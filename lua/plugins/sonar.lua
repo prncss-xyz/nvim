@@ -1,41 +1,28 @@
+local personal = require("my.conds").personal
+local analyzers = vim.fn.stdpath("data") .. "/mason/share/sonarlint-analyzers/"
+
+local ft = {
+	"dockerfile",
+	"javascript",
+	"typescript",
+	"javascriptreact",
+	"typescriptreact",
+}
+
 return {
 	"https://gitlab.com/schrieveslaach/sonarlint.nvim",
 	opts = {
 		server = {
 			cmd = {
 				"sonarlint-language-server",
-				-- Ensure that sonarlint-language-server uses stdio channel
 				"-stdio",
 				"-analyzers",
-				-- paths to the analyzers you need, using those for python and java in this example
-				vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarpython.jar"),
-				vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarcfamily.jar"),
-				vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarjava.jar"),
+				analyzers .. "sonarjs.jar",
 			},
 		},
-		filetypes = {
-			"cs",
-			"dockerfile",
-			"python",
-			"cpp",
-			"java",
-			"javascript",
-			"typescript",
-			"javascriptreact",
-			"typescriptreact",
-		},
+		filetypes = ft,
+		cmd = "SonarlintListRules",
 	},
-	ft = {
-		"cs",
-		"dockerfile",
-		"python",
-		"cpp",
-		"java",
-		"javascript",
-		"typescript",
-		"javascriptreact",
-		"typescriptreact",
-	},
-  -- currently not working wiht typescript
-	enabled = false,
+	ft = ft,
+	enabled = personal,
 }

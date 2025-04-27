@@ -5,7 +5,7 @@ local domain = require("my.parameters").domain
 local pane = domain.pane
 local pick = domain.pick
 local win = domain.win
-local web = domain.win
+local web = domain.web
 
 return {
 	{

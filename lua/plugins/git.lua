@@ -1,4 +1,6 @@
 local not_vscode = require("my.conds").not_vscode
+local domain = require("my.parameters").domain
+local theme = require("my.parameters").theme
 
 return {
 	{
@@ -33,6 +35,11 @@ return {
 				diffview = true,
 			},
 		},
+		keys = { {
+			domain.win .. theme.hunk,
+			"<cmd>Neogit<cr>",
+			desc = "Neogit",
+		} },
 	},
 	cmd = "Neogit",
 }

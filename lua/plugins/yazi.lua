@@ -22,6 +22,12 @@ return {
 		end,
 		keys = {
 			{
+				"<m-y>",
+				mode = { "n", "x", "i" },
+				"<cmd>Yazi toggle<cr>",
+				desc = "Yazi Last",
+			},
+			{
 				pane .. theme.file,
 				mode = { "n", "v" },
 				"<cmd>Yazi<cr>",
@@ -30,7 +36,7 @@ return {
 			{
 				pane .. reverse(theme.file),
 				"<cmd>Yazi cwd<cr>",
-				desc = "Yazi Toggle",
+				desc = "Yazi Cwd",
 			},
 		},
 		event = "VeryLazy",
