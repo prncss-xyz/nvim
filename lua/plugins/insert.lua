@@ -1,4 +1,3 @@
-local personal = require("my.conds").personal
 local not_vscode = require("my.conds").not_vscode
 
 return {
@@ -63,32 +62,6 @@ return {
 			},
 		},
 		event = "InsertEnter",
-		cond = not_vscode,
-	},
-	-- windsurf/codeium,
-	{
-		"supermaven-inc/supermaven-nvim",
-		opts = {
-			keymaps = {
-				accept_suggestion = "<c-l>",
-				clear_suggestion = "<c-c>",
-				accept_word = "<c-j>",
-			},
-			ignore_filetypes = { markdown = true },
-		},
-		cmd = {
-			"SupermavenUseFree",
-			"SupermavenLogout",
-			"SupermavenStop",
-			"SupermavenStart",
-			"SupermavenRestart",
-			"SupermavenStatus",
-			"SupermavenShowLog",
-			"SupermavenClearLog",
-			"SupermavenToggle",
-		},
-		--[[ event = 'InsertEnter', ]]
-		enabled = personal,
 		cond = not_vscode,
 	},
 	-- Use tressitter to autoclose and autorename HTML tag

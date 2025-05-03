@@ -1,4 +1,6 @@
 local personal = require("my.conds").personal
+local not_personal = require("my.conds").not_personal
+local not_vscode = require("my.conds").not_vscode
 local domain = require("my.parameters").domain
 local pick = domain.pick
 local ai = domain.ai
@@ -100,5 +102,56 @@ return {
 			"AvanteClear",
 		},
 		enabled = personal,
+	},
+	-- windsurf/codeium,
+	{
+		"supermaven-inc/supermaven-nvim",
+		opts = {
+			keymaps = {
+				accept_suggestion = "<c-l>",
+				clear_suggestion = "<c-c>",
+				accept_word = "<c-j>",
+			},
+			ignore_filetypes = { markdown = true },
+		},
+		cmd = {
+			"SupermavenUseFree",
+			"SupermavenLogout",
+			"SupermavenStop",
+			"SupermavenStart",
+			"SupermavenRestart",
+			"SupermavenStatus",
+			"SupermavenShowLog",
+			"SupermavenClearLog",
+			"SupermavenToggle",
+		},
+		--[[ event = 'InsertEnter', ]]
+		enabled = personal,
+		cond = not_vscode,
+	},
+	{
+		"zbirenbaum/copilot.lua",
+		opts = {
+			suggestion = {
+				auto_trigger = true,
+				keymap = {
+					accept = "<c-l>",
+					next = "<c-9>",
+					prev = "<c-0>",
+					dismiss = "<c-c>",
+					accept_word = "<c-j>",
+				},
+			},
+		},
+		keymaps = {
+			{
+				ai .. "a",
+				"<cmd>CopilotChatOpen<cr>",
+				desc = "Coplot Chat",
+			},
+		},
+		cmd = { "Copilot" },
+		event = "InsertEnter",
+		enabled = not_personal,
 	},
 }
