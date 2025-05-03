@@ -11,8 +11,9 @@
   - better m-t
 
 - test server
-  - https://github.com/kbwo/testing-language-server
-  - https://github.com/kbwo/testing-ls.nvim
+  - not ready to use
+      - https://github.com/kbwo/testing-language-server
+      - https://github.com/kbwo/testing-ls.nvim
 
 - window
   - implement alt buffer per window
@@ -29,3 +30,5 @@
 
 - snippets
   - create file
+
+

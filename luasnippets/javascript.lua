@@ -466,6 +466,6 @@ table.insert(
   )
 )
 
-require('plugins.flies.utils').add_snips(M, 'javascriptreact')
+require('plugins.flies.utils').add_snips(M, 'javascript')
 
 return M

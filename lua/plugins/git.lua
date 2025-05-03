@@ -24,7 +24,7 @@ return {
 			word_diff = false,
 		},
 		cmd = "Gitsigns",
-		cond = not_vscode,
+		-- cond = not_vscode,
 	},
 	{
 		"TimUntersberger/neogit",
@@ -42,4 +42,5 @@ return {
 		} },
 	},
 	cmd = "Neogit",
+	cond = not_vscode,
 }

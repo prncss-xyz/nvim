@@ -62,6 +62,7 @@ return {
 		keys = {
 			{
 				"<c-s>",
+				mode = { "n", "i" },
 				function()
 					vim.cmd("stopinsert")
 					vim.lsp.buf.format({
@@ -74,7 +75,6 @@ return {
 						end,
 					})
 				end,
-				mode = { "n", "i" },
 				desc = "LSP Format",
 			},
 			{
@@ -86,10 +86,10 @@ return {
 			},
 			{
 				edit .. edit,
+				mode = { "n", "x" },
 				function()
 					vim.lsp.buf.code_action()
 				end,
-				mode = { "n", "x" },
 				desc = "LSP Code Action",
 			},
 			{
@@ -113,6 +113,7 @@ return {
 	},
 	{
 		"jay-babu/mason-null-ls.nvim",
+		commit = "de19726",
 		dependencies = {
 			"williamboman/mason.nvim",
 		},
@@ -140,7 +141,7 @@ return {
 			}
 		end,
 		event = "VeryLazy",
-		enabled = true,
+		cond = not_vscode,
 	},
 	{
 		"b0o/schemastore.nvim",
@@ -171,6 +172,7 @@ return {
 			})
 		end,
 		ft = { "json", "yaml" },
+		cond = not_vscode,
 	},
 	{
 		"folke/lazydev.nvim",

@@ -84,6 +84,7 @@ return {
 				desc = "Trouble next",
 			},
 		},
+		cond = not_vscode,
 	},
 	{
 		"folke/noice.nvim",

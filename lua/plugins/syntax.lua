@@ -68,6 +68,7 @@ return {
 		enabled = false,
 		ft = "sway",
 		cond = not_vscode,
+		enabled = personal,
 	},
 	{
 		"folke/todo-comments.nvim",
@@ -99,6 +100,7 @@ return {
 	},
 	{
 		"nvim-treesitter/nvim-treesitter-context",
+		commit = "ff1d12c",
 		dependencies = { "nvim-treesitter/nvim-treesitter" },
 		opts = {
 			min_window_height = 30,
@@ -115,14 +117,13 @@ return {
 		enabled = false,
 		cond = not_vscode,
 	},
-  {
-    'code-biscuits/nvim-biscuits',
-    dependencies = { 'nvim-treesitter/nvim-treesitter' },
-    opts = {
-      cursor_line_only = true,
-    },
-    event = 'VeryLazy',
-    enabled = true,
+	{
+		"code-biscuits/nvim-biscuits",
+		dependencies = { "nvim-treesitter/nvim-treesitter" },
+		opts = {
+			cursor_line_only = true,
+		},
+		event = "VeryLazy",
 		cond = not_vscode,
-  },
+	},
 }

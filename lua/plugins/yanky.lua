@@ -1,6 +1,7 @@
 local reverse = require("my.parameters").reverse
 local edit = require("my.parameters").domain.edit
 local pick = require("my.parameters").domain.pick
+local not_vscode = require("my.conds").not_vscode
 
 return {
 	{
@@ -23,7 +24,6 @@ return {
 				sync_with_ring = false,
 			},
 		},
-		event = "BufReadPost",
 		keys = {
 			{
 				pick .. "y",
@@ -68,5 +68,7 @@ return {
 				desc = "Paste After",
 			},
 		},
+		event = "BufReadPost",
+		cond = not_vscode,
 	},
 }

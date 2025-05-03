@@ -1,12 +1,10 @@
 local reverse = require("my.parameters").reverse
 local domain = require("my.parameters").domain
-local theme = require("my.parameters").theme
 local edit = domain.edit
 local move = domain.move
 local web = domain.web
 local win = domain.win
 local directions = require("my.parameters").directions
-local recompose = require("flies.actions.move_again").recompose2
 
 vim.keymap.del("n", "gcc")
 vim.keymap.set("n", "gra", "<nop>")
@@ -109,13 +107,6 @@ end, { desc = "toggle conceal level" })
 vim.keymap.set("n", domain.appearance .. "c", function()
 	vim.o.concealcursor = vim.o.concealcursor == "n" and "" or "n"
 end, { desc = "toggle conceal cursor" })
-
-vim.keymap.set("n", move .. reverse("d"), function()
-	recompose("<Plug>(unimpaired-directory-previous)", "<Plug>(unimpaired-directory-next)", false)
-end, { desc = "previous directory file" })
-vim.keymap.set("n", move .. "d", function()
-	recompose("<Plug>(unimpaired-directory-previous)", "<Plug>(unimpaired-directory-next)", true)
-end, { desc = "previous directory file" })
 
 vim.keymap.set("n", domain.file .. "a", function()
 	require("my.alternative_file").alternative({

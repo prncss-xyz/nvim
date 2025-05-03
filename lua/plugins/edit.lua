@@ -50,7 +50,7 @@ return {
 						type = "func",
 					})
 				end,
-				desc = "annotate function",
+				desc = "Annotate Function",
 			},
 			{
 				edit .. "nk",
@@ -59,7 +59,7 @@ return {
 						type = "class",
 					})
 				end,
-				desc = "annotate function",
+				desc = "Annotate Class",
 			},
 			{
 				edit .. "nt",
@@ -68,7 +68,7 @@ return {
 						type = "type",
 					})
 				end,
-				desc = "annotate function",
+				desc = "Annotate Type",
 			},
 			{
 				edit .. "nf",
@@ -77,7 +77,7 @@ return {
 						type = "file",
 					})
 				end,
-				desc = "annotate function",
+				desc = "Annotate File",
 			},
 		},
 		enabled = personal,
@@ -98,13 +98,6 @@ return {
 					require("treesj").toggle()
 				end,
 				desc = "TSJToggle",
-			},
-			{
-				edit .. "nf",
-				function()
-					require("treesj").toggle()
-				end,
-				desc = "caca",
 			},
 		},
 	},

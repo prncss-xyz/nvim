@@ -34,6 +34,7 @@ return {
 					e = require("flies.flies.buffer"),
 					f = "right",
 					g = "left",
+					h = require("flies.flies.hunk"),
 					i = require("flies.flies._ts"):new({ names = "conditional" }),
 					j = require("flies.flies._ts"):new({ names = "block" }),
 					k = require("flies.flies._ts"):new({ names = "call" }),
@@ -105,20 +106,18 @@ return {
 			},
 			{
 				"e",
+				mode = { "n", "x" },
 				function()
 					require("flies.actions.move").move("n", {
 						domain = "outer",
 						move = "right",
 					})
 				end,
-				mode = {
-					"n",
-					"x",
-				},
 				desc = "Move Right",
 			},
 			{
 				"f",
+				mode = { "n" },
 				function()
 					require("flies.actions.move").move("n", {
 						axis = "forward",
@@ -141,45 +140,38 @@ return {
 						end,
 					})
 				end,
-				mode = { "n" },
 				desc = "Move Forward",
 			},
 			{
 				"f",
+				mode = { "o" },
 				function()
 					require("flies.actions.move").move("o", { axis = "forward", domain = "outer" })
 				end,
-				mode = { "o" },
 				desc = "Move Forward",
 			},
 			{
 				"f",
+				mode = { "x" },
 				function()
 					require("flies.actions.move").move("x", { axis = "forward", domain = "outer" })
 				end,
-				mode = { "x" },
 				desc = "Move Forward",
 			},
 			{
 				"n",
+				mode = { "n", "x" },
 				function()
 					require("flies.actions.move_again").next()
 				end,
-				mode = {
-					"n",
-					"x",
-				},
 				desc = "Move Again Next",
 			},
 			{
 				"p",
+				mode = { "n", "x" },
 				function()
 					require("flies.actions.move_again").prev()
 				end,
-				mode = {
-					"n",
-					"x",
-				},
 				desc = "Move Again Next",
 			},
 			{
@@ -191,10 +183,10 @@ return {
 			},
 			{
 				"s",
+				mode = { "x" },
 				function()
 					require("flies.actions.move").move("x", { axis = "hint", domain = "outer" })
 				end,
-				mode = { "x" },
 				desc = "Move Hint",
 			},
 			{
@@ -216,10 +208,7 @@ return {
 						move = "left",
 					})
 				end,
-				mode = {
-					"n",
-					"x",
-				},
+				mode = { "n", "x" },
 				desc = "Move Left",
 			},
 			{
@@ -279,18 +268,18 @@ return {
 			},
 			{
 				edit .. "x",
+				mode = { "n", "x" },
 				function()
 					require("flies.operations.explode"):call()
 				end,
-				mode = { "n", "x" },
 				desc = "Explode",
 			},
 			{
 				edit .. "y",
+				mode = { "n", "x" },
 				function()
 					require("flies.operations.wrap"):call()
 				end,
-				mode = { "n", "x" },
 				desc = "Wrap",
 			},
 			{
@@ -302,28 +291,25 @@ return {
 			},
 			{
 				move .. "c",
+				mode = { "n" },
 				function()
 					require("flies.flies.search").set_search(true)
 					vim.cmd("normal! *N")
 				end,
-				mode = {
-					"n",
-				},
 				desc = "Search Current Word",
 			},
 			{
 				move .. "c",
+				mode = { "x" },
 				function()
 					require("flies.flies.search").set_search(true)
 					vim.cmd("normal! *N")
 				end,
-				mode = {
-					"x",
-				},
 				desc = "Search Current Selection",
 			},
 			{
 				"<c-a>",
+				mode = { "n", "i", "c" },
 				function()
 					require("flies.flies.line"):move({
 						axis = "best",
@@ -331,12 +317,12 @@ return {
 						move = "left",
 					})
 				end,
-				mode = { "n", "i", "c" },
 				desc = "Move Begin of Line",
 			},
 			--[[
 			{
 				"<c-e>",
+				mode = { "n", "i", "c" },
 				function()
 					require("flies.flies.line"):move({
 						axis = "best",
@@ -344,30 +330,37 @@ return {
 						move = "right",
 					})
 				end,
-				mode = { "n", "i", "c" },
 				desc = "Move End of Line",
 			},
       --]]
 			{
 				"<m-b>",
+				mode = { "n", "i", "c" },
 				function()
 					require("flies.flies.word"):move({
 						axis = "backward",
 						domain = "outer",
 					})
 				end,
-				mode = { "n", "i", "c" },
 				desc = "Move Word Backward",
 			},
 			{
 				"<m-f>",
+				mode = { "n", "i", "c" },
 				function()
 					require("flies.flies.word"):move({
 						axis = "forward",
 						domain = "outer",
 					})
 				end,
-				mode = { "n", "i", "c" },
+				desc = "Move Word Forward",
+			},
+			{
+				"<c-y>",
+				mode = "i",
+				function()
+					require("flies.actions.quickexpand").exec("<c-g>")
+				end,
 				desc = "Move Word Forward",
 			},
 		},

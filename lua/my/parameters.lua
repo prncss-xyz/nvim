@@ -16,6 +16,7 @@ M.theme = {
 	file = "f",
 	run = "u",
 	comment = "k",
+	buffers = "b",
 	scratch = "b",
 }
 

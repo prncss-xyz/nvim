@@ -1,26 +1,33 @@
 local M = {}
 
+local not_vscode = require("my.conds").not_vscode
+
 local ls = require("luasnip")
 local i = ls.insert_node
 local f = ls.function_node
 local contents = ls.function_node(function(_, snip)
 	return snip.captures.contents
 end, {})
-
 local fmt = require("luasnip.extras.fmt").fmt
 
 M.b = {
 	left = "(",
 	right = ")",
 }
+
+M.B = {
+	left = "{",
+	right = "}",
+}
+
 M.i = {
-	snip = {
+	snip = not_vscode({
 		javascript = fmt(
 			[[
-          if ([]) {
-            [][]
-          }
-        ]],
+	          if ([]) {
+	            [][]
+	          }
+	        ]],
 			{
 				i(1, "true"),
 				contents,
@@ -30,10 +37,10 @@ M.i = {
 		),
 		lua = fmt(
 			[[
-          if [] then
-            [][]
-          end
-        ]],
+	          if [] then
+	            [][]
+	          end
+	        ]],
 			{
 				i(1, "true"),
 				contents,
@@ -41,27 +48,27 @@ M.i = {
 			},
 			{ delimiters = "[]" }
 		),
-	},
+	}),
 }
 
 M.k = {
-	snip = {
+	snip = not_vscode({
 		all = fmt([[<>(<><>)]], {
 			i(1, "name"),
 			contents,
 			i(2, ""),
 		}, { delimiters = "<>" }),
-	},
+	}),
 }
 
 M.l = {
-	snip = {
+	snip = not_vscode({
 		javascript = fmt(
 			[[
-          while ([]) {
-            [][]
-          }
-        ]],
+	          while ([]) {
+	            [][]
+	          }
+	        ]],
 			{
 				i(1, "true"),
 				contents,
@@ -71,10 +78,10 @@ M.l = {
 		),
 		lua = fmt(
 			[[
-          while [] do
-            [][]
-          end
-        ]],
+	          while [] do
+	            [][]
+	          end
+	        ]],
 			{
 				i(1, "true"),
 				contents,
@@ -82,7 +89,7 @@ M.l = {
 			},
 			{ delimiters = "[]" }
 		),
-	},
+	}),
 }
 
 M.q = {
@@ -90,14 +97,19 @@ M.q = {
 	right = '"',
 }
 
+M.Q = {
+	left = "`",
+	right = "`",
+}
+
 M.h = {
-	snip = {
+	snip = not_vscode({
 		javascript = fmt(
 			[[
-          function []([]) {
-            [][]
-          }
-        ]],
+	          function []([]) {
+	            [][]
+	          }
+	        ]],
 			{
 				i(1, "name"),
 				i(2, ""),
@@ -108,10 +120,10 @@ M.h = {
 		),
 		lua = fmt(
 			[[
-          function []([])
-            [][]
-          end
-        ]],
+	          function []([])
+	            [][]
+	          end
+	        ]],
 			{
 				i(1, "name"),
 				i(2, ""),
@@ -120,7 +132,7 @@ M.h = {
 			},
 			{ delimiters = "[]" }
 		),
-	},
+	}),
 }
 
 local function to_tag(args)
@@ -128,13 +140,15 @@ local function to_tag(args)
 end
 
 M.t = {
-	snip = {
+	left = "<>",
+	right = "</>",
+	snip = not_vscode({
 		all = fmt(
 			[[
-          <[]>
-            [][]
-          </[]>
-        ]],
+	          <[]>
+	            [][]
+	          </[]>
+	        ]],
 			{
 				i(1, ""),
 				contents,
@@ -143,7 +157,7 @@ M.t = {
 			},
 			{ delimiters = "[]" }
 		),
-	},
+	}),
 }
 
 M.v = {

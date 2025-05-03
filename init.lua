@@ -1,3 +1,3 @@
 require("options")
-require("bootstrap")
+ require("bootstrap")
 require("globals")

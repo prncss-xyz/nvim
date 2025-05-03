@@ -1,4 +1,5 @@
 local domain = require("my.parameters").domain
+local reverse = require("my.parameters").reverse
 
 return {
 	{
@@ -84,6 +85,28 @@ return {
 					require("khutulun").yank_absolute_filepath()
 				end,
 				desc = "Yank Absolute Filepath",
+			},
+			{
+				domain.move .. reverse("d"),
+				function()
+					require("flies.actions.move_again").recompose2(
+						"<Plug>(unimpaired-directory-previous)",
+						"<Plug>(unimpaired-directory-next)",
+						false
+					)
+				end,
+				desc = "Previous Directory File",
+			},
+			{
+				domain.move .. "d",
+				function()
+					require("flies.actions.move_again").recompose2(
+						"<Plug>(unimpaired-directory-previous)",
+						"<Plug>(unimpaired-directory-next)",
+						true
+					)
+				end,
+				desc = "Next Directory File",
 			},
 		},
 	},

@@ -1,4 +1,5 @@
 local personal = require("my.conds").personal
+local not_vscode = require("my.conds").not_vscode
 local analyzers = vim.fn.stdpath("data") .. "/mason/share/sonarlint-analyzers/"
 
 local ft = {
@@ -24,5 +25,6 @@ return {
 		cmd = "SonarlintListRules",
 	},
 	ft = ft,
+	cond = not_vscode,
 	enabled = personal,
 }

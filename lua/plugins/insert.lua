@@ -98,6 +98,6 @@ return {
 		opts = {},
 		event = "InsertEnter",
 		cond = not_vscode,
-		--[[ ft = { "html", "javascriptreact", "typescriptreact", "javascript", "markdown" }, ]]
+		ft = { "html", "javascriptreact", "typescriptreact", "javascript", "markdown" },
 	},
 }

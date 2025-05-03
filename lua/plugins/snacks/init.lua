@@ -228,6 +228,13 @@ return {
 				end,
 				desc = "Pick Picker",
 			},
+			{
+				"oxu",
+				function()
+					Snacks.pickers.undo()
+				end,
+				desc = "Undo History",
+			},
 		},
 	},
 	{
