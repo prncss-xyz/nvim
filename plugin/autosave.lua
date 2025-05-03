@@ -1,3 +1,6 @@
+if not require("my.conds").not_vscode() then
+	return
+end
 local group = vim.api.nvim_create_augroup("MyAutoSave", { clear = true })
 
 vim.api.nvim_create_autocmd({ "TabLeave", "FocusLost", "BufLeave", "VimLeavePre" }, {

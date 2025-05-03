@@ -1,4 +1,5 @@
 local personal = require("my.conds").personal
+local not_vscode = require("my.conds").not_vscode
 local reverse = require("my.parameters").reverse
 local theme = require("my.parameters").theme
 local domain = require("my.parameters").domain
@@ -236,6 +237,7 @@ return {
 				desc = "Undo History",
 			},
 		},
+		cond = not_vscode,
 	},
 	{
 		"DestopLine/scratch-runner.nvim",
@@ -250,5 +252,6 @@ return {
 			},
 		},
 		enabled = personal,
+		cond = not_vscode,
 	},
 }
