@@ -110,7 +110,6 @@ return {
 			keymaps = {
 				accept_suggestion = "<c-l>",
 				clear_suggestion = "<c-c>",
-				accept_word = "<c-j>",
 			},
 			ignore_filetypes = { markdown = true },
 		},
@@ -139,7 +138,6 @@ return {
 					next = "<c-9>",
 					prev = "<c-0>",
 					dismiss = "<c-c>",
-					accept_word = "<c-j>",
 				},
 			},
 		},

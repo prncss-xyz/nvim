@@ -1,4 +1,5 @@
 local file = require("my.parameters").domain.file
+local win = require("my.parameters").domain.win
 local theme = require("my.parameters").theme
 
 return {
@@ -146,7 +147,7 @@ return {
 				desc = "Neotree buffers",
 			},
 			{
-				file .. theme.file,
+				win .. theme.file,
 				"<cmd>Neotree<cr>",
 				desc = "Neotree files",
 			},

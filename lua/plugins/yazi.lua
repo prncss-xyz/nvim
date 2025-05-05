@@ -1,8 +1,6 @@
 local not_vscode = require("my.conds").not_vscode
 local reverse = require("my.parameters").reverse
-local theme = require("my.parameters").theme
-local domain = require("my.parameters").domain
-local pane = domain.pane
+local file = require("my.parameters").domain.file
 
 return {
 	---@type LazySpec
@@ -22,19 +20,19 @@ return {
 		end,
 		keys = {
 			{
-				"<m-y>",
+				file .. "l",
 				mode = { "n", "x", "i" },
 				"<cmd>Yazi toggle<cr>",
 				desc = "Yazi Last",
 			},
 			{
-				pane .. theme.file,
+				file .. "f",
 				mode = { "n", "v" },
 				"<cmd>Yazi<cr>",
 				desc = "Yazi Reveal",
 			},
 			{
-				pane .. reverse(theme.file),
+				file .. reverse("f"),
 				"<cmd>Yazi cwd<cr>",
 				desc = "Yazi Cwd",
 			},

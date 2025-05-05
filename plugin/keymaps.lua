@@ -68,7 +68,6 @@ vim.keymap.set("n", win .. directions.down, "<cmd>split<cr>", { desc = "window s
 vim.keymap.set("n", web .. "d", function()
 	require("my.browser").server()
 end, { desc = "browse server" })
-
 vim.keymap.set("n", web .. "y", function()
 	require("my.browser").search()
 end, { desc = "browse search" })
@@ -108,7 +107,7 @@ vim.keymap.set("n", domain.appearance .. "c", function()
 	vim.o.concealcursor = vim.o.concealcursor == "n" and "" or "n"
 end, { desc = "toggle conceal cursor" })
 
-vim.keymap.set("n", domain.file .. "a", function()
+vim.keymap.set("n", domain.move .. "a", function()
 	require("my.alternative_file").alternative({
 		create = true,
 		patterns = {

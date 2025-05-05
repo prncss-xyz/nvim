@@ -53,7 +53,7 @@ M.i = {
 
 M.k = {
 	snip = not_vscode({
-		all = fmt([[<>(<><>)]], {
+		all = fmt([[<>(<><>) ]], {
 			i(1, "name"),
 			contents,
 			i(2, ""),

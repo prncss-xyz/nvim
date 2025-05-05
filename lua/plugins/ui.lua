@@ -3,7 +3,6 @@ local pane = domain.pane
 local theme = require("my.parameters").theme
 local reverse = require("my.parameters").reverse
 local not_vscode = require("my.conds").not_vscode
-local personal = require("my.conds").personal
 
 return {
 	{
@@ -233,12 +232,5 @@ return {
 		end,
 		event = "VeryLazy",
 		-- enabled on vscode because we use it for movements
-	},
-	{
-		"4e554c4c/darkman.nvim",
-		event = "VimEnter",
-		build = "go build -o bin/darkman.nvim",
-		enabled = false and personal,
-		cond = not_vscode,
 	},
 }

@@ -30,5 +30,3 @@
 
 - snippets
   - create file
-
-
