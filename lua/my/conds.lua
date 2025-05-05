@@ -25,4 +25,8 @@ M.not_vscode = cond(function()
 	return not vim.g.vscode
 end)
 
+M.tui = cond(function()
+	return not (vim.g.vscode or vim.g.neovide)
+end)
+
 return M

@@ -1,42 +1,46 @@
 local not_vscode = require("my.conds").not_vscode
 local personal = require("my.conds").personal
+local tui = require("my.conds").tui
+
+local function active(name, flag)
+	return function(config)
+		config.cond = not_vscode
+		if flag or flag == nil then
+			config.priority = 1000
+			config.lazy = false
+			function config.config()
+				vim.o.background = "dark"
+				vim.cmd.colorscheme(name)
+			end
+		end
+		return config
+	end
+end
 
 return {
+	active("matrix")({
+		"iruzo/matrix-nvim",
+	}),
 	{
 		"calind/selenized.nvim",
 		commit = "a43e34d",
-		lazy = false, -- make sure we load this during startup if it is your main colorscheme
-		priority = 1000, -- make sure to load this before all the other start plugins
-		config = function()
-			-- load the colorscheme here
-			vim.o.background = "dark"
-			vim.cmd.colorscheme("selenized")
-		end,
-		cond = not_vscode,
-		enabled = true,
 	},
 	{
 		"rebelot/kanagawa.nvim",
-		enabled = true,
 	},
 	{
 		"rose-pine/neovim",
-		name = "rose-pine",
-		enabled = true,
 	},
 	{
 		"ellisonleao/gruvbox.nvim",
-		enabled = true,
 	},
 	{
 		"ishan9299/nvim-solarized-lua",
 		commit = "d69a263",
-		enabled = true,
 	},
 	{
 		"iruzo/matrix-nvim",
 		commit = "5fafe6b",
-		enabled = true,
 	},
 	{
 		"sphamba/smear-cursor.nvim",
@@ -50,7 +54,7 @@ return {
 			gamma = 1,
 		} or {},
 		event = "VeryLazy",
-		cond = not_vscode,
+		cond = tui,
 	},
 	{
 		"4e554c4c/darkman.nvim",
