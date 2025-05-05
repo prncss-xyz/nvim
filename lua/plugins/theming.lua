@@ -1,44 +1,43 @@
 local not_vscode = require("my.conds").not_vscode
-local personal = require("my.conds").personal
+local work = require("my.conds").work
 local tui = require("my.conds").tui
 
 local current = "gruvbox"
-local background = "dark"
 
-local function colorscheme(name)
-	return function(config)
-		config.cond = not_vscode
-		if name == current then
-			config.priority = 1000
-			config.lazy = false
-			function config.config()
-				vim.o.background = background
-				vim.cmd.colorscheme(name)
-			end
+local function colorscheme(name, config)
+	config.cond = not_vscode
+	if name == current then
+		config.priority = 1000
+		config.lazy = false
+		config.dependencies = work({
+			"f-person/auto-dark-mode.nvim",
+		}, nil)
+		function config.config()
+			vim.cmd.colorscheme(name)
 		end
-		return config
 	end
+	return config
 end
 
 return {
-	colorscheme("matrix")({
+	colorscheme("matrix", {
 		"iruzo/matrix-nvim",
 		commit = "5fafe6b",
 	}),
-	colorscheme("selenized")({
+	colorscheme("selenized", {
 		"calind/selenized.nvim",
 		commit = "a43e34d",
 	}),
-	colorscheme("kanagawa")({
+	colorscheme("kanagawa", {
 		"rebelot/kanagawa.nvim",
 	}),
-	colorscheme("rose-pine")({
+	colorscheme("rose-pine", {
 		"rose-pine/neovim",
 	}),
-	colorscheme("gruvbox")({
+	colorscheme("gruvbox", {
 		"ellisonleao/gruvbox.nvim",
 	}),
-	colorscheme("solarized")({
+	colorscheme("solarized", {
 		"ishan9299/nvim-solarized-lua",
 		commit = "d69a263",
 	}),
@@ -57,10 +56,8 @@ return {
 		cond = tui,
 	},
 	{
-		"4e554c4c/darkman.nvim",
-		event = "VimEnter",
-		build = "go build -o bin/darkman.nvim",
-		enabled = false and personal,
-		cond = not_vscode,
+		"f-person/auto-dark-mode.nvim",
+		opts = {},
+		enabled = work,
 	},
 }

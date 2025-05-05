@@ -17,9 +17,9 @@ M.personal = cond(function()
 	return vim.env.HOME == "/home/prncss"
 end)
 
-M.not_personal = function()
+M.work = cond(function()
 	return vim.env.HOME ~= "/home/prncss"
-end
+end)
 
 M.not_vscode = cond(function()
 	return not vim.g.vscode

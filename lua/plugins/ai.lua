@@ -1,5 +1,5 @@
 local personal = require("my.conds").personal
-local not_personal = require("my.conds").not_personal
+local work = require("my.conds").work
 local not_vscode = require("my.conds").not_vscode
 local domain = require("my.parameters").domain
 local pick = domain.pick
@@ -150,6 +150,6 @@ return {
 		},
 		cmd = { "Copilot" },
 		event = "InsertEnter",
-		enabled = not_personal,
+		enabled = work,
 	},
 }
