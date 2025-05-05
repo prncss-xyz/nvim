@@ -57,6 +57,7 @@ return {
 	},
 	{
 		"f-person/auto-dark-mode.nvim",
+		commit = "c31de12",
 		opts = {},
 		enabled = work,
 	},
