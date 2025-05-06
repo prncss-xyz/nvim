@@ -7,7 +7,7 @@ return {
 	{
 		"gbprod/yanky.nvim",
 		dependencies = {
-			"kkharji/sqlite.lua",
+			-- "kkharji/sqlite.lua",
 			"folke/snacks.nvim",
 		},
 		opts = {
@@ -15,7 +15,8 @@ return {
 				enabled = true,
 			},
 			ring = {
-				storage = "sqlite",
+				storage = "shada",
+				-- storage = "sqlite",
 			},
 			highlight = {
 				timer = 200,

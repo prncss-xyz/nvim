@@ -17,7 +17,7 @@ M.theme = {
 	run = "u",
 	comment = "k",
 	buffers = "b",
-	scratch = "b",
+	scratch = "o",
 }
 
 M.domain = {

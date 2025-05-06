@@ -4,25 +4,6 @@ end
 
 local group = vim.api.nvim_create_augroup("My", {})
 
-local function open_project(cwd)
-	if cwd == vim.fn.getenv("HOME") then
-		Snacks.dashboard()
-		return
-	end
-	if not vim.endswith(cwd, "/") then
-		cwd = cwd .. "/"
-	end
-	for _, file in ipairs(vim.v.oldfiles) do
-		if vim.startswith(file, cwd) and vim.fn.filereadable(file) == 1 then
-			vim.cmd.edit(file)
-			return
-		end
-	end
-	Snacks.picker.smart({
-		cwd = cwd,
-	})
-end
-
 vim.api.nvim_create_autocmd("VimEnter", {
 	pattern = "*",
 	group = group,
@@ -42,7 +23,11 @@ vim.api.nvim_create_autocmd("VimEnter", {
 			cwd = vim.fn.getcwd()
 		end
 		vim.schedule(function()
-			open_project(cwd)
+			if cwd == vim.fn.getenv("HOME") then
+				Snacks.dashboard()
+				return
+			end
+			require("my.open_project").open_project(cwd)
 		end)
 	end,
 })

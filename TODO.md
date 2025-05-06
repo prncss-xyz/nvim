@@ -10,10 +10,6 @@
   - better c-j
   - better m-t
 
-- test server
-  - not ready to use
-      - https://github.com/kbwo/testing-language-server
-      - https://github.com/kbwo/testing-ls.nvim
 
 - window
   - implement alt buffer per window
@@ -24,9 +20,12 @@
 
   - git toggle stage
 
-- pick
-
-  - pick project
-
 - snippets
-  - create file
+  - create file (template)
+
+## Stuck
+
+- test server
+  - not ready to use
+      - https://github.com/kbwo/testing-language-server
+      - https://github.com/kbwo/testing-ls.nvim

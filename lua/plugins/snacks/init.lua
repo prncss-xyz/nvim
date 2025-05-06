@@ -15,13 +15,23 @@ return {
 		lazy = false,
 		---@type snacks.Config
 		opts = function()
+			local actions = require("my.tables").deep_merge({
+				open_project = {
+					action = function(picker)
+						local cwd = vim.fn.getcwd()
+						picker:close()
+						require("my.open_project").open_project(cwd)
+					end,
+					desc = "open_project",
+				},
+			}, require("trouble.sources.snacks").actions)
 			return {
 				bigfile = { enabled = true },
 				indent = { enabled = true },
 				input = { enabled = true },
 				picker = {
 					enabled = true,
-					actions = require("trouble.sources.snacks").actions,
+					actions = actions,
 					win = {
 						input = {
 							keys = {
@@ -72,16 +82,55 @@ return {
 				desc = "Scratch Open",
 			},
 			{
-				pick .. "b",
+				pick .. theme.buffers,
 				function()
-					Snacks.picker.buffers()
+					Snacks.picker.buffers({
+						transform = require("plugins.snacks.transform").exclude_current(),
+					})
 				end,
 				desc = "Pick Buffer",
 			},
 			{
 				pick .. "c",
 				function()
-					Snacks.picker.projects()
+					Snacks.picker.pick({
+						finder = "recent_projects",
+						transform= require("plugins.snacks.transform").filter_current_dir(),
+						format = "file",
+						dev = { "~/dev", "~/projects" },
+						confirm = "load_session",
+						patterns = { ".git", "_darcs", ".hg", ".bzr", ".svn", "package.json", "Makefile" },
+						recent = true,
+						matcher = {
+							frecency = true,
+							sort_empty = true,
+							cwd_bonus = false,
+						},
+						sort = { fields = { "score:desc", "idx" } },
+						win = {
+							preview = { minimal = true },
+							input = {
+								keys = {
+									-- every action will always first change the cwd of the current tabpage to the project
+									["<c-e>"] = { { "tcd", "picker_explorer" }, mode = { "n", "i" } },
+									["<c-f>"] = { { "tcd", "picker_files" }, mode = { "n", "i" } },
+									["<c-g>"] = { { "tcd", "picker_grep" }, mode = { "n", "i" } },
+									["<c-r>"] = { { "tcd", "picker_recent" }, mode = { "n", "i" } },
+									["<c-w>"] = { { "tcd" }, mode = { "n", "i" } },
+									["<c-t>"] = {
+										function(picker)
+											vim.cmd("tabnew")
+											Snacks.notify("New tab opened")
+											picker:close()
+											Snacks.picker.projects()
+										end,
+										mode = { "n", "i" },
+									},
+									["<cr>"] = { { "tcd", "open_project" }, mode = { "n", "i" } },
+								},
+							},
+						},
+					})
 				end,
 				desc = "Pick Project",
 			},
@@ -95,17 +144,8 @@ return {
 			{
 				pick .. "e",
 				function()
-					-- like unique_file, but removes current file
-					local name = vim.api.nvim_buf_get_name(0)
 					Snacks.picker.smart({
-						transform = function(item, ctx)
-							ctx.meta.done = ctx.meta.done or {} ---@type table<string, boolean>
-							local path = Snacks.picker.util.path(item)
-							if not path or path == name or path == ctx.meta.current or ctx.meta.done[path] then
-								return false
-							end
-							ctx.meta.done[path] = true
-						end,
+						transform = require("plugins.snacks.transform").exclude_current(),
 					})
 				end,
 				desc = "Pick Smart File",
