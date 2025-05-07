@@ -1,4 +1,3 @@
-local file = require("my.parameters").domain.file
 local win = require("my.parameters").domain.win
 local theme = require("my.parameters").theme
 
@@ -66,16 +65,16 @@ return {
 							oa = "avante_add_files",
 							oo = "system_open",
 							oh = "open_split",
-							os = "open_vsplit",
+							["o;"] = "open_vsplit",
 							ow = "open_with_window_picker",
-							q = false,
 							v = "move",
 							yl = "yank_filename",
 							yy = "yank_filepath",
 							x = "delete",
 							["<tab>"] = "preview",
 							[";"] = "open",
-							["é"] = "fuzzy_finder",
+							f = "fuzzy_finder",
+							["é"] = "filter_on_submit",
 							["."] = "toggle_hidden",
 						},
 					},
@@ -142,7 +141,7 @@ return {
 		cmd = { "Neotree" },
 		keys = {
 			{
-				file .. theme.buffers,
+				win .. theme.buffers,
 				"<cmd>Neotree buffers<cr>",
 				desc = "Neotree buffers",
 			},
@@ -152,12 +151,12 @@ return {
 				desc = "Neotree files",
 			},
 			{
-				file .. theme.hunk,
+				win .. theme.hunk,
 				"<cmd>Neotree git_status<cr>",
 				desc = "Neotree git",
 			},
 			{
-				file .. theme.symbol,
+				win .. theme.symbol,
 				"<cmd>Neotree document_symbols<cr>",
 				desc = "Neotree symbols",
 			},

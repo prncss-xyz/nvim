@@ -3,10 +3,10 @@ local not_vscode = require("my.conds").not_vscode
 local reverse = require("my.parameters").reverse
 local theme = require("my.parameters").theme
 local domain = require("my.parameters").domain
-local pane = domain.pane
 local pick = domain.pick
 local win = domain.win
 local web = domain.web
+local projects = require("plugins.snacks.projects")
 
 return {
 	{
@@ -20,7 +20,7 @@ return {
 					action = function(picker)
 						local cwd = vim.fn.getcwd()
 						picker:close()
-						require("my.open_project").open_project(cwd)
+						projects.open_project(cwd)
 					end,
 					desc = "open_project",
 				},
@@ -75,7 +75,7 @@ return {
 				desc = "Window Bufdelete",
 			},
 			{
-				pane .. theme.scratch,
+				win .. theme.scratch,
 				function()
 					Snacks.scratch.open()
 				end,
@@ -92,46 +92,7 @@ return {
 			},
 			{
 				pick .. "c",
-				function()
-					Snacks.picker.pick({
-						finder = "recent_projects",
-						transform= require("plugins.snacks.transform").filter_current_dir(),
-						format = "file",
-						dev = { "~/dev", "~/projects" },
-						confirm = "load_session",
-						patterns = { ".git", "_darcs", ".hg", ".bzr", ".svn", "package.json", "Makefile" },
-						recent = true,
-						matcher = {
-							frecency = true,
-							sort_empty = true,
-							cwd_bonus = false,
-						},
-						sort = { fields = { "score:desc", "idx" } },
-						win = {
-							preview = { minimal = true },
-							input = {
-								keys = {
-									-- every action will always first change the cwd of the current tabpage to the project
-									["<c-e>"] = { { "tcd", "picker_explorer" }, mode = { "n", "i" } },
-									["<c-f>"] = { { "tcd", "picker_files" }, mode = { "n", "i" } },
-									["<c-g>"] = { { "tcd", "picker_grep" }, mode = { "n", "i" } },
-									["<c-r>"] = { { "tcd", "picker_recent" }, mode = { "n", "i" } },
-									["<c-w>"] = { { "tcd" }, mode = { "n", "i" } },
-									["<c-t>"] = {
-										function(picker)
-											vim.cmd("tabnew")
-											Snacks.notify("New tab opened")
-											picker:close()
-											Snacks.picker.projects()
-										end,
-										mode = { "n", "i" },
-									},
-									["<cr>"] = { { "tcd", "open_project" }, mode = { "n", "i" } },
-								},
-							},
-						},
-					})
-				end,
+				projects.pick_project,
 				desc = "Pick Project",
 			},
 			{

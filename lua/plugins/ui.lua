@@ -1,5 +1,5 @@
 local domain = require("my.parameters").domain
-local pane = domain.pane
+local win = domain.win
 local theme = require("my.parameters").theme
 local reverse = require("my.parameters").reverse
 local not_vscode = require("my.conds").not_vscode
@@ -14,37 +14,37 @@ return {
 		cmd = { "Trouble" },
 		keys = {
 			{
-				pane .. "c",
+				win .. "c",
 				"<cmd>Trouble lsp_outgoing_calls toggle focus=false<cr>",
 				desc = "Trouble LSP",
 			},
 			{
-				pane .. reverse("c"),
+				win .. reverse("c"),
 				"<cmd>Trouble lsp_incoming_calls toggle focus=false<cr>",
 				desc = "Trouble LSP",
 			},
 			{
-				pane .. "l",
+				win .. "l",
 				"<cmd>Trouble lsp toggle focus=false<cr>",
 				desc = "Trouble LSP",
 			},
 			{
-				pane .. "q",
+				win .. "q",
 				"<cmd>Trouble qflist toggle<cr>",
 				desc = "Trouble Quickfix List",
 			},
 			{
-				pane .. theme.reference,
+				win .. theme.reference,
 				"<cmd>Trouble lsp_references toggle<cr>",
 				desc = "Trouble Diagnostics",
 			},
 			{
-				pane .. theme.symbol,
+				win .. reverse(theme.symbol),
 				"<cmd>Trouble symbols toggle focus=false<cr>",
 				desc = "Trouble Symbols",
 			},
 			{
-				pane .. theme.diagnostic,
+				win .. theme.diagnostic,
 				"<cmd>Trouble diagnostics toggle<cr>",
 				desc = "Trouble Diagnostics",
 			},
@@ -174,7 +174,7 @@ return {
 		},
 		keys = {
 			{
-				pane .. "q",
+				win .. "q",
 				function()
 					require("edgy").toggle()
 				end,
@@ -208,12 +208,23 @@ return {
 		},
 		keys = {
 			{
+				"<c-i>",
+				function()
+          print('toto')
+					require("my.windows").list()
+				end,
+				mode = { "n", "x", "i" },
+				desc = "List Windows",
+			},
+			{
 				"<c-o>",
 				function()
 					local id = require("window-picker").pick_window({
 						hint = "floating-big-letter",
 					})
-					vim.api.nvim_set_current_win(id)
+					if id then
+						vim.api.nvim_set_current_win(id)
+					end
 				end,
 				mode = { "n", "x", "i" },
 				desc = "Pick Window",

@@ -1,5 +1,5 @@
 local edit = require("my.parameters").domain.edit
-local pane = require("my.parameters").domain.pane
+local win = require("my.parameters").domain.win
 local theme = require("my.parameters").theme
 local personal = require("my.conds").personal
 
@@ -10,8 +10,20 @@ return {
 		cmd = { "GrugFar" },
 		keys = {
 			{
-				pane .. theme.find,
-				"<cmd>GrugFar<cr>",
+				win .. theme.find,
+				function()
+					require("grug-far").open({ engine = "ripgrep" })
+					-- require("grug-far").open({ engine = "astgrep" })
+					-- require("grug-far").open({ engine = "astgrep-rules" })
+				end,
+				desc = "GrugFar",
+			},
+			{
+				win .. theme.find,
+				function()
+					require("grug-far").with_visual_selection({ engine = "ripgrep" })
+				end,
+				mode = { "i" },
 				desc = "GrugFar",
 			},
 		},

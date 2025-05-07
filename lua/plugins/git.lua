@@ -36,7 +36,7 @@ return {
 			},
 		},
 		keys = { {
-			domain.win .. theme.hunk,
+			domain.file .. theme.hunk,
 			"<cmd>Neogit<cr>",
 			desc = "Neogit",
 		} },

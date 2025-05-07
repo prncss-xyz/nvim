@@ -44,7 +44,7 @@ return {
 				desc = "Overseer Run Command",
 			},
 			{
-				domain.win .. "b",
+				"ou",
 				"<cmd>OverseerToggle<cr>",
 				desc = "Overseer Toggle",
 			},

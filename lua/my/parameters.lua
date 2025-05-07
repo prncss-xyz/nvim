@@ -31,7 +31,6 @@ M.domain = {
 	appearance = "og",
 	run = "ou",
 	pick = "t",
-	pane = "r",
 }
 
 M.directions = {

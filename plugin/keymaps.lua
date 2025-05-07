@@ -107,6 +107,8 @@ vim.keymap.set("n", domain.appearance .. "c", function()
 	vim.o.concealcursor = vim.o.concealcursor == "n" and "" or "n"
 end, { desc = "toggle conceal cursor" })
 
+vim.keymap.set({ "i", "s", "c" }, "<c-v>", "<c-r><c-+>", { desc = "Paste" })
+
 vim.keymap.set("n", domain.move .. "a", function()
 	require("my.alternative_file").alternative({
 		create = true,

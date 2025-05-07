@@ -1,15 +1,15 @@
 - yanky
-  - fix yanky
+  - fix yanky (yank?)
   - check if yanky protects s mode
   - blink
-    - port https://github.com/chrisgrieser/cmp_yanky
+    - port `https://github.com/chrisgrieser/cmp_yanky`
 - comment
+- pick modified files
 
 - windows
 
   - better c-j
   - better m-t
-
 
 - window
   - implement alt buffer per window
@@ -27,5 +27,5 @@
 
 - test server
   - not ready to use
-      - https://github.com/kbwo/testing-language-server
-      - https://github.com/kbwo/testing-ls.nvim
+    - https://github.com/kbwo/testing-language-server
+    - https://github.com/kbwo/testing-ls.nvim

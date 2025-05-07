@@ -46,12 +46,6 @@ return {
 			},
 			{
 				"<c-v>",
-				"<c-o><plug>(YankyPutBefore)",
-				mode = { "i", "s", "c" },
-				desc = "Paste Before",
-			},
-			{
-				"<c-v>",
 				"<plug>(YankyPutBefore)",
 				mode = { "n", "x" },
 				desc = "Paste Before",
