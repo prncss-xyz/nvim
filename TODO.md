@@ -1,29 +1,37 @@
+# TOOD
+
+- flies
+
+  - buffer: we, ee
+  - tree sitter flies
+  - wrap, substitute: multi-char key
+  - cyclic iterators
+
+- dap
+
+- comment
+
+## Later
+
+- window
+
+  - implement alt buffer per window
+
+- snippets
+
+  - create file (template)
+
 - yanky
-  - fix yanky (yank?)
+
   - check if yanky protects s mode
   - blink
     - port `https://github.com/chrisgrieser/cmp_yanky`
-- comment
-- pick modified files
-
-- windows
-
-  - better c-j
-  - better m-t
-
-- window
-  - implement alt buffer per window
-  - implement alt window defaulting to other
-- flies
-  - lsp reference (illuminate) fly
-- files
-
-  - git toggle stage
-
-- snippets
-  - create file (template)
 
 ## Stuck
+
+- last jump (same file)
+
+- `mdx_analyzer`
 
 - test server
   - not ready to use

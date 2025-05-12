@@ -1,5 +1,6 @@
 local win = require("my.parameters").domain.win
 local theme = require("my.parameters").theme
+local avante = require("my.conds").avante
 
 return {
 	{
@@ -62,7 +63,7 @@ return {
 							gn = "next_git_modified",
 							h = "show_help",
 							i = "run_command",
-							oa = "avante_add_files",
+							oa = avante("avante_add_files"),
 							oo = "system_open",
 							oh = "open_split",
 							["o;"] = "open_vsplit",
@@ -146,7 +147,7 @@ return {
 				desc = "Neotree buffers",
 			},
 			{
-				win .. theme.file,
+				win .. theme.directory,
 				"<cmd>Neotree<cr>",
 				desc = "Neotree files",
 			},

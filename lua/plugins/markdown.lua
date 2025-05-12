@@ -1,4 +1,5 @@
 local not_vscode = require("my.conds").not_vscode
+local personal = require("my.conds").personal
 
 return {
 	{
@@ -35,7 +36,7 @@ return {
 				},
 			},
 		},
-		enabled = false,
+		enabled = personal,
 		cond = not_vscode,
 		ft = { "markdown", "tex", "gitcommit", "text" },
 	},

@@ -13,6 +13,7 @@ return {
 		opts = {
 			keymap = {
 				preset = "none",
+				["<c-space>"] = { "show" },
 				["<c-p>"] = { "select_prev", "fallback" },
 				["<c-n>"] = { "select_next", "fallback" },
 				["<c-g>"] = {

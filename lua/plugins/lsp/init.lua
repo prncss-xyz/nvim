@@ -24,6 +24,7 @@ return {
 		},
 		opts = {
 			automatic_installation = true,
+			automatic_enable = false,
 		},
 	},
 	{
@@ -32,21 +33,22 @@ return {
 			"williamboman/mason-lspconfig.nvim",
 		},
 		config = function()
-			for _, lsp in ipairs({
+			local lspconfig = require("lspconfig")
+			lspconfig.graphql.filetypes =
+				{ "graphql", "javascript", "typescript", "javascriptreact", "typescriptreact" }
+			for _, lsp in pairs({
 				"bashls",
-				"graphql",
 				"gopls",
+				"marksman",
 				"eslint",
+				"graphql",
 			}) do
-				require("lspconfig")[lsp].setup({
+				lspconfig[lsp].setup({
 					capabilities = require("plugins.lsp.utils").cmp_capabilities,
 				})
 			end
-			require("lspconfig").lua_ls.setup({
+			lspconfig.lua_ls.setup({
 				capabilities = require("plugins.lualine").cmp_capabilities,
-				on_attach = function(client, bufnr)
-					require("workspace-diagnostics").populate_workspace_diagnostics(client, bufnr)
-				end,
 				settings = {
 					Lua = {
 						telemetry = {

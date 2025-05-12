@@ -1,6 +1,6 @@
-local personal = require("my.conds").personal
-local work = require("my.conds").work
 local not_vscode = require("my.conds").not_vscode
+local avante = require("my.conds").avante
+local copilot = require("my.conds").copilot
 local domain = require("my.parameters").domain
 local pick = domain.pick
 local ai = domain.ai
@@ -25,14 +25,6 @@ return {
 			openai = {
 				api_key_name = "cmd:pass show openai.com/juliette.lamarche.xyz@gmail.com/keys/nvim",
 			},
-			web_search_engine = {
-				provider = "tavily", -- tavily, serpapi, searchapi, google, kagi, brave, or searxng
-				providers = {
-					tavily = {
-						api_key_name = "cmd:pass show tavily.com/juliette.lamarche.xyz@gmail.com/keys/nvim",
-					},
-				},
-			},
 			gemini = {
 				api_key_name = "cmd:pass show google.com/juliette.lamarche.xyz@gmail.com/keys/nvim",
 				endpoint = "https://generativelanguage.googleapis.com/v1beta/models",
@@ -43,6 +35,14 @@ return {
 				timeout = 30000, -- Timeout in milliseconds
 				temperature = 0,
 				max_tokens = 4096,
+			},
+			web_search_engine = {
+				provider = "tavily", -- tavily, serpapi, searchapi, google, kagi, brave, or searxng
+				providers = {
+					tavily = {
+						api_key_name = "cmd:pass show tavily.com/juliette.lamarche.xyz@gmail.com/keys/nvim",
+					},
+				},
 			},
 			mappings = {
 				ask = ai .. "a",
@@ -101,7 +101,8 @@ return {
 			"AvanteSwitchProvider",
 			"AvanteClear",
 		},
-		enabled = personal,
+		enabled = avante,
+		cond = not_vscode,
 	},
 	-- windsurf/codeium,
 	{
@@ -124,8 +125,8 @@ return {
 			"SupermavenClearLog",
 			"SupermavenToggle",
 		},
-		--[[ event = 'InsertEnter', ]]
-		enabled = personal,
+		event = "InsertEnter",
+		enabled = avante,
 		cond = not_vscode,
 	},
 	{
@@ -150,6 +151,30 @@ return {
 		},
 		cmd = { "Copilot" },
 		event = "InsertEnter",
-		enabled = work,
+		enabled = copilot,
+		cond = not_vscode,
+	},
+	{
+		"CopilotC-Nvim/CopilotChat.nvim",
+		dependencies = {
+			{ "zbirenbaum/copilot.lua" },
+			{ "nvim-lua/plenary.nvim" },
+		},
+		opts = {},
+		enabled = copilot,
+		cond = not_vscode,
+		cmd = {
+			"CopilotChat",
+			"CopilotChatOpen",
+			"CopilotChatClose",
+			"CopilotChatToggle",
+			"CopilotChatStop",
+			"CopilotChatReset",
+			"CopilotChatSave",
+			"CopilotChatLoad",
+			"CopilotChatPrompts",
+			"CopilotChatModels",
+			"CopilotChatAgents",
+		},
 	},
 }

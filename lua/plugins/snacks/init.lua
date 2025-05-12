@@ -6,6 +6,7 @@ local domain = require("my.parameters").domain
 local pick = domain.pick
 local win = domain.win
 local web = domain.web
+local move = domain.move
 local projects = require("plugins.snacks.projects")
 
 return {
@@ -91,7 +92,7 @@ return {
 				desc = "Pick Buffer",
 			},
 			{
-				pick .. "c",
+				pick .. theme.project,
 				projects.pick_project,
 				desc = "Pick Project",
 			},
@@ -112,7 +113,7 @@ return {
 				desc = "Pick Smart File",
 			},
 			{
-				pick .. theme.file,
+				pick .. theme.directory,
 				function()
 					-- like unique_file, but removes current file
 					local name = vim.api.nvim_buf_get_name(0)
@@ -140,9 +141,31 @@ return {
 			{
 				pick .. theme.hunk,
 				function()
-					Snacks.picker.git_diff()
+					Snacks.picker.pick({
+						finder = function(opts, ctx)
+							return require("snacks.picker.source.proc").proc({
+								opts,
+								{
+									cmd = "git",
+									args = { "ls-files", "-mo", "--exclude-standard" },
+									---@param item snacks.picker.finder.Item
+									transform = function(item)
+										item.file = item.text
+									end,
+								},
+							}, ctx)
+						end,
+						format = "file",
+						title = "Diff Files",
+						matcher = {
+							cwd_bonus = true,
+							frecency = true,
+							sort_empty = true,
+						},
+						transform = require("plugins.snacks.transform").modified(),
+					})
 				end,
-				desc = "Pick Diff",
+				desc = "Pick Diff Files",
 			},
 			{
 				pick .. "i",
@@ -189,9 +212,13 @@ return {
 			{
 				pick .. theme.symbol,
 				function()
-					Snacks.picker.lsp_symbols()
+					if vim.bo.filetype == "markdown" then
+						Snacks.picker.lsp_symbols()
+					else
+						Snacks.picker.lsp_symbols()
+					end
 				end,
-				desc = "Pick LSP Symbols",
+				desc = "Pick Symbols",
 			},
 			{
 				pick .. theme.work,
@@ -231,11 +258,28 @@ return {
 				desc = "Pick Picker",
 			},
 			{
+				"oz",
+				function()
+					Snacks.picker.zoxide()
+				end,
+				desc = "Pick Zoxide",
+			},
+			{
 				"oxu",
 				function()
-					Snacks.pickers.undo()
+					Snacks.picker.undo()
 				end,
-				desc = "Undo History",
+				desc = "Pick Undo History",
+			},
+			{
+				move .. theme.project,
+				projects.toggle_project,
+				desc = "Toggle Project",
+			},
+			{
+				move .. "e",
+				projects.toggle_file,
+				desc = "Toggle File",
 			},
 		},
 		cond = not_vscode,

@@ -52,12 +52,14 @@ return {
 			},
 			{
 				edit .. reverse("v"),
+				-- "P",
 				"<plug>(YankyPutBefore)",
 				mode = { "n", "x" },
 				desc = "Paste Before",
 			},
 			{
 				edit .. "v",
+				--  "p",
 				"<plug>(YankyPutAfter)",
 				mode = { "n", "x" },
 				desc = "Paste After",

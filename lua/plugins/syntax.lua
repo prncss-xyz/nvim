@@ -117,13 +117,21 @@ return {
 		enabled = false,
 		cond = not_vscode,
 	},
-	{
-		"code-biscuits/nvim-biscuits",
-		dependencies = { "nvim-treesitter/nvim-treesitter" },
-		opts = {
-			cursor_line_only = true,
-		},
-		event = "VeryLazy",
-		cond = not_vscode,
-	},
+  {
+    'nvim-treesitter/nvim-treesitter-context',
+    dependencies = { 'nvim-treesitter/nvim-treesitter' },
+    opts = {
+      min_window_height = 30,
+      max_lines = 5,
+      --[[ multiline_threshold = 3,
+      trim_scope = 'outer', ]]
+    },
+    cmd = {
+      'TSContextEnable',
+      'TSContextDisable',
+      'TSContextToggle',
+    },
+    event = 'VeryLazy',
+    enabled = true,
+  },
 }

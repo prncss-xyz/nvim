@@ -8,8 +8,7 @@ vim.filetype.add({
 		[".envrc"] = "bash",
 	},
 	extension = {
-		astro = "astro",
-		mdx = "mdx",
+		mdx = "markdown",
 	},
 	pattern = {
 		[".*/%.config/waybar/config"] = "json",

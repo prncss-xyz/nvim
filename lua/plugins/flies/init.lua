@@ -39,7 +39,8 @@ return {
 					j = require("flies.flies._ts"):new({ names = "block" }),
 					k = require("flies.flies._ts"):new({ names = "call" }),
 					l = require("flies.flies._ts"):new({ names = "loop" }),
-					r = require("flies.flies.number"),
+					r = require("flies.flies.reference"),
+					m = require("flies.flies.number"),
 					n = "forward",
 					o = require("flies.flies._ts"):new({
 						names = "argument",
@@ -123,21 +124,6 @@ return {
 						axis = "forward",
 						move = "left",
 						domain = "outer",
-					}, {
-						pr = function()
-							require("flies.actions.move_again").recompose2(function()
-								require("illuminate").goto_prev_reference(true)
-							end, function()
-								require("illuminate").goto_next_reference(true)
-							end, false)
-						end,
-						r = function()
-							require("flies.actions.move_again").recompose2(function()
-								require("illuminate").goto_prev_reference(true)
-							end, function()
-								require("illuminate").goto_next_reference(true)
-							end, true)
-						end,
 					})
 				end,
 				desc = "Move Forward",
@@ -290,10 +276,11 @@ return {
 				desc = "Substitute",
 			},
 			{
-				move .. "c",
+				move .. "w",
 				mode = { "n" },
 				function()
 					require("flies.flies.search").set_search(true)
+					require("hlslens").start()
 					vim.cmd("normal! *N")
 				end,
 				desc = "Search Current Word",
@@ -303,13 +290,14 @@ return {
 				mode = { "x" },
 				function()
 					require("flies.flies.search").set_search(true)
+					require("hlslens").start()
 					vim.cmd("normal! *N")
 				end,
 				desc = "Search Current Selection",
 			},
 			{
 				"<c-a>",
-				mode = { "n", "i", "c" },
+				mode = { "i", "c" },
 				function()
 					require("flies.flies.line"):move({
 						axis = "best",
@@ -319,20 +307,6 @@ return {
 				end,
 				desc = "Move Begin of Line",
 			},
-			--[[
-			{
-				"<c-e>",
-				mode = { "n", "i", "c" },
-				function()
-					require("flies.flies.line"):move({
-						axis = "best",
-						domain = "outer",
-						move = "right",
-					})
-				end,
-				desc = "Move End of Line",
-			},
-      --]]
 			{
 				"<m-b>",
 				mode = { "n", "i", "c" },

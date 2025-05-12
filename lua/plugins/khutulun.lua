@@ -75,14 +75,14 @@ return {
 			{
 				domain.file .. "yr",
 				function()
-					require("khutulun").yank_relative_filepath()
+					require("khutulun").yank_relative_path()
 				end,
 				desc = "Yank Relative Filepath",
 			},
 			{
 				domain.file .. "ya",
 				function()
-					require("khutulun").yank_absolute_filepath()
+					require("khutulun").yank_absolute_path()
 				end,
 				desc = "Yank Absolute Filepath",
 			},

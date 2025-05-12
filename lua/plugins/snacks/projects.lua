@@ -1,18 +1,72 @@
 local M = {}
 
-function M.open_project(cwd)
+function M.toggle_project()
+	M.open_project(vim.env.HOME, { vim.fn.getcwd() }, M.pick_project)
+end
+
+function M.toggle_file()
+	M.open_project(vim.fn.getcwd(), { vim.api.nvim_buf_get_name(0) })
+end
+
+local function get_test(cwd, exclude)
+	return function(fname)
+		if fname == "" then
+			return false
+		end
+		if exclude then
+			for _, ex in pairs(exclude) do
+				if vim.startswith(fname, ex) then
+					return false
+				end
+			end
+		end
+		return vim.startswith(fname, cwd) and vim.fn.filereadable(fname) == 1
+	end
+end
+
+-- FIXME:
+function M.toggle_cursor()
+	local bufnr = vim.api.nvim_win_get_buf(0)
+	local jumplist, len = unpack(vim.fn.getjumplist())
+	local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+	for i = len, 1, -1 do
+		if bufnr == jumplist[i].bufnr then
+			local jrow = jumplist[i].lnum
+			local jcol = jumplist[i].col
+			if row ~= jrow and col ~= jcol then
+				vim.api.nvim_win_set_cursor(0, { jrow, jcol })
+				return
+			end
+		end
+	end
+end
+
+function M.open_project(cwd, exclude, fallback)
 	if not vim.endswith(cwd, "/") then
 		cwd = cwd .. "/"
 	end
-	for _, file in ipairs(vim.v.oldfiles) do
-		if vim.startswith(file, cwd) and vim.fn.filereadable(file) == 1 then
-			vim.cmd.edit(file)
-			return
+	local test = get_test(cwd, exclude)
+	local jumplist, len = unpack(vim.fn.getjumplist())
+	local done = {}
+	for i = len, 1, -1 do
+		local bufnr = jumplist[i].bufnr
+		if not done[bufnr] then
+			done[bufnr] = true
+			local fname = vim.api.nvim_buf_get_name(bufnr)
+			if test(fname) then
+				vim.cmd.edit(fname)
+				return
+			end
 		end
 	end
-	Snacks.picker.smart({
-		cwd = cwd,
-	})
+	if fallback then
+		fallback(cwd)
+	else
+		Snacks.picker.smart({
+			cwd = cwd,
+			transform = require("plugins.snacks.transform").exclude_current(),
+		})
+	end
 end
 
 function M.pick_project()

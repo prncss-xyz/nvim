@@ -13,11 +13,12 @@ M.theme = {
 	reference = "r",
 	definition = "d",
 	hunk = "h",
-	file = "f",
+	directory = "f",
 	run = "u",
 	comment = "k",
 	buffers = "b",
 	scratch = "o",
+	project = "c",
 }
 
 M.domain = {

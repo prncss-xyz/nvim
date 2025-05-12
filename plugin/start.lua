@@ -23,10 +23,6 @@ vim.api.nvim_create_autocmd("VimEnter", {
 			cwd = vim.fn.getcwd()
 		end
 		vim.schedule(function()
-			if cwd == vim.fn.getenv("HOME") then
-				require("plugins.snacks.projects").pick_project()
-				return
-			end
 			require("plugins.snacks.projects").open_project(cwd)
 		end)
 	end,

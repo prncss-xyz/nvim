@@ -23,7 +23,7 @@ return {
 				function()
 					require("grug-far").with_visual_selection({ engine = "ripgrep" })
 				end,
-				mode = { "i" },
+				mode = { "x" },
 				desc = "GrugFar",
 			},
 		},

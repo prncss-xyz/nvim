@@ -10,14 +10,26 @@ local contents = ls.function_node(function(_, snip)
 end, {})
 local fmt = require("luasnip.extras.fmt").fmt
 
-M.b = {
+M.B = {
 	left = "(",
 	right = ")",
+	snip = not_vscode({
+		all = fmt("([][])", {
+			contents,
+			i(1, ""),
+		}, { delimiters = "[]" }),
+	}),
 }
 
-M.B = {
+M.b = {
 	left = "{",
 	right = "}",
+	snip = not_vscode({
+		all = fmt("{[][]}", {
+			contents,
+			i(1, ""),
+		}, { delimiters = "[]" }),
+	}),
 }
 
 M.i = {
@@ -92,14 +104,26 @@ M.l = {
 	}),
 }
 
-M.q = {
+M.Q = {
 	left = '"',
 	right = '"',
+	snip = not_vscode({
+		all = fmt('"[][]"', {
+			contents,
+			i(1, ""),
+		}, { delimiters = "[]" }),
+	}),
 }
 
-M.Q = {
+M.q = {
 	left = "`",
 	right = "`",
+	snip = not_vscode({
+		all = fmt("`[][]`", {
+			contents,
+			i(1, ""),
+		}, { delimiters = "[]" }),
+	}),
 }
 
 M.h = {
@@ -165,9 +189,35 @@ M.v = {
 	right = "_",
 }
 
+-- TODO:
+M.pw = {
+	left = " ",
+	snip = not_vscode({
+		all = fmt("[] []", {
+			contents,
+			i(1, ""),
+		}, { delimiters = "[]" }),
+	}),
+}
+
 M.w = {
 	left = " ",
-	right = " ",
+	snip = not_vscode({
+		all = fmt("[] []", {
+			i(1, ""),
+			contents,
+		}, { delimiters = "[]" }),
+	}),
+}
+
+M[","] = {
+	left = ", ",
+	snip = not_vscode({
+		all = fmt("[], []", {
+			i(1, ""),
+			contents,
+		}, { delimiters = "[]" }),
+	}),
 }
 
 return M

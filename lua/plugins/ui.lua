@@ -197,6 +197,7 @@ return {
 		commit = "6382540",
 		opts = {
 			selection_chars = require("my.parameters").selection_chars:upper(),
+			hint = "floating-big-letter",
 			show_prompt = false,
 			filter_rules = {
 				include_current_win = false,
@@ -210,7 +211,6 @@ return {
 			{
 				"<c-i>",
 				function()
-          print('toto')
 					require("my.windows").list()
 				end,
 				mode = { "n", "x", "i" },
@@ -219,9 +219,7 @@ return {
 			{
 				"<c-o>",
 				function()
-					local id = require("window-picker").pick_window({
-						hint = "floating-big-letter",
-					})
+					local id = require("window-picker").pick_window()
 					if id then
 						vim.api.nvim_set_current_win(id)
 					end
