@@ -1,23 +1,24 @@
 local not_vscode = require("my.conds").not_vscode
 local personal = require("my.conds").personal
+local dap = require("my.parameters").domain.dap
 
 return {
 	{
 		"jbyuki/one-small-step-for-vimkind",
 		keys = {
 			{
-				"<leader>dvL",
+				dap .. "vL",
 				function()
 					require("osv").launch({ port = 8086 })
 				end,
-				desc = "Launch OSV",
+				desc = "DAP OSV Launch",
 			},
 			{
-				"<leader>dvl",
+				dap .. "vl",
 				function()
 					require("osv").run_this({ port = 8086 })
 				end,
-				desc = "Launch OSV",
+				desc = "DAP OSV Run This",
 			},
 		},
 		cond = not_vscode,
@@ -68,42 +69,42 @@ return {
 		lazy = false,
 		opts = {},
 		config = function()
-			local dap = require("dap")
+			local nvim_dap = require("dap")
 			local ui = "dv"
 			if ui == "dapui" then
 				local dapui = require("dapui")
-				dap.listeners.before.attach.dapui_config = function()
+				nvim_dap.listeners.before.attach.dapui_config = function()
 					dapui.open()
 				end
-				dap.listeners.before.launch.dapui_config = function()
+				nvim_dap.listeners.before.launch.dapui_config = function()
 					dapui.open()
 				end
-				dap.listeners.before.event_terminated.dapui_config = function()
+				nvim_dap.listeners.before.event_terminated.dapui_config = function()
 					dapui.close()
 				end
-				dap.listeners.before.event_exited.dapui_config = function()
+				nvim_dap.listeners.before.event_exited.dapui_config = function()
 					dapui.close()
 				end
 			elseif ui == "dv" then
 				local dv = require("dap-view")
-				dap.listeners.before.attach["dap-view-config"] = function()
+				nvim_dap.listeners.before.attach["dap-view-config"] = function()
 					dv.open()
 				end
-				dap.listeners.before.launch["dap-view-config"] = function()
+				nvim_dap.listeners.before.launch["dap-view-config"] = function()
 					dv.open()
 				end
-				dap.listeners.before.event_terminated["dap-view-config"] = function()
+				nvim_dap.listeners.before.event_terminated["dap-view-config"] = function()
 					dv.close()
 				end
-				dap.listeners.before.event_exited["dap-view-config"] = function()
+				nvim_dap.listeners.before.event_exited["dap-view-config"] = function()
 					dv.close()
 				end
 			end
 			local packages = vim.fn.stdpath("data") .. "/mason/packages"
-			dap.adapters.nlua = function(callback, config)
+			nvim_dap.adapters.nlua = function(callback, config)
 				callback({ type = "server", host = config.host or "127.0.0.1", port = config.port or 8086 })
 			end
-			dap.adapters["pwa-node"] = {
+			nvim_dap.adapters["pwa-node"] = {
 				type = "server",
 				host = "localhost",
 				port = "${port}",
@@ -115,127 +116,127 @@ return {
 					},
 				},
 			}
-			require("my.tables").deep_merge(dap.configurations, require("plugins.dap.configurations"))
+			require("my.tables").deep_merge(nvim_dap.configurations, require("plugins.dap.configurations"))
 		end,
 		keys = {
 			{
-				"<leader>dB",
+				dap .. "B",
 				function()
 					require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
 				end,
-				desc = "Breakpoint Condition",
+				desc = "DAP Breakpoint Condition",
 			},
 			{
-				"<leader>db",
+				dap .. "b",
 				function()
 					require("dap").toggle_breakpoint()
 				end,
-				desc = "Toggle Breakpoint",
+				desc = "DAP Toggle Breakpoint",
 			},
 			{
-				"<leader>dc",
+				dap .. "c",
 				function()
 					require("dap").continue()
 				end,
-				desc = "Run/Continue",
+				desc = "DAP Run/Continue",
 			},
 			{
-				"<leader>da",
+				dap .. "a",
 				function()
 					require("dap").continue()
 				end,
-				desc = "Run with Args",
+				desc = "DAP Run with Args",
 			},
 			{
-				"<leader>dC",
+				dap .. "C",
 				function()
 					require("dap").run_to_cursor()
 				end,
-				desc = "Run to Cursor",
+				desc = "DAP Run to Cursor",
 			},
 			{
-				"<leader>dg",
+				dap .. "g",
 				function()
 					require("dap").goto_()
 				end,
-				desc = "Go to Line (No Execute)",
+				desc = "DAP Go to Line (No Execute)",
 			},
 			{
-				"<leader>di",
+				dap .. "i",
 				function()
 					require("dap").step_into()
 				end,
-				desc = "Step Into",
+				desc = "DAP Step Into",
 			},
 			{
-				"<leader>dj",
+				dap .. "j",
 				function()
 					require("dap").down()
 				end,
-				desc = "Down",
+				desc = "DAP Down",
 			},
 			{
-				"<leader>dk",
+				dap .. "k",
 				function()
 					require("dap").up()
 				end,
-				desc = "Up",
+				desc = "DAP Up",
 			},
 			{
-				"<leader>dl",
+				dap .. "l",
 				function()
 					require("dap").run_last()
 				end,
-				desc = "Run Last",
+				desc = "DAP Run Last",
 			},
 			{
-				"<leader>do",
+				dap .. "o",
 				function()
 					require("dap").step_out()
 				end,
-				desc = "Step Out",
+				desc = "DAP Step Out",
 			},
 			{
-				"<leader>dO",
+				dap .. "O",
 				function()
 					require("dap").step_over()
 				end,
-				desc = "Step Over",
+				desc = "DAP Step Over",
 			},
 			{
-				"<leader>dP",
+				dap .. "P",
 				function()
 					require("dap").pause()
 				end,
-				desc = "Pause",
+				desc = "DAP Pause",
 			},
 			{
-				"<leader>dr",
+				dap .. "r",
 				function()
 					require("dap").repl.toggle()
 				end,
-				desc = "Toggle REPL",
+				desc = "DAP Toggle REPL",
 			},
 			{
-				"<leader>ds",
+				dap .. "s",
 				function()
 					require("dap").session()
 				end,
-				desc = "Session",
+				desc = "DAP Session",
 			},
 			{
-				"<leader>dt",
+				dap .. "t",
 				function()
 					require("dap").terminate()
 				end,
-				desc = "Terminate",
+				desc = "DAP Terminate",
 			},
 			{
-				"<leader>dw",
+				dap .. "w",
 				function()
 					require("dap.ui.widgets").hover()
 				end,
-				desc = "Widgets",
+				desc = "DAP Widgets",
 			},
 		},
 		cond = not_vscode,

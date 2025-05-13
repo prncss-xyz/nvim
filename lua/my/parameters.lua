@@ -25,6 +25,7 @@ M.domain = {
 	move = "g",
 	edit = "h",
 	file = "of",
+	git = "oh",
 	win = "r",
 	ai = "oa",
 	web = "oy",
@@ -32,6 +33,7 @@ M.domain = {
 	appearance = "og",
 	run = "ou",
 	pick = "t",
+  dap = "od",
 }
 
 M.directions = {

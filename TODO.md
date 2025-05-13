@@ -13,6 +13,8 @@
 
 ## Later
 
+- toggle zoom window
+
 - window
 
   - implement alt buffer per window
