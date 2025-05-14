@@ -142,13 +142,6 @@ return {
 				},
 			},
 		},
-		keymaps = {
-			{
-				ai .. "a",
-				"<cmd>CopilotChatOpen<cr>",
-				desc = "Coplot Chat",
-			},
-		},
 		cmd = { "Copilot" },
 		event = "InsertEnter",
 		enabled = copilot,
@@ -160,7 +153,59 @@ return {
 			{ "zbirenbaum/copilot.lua" },
 			{ "nvim-lua/plenary.nvim" },
 		},
-		opts = {},
+		opts = {
+			prompts = {
+				Todo = {
+					prompt = "Replace all TODO comments with relevent code",
+					description = "Complete the work",
+				},
+			},
+		},
+		keys = {
+			{
+				ai .. "a",
+				"<cmd>CopilotChatToggle<cr>",
+				desc = "Coplot Chat Toggle",
+				mode = { "n", "x" },
+			},
+			{
+				ai .. "x",
+				"<cmd>CopilotChatStop<cr>",
+				desc = "Coplot Chat Stop",
+				mode = { "n", "x" },
+			},
+			{
+				ai .. "r",
+				"<cmd>CopilotChatReset<cr>",
+				desc = "Coplot Chat Reset",
+			},
+			{
+				ai .. "s",
+				"<cmd>CopilotChatSave<cr>",
+				desc = "Coplot Chat Save",
+			},
+			{
+				ai .. "l",
+				"<cmd>CopilotChatLoad<cr>",
+				desc = "Coplot Chat Load",
+			},
+			{
+				pick .. "a",
+				"<cmd>CopilotChatPrompts<cr>",
+				desc = "Coplot Chat Prompts",
+				mode = { "n", "x" },
+			},
+			{
+				ai .. "m",
+				"<cmd>CopilotChatModels<cr>",
+				desc = "Coplot Chat Models",
+			},
+			{
+				ai .. "g",
+				"<cmd>CopilotChatAgents<cr>",
+				desc = "Coplot Chat Agents",
+			},
+		},
 		enabled = copilot,
 		cond = not_vscode,
 		cmd = {

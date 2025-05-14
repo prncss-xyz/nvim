@@ -32,6 +32,7 @@ return {
 		"rebelot/kanagawa.nvim",
 	}),
 	colorscheme("rose-pine", {
+    name = "rose-pine",
 		"rose-pine/neovim",
 	}),
 	colorscheme("gruvbox", {

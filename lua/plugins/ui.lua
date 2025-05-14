@@ -135,40 +135,26 @@ return {
 			},
 			left = {
 				{
-					title = "Overseer",
 					ft = "OverseerList",
 				},
 				{
-					title = "Aerial",
 					ft = "aerial",
 				},
 				{
-					title = "Trouble",
 					ft = "trouble",
 				},
 				{
-					title = "Neo-Tree",
 					ft = "neo-tree",
 				},
 				{
-					ft = "Outline",
-					open = "SymbolsOutlineOpen",
-				},
-				-- any other neo-tree windows
-				"neo-tree",
-				{
 					ft = "codecompanion",
-					title = "Code Companion Chat",
 				},
-			},
-			right = {
+				{
+					ft = "copilot-chat",
+					size = { width = 50 },
+				},
 				{
 					ft = "grug-far",
-					title = "Grug Far",
-				},
-				{
-					ft = "mchat",
-					title = "Mchat",
 				},
 			},
 		},

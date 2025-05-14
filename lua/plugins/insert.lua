@@ -13,13 +13,9 @@ return {
 		opts = {
 			keymap = {
 				preset = "none",
-				["<c-space>"] = { "show" },
-				["<c-p>"] = { "select_prev", "fallback" },
-				["<c-n>"] = { "select_next", "fallback" },
-				["<c-g>"] = {
-					"accept",
-					"fallback",
-				},
+				["<c-p>"] = { "show", "select_prev", "fallback" },
+				["<c-n>"] = { "show", "select_next", "fallback" },
+				["<c-g>"] = { "accept", "fallback" },
 			},
 			snippets = { preset = "luasnip" },
 			sources = {

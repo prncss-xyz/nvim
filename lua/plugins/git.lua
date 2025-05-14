@@ -207,5 +207,13 @@ return {
 			"DiffviewToggleFiles",
 			"DiffviewRefresh",
 		},
+		keys = {
+			{ git .. "e", "<cmd>DiffviewFileHistory %<CR>", desc = "Diffview Current File History" },
+			{ git .. "E", "<cmd>DiffviewOpen<CR>", desc = "Diffview Open" },
+			{ git .. "q", "<cmd>DiffviewClose<CR>", desc = "Diffview Close" },
+			{ git .. "F", "<cmd>DiffviewFocusFiles<CR>", desc = "Diffview Focus Files" },
+			{ git .. "T", "<cmd>DiffviewToggleFiles<CR>", desc = "Diffview Toggle Files" },
+			{ git .. "R", "<cmd>DiffviewRefresh<CR>", desc = "Diffview Refresh" },
+		},
 	},
 }

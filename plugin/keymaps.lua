@@ -43,7 +43,7 @@ vim.keymap.set("n", edit .. "<cr>", function()
 end, { desc = "Blank Line Below" })
 
 vim.keymap.set("n", "ow", function()
-  local bufnr = vim.api.nvim_get_current_buf()
+	local bufnr = vim.api.nvim_get_current_buf()
 	dd(require("illuminate.reference").buf_get_references(bufnr))
 end, { desc = "Surround" })
 
@@ -70,6 +70,11 @@ vim.keymap.set("n", win .. "k", function()
 end, { desc = "Keep Window (Close Other)" })
 vim.keymap.set("n", win .. directions.right, "<cmd>vsplit<cr>", { desc = "Window Split Right" })
 vim.keymap.set("n", win .. directions.down, "<cmd>split<cr>", { desc = "Window Split Down" })
+vim.keymap.set("n", win .. "g", function()
+	require("my.zoom").zoom(0)
+end, { desc = "Window Zoom" })
+
+vim.keymap.set("n", 'ov', "gv", { desc = "reselect" })
 
 vim.keymap.set("n", web .. "d", function()
 	require("my.browser").server()
@@ -139,3 +144,5 @@ vim.keymap.set("n", domain.move .. "a", function()
 		},
 	})
 end, { desc = "Alternative File" })
+
+vim.keymap.set("n", "ol", "<cmd>Lazy<cr>", { desc = "Lazy" })

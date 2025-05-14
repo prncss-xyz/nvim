@@ -1,19 +1,29 @@
 # TOOD
 
+- grugfar, grep: prefil with selection
+
+- ge: apply only to regular buffer
+
+- dap
+    - vitest
+    - signs
+
+- comment
+
+- more normal direction
+
 - flies
 
   - buffer: we, ee
   - tree sitter flies
+  - remove to bracket
+  - remove to char (backward)
+    - dfc => dfsc
+  - `f,` should be consistent with `fsc`
   - wrap, substitute: multi-char key
   - cyclic iterators
 
-- dap
-
-- comment
-
 ## Later
-
-- toggle zoom window
 
 - window
 
@@ -25,13 +35,10 @@
 
 - yanky
 
-  - check if yanky protects s mode
   - blink
     - port `https://github.com/chrisgrieser/cmp_yanky`
 
 ## Stuck
-
-- last jump (same file)
 
 - `mdx_analyzer`
 
