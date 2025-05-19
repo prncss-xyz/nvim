@@ -8,44 +8,58 @@ return {
 	{
 		"folke/trouble.nvim",
 		opts = {
-			position = "left",
+			win = { position = "bottom" },
 			use_diagnostic_signs = true,
 		},
 		cmd = { "Trouble" },
 		keys = {
 			{
 				win .. "c",
-				"<cmd>Trouble lsp_outgoing_calls toggle focus=false<cr>",
-				desc = "Trouble LSP",
+				function()
+					require("my.ui_toggle").activate("trouble", "Trouble lsp_outgoing_calls toggle focus=false")
+				end,
+				desc = "Trouble LSP Outgoing Calls",
 			},
 			{
 				win .. reverse("c"),
-				"<cmd>Trouble lsp_incoming_calls toggle focus=false<cr>",
-				desc = "Trouble LSP",
+				function()
+					require("my.ui_toggle").activate("trouble", "Trouble lsp_incoming_calls toggle focus=false")
+				end,
+				desc = "Trouble LSP Incomming Calls",
 			},
 			{
 				win .. "l",
-				"<cmd>Trouble lsp toggle focus=false<cr>",
+				function()
+					require("my.ui_toggle").activate("trouble", "Trouble lsp focus=false")
+				end,
 				desc = "Trouble LSP",
 			},
 			{
 				win .. "q",
-				"<cmd>Trouble qflist toggle<cr>",
+				function()
+					require("my.ui_toggle").activate("trouble", "Trouble qflist toggle")
+				end,
 				desc = "Trouble Quickfix List",
 			},
 			{
 				win .. theme.reference,
-				"<cmd>Trouble lsp_references toggle<cr>",
+				function()
+					require("my.ui_toggle").activate("trouble", "Trouble lsp_references toggle")
+				end,
 				desc = "Trouble Diagnostics",
 			},
 			{
-				win .. reverse(theme.symbol),
-				"<cmd>Trouble symbols toggle focus=false<cr>",
+				win .. theme.symbol,
+				function()
+					require("my.ui_toggle").activate("trouble", "Trouble symbols toggle focus=false win.position=bottom")
+				end,
 				desc = "Trouble Symbols",
 			},
 			{
 				win .. theme.diagnostic,
-				"<cmd>Trouble diagnostics toggle<cr>",
+				function()
+					require("my.ui_toggle").activate("trouble", "Trouble diagnostics toggle")
+				end,
 				desc = "Trouble Diagnostics",
 			},
 			{
@@ -122,54 +136,6 @@ return {
 		cond = not_vscode,
 	},
 	{
-		"folke/edgy.nvim",
-		event = "VeryLazy",
-		init = function()
-			vim.opt.laststatus = 3
-			vim.opt.splitkeep = "screen"
-		end,
-		opts = {
-			options = {
-				left = { size = 40 },
-				right = { size = 60 },
-			},
-			left = {
-				{
-					ft = "OverseerList",
-				},
-				{
-					ft = "aerial",
-				},
-				{
-					ft = "trouble",
-				},
-				{
-					ft = "neo-tree",
-				},
-				{
-					ft = "codecompanion",
-				},
-				{
-					ft = "copilot-chat",
-					size = { width = 50 },
-				},
-				{
-					ft = "grug-far",
-				},
-			},
-		},
-		keys = {
-			{
-				win .. "q",
-				function()
-					require("edgy").toggle()
-				end,
-				desc = "Pick Window",
-			},
-		},
-		cond = not_vscode,
-	},
-	{
 		"kevinhwang91/nvim-hlslens",
 		name = "hlslens",
 		opts = {
@@ -201,6 +167,16 @@ return {
 				end,
 				mode = { "n", "x", "i" },
 				desc = "List Windows",
+			},
+			{
+				"rw",
+				function()
+					local id = require("window-picker").pick_window()
+					if id then
+						require("my.windows").swap(id)
+					end
+				end,
+				desc = "Swap Window",
 			},
 			{
 				"<c-o>",

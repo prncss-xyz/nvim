@@ -26,7 +26,6 @@ vim.keymap.set({ "n", "x" }, "V", "<c-v>", {
 	desc = "Visual Bloc",
 })
 vim.keymap.set("n", "<c-q>", "<cmd>quitall!<cr>", { desc = "quitall" })
--- vim.keymap.set("n", move .. "e", "<cmd>b#<cr>", { desc = "Toggle Last File" })
 vim.keymap.set({ "n", "x", "o" }, directions.left, "h", { desc = "Left" })
 vim.keymap.set({ "n", "x", "o" }, directions.right, "l", { desc = "Right" })
 vim.keymap.set({ "n", "x", "o" }, directions.up, "gk", { desc = "Up" })
@@ -62,7 +61,7 @@ end, {
 	desc = "Close Window",
 })
 vim.keymap.set("n", "<c-j>", function()
-	require("my.windows").focus_last()
+	require("my.windows").focus_last_win()
 end, { desc = "Window Toggle" })
 -- vim.keymap.set("n", "<c-j>", "<c-w><c-p>", { desc = "Window Toggle" })
 vim.keymap.set("n", win .. "k", function()
@@ -74,7 +73,7 @@ vim.keymap.set("n", win .. "g", function()
 	require("my.zoom").zoom(0)
 end, { desc = "Window Zoom" })
 
-vim.keymap.set("n", 'ov', "gv", { desc = "reselect" })
+vim.keymap.set("n", "ov", "gv", { desc = "reselect" })
 
 vim.keymap.set("n", web .. "d", function()
 	require("my.browser").server()
@@ -146,3 +145,7 @@ vim.keymap.set("n", domain.move .. "a", function()
 end, { desc = "Alternative File" })
 
 vim.keymap.set("n", "ol", "<cmd>Lazy<cr>", { desc = "Lazy" })
+
+vim.keymap.set("n", win .. "q", require("my.ui_toggle").toggle, { desc = "Close Widget" })
+
+vim.keymap.set("n", "oq", require("my.lsp").stop_client, { desc = "Stop Lsp Clien" })

@@ -34,19 +34,20 @@ return {
 		},
 		config = function()
 			local lspconfig = require("lspconfig")
-			lspconfig.graphql.filetypes =
-				{ "graphql", "javascript", "typescript", "javascriptreact", "typescriptreact" }
 			for _, lsp in pairs({
 				"bashls",
 				"gopls",
 				"marksman",
 				"eslint",
-				"graphql",
 			}) do
 				lspconfig[lsp].setup({
 					capabilities = require("plugins.lsp.utils").cmp_capabilities,
 				})
 			end
+			lspconfig.graphql.setup({
+				capabilities = require("plugins.lsp.utils").cmp_capabilities,
+				filetypes = { "graphql", "javascript", "typescript", "javascriptreact", "typescriptreact" },
+			})
 			lspconfig.lua_ls.setup({
 				capabilities = require("plugins.lualine").cmp_capabilities,
 				settings = {

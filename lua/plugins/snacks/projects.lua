@@ -1,11 +1,17 @@
 local M = {}
 
+local is_file_cur_win = require("my.windows").is_file_cur_win
+
 function M.toggle_project()
-	M.open_project(vim.env.HOME, { vim.fn.getcwd() }, M.pick_project)
+	if is_file_cur_win() then
+		M.open_project(vim.env.HOME, { vim.fn.getcwd() }, M.pick_project)
+	end
 end
 
 function M.toggle_file()
-	M.open_project(vim.fn.getcwd(), { vim.api.nvim_buf_get_name(0) })
+	if is_file_cur_win() then
+		M.open_project(vim.fn.getcwd(), { vim.api.nvim_buf_get_name(0) })
+	end
 end
 
 local function get_test(cwd, exclude)

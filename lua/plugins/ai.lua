@@ -145,7 +145,7 @@ return {
 		cmd = { "Copilot" },
 		event = "InsertEnter",
 		enabled = copilot,
-		cond = not_vscode,
+		cond = false and not_vscode,
 	},
 	{
 		"CopilotC-Nvim/CopilotChat.nvim",
@@ -157,22 +157,23 @@ return {
 			prompts = {
 				Todo = {
 					prompt = "Replace all TODO comments with relevent code",
-					description = "Complete the work",
+					description = "Complete the work.",
 				},
 			},
 		},
 		keys = {
 			{
 				ai .. "a",
-				"<cmd>CopilotChatToggle<cr>",
-				desc = "Coplot Chat Toggle",
+				function()
+					require("my.ui_toggle").activate("copilot")
+				end,
+				desc = "Coplot Chat Open",
 				mode = { "n", "x" },
 			},
 			{
 				ai .. "x",
 				"<cmd>CopilotChatStop<cr>",
 				desc = "Coplot Chat Stop",
-				mode = { "n", "x" },
 			},
 			{
 				ai .. "r",
@@ -191,7 +192,9 @@ return {
 			},
 			{
 				pick .. "a",
-				"<cmd>CopilotChatPrompts<cr>",
+				function()
+					require("my.ui_toggle").activate("copilot", "CopilotChatPrompts")
+				end,
 				desc = "Coplot Chat Prompts",
 				mode = { "n", "x" },
 			},

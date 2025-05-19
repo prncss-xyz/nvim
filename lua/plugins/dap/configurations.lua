@@ -15,7 +15,7 @@ local jsOrTs = {
 		request = "launch",
 		cwd = vim.fn.getcwd(),
 		program = "${workspaceFolder}/node_modules/vitest/vitest.mjs",
-		args = { "run", "${file}" },
+		args = { "run", "${file}", "--test-timeout=0", "--no-file-parallelism" },
 		autoAttachChildProcesses = true,
 		smartStep = true,
 		console = "integratedTerminal",

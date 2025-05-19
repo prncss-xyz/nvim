@@ -3,6 +3,9 @@ local win = require("my.parameters").domain.win
 local theme = require("my.parameters").theme
 local personal = require("my.conds").personal
 
+local engine = "rigrep"
+-- local engine = "astgrep"
+
 return {
 	{
 		"MagicDuck/grug-far.nvim",
@@ -12,16 +15,18 @@ return {
 			{
 				win .. theme.find,
 				function()
-					require("grug-far").open({ engine = "ripgrep" })
-					-- require("grug-far").open({ engine = "astgrep" })
-					-- require("grug-far").open({ engine = "astgrep-rules" })
+					require("my.ui_toggle").activate("grugfar", function()
+						require("grug-far").open({ engine = engine })
+					end)
 				end,
 				desc = "GrugFar",
 			},
 			{
 				win .. theme.find,
 				function()
-					require("grug-far").with_visual_selection({ engine = "ripgrep" })
+					require("my.ui_toggle").activate("grugfar", function()
+						require("grug-far").with_visual_selection({ engine = engine })
+					end)
 				end,
 				mode = { "x" },
 				desc = "GrugFar",

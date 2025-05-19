@@ -65,10 +65,9 @@ return {
 	},
 	{
 		"ajouellette/sway-vim-syntax",
-		enabled = false,
 		ft = "sway",
 		cond = not_vscode,
-		enabled = personal,
+		enabled = false and personal,
 	},
 	{
 		"folke/todo-comments.nvim",
@@ -100,7 +99,6 @@ return {
 	},
 	{
 		"nvim-treesitter/nvim-treesitter-context",
-		commit = "ff1d12c",
 		dependencies = { "nvim-treesitter/nvim-treesitter" },
 		opts = {
 			min_window_height = 30,
@@ -117,21 +115,21 @@ return {
 		enabled = false,
 		cond = not_vscode,
 	},
-  {
-    'nvim-treesitter/nvim-treesitter-context',
-    dependencies = { 'nvim-treesitter/nvim-treesitter' },
-    opts = {
-      min_window_height = 30,
-      max_lines = 5,
-      --[[ multiline_threshold = 3,
+	{
+		"nvim-treesitter/nvim-treesitter-context",
+		dependencies = { "nvim-treesitter/nvim-treesitter" },
+		opts = {
+			min_window_height = 30,
+			max_lines = 5,
+			--[[ multiline_threshold = 3,
       trim_scope = 'outer', ]]
-    },
-    cmd = {
-      'TSContextEnable',
-      'TSContextDisable',
-      'TSContextToggle',
-    },
-    event = 'VeryLazy',
-    enabled = true,
-  },
+		},
+		cmd = {
+			"TSContextEnable",
+			"TSContextDisable",
+			"TSContextToggle",
+		},
+		event = "VeryLazy",
+		enabled = true,
+	},
 }

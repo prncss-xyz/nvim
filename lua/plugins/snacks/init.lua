@@ -242,6 +242,14 @@ return {
 				desc = "Live Grep",
 			},
 			{
+				pick .. "g",
+				function()
+					Snacks.picker.grep_word()
+				end,
+				mode = { "x" },
+				desc = "Live Grep",
+			},
+			{
 				pick .. pick,
 				function()
 					Snacks.picker.keymaps({

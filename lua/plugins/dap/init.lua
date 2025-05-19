@@ -91,10 +91,14 @@ return {
 					dv.open()
 				end
 				nvim_dap.listeners.before.launch["dap-view-config"] = function()
-					dv.open()
+					require("my.ui_toggle").activate("dapview", function()
+						dv.open()
+					end)
 				end
 				nvim_dap.listeners.before.event_terminated["dap-view-config"] = function()
-					dv.close()
+					require("my.ui_toggle").activate("dapview", function()
+						dv.open()
+					end)
 				end
 				nvim_dap.listeners.before.event_exited["dap-view-config"] = function()
 					dv.close()

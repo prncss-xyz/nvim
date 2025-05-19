@@ -1,29 +1,27 @@
 # TOOD
 
-- grugfar, grep: prefil with selection
-
-- ge: apply only to regular buffer
-
-- dap
-    - vitest
-    - signs
-
-- comment
-
-- more normal direction
+- g for left moves?
 
 - flies
 
+  - comments opterations
+    - currently only comments out the first line
   - buffer: we, ee
-  - tree sitter flies
   - remove to bracket
   - remove to char (backward)
-    - dfc => dfsc
+    - dfc `=>` dfsc
   - `f,` should be consistent with `fsc`
   - wrap, substitute: multi-char key
   - cyclic iterators
+  - comments as part of fly borrough
+
+- dap
+
+  - browser
 
 ## Later
+
+- picker: proximity bonus
 
 - window
 

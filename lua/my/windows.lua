@@ -7,10 +7,8 @@ local opts = {
 
 function M.test_win(win_id)
 	local buf_id = vim.api.nvim_win_get_buf(win_id)
-	return not (
-		vim.tbl_contains(opts.buftype, vim.api.nvim_buf_get_option(buf_id, "buftype"))
-		or vim.tbl_contains(opts.filetype, vim.api.nvim_buf_get_option(buf_id, "filetype"))
-	)
+	local buf_type = vim.api.nvim_buf_get_option(buf_id, "buftype")
+	return not (vim.tbl_contains(opts.buftype, buf_type) or vim.tbl_contains(opts.filetype, buf_type))
 end
 
 function M.close_all_but_current()
@@ -35,7 +33,14 @@ function M.on_focus()
 	end
 end
 
-function M.focus_last()
+function M.is_file_cur_win()
+	local winid = vim.api.nvim_get_current_win()
+	local bufnr = vim.api.nvim_win_get_buf(winid)
+	local buf_type = vim.api.nvim_buf_get_option(bufnr, "buftype")
+	return buf_type == ""
+end
+
+function M.focus_last_win()
 	history = vim.tbl_filter(function(v)
 		return vim.api.nvim_win_is_valid(v)
 	end, history)
@@ -76,35 +81,15 @@ function M.list()
 	dd(infos)
 end
 
-
--- taken from mini
---- Zoom in and out of a buffer, making it full screen in a floating window
----
---- This function is useful when working with multiple windows but temporarily
---- needing to zoom into one to see more of the code from that buffer. Call it
---- again (without arguments) to zoom out.
----
----@param buf_id number Buffer identifier (see |bufnr()|) to be zoomed.
----   Default: 0 for current.
----@param config table Optional config for window (as for |nvim_open_win()|).
-function M.zoom(buf_id, config)
-  if zoom_winid and vim.api.nvim_win_is_valid(zoom_winid) then
-    vim.api.nvim_win_close(zoom_winid, true)
-    zoom_winid = nil
-  else
-    buf_id = buf_id or 0
-    -- Currently very big `width` and `height` get truncated to maximum allowed
-    local default_config = {
-      relative = 'editor',
-      row = 0,
-      col = 0,
-      width = 1000,
-      height = 1000,
-    }
-    config = vim.tbl_deep_extend('force', default_config, config or {})
-    zoom_winid = vim.api.nvim_open_win(buf_id, true, config)
-    vim.cmd 'normal! zz'
-  end
+function M.swap(winid)
+	if not winid then
+		return
+	end
+	local cur_winid = vim.api.nvim_get_current_win()
+	local cur_bufnr = vim.api.nvim_win_get_buf(cur_winid)
+	local target_bufnr = vim.api.nvim_win_get_buf(winid)
+	vim.api.nvim_win_set_buf(cur_winid, target_bufnr)
+	vim.api.nvim_win_set_buf(winid, cur_bufnr)
 end
 
 return M

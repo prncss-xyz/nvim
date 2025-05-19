@@ -43,153 +43,195 @@ return {
 			{
 				git .. theme.hunk,
 				function()
-					require("neogit").open()
+					require("my.ui_toggle").activate("neogit")
 				end,
 				desc = "Neogit",
 			},
 			{
 				git .. "A",
 				function()
-					require("neogit").open({ "cherry_pick" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "cherry_pick" })
+					end)
 				end,
 				desc = "Neogit Cherry Pick",
 			},
 			{
 				git .. "B",
 				function()
-					require("neogit").open({ "bisect" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "bisect" })
+					end)
 				end,
 				desc = "Neogit Bisect",
 			},
 			{
 				git .. "b",
 				function()
-					require("neogit").open({ "branch" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "branch" })
+					end)
 				end,
 				desc = "Neogit Branch",
 			},
 			{
 				git .. ",b",
 				function()
-					require("neogit").open({ "branch_config" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "branch_config" })
+					end)
 				end,
 				desc = "Neogit Branch Config",
 			},
 			{
 				git .. "c",
 				function()
-					require("neogit").open({ "commit" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "commit" })
+					end)
 				end,
 				desc = "Neogit Commit",
 			},
 			{
 				git .. "d",
 				function()
-					require("neogit").open({ "diff" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "diff" })
+					end)
 				end,
 				desc = "Neogit Diff",
 			},
 			{
 				git .. "f",
 				function()
-					require("neogit").open({ "fetch" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "fetch" })
+					end)
 				end,
 				desc = "Neogit Fetch",
 			},
 			{
 				git .. "?",
 				function()
-					require("neogit").open({ "help" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "help" })
+					end)
 				end,
 				desc = "Neogit Help",
 			},
 			{
 				git .. "i",
 				function()
-					require("neogit").open({ "ignore" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "ignore" })
+					end)
 				end,
 				desc = "Neogit Ignore",
 			},
 			{
 				git .. "l",
 				function()
-					require("neogit").open({ "log" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "log" })
+					end)
 				end,
 				desc = "Neogit Log",
 			},
 			{
 				git .. "m",
 				function()
-					require("neogit").open({ "merge" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "merge" })
+					end)
 				end,
 				desc = "Neogit Merge",
 			},
 			{
 				git .. "p",
 				function()
-					require("neogit").open({ "pull" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "pull" })
+					end)
 				end,
 				desc = "Neogit Pull",
 			},
 			{
 				git .. "P",
 				function()
-					require("neogit").open({ "push" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "push" })
+					end)
 				end,
 				desc = "Neogit Push",
 			},
 			{
 				git .. "r",
 				function()
-					require("neogit").open({ "rebase" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "rebase" })
+					end)
 				end,
 				desc = "Neogit Rebase",
 			},
 			{
 				git .. "M",
 				function()
-					require("neogit").open({ "remote" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "remote" })
+					end)
 				end,
 				desc = "Neogit Remote",
 			},
 			{
 				git .. ",M",
 				function()
-					require("neogit").open({ "remote_config" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "remote_config" })
+					end)
 				end,
 				desc = "Neogit Remote Config",
 			},
 			{
 				git .. "X",
 				function()
-					require("neogit").open({ "reset" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "reset" })
+					end)
 				end,
 			},
 			{
 				git .. "v",
 				function()
-					require("neogit").open({ "revert" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "revert" })
+					end)
 				end,
 				desc = "Neogit Revert",
 			},
 			{
 				git .. "Z",
 				function()
-					require("neogit").open({ "stash" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "stash" })
+					end)
 				end,
 				desc = "Neogit Stash",
 			},
 			{
 				git .. "t",
 				function()
-					require("neogit").open({ "tag" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "tag" })
+					end)
 				end,
 				desc = "Neogit Tag",
 			},
 			{
 				git .. "w",
 				function()
-					require("neogit").open({ "worktree" })
+					require("my.ui_toggle").activate("neogit", function()
+						require("neogit").open({ "worktree" })
+					end)
 				end,
 				desc = "Neogit Worktree",
 			},

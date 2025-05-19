@@ -45,7 +45,9 @@ return {
 			},
 			{
 				"ou",
-				"<cmd>OverseerToggle<cr>",
+				function()
+					require("my.ui_toggle").activate("overseer", "OverseerOpen")
+				end,
 				desc = "Overseer Toggle",
 			},
 		},
