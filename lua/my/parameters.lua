@@ -33,7 +33,9 @@ M.domain = {
 	appearance = "og",
 	run = "ou",
 	pick = "t",
-  dap = "od",
+	dap = "od",
+	language = "ol",
+	tests = "ot",
 }
 
 M.directions = {

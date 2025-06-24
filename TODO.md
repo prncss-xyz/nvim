@@ -1,5 +1,8 @@
 # TOOD
 
+- pickers
+    - overseer: run or rise
+
 - g for left moves?
 
 - flies

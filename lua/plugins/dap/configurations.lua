@@ -1,7 +1,6 @@
 local M = {}
--- https://github.com/harrisoncramer/nvim/tree/main/lua/plugins/dap
 
-local jsOrTs = {
+M.javascript = {
 	{
 		type = "pwa-node",
 		request = "launch",
@@ -9,22 +8,9 @@ local jsOrTs = {
 		program = "${file}",
 		cwd = "${workspaceFolder}",
 	},
-	{
-		name = "Vitest Debug",
-		type = "pwa-node",
-		request = "launch",
-		cwd = vim.fn.getcwd(),
-		program = "${workspaceFolder}/node_modules/vitest/vitest.mjs",
-		args = { "run", "${file}", "--test-timeout=0", "--no-file-parallelism" },
-		autoAttachChildProcesses = true,
-		smartStep = true,
-		console = "integratedTerminal",
-		skipFiles = { "<node_internals>/**", "node_modules/**" },
-	},
 }
 
-M.javascript = jsOrTs
-M.typescript = jsOrTs
+M.typescript = M.javascript
 
 M.lua = {
 	{

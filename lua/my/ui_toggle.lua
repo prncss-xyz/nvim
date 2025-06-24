@@ -26,11 +26,13 @@ local config = {
 		},
 		trouble = {
 			ft = { "trouble" },
-			raise = "Trouble",
 		},
 		overseer = {
 			ft = { "OverseerList" },
 			raise = "OverseerOpen",
+		},
+		neotest = {
+			ft = { "neotest-summary", "neotest-output-panel" },
 		},
 	},
 }

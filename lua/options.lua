@@ -11,7 +11,6 @@ deep_merge(vim, {
 	o = {
 		winblend = 10,
 		pumblend = 10,
-		-- background = 'dark',
 		compatible = false,
 		autoindent = true,
 		autoread = true,

@@ -142,10 +142,21 @@ return {
 				},
 			},
 		},
+
+		keys = {
+			{
+				ai .. "t",
+				function()
+					require("my.ui_toggle").activate("copilot")
+				end,
+				desc = "Coplot Toggle Autocomplete",
+				mode = { "n", "x" },
+			},
+		},
 		cmd = { "Copilot" },
 		event = "InsertEnter",
 		enabled = copilot,
-		cond = false and not_vscode,
+		cond = not_vscode,
 	},
 	{
 		"CopilotC-Nvim/CopilotChat.nvim",

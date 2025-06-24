@@ -2,17 +2,18 @@ local not_vscode = require("my.conds").not_vscode
 local work = require("my.conds").work
 local tui = require("my.conds").tui
 
-local current = "gruvbox"
+local theme = require("my.theme_utils").load_theme()
 
 local function colorscheme(name, config)
 	config.cond = not_vscode
-	if name == current then
+	if name == theme.colors_name then
 		config.priority = 1000
 		config.lazy = false
 		config.dependencies = work({
 			"f-person/auto-dark-mode.nvim",
 		}, nil)
 		function config.config()
+			vim.o.background = theme.background
 			vim.cmd.colorscheme(name)
 		end
 	end
@@ -32,7 +33,7 @@ return {
 		"rebelot/kanagawa.nvim",
 	}),
 	colorscheme("rose-pine", {
-    name = "rose-pine",
+		name = "rose-pine",
 		"rose-pine/neovim",
 	}),
 	colorscheme("gruvbox", {

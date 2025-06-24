@@ -46,8 +46,8 @@ M.personal = cond(personal)
 M.work = cond(negate(personal))
 
 -- never enable for work
-local avante = always(false)
--- local avante = personal
+-- local avante = always(false)
+local avante = personal
 M.avante = cond(avante)
 -- M.copilot = M.work
 M.copilot = cond(negate(avante))

@@ -8,7 +8,6 @@ return {
 		opts = function()
 			local function open_grug_far(prefills)
 				local grug_far = require("grug-far")
-
 				if not grug_far.has_instance("explorer") then
 					grug_far.open({ instanceName = "explorer" })
 				else
@@ -45,6 +44,8 @@ return {
 					"terminal",
 					"Trouble",
 					"qf",
+					"neotest-summary",
+					"neotest-output-panel",
 				},
 				default_component_configs = {
 					indent = {
@@ -192,7 +193,7 @@ return {
 			{
 				win .. theme.directory,
 				function()
-					require("my.ui_toggle").activate("neotree")
+					require("my.ui_toggle").activate("neotree", "Neotree filesystem")
 				end,
 				desc = "Neotree files",
 			},

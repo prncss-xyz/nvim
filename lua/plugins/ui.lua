@@ -8,7 +8,10 @@ return {
 	{
 		"folke/trouble.nvim",
 		opts = {
-			win = { position = "bottom" },
+			win = {
+				size = 60,
+				position = "left",
+			},
 			use_diagnostic_signs = true,
 		},
 		cmd = { "Trouble" },
@@ -28,30 +31,16 @@ return {
 				desc = "Trouble LSP Incomming Calls",
 			},
 			{
-				win .. "l",
+				win .. "t",
 				function()
-					require("my.ui_toggle").activate("trouble", "Trouble lsp focus=false")
+					require("my.ui_toggle").activate("trouble", "Trouble")
 				end,
-				desc = "Trouble LSP",
-			},
-			{
-				win .. "q",
-				function()
-					require("my.ui_toggle").activate("trouble", "Trouble qflist toggle")
-				end,
-				desc = "Trouble Quickfix List",
-			},
-			{
-				win .. theme.reference,
-				function()
-					require("my.ui_toggle").activate("trouble", "Trouble lsp_references toggle")
-				end,
-				desc = "Trouble Diagnostics",
+				desc = "Trouble (Select)",
 			},
 			{
 				win .. theme.symbol,
 				function()
-					require("my.ui_toggle").activate("trouble", "Trouble symbols toggle focus=false win.position=bottom")
+					require("my.ui_toggle").activate("trouble", "Trouble symbols toggle focus=false")
 				end,
 				desc = "Trouble Symbols",
 			},

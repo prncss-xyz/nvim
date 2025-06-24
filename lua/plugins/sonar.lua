@@ -26,5 +26,6 @@ return {
 	},
 	ft = ft,
 	cond = not_vscode,
-	enabled = personal,
+	enabled = false,
+	-- enabled = personal,
 }

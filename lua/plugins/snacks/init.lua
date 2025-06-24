@@ -16,23 +16,30 @@ return {
 		lazy = false,
 		---@type snacks.Config
 		opts = function()
-			local actions = require("my.tables").deep_merge({
-				open_project = {
-					action = function(picker)
-						local cwd = vim.fn.getcwd()
-						picker:close()
-						projects.open_project(cwd)
-					end,
-					desc = "open_project",
-				},
-			}, require("trouble.sources.snacks").actions)
 			return {
 				bigfile = { enabled = true },
 				indent = { enabled = true },
 				input = { enabled = true },
 				picker = {
 					enabled = true,
-					actions = actions,
+					actions = {
+						open_project = {
+							action = function(picker)
+								local cwd = vim.fn.getcwd()
+								picker:close()
+								projects.open_project(cwd)
+							end,
+							desc = "open_project",
+						},
+						trouble_open = {
+							action = function(picker)
+								require("my.ui_toggle").activate("trouble", function()
+									require("trouble.sources.snacks").open(picker, { type = "smart" })
+								end)
+							end,
+							desc = "trouble open",
+						},
+					},
 					win = {
 						input = {
 							keys = {
@@ -107,7 +114,7 @@ return {
 				pick .. "e",
 				function()
 					Snacks.picker.smart({
-						transform = require("plugins.snacks.transform").exclude_current(),
+						transform = require("plugins.snacks.transform").file(),
 					})
 				end,
 				desc = "Pick Smart File",
@@ -148,10 +155,7 @@ return {
 								{
 									cmd = "git",
 									args = { "ls-files", "-mo", "--exclude-standard" },
-									---@param item snacks.picker.finder.Item
-									transform = function(item)
-										item.file = item.text
-									end,
+									transform = require("plugins.snacks.transform").hunk(),
 								},
 							}, ctx)
 						end,

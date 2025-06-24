@@ -18,6 +18,13 @@ return {
 				["<c-g>"] = { "accept", "fallback" },
 			},
 			snippets = { preset = "luasnip" },
+			completion = {
+				accept = {
+					auto_brackets = {
+						enabled = false,
+					},
+				},
+			},
 			sources = {
 				default = {
 					"avante",

@@ -88,6 +88,13 @@ function M.swap(winid)
 	local cur_winid = vim.api.nvim_get_current_win()
 	local cur_bufnr = vim.api.nvim_win_get_buf(cur_winid)
 	local target_bufnr = vim.api.nvim_win_get_buf(winid)
+	if cur_bufnr == target_bufnr then
+		local cur_pos = vim.api.nvim_win_get_cursor(cur_winid)
+		local target_pos = vim.api.nvim_win_get_cursor(winid)
+		vim.api.nvim_win_set_cursor(cur_winid, target_pos)
+		vim.api.nvim_win_set_cursor(winid, cur_pos)
+		return
+	end
 	vim.api.nvim_win_set_buf(cur_winid, target_bufnr)
 	vim.api.nvim_win_set_buf(winid, cur_bufnr)
 end

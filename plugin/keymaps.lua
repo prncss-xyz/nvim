@@ -52,7 +52,7 @@ vim.keymap.set("n", edit .. ",", "i,<left>", { desc = "Insert Argument" })
 vim.keymap.set("n", edit .. " ", "i <left>", { desc = "Insert Word" })
 
 vim.keymap.set("n", move .. move, "``", { desc = "Last Jump" })
-vim.keymap.set("n", move .. ";", "g;", { desc = "last Change" })
+vim.keymap.set("n", move .. ";", "g;", { desc = "Last Change" })
 
 vim.keymap.set({ "n", "x", "i" }, "<m-w>", function()
 	vim.api.nvim_win_close(0, true)
@@ -110,6 +110,10 @@ vim.keymap.set({ "i", "s" }, "<c-e>", function()
 	require("my.readline").eol()
 end, { desc = "EOL" })
 
+vim.keymap.set("n", domain.appearance .. "n", function()
+	vim.wo.number = not vim.wo.number
+end, { desc = "Toggle Line Numbers" })
+
 vim.keymap.set("n", domain.appearance .. "g", function()
 	vim.o.background = vim.o.background == "light" and "dark" or "light"
 end, { desc = "Toggle Light" })
@@ -144,7 +148,7 @@ vim.keymap.set("n", domain.move .. "a", function()
 	})
 end, { desc = "Alternative File" })
 
-vim.keymap.set("n", "ol", "<cmd>Lazy<cr>", { desc = "Lazy" })
+vim.keymap.set("n", "oml", "<cmd>Lazy<cr>", { desc = "Lazy" })
 
 vim.keymap.set("n", win .. "q", require("my.ui_toggle").toggle, { desc = "Close Widget" })
 
