@@ -30,6 +30,7 @@ require("lazy").setup({
 	defaults = {
 		lazy = true,
 	},
+	rocks = { hererocks = true },
 	dev = dev,
 })
 

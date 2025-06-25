@@ -7,10 +7,7 @@ return {
 	{
 		"stevearc/overseer.nvim",
 		opts = {
-			strategy = {
-				"toggleterm",
-				open_on_start = true,
-			},
+			strategy = { "toggleterm", open_on_start = true },
 			templates = {
 				"builtin",
 				"my.zsh",

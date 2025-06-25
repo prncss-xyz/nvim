@@ -38,47 +38,22 @@ return {
 		},
 		enabled = personal,
 		cond = not_vscode,
-		ft = { "markdown", "tex", "gitcommit", "text" },
-	},
-	{
-		"zk-org/zk-nvim",
-		ft = "markdown",
-		name = "zk",
-		opts = {
-			lsp = {
-				config = {
-					cmd = { "zk", "lsp" },
-					name = "zk",
-				},
-			},
-			auto_attach = {
-				enabled = true,
-				filetypes = { "markdown" },
-			},
-		},
-		cmd = {
-			"ZkIndex",
-			"ZkNew",
-			"ZkNewFromTitleSelection",
-			"ZkNewFromContentSelection",
-			"ZkCd",
-			"ZkNotes",
-			"ZkBacklinks",
-			"ZkLinks",
-			"ZkMatch",
-			"ZkTags",
-		},
-		enabled = false,
-		cond = not_vscode,
+		ft = { "markdown", "tex", "gitcommit", "text", "mdx" },
 	},
 	{
 		"MeanderingProgrammer/render-markdown.nvim",
-		opts = {},
+		opts = {
+			-- FIXME: not working
+			completions = { lsp = { enabled = true } },
+			file_types = { "markdown", "mdx" },
+			-- FIXME: not working
+			code = { enabled = true },
+		},
 		dependencies = {
 			"nvim-treesitter/nvim-treesitter",
 			"nvim-tree/nvim-web-devicons",
 		},
-		ft = { "markdown", "Avante" },
+		ft = { "markdown", "Avante", "mdx" },
 		cmd = { "RenderMarkdown" },
 		cond = not_vscode,
 	},

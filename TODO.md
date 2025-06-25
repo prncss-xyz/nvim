@@ -41,6 +41,12 @@
 
 ## Stuck
 
+- markdown codeblock
+
+```typescript
+const x = 3
+```
+
 - `mdx_analyzer`
 
 - test server
