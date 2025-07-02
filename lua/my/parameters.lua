@@ -22,7 +22,7 @@ M.theme = {
 }
 
 M.domain = {
-	move = "g",
+	move = "b",
 	edit = "h",
 	file = "of",
 	git = "oh",

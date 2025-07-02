@@ -3,10 +3,9 @@
 - pickers
     - overseer: run or rise
 
-- g for left moves?
-
 - flies
 
+  - select current word
   - comments opterations
     - currently only comments out the first line
   - buffer: we, ee
@@ -40,12 +39,6 @@
     - port `https://github.com/chrisgrieser/cmp_yanky`
 
 ## Stuck
-
-- markdown codeblock
-
-```typescript
-const x = 3
-```
 
 - `mdx_analyzer`
 

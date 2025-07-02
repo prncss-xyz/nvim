@@ -28,6 +28,8 @@ return {
 		config = function(_, opts)
 			require("nvim-treesitter.configs").setup(opts)
 			vim.treesitter.language.register("markdown", "mdx")
+      -- for unknown reason, this is needed to make proper highlighting of markdown codeblocks
+      vim.cmd('TSEnable highlight')
 		end,
 	},
 	{

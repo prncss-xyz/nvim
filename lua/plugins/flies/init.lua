@@ -145,6 +145,34 @@ return {
 				desc = "Move Forward",
 			},
 			{
+				"g",
+				mode = { "n" },
+				function()
+					require("flies.actions.move").move("n", {
+						axis = "backward",
+						move = "left",
+						domain = "outer",
+					})
+				end,
+				desc = "Move Backward",
+			},
+			{
+				"g",
+				mode = { "o" },
+				function()
+					require("flies.actions.move").move("o", { axis = "backward", domain = "outer" })
+				end,
+				desc = "Move Backward",
+			},
+			{
+				"g",
+				mode = { "x" },
+				function()
+					require("flies.actions.move").move("x", { axis = "backward", domain = "outer" })
+				end,
+				desc = "Move Backward",
+			},
+			{
 				"n",
 				mode = { "n", "x" },
 				function()
