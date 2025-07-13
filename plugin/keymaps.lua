@@ -16,6 +16,10 @@ vim.keymap.set("n", "o", "<nop>")
 vim.keymap.set("n", "O", "<nop>")
 vim.keymap.set("n", "h", "<nop>")
 
+vim.keymap.set("n", "zz", function()
+	require("my.lsp").display_code_actions()
+end, { desc = "Experimental Code Action" })
+
 vim.keymap.set("x", "c", '"_c', { desc = "Cut Void" })
 vim.keymap.set("x", edit .. "c", '"+c', { desc = "Cut" })
 vim.keymap.set("x", "d", '"_d', { desc = "Cut Void" })

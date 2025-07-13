@@ -4,7 +4,11 @@ local copilot = require("my.conds").copilot
 local domain = require("my.parameters").domain
 local pick = domain.pick
 local ai = domain.ai
+local ai_insert = require("my.parameters").ai_insert
 local reverse = require("my.parameters").reverse
+
+-- TODO: tabnine: codota/tabnine-nvim
+local completion_with_avante = "supermaven" -- "windsurf" | "supermaven" | "none"
 
 return {
 	{
@@ -104,13 +108,30 @@ return {
 		enabled = avante,
 		cond = not_vscode,
 	},
-	-- windsurf/codeium,
+	{
+    -- FIXME:
+		"Exafunction/windsurf.nvim",
+		dependencies = { "nvim-lua/plenary.nvim" },
+		opts = {
+			enable_cmp_source = false,
+			virtual_text = {
+				enabled = true,
+				key_bindings = ai_insert,
+			},
+		},
+		event = "InsertEnter",
+		cmd = "Codeium",
+		enabled = avante(completion_with_avante == "windsurf"),
+		cond = not_vscode,
+	},
 	{
 		"supermaven-inc/supermaven-nvim",
 		opts = {
 			keymaps = {
-				accept_suggestion = "<c-l>",
-				clear_suggestion = "<c-c>",
+				accept_suggestion = ai_insert.accept,
+				clear_suggestion = ai_insert.clear,
+				next = ai_insert.next,
+				prev = ai_insert.prev,
 			},
 			ignore_filetypes = { markdown = true },
 		},
@@ -126,7 +147,7 @@ return {
 			"SupermavenToggle",
 		},
 		event = "InsertEnter",
-		enabled = avante,
+		enabled = avante(completion_with_avante == "supermaven"),
 		cond = not_vscode,
 	},
 	{
@@ -135,14 +156,13 @@ return {
 			suggestion = {
 				auto_trigger = true,
 				keymap = {
-					accept = "<c-l>",
-					next = "<c-9>",
-					prev = "<c-0>",
-					dismiss = "<c-c>",
+					accept = ai_insert.accept,
+					next = ai_insert.next,
+					prev = ai_insert.prev,
+					dismiss = ai_insert.clear,
 				},
 			},
 		},
-
 		keys = {
 			{
 				ai .. "t",

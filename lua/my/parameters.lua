@@ -4,6 +4,13 @@ function M.reverse(key)
 	return "p" .. key
 end
 
+M.ai_insert = {
+	accept = "<c-l>",
+	clear = "<c-c>",
+	next = "<c-9>",
+	prev = "<c-0>",
+}
+
 M.theme = {
 	win = "w",
 	work = "w",

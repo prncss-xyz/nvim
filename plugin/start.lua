@@ -10,8 +10,9 @@ vim.api.nvim_create_autocmd("VimEnter", {
 	callback = function()
 		local args = vim.fn.argv()
 		local cwd
-		if #args > 1 then
+		if #args >= 1 then
 			return
+		-- this is incompatible with yazi netrw replacement, so it is currently diabled
 		elseif #args == 1 then
 			local arg = args[1]
 			if vim.fn.isdirectory(arg) == 1 then

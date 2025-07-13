@@ -160,7 +160,16 @@ return {
 			{
 				"rw",
 				function()
-					local id = require("window-picker").pick_window()
+					dd(require("my.ui_toggle").ft)
+					local id = require("window-picker").pick_window({
+						filter_rules = {
+							include_current_win = false,
+							bo = {
+								filetype = {},
+								buftype = { "nofile" },
+							},
+						},
+					})
 					if id then
 						require("my.windows").swap(id)
 					end
