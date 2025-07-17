@@ -270,7 +270,7 @@ return {
 				desc = "Pick Picker",
 			},
 			{
-				"oz",
+				"<m-o>",
 				function()
 					Snacks.picker.zoxide()
 				end,
