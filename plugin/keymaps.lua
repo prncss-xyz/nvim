@@ -77,6 +77,8 @@ vim.keymap.set("n", win .. "g", function()
 	require("my.zoom").zoom(0)
 end, { desc = "Window Zoom" })
 
+vim.keymap.set("n", "bf", "gf", { desc = "open file" })
+
 vim.keymap.set("n", "ov", "gv", { desc = "reselect" })
 
 vim.keymap.set("n", web .. "d", function()

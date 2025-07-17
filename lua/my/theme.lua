@@ -1,4 +1,4 @@
 return {
-  colors_name = "gruvbox",
-  background = "dark",
+  colors_name = "rose-pine",
+  background = "light",
 }
