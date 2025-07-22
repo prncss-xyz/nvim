@@ -53,14 +53,14 @@ return {
 			{
 				edit .. reverse("v"),
 				-- "P",
-				"<plug>(YankyPutBefore)",
+				"<plug>(YankyPutBeforeFilter)",
 				mode = { "n", "x" },
 				desc = "Paste Before",
 			},
 			{
 				edit .. "v",
 				--  "p",
-				"<plug>(YankyPutAfter)",
+				"<plug>(YankyPutAfterFilter)",
 				mode = { "n", "x" },
 				desc = "Paste After",
 			},

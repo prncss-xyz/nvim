@@ -1,10 +1,9 @@
-local tui = require("my.conds").tui
-
 return {
 	{
 		"3rd/image.nvim",
 		opts = {},
 		event = "VeryLazy",
-		enabled = tui,
+		enabled = require("my.conds").tui,
+		cond = require("my.conds").personal,
 	},
 }
