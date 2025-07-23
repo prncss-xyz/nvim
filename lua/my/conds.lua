@@ -13,9 +13,7 @@ local function always(value)
 end
 
 local function personal()
-	if vim.env.HOME == "/home/prncss" then
-		return true
-	end
+	return vim.env.HOME == "/home/prncss"
 end
 
 local function vscode()

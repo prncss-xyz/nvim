@@ -1,4 +1,5 @@
 local personal = require("my.conds").personal
+local work = require("my.conds").work
 local not_vscode = require("my.conds").not_vscode
 local reverse = require("my.parameters").reverse
 local theme = require("my.parameters").theme
@@ -17,6 +18,9 @@ return {
 		---@type snacks.Config
 		opts = function()
 			return {
+				image = work({
+					doc = { enabled = true },
+				}),
 				bigfile = { enabled = true },
 				indent = { enabled = true },
 				input = { enabled = true },
@@ -118,6 +122,45 @@ return {
 					})
 				end,
 				desc = "Pick Smart File",
+			},
+			{
+				pick .. "n",
+				function()
+					Snacks.picker.files({
+						cwd = personal(vim.env.HOME .. "/Personal/notes", vim.env.HOME .. "/Projects/notes"),
+						matcher = {
+							frecency = true,
+						},
+					})
+				end,
+				desc = "Pick Config File",
+			},
+			{
+				pick .. ",",
+				function()
+					Snacks.picker.files({
+						cwd = vim.fn.stdpath("config"),
+						matcher = {
+							frecency = true,
+						},
+					})
+				end,
+				desc = "Pick Config File",
+			},
+			{
+				pick .. ".",
+				function()
+					dd(vim.env.HOME .. "/Dotfiles")
+					if personal() then
+						Snacks.picker.files({
+							cwd = vim.env.HOME .. "/Dotfiles",
+							matcher = {
+								frecency = true,
+							},
+						})
+					end
+				end,
+				desc = "Pick Dotifiles",
 			},
 			{
 				pick .. theme.directory,

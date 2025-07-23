@@ -4,6 +4,7 @@ return {
 		opts = {},
 		event = "VeryLazy",
 		enabled = require("my.conds").tui,
-		cond = require("my.conds").personal,
+		-- cond = require("my.conds").personal,
+		cond = false,
 	},
 }

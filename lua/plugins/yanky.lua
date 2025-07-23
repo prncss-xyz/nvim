@@ -46,7 +46,7 @@ return {
 			},
 			{
 				"<c-v>",
-				"<plug>(YankyPutBefore)",
+				"<plug>(YankyPutBeforeFilter)",
 				mode = { "n", "x" },
 				desc = "Paste Before",
 			},
