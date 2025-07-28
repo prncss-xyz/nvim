@@ -1,6 +1,11 @@
 local not_vscode = require("my.conds").not_vscode
+local personal = require("my.conds").personal
 
 return {
+	{
+		"Kaiser-Yang/blink-cmp-avante",
+		cond = personal,
+	},
 	{
 		"saghen/blink.cmp",
 		dependencies = {
@@ -26,14 +31,20 @@ return {
 				},
 			},
 			sources = {
-				default = {
+				default = personal({
 					"avante",
 					"lazydev",
 					"lsp",
 					"path",
 					"snippets",
 					"buffer",
-				},
+				}, {
+					"lazydev",
+					"lsp",
+					"path",
+					"snippets",
+					"buffer",
+				}),
 				providers = {
 					lazydev = {
 						name = "LazyDev",
