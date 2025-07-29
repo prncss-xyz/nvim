@@ -133,7 +133,7 @@ return {
 						},
 					})
 				end,
-				desc = "Pick Config File",
+				desc = "Pick Note File",
 			},
 			{
 				pick .. ",",
