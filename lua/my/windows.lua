@@ -78,7 +78,6 @@ function M.list()
 			current = (win_id == current_win_id) and true or nil,
 		})
 	end
-	dd(infos)
 end
 
 function M.swap(winid)

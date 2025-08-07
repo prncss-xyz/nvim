@@ -28,7 +28,6 @@ M.terms = cached(function(key)
 end)
 
 function M.from_filetype()
-	dd(vim.bo.filetype)
 	local key = filetype_to_key[vim.bo.filetype] or "zsh"
 	return M.terms[key]
 end
