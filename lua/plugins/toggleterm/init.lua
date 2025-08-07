@@ -43,15 +43,22 @@ return {
 				function()
 					require("plugins.toggleterm.terms").terms.zsh_e:toggle()
 				end,
-        desc = "Toggle Terminal e",
+				desc = "Toggle Terminal e",
 			},
-      {
-        "or",
-        function()
-          require("plugins.toggleterm.terms").terms.zsh_r:toggle()
-        end,
-        desc = "Toggle Terminal r",
-      },
+			{
+				"or",
+				function()
+					require("plugins.toggleterm.terms").terms.zsh_r:toggle()
+				end,
+				desc = "Toggle Terminal r",
+			},
+			{
+				"oi",
+				function()
+					require("plugins.toggleterm.terms").from_filetype():toggle()
+				end,
+				desc = "Toggle Terminal Filetype",
+			},
 		},
 		cond = not_vscode,
 	},
