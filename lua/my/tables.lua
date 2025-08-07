@@ -14,4 +14,14 @@ function M.deep_merge(t1, t2)
 	return t1
 end
 
+function M.cached(create)
+	local cache = {}
+	local mt = {}
+	function mt:__index(key)
+		cache[key] = cache[key] or create(key)
+		return cache[key]
+	end
+	return setmetatable({}, mt)
+end
+
 return M

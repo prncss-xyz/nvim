@@ -41,14 +41,14 @@ return {
 			{
 				"oe",
 				function()
-					require("plugins.toggleterm.term").terms.zsh_e:toggle()
+					require("plugins.toggleterm.terms").terms.zsh_e:toggle()
 				end,
         desc = "Toggle Terminal e",
 			},
       {
         "or",
         function()
-          require("plugins.toggleterm.term").terms.zsh_r:toggle()
+          require("plugins.toggleterm.terms").terms.zsh_r:toggle()
         end,
         desc = "Toggle Terminal r",
       },
