@@ -160,7 +160,6 @@ return {
 			{
 				"rw",
 				function()
-					dd(require("my.ui_toggle").ft)
 					local id = require("window-picker").pick_window({
 						filter_rules = {
 							include_current_win = false,
