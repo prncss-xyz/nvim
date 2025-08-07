@@ -9,10 +9,12 @@ return {
 	{
 		"saghen/blink.cmp",
 		dependencies = {
-			{
+			personal({
 				"L3MON4D3/LuaSnip",
 				"Kaiser-Yang/blink-cmp-avante",
-			},
+			}, {
+				"L3MON4D3/LuaSnip",
+			}),
 		},
 		version = "*",
 		opts = {

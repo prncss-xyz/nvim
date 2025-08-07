@@ -38,6 +38,20 @@ return {
 				mode = { "n", "x", "i", "t" },
 				desc = "Toggle Terminal",
 			},
+			{
+				"oe",
+				function()
+					require("plugins.toggleterm.term").terms.zsh_e:toggle()
+				end,
+        desc = "Toggle Terminal e",
+			},
+      {
+        "or",
+        function()
+          require("plugins.toggleterm.term").terms.zsh_r:toggle()
+        end,
+        desc = "Toggle Terminal r",
+      },
 		},
 		cond = not_vscode,
 	},
