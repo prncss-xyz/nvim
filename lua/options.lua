@@ -77,8 +77,8 @@ deep_merge(vim, {
 	},
 	g = {
 		neovide_cursor_vfx_mode = "torpedo",
-		neovide_opacity = 0.75,
-		transparency = 0.8,
+		neovide_opacity = 1,
+		transparency = 1,
 		mapleader = " ",
 		maplocalleader = ",",
 	},

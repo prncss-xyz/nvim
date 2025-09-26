@@ -103,10 +103,7 @@ return {
 		-- FIX: toggle block seeams not to work with certain syntaxes unless toggle multiline was called before
 		-- likely due to breaking changes in treesitter
 		"Wansmer/treesj",
-		lazy = false,
-		opts = {
-			use_default_keymaps = false,
-		},
+		opts = { use_default_keymaps = false },
 		cmd = { "TSJToggle", "TSJSplit", "TSJJoin" },
 		keys = {
 			{

@@ -73,11 +73,18 @@ return {
 				desc = "Browse Git Remote",
 			},
 			{
-				win .. "d",
+				domain.appearance .. "d",
 				function()
 					Snacks.dim()
 				end,
 				desc = "Window Dim",
+			},
+			{
+				domain.appearance .. reverse("d"),
+				function()
+					Snacks.dim.disable()
+				end,
+				desc = "Window Un Dim",
 			},
 			{
 				win .. "x",

@@ -1,7 +1,9 @@
 # TOOD
 
-- pickers
-    - overseer: run or rise
+- yank: fix stop always line-wise
+
+- startup
+    - make DAP/cmp lazy again
 
 - flies
 
@@ -46,3 +48,5 @@
   - not ready to use
     - https://github.com/kbwo/testing-language-server
     - https://github.com/kbwo/testing-ls.nvim
+
+- https://github.com/dmtrKovalenko/fff.nvim (not ready)

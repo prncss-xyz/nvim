@@ -20,8 +20,8 @@ end
 --  TODO: case, try, class, default, else, extends, import, with
 
 for _, keyword in ipairs {
-  'break;',
-  'continue;',
+  'break',
+  'continue',
   'delete ',
   'export ',
   'extends ',
@@ -67,8 +67,8 @@ table.insert(
     fmt(
       [[
       const <> = Object.fromEntries(
-        Object.entries(<>).map(([<>, <>]) =<> { <>return [<>, <>]; }),
-      );
+        Object.entries(<>).map(([<>, <>]) =<> { <>return [<>, <>] }),
+      )
     ]],
       {
         i(1, 'target'),
@@ -89,7 +89,7 @@ table.insert(
   M,
   s(
     'const',
-    fmt('const [] = [];', { i(1, 'name'), i(2, '0') }, { delimiters = '[]' })
+    fmt('const [] = []', { i(1, 'name'), i(2, '0') }, { delimiters = '[]' })
   )
 )
 
@@ -97,7 +97,7 @@ table.insert(
   M,
   s(
     'let',
-    fmt('let [] = [];', { i(1, 'name'), i(2, '0') }, { delimiters = '[]' })
+    fmt('let [] = []', { i(1, 'name'), i(2, '0') }, { delimiters = '[]' })
   )
 )
 
@@ -265,7 +265,7 @@ table.insert(
         switch ([]) {
           case []: 
             []
-            break;
+            break
           default: 
             []
         }
@@ -286,7 +286,7 @@ table.insert(
       [[
         case []: 
           []
-          break;
+          break
       ]],
       { i(1, 'value'), i(2, '') },
       {
@@ -342,7 +342,7 @@ table.insert(
         try {
           []
         } catch (error) {
-          if (error.code !== "[]") throw error;[]
+          if (error.code !== "[]") throw error[]
         }
       ]],
       { i(1, ''), i(2, 'ENOENT'), i(3, '') },
@@ -357,12 +357,27 @@ table.insert(
 table.insert(
   M,
   s(
-    'describe',
+    'tst',
     fmt(
       [[
-        describe("[]", () => {
+        test("[]", () => {
           []
-        });
+        })
+      ]],
+      { i(1, 'description'), i(2, '') },
+      { delimiters = '[]' }
+    )
+  )
+)
+table.insert(
+  M,
+  s(
+    'itt',
+    fmt(
+      [[
+        it("[]", () => {
+          []
+        })
       ]],
       { i(1, 'description'), i(2, '') },
       { delimiters = '[]' }
@@ -370,38 +385,22 @@ table.insert(
   )
 )
 
-for _, name in ipairs { 'it', 'test' } do
-  table.insert(
-    M,
-    s(
-      name,
-      fmt(
-        [[
-        []("[]", () => {
+--TODO: default from filename
+table.insert(
+  M,
+  s(
+    'dsc',
+    fmt(
+      [[
+        describe("[]", () => {
           []
-        });
+        })
       ]],
-        { t(name), i(1, 'description'), i(2, '') },
-        { delimiters = '[]' }
-      )
+      { i(1, 'description'), i(2, '') },
+      { delimiters = '[]' }
     )
   )
-  table.insert(
-    M,
-    s(
-      name .. ' async',
-      fmt(
-        [[
-        []("[]", async () => {
-          []
-        });
-      ]],
-        { t(name), i(1, 'description'), i(2, '') },
-        { delimiters = '[]' }
-      )
-    )
-  )
-end
+)
 
 table.insert(
   M,
@@ -409,7 +408,7 @@ table.insert(
     'expect toThrow',
     fmt(
       [[
-        expect(() => { [] }).toThrow[]([]);
+        expect(() => { [] }).toThrow[]([])
       ]],
       { i(1, '/* statement */'), i(2, ''), i(3, '') },
       { delimiters = '[]' }
@@ -423,7 +422,7 @@ table.insert(
     'expect toThrowError',
     fmt(
       [[
-        expect(() => { [] }).toThrowError[]([]);
+        expect(() => { [] }).toThrowError[]([])
       ]],
       { i(1, ''), i(2, ''), i(3, '') },
       { delimiters = '[]' }
@@ -432,7 +431,7 @@ table.insert(
 )
 
 -- assertions
-for _, name in ipairs { 'toEqual', 'toBe', 'toContain', 'toMatch' } do
+for _, name in ipairs { 'toEqual', 'toBe', 'toContain', 'toMatch', 'toBeTruthy', 'toBeFalsy' } do
   table.insert(
     M,
     s(
@@ -454,7 +453,7 @@ table.insert(
     'fcassert',
     fmt(
       [[
-        fc.assert(fc.property([], ([]) => {[]}));
+        fc.assert(fc.property([], ([]) => {[]}))
       ]],
       {
         i(1, ''),

@@ -2,7 +2,6 @@ local M = {}
 
 local module = "my/theme"
 local theme_file = vim.fn.stdpath("config") .. "/lua/" .. module .. ".lua"
-
 local function file_exists(path)
 	local f = io.open(path, "r")
 	if f ~= nil then

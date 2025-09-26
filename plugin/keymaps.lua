@@ -5,6 +5,7 @@ local move = domain.move
 local web = domain.web
 local win = domain.win
 local directions = require("my.parameters").directions
+local theme = require("my.parameters").theme
 
 vim.keymap.del("n", "gcc")
 vim.keymap.set("n", "gra", "<nop>")
@@ -65,8 +66,11 @@ end, {
 	desc = "Close Window",
 })
 vim.keymap.set("n", "<c-j>", function()
-	require("my.windows").focus_last_win()
-end, { desc = "Window Toggle" })
+	require("my.windows").focus_last_win(true)
+end, { desc = "Window Toggle File" })
+vim.keymap.set("n", "<c-k>", function()
+	require("my.windows").focus_last_win(false)
+end, { desc = "Window Toggle UI" })
 -- vim.keymap.set("n", "<c-j>", "<c-w><c-p>", { desc = "Window Toggle" })
 vim.keymap.set("n", win .. "k", function()
 	require("my.windows").close_all_but_current()
@@ -159,3 +163,35 @@ vim.keymap.set("n", "oml", "<cmd>Lazy<cr>", { desc = "Lazy" })
 vim.keymap.set("n", win .. "q", require("my.ui_toggle").toggle, { desc = "Close Widget" })
 
 vim.keymap.set("n", "oq", require("my.lsp").stop_client, { desc = "Stop Lsp Clien" })
+
+vim.keymap.set({ "n", "i" }, "<c-s>", function()
+	vim.cmd("stopinsert")
+	vim.lsp.buf.format({
+		async = false,
+		filter = function(client)
+			return not vim.tbl_contains({
+				"lua_ls",
+				"vtsls",
+			}, client.name)
+		end,
+	})
+end, { desc = "LSP Format" })
+vim.keymap.set("n", edit .. theme.symbol, function()
+	vim.lsp.buf.rename()
+end, { desc = "LSP Rename" })
+vim.keymap.set({ "n", "x" }, edit .. edit, function()
+	vim.lsp.buf.code_action()
+end, { desc = "LSP Code Action" })
+vim.keymap.set("n", win .. theme.definition, function()
+	vim.lsp.buf.hover()
+end, { desc = "LSP Hover" })
+
+if vim.g.neovide then
+  print("neovide")
+  vim.api.nvim_set_keymap("n", "<C-=>", ":lua vim.g.neovide_scale_factor = vim.g.neovide_scale_factor + 0.1<CR>", { silent = true })
+  vim.api.nvim_set_keymap("n", "<C-->", ":lua vim.g.neovide_scale_factor = vim.g.neovide_scale_factor - 0.1<CR>", { silent = true })
+  vim.api.nvim_set_keymap("n", "<C-0>", ":lua vim.g.neovide_scale_factor = 1<CR>", { silent = true })
+  vim.api.nvim_set_keymap("n", "<C-+>", ":lua vim.g.neovide_transparency = math.min(vim.g.neovide_transparency + 0.05, 1.0)<CR>", { silent = true })
+  vim.api.nvim_set_keymap("n", "<C-_>", ":lua vim.g.neovide_transparency = math.max(vim.g.neovide_transparency - 0.05, 0.0)<CR>", { silent = true })
+  vim.api.nvim_set_keymap("n", "<C-)>", ":lua vim.g.neovide_transparency = 0.9<CR>", { silent = true })
+end

@@ -1,8 +1,5 @@
 local not_vscode = require("my.conds").not_vscode
 local domain = require("my.parameters").domain
-local edit = domain.edit
-local win = domain.win
-local theme = require("my.parameters").theme
 
 return {
 	{
@@ -39,80 +36,7 @@ return {
 		dependencies = {
 			"williamboman/mason-lspconfig.nvim",
 		},
-		config = function()
-			local lspconfig = require("lspconfig")
-			for _, lsp in pairs({
-				"bashls",
-				"gopls",
-				"marksman",
-				"eslint",
-			}) do
-				lspconfig[lsp].setup({
-					capabilities = require("plugins.lsp.utils").cmp_capabilities,
-				})
-			end
-			lspconfig.graphql.setup({
-				capabilities = require("plugins.lsp.utils").cmp_capabilities,
-				filetypes = { "graphql", "javascript", "typescript", "javascriptreact", "typescriptreact" },
-			})
-			lspconfig.lua_ls.setup({
-				capabilities = require("plugins.lualine").cmp_capabilities,
-				settings = {
-					Lua = {
-						telemetry = {
-							enabled = false,
-						},
-					},
-				},
-			})
-		end,
-		init = function()
-			vim.diagnostic.config({ virtual_text = false, update_in_insert = true })
-		end,
-		keys = {
-			{
-				"<c-s>",
-				mode = { "n", "i" },
-				function()
-					vim.cmd("stopinsert")
-					vim.lsp.buf.format({
-						async = false,
-						filter = function(client)
-							return not vim.tbl_contains({
-								"lua_ls",
-								"vtsls",
-							}, client.name)
-						end,
-					})
-				end,
-				desc = "LSP Format",
-			},
-			{
-				edit .. theme.symbol,
-				function()
-					vim.lsp.buf.rename()
-				end,
-				desc = "LSP Rename",
-			},
-			{
-				edit .. edit,
-				mode = { "n", "x" },
-				function()
-					vim.lsp.buf.code_action()
-				end,
-				desc = "LSP Code Action",
-			},
-			{
-				win .. theme.definition,
-				function()
-					vim.lsp.buf.hover()
-				end,
-				desc = "LSP Hover",
-			},
-		},
-		cmd = { "LspInfo" },
-		event = "BufReadPost",
-		cond = not_vscode,
+		lazy = false,
 	},
 	{
 		"zeioth/garbage-day.nvim",

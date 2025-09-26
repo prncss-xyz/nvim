@@ -51,8 +51,6 @@ M.directions = {
 	left = ";",
 	right = "l",
 	search = "é",
-	next_search = "<c-j>",
-	prev_search = "<c-x>",
 }
 
 M.selection_chars = "asdfjkl;ghqweruiopzxcvm,étybn"

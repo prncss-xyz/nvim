@@ -9,8 +9,17 @@ local reverse = require("my.parameters").reverse
 
 -- TODO: tabnine: codota/tabnine-nvim
 local completion_with_avante = "supermaven" -- "windsurf" | "supermaven" | "none"
+-- also, https://github.com/awslabs/amazonq.nvim
 
 return {
+	{
+		name = "amazonq",
+		url = "https://github.com/awslabs/amazonq.nvim.git",
+		opts = {
+			ssoStartUrl = "https://view.awsapps.com/start", -- Authenticate with Amazon Q Free Tier
+		},
+		cmd = { "AmazonQ" },
+	},
 	{
 		"yetone/avante.nvim",
 		version = false,
@@ -23,22 +32,24 @@ return {
 		},
 		opts = {
 			provider = "gemini",
-			claude = {
-				api_key_name = "cmd:pass show anthropic.com/juliette.lamarche.xyz@gmail.com/keys/nvim",
-			},
-			openai = {
-				api_key_name = "cmd:pass show openai.com/juliette.lamarche.xyz@gmail.com/keys/nvim",
-			},
-			gemini = {
-				api_key_name = "cmd:pass show google.com/juliette.lamarche.xyz@gmail.com/keys/nvim",
-				endpoint = "https://generativelanguage.googleapis.com/v1beta/models",
-				-- find new models here: https://aistudio.google.com/prompts/new_chat
-				-- model = "gemini-2.0-pro-exp-02-05",
-				-- model = "gemini-2.5-pro-preview-03-25",
-				model = "gemini-2.5-flash-preview-04-17",
-				timeout = 30000, -- Timeout in milliseconds
-				temperature = 0,
-				max_tokens = 4096,
+			providers = {
+				claude = {
+					api_key_name = "cmd:pass show anthropic.com/juliette.lamarche.xyz@gmail.com/keys/nvim",
+				},
+				openai = {
+					api_key_name = "cmd:pass show openai.com/juliette.lamarche.xyz@gmail.com/keys/nvim",
+				},
+				gemini = {
+					api_key_name = "cmd:pass show google.com/juliette.lamarche.xyz@gmail.com/keys/nvim",
+					endpoint = "https://generativelanguage.googleapis.com/v1beta/models",
+					-- find new models here: https://aistudio.google.com/prompts/new_chat
+					-- model = "gemini-2.0-pro-exp-02-05",
+					-- model = "gemini-2.5-pro-preview-03-25",
+					model = "gemini-2.5-flash-preview-04-17",
+					timeout = 30000, -- Timeout in milliseconds
+					temperature = 0,
+					max_tokens = 4096,
+				},
 			},
 			web_search_engine = {
 				provider = "tavily", -- tavily, serpapi, searchapi, google, kagi, brave, or searxng
@@ -96,6 +107,7 @@ return {
 			},
 		},
 		cmd = {
+			"AvanteModels",
 			"AvanteAsk",
 			"AvanteChat",
 			"AvanteToggle",
@@ -109,7 +121,7 @@ return {
 		cond = not_vscode,
 	},
 	{
-    -- FIXME:
+		-- FIXME:
 		"Exafunction/windsurf.nvim",
 		dependencies = { "nvim-lua/plenary.nvim" },
 		opts = {
@@ -161,6 +173,9 @@ return {
 					prev = ai_insert.prev,
 					dismiss = ai_insert.clear,
 				},
+			},
+			server = {
+				type = "binary", -- "nodejs" | "binary"
 			},
 		},
 		keys = {

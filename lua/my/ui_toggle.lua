@@ -74,6 +74,7 @@ local last_key
 
 -- TODO: skip if already in focus
 function M.raise()
+  local last = require("my.windows").get_last_n(1)[1]
 	if last_key then
 		local opts = config.keys[last_key] or {}
 		local action = opts.raise

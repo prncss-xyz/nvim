@@ -21,6 +21,17 @@ local function colorscheme(name, config)
 end
 
 return {
+	colorscheme("cyberdream", {
+		"scottmckendry/cyberdream.nvim",
+	}),
+	colorscheme("lackluster", {
+		"slugbyte/lackluster.nvim",
+		commit = "b247a6f",
+	}),
+	colorscheme("e-ink", {
+		"e-ink-colorscheme/e-ink.nvim",
+		commit = "c90bf52",
+	}),
 	colorscheme("matrix", {
 		"iruzo/matrix-nvim",
 		commit = "5fafe6b",
