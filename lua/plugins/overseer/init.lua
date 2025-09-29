@@ -12,6 +12,7 @@ return {
 				"builtin",
 				"my.zsh",
 				"my.zsh-current",
+				"my.diff",
 			},
 		},
 		cmd = {

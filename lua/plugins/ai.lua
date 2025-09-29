@@ -1,6 +1,6 @@
 local not_vscode = require("my.conds").not_vscode
-local avante = require("my.conds").avante
 local copilot = require("my.conds").copilot
+local personal = require("my.conds").personal
 local domain = require("my.parameters").domain
 local pick = domain.pick
 local ai = domain.ai
@@ -9,7 +9,6 @@ local reverse = require("my.parameters").reverse
 
 -- TODO: tabnine: codota/tabnine-nvim
 local completion_with_avante = "supermaven" -- "windsurf" | "supermaven" | "none"
--- also, https://github.com/awslabs/amazonq.nvim
 
 return {
 	{
@@ -19,6 +18,8 @@ return {
 			ssoStartUrl = "https://view.awsapps.com/start", -- Authenticate with Amazon Q Free Tier
 		},
 		cmd = { "AmazonQ" },
+    cond = personal,
+    enabled = not_vscode,
 	},
 	{
 		"yetone/avante.nvim",
@@ -117,7 +118,7 @@ return {
 			"AvanteSwitchProvider",
 			"AvanteClear",
 		},
-		enabled = avante,
+		enabled = copilot(false, true),
 		cond = not_vscode,
 	},
 	{
@@ -133,7 +134,7 @@ return {
 		},
 		event = "InsertEnter",
 		cmd = "Codeium",
-		enabled = avante(completion_with_avante == "windsurf"),
+		enabled = copilot(false, completion_with_avante == "windsurf"),
 		cond = not_vscode,
 	},
 	{
@@ -159,7 +160,7 @@ return {
 			"SupermavenToggle",
 		},
 		event = "InsertEnter",
-		enabled = avante(completion_with_avante == "supermaven"),
+		enabled = copilot(false, completion_with_avante == "supermaven"),
 		cond = not_vscode,
 	},
 	{

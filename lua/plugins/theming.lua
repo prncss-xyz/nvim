@@ -1,6 +1,7 @@
 local not_vscode = require("my.conds").not_vscode
 local work = require("my.conds").work
 local tui = require("my.conds").tui
+local domain = require("my.parameters").domain
 
 local theme = require("my.theme_utils").load_theme()
 
@@ -54,6 +55,23 @@ return {
 		"ishan9299/nvim-solarized-lua",
 		commit = "d69a263",
 	}),
+	{
+		"xiyaowong/transparent.nvim",
+		event = "ColorScheme",
+		commit = "8ac5988",
+		config = function()
+			require("transparent").clear_prefix("lualine")
+		end,
+		keys = {
+			{
+				domain.appearance .. "o",
+				function()
+					vim.cmd("TransparentToggle")
+				end,
+				desc = "Toggle Transparent",
+			},
+		},
+	},
 	{
 		"sphamba/smear-cursor.nvim",
 		opts = false and {

@@ -1,5 +1,4 @@
 local not_vscode = require("my.conds").not_vscode
-local domain = require("my.parameters").domain
 
 return {
 	{
@@ -80,7 +79,7 @@ return {
 	{
 		"b0o/schemastore.nvim",
 		config = function()
-			require("lspconfig").jsonls.setup({
+			vim.lsp.config("jsonls", {
 				capabilities = require("plugins.lualine").cmp_capabilities,
 				settings = {
 					json = {
@@ -89,7 +88,7 @@ return {
 					},
 				},
 			})
-			require("lspconfig").yamlls.setup({
+			vim.lsp.config("yamlls", {
 				capabilities = require("plugins.lualine").cmp_capabilities,
 				settings = {
 					yaml = {
@@ -104,6 +103,7 @@ return {
 					},
 				},
 			})
+			vim.lsp.enable({ "jsonls", "yamlls" })
 		end,
 		ft = { "json", "yaml" },
 		cond = not_vscode,

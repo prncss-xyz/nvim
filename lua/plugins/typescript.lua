@@ -6,10 +6,8 @@ return {
 	{
 		"yioneko/nvim-vtsls",
 		config = function()
-			require("lspconfig.configs").vtsls = require("vtsls").lspconfig
-			require("lspconfig").vtsls.setup({
-				on_attach = require("workspace-diagnostics").populate_workspace_diagnostics,
-			})
+			vim.lsp.enable("vtsls", require("vtsls").config)
+			-- require("lspconfig").vtsls.setup({ on_attach = require("workspace-diagnostics").populate_workspace_diagnostics, })
 		end,
 		keys = {
 			{

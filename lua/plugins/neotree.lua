@@ -1,6 +1,6 @@
 local win = require("my.parameters").domain.win
 local theme = require("my.parameters").theme
-local avante = require("my.conds").avante
+local has_copilot = require("my.conds").copilot()
 
 return {
 	{
@@ -79,7 +79,7 @@ return {
 							gn = "next_git_modified",
 							h = "show_help",
 							i = "run_command",
-							oa = avante("avante_add_files"),
+							oa = "avante_add_files",
 							oo = "system_open",
 							oh = "open_split",
 							["o;"] = "open_vsplit",
@@ -153,6 +153,9 @@ return {
 							end
 						end,
 						avante_add_files = function(state)
+              if has_copilot then
+                return
+              end
 							local node = state.tree:get_node()
 							local filepath = node:get_id()
 							local relative_path = require("avante.utils").relative_path(filepath)

@@ -59,6 +59,20 @@ return {
 				end,
 				desc = "Toggle Terminal Filetype",
 			},
+			{
+				"oo",
+				function()
+					require("plugins.toggleterm.terms").terms.zsh_o:toggle()
+				end,
+				desc = "Toggle Terminal Current file",
+			},
+			{
+				"occ",
+				function()
+					require("plugins.toggleterm.terms").terms.diff:toggle()
+				end,
+				desc = "Toggle Terminal Diff",
+			},
 		},
 		cond = not_vscode,
 	},
