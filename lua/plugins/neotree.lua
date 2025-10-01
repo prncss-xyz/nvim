@@ -153,9 +153,9 @@ return {
 							end
 						end,
 						avante_add_files = function(state)
-              if has_copilot then
-                return
-              end
+							if package.loaded["avante"] then
+								return
+							end
 							local node = state.tree:get_node()
 							local filepath = node:get_id()
 							local relative_path = require("avante.utils").relative_path(filepath)
