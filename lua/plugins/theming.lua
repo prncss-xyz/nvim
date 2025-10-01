@@ -5,9 +5,21 @@ local domain = require("my.parameters").domain
 
 local theme = require("my.theme_utils").load_theme()
 
-local function colorscheme(name, config)
+local function find(value, tbl)
+	if type(tbl) == "string" then
+		return tbl == value
+	end
+	for _, v in ipairs(tbl) do
+		if v == value then
+			return true
+		end
+	end
+	return false
+end
+
+local function colorscheme(names, config)
 	config.cond = not_vscode
-	if name == theme.colors_name then
+	if find(theme.colors_name, names) then
 		config.priority = 1000
 		config.lazy = false
 		config.dependencies = work({
@@ -15,17 +27,17 @@ local function colorscheme(name, config)
 		}, nil)
 		function config.config()
 			vim.o.background = theme.background
-			vim.cmd.colorscheme(name)
+			vim.cmd.colorscheme(theme.colors_name)
 		end
 	end
 	return config
 end
 
 return {
-	colorscheme("cyberdream", {
+	colorscheme({ "cyberdream", "cyberdream-light" }, {
 		"scottmckendry/cyberdream.nvim",
 	}),
-	colorscheme("lackluster", {
+	colorscheme({ "lackluster", "lackluster-dark", "lackluster-mint", "lackluster-light", "lackluster-night" }, {
 		"slugbyte/lackluster.nvim",
 		commit = "b247a6f",
 	}),
@@ -41,17 +53,17 @@ return {
 		"calind/selenized.nvim",
 		commit = "a43e34d",
 	}),
-	colorscheme("kanagawa", {
+	colorscheme({ "kanagawa", "kanagawa-lotus", "kanagawa-dragon", "kanagawa-wave" }, {
 		"rebelot/kanagawa.nvim",
 	}),
-	colorscheme("rose-pine", {
+	colorscheme({ "rose-pine", "rose-pine-dawn", "rose-pine-main", "rose-pine-moon" }, {
 		name = "rose-pine",
 		"rose-pine/neovim",
 	}),
 	colorscheme("gruvbox", {
 		"ellisonleao/gruvbox.nvim",
 	}),
-	colorscheme("solarized", {
+	colorscheme({ "solarized", "solarized-flat", "solarized-high", "solarized-low" }, {
 		"ishan9299/nvim-solarized-lua",
 		commit = "d69a263",
 	}),

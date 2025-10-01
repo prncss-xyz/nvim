@@ -193,6 +193,15 @@ vim.keymap.set({ "n", "x" }, "ocb", function()
 	require("my.diff").cp("__diff.txt")
 end, { desc = "Compare diff" })
 
+for _, key in pairs({ "j", "k", "l", ";" }) do
+	vim.keymap.set("n", "z" .. key, function()
+		require("my.targets").recover(key)
+	end, { desc = "Target Recover " .. key })
+	vim.keymap.set("n", "z" .. reverse(key), function()
+		require("my.targets").register(key)
+	end, { desc = "Target Register " .. key })
+end
+
 if vim.g.neovide then
 	vim.api.nvim_set_keymap(
 		"n",

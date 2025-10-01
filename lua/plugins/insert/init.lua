@@ -23,6 +23,15 @@ return {
 				["<c-p>"] = { "show", "select_prev", "fallback" },
 				["<c-n>"] = { "show", "select_next", "fallback" },
 				["<c-g>"] = { "accept", "fallback" },
+				["<tab>"] = {
+					"snippet_forward",
+					function()
+						if package.loaded["sidekick"] then
+							return require("sidekick").nes_jump_or_apply()
+						end
+					end,
+					"fallback",
+				},
 			},
 			snippets = { preset = "luasnip" },
 			completion = {

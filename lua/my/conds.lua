@@ -43,9 +43,6 @@ M.personal = cond(personal)
 
 M.work = cond(negate(personal))
 
-M.copilot = M.work
--- M.copilot = cond(always(true))
-
 M.not_vscode = cond(negate(vscode))
 
 M.tui = cond(function()

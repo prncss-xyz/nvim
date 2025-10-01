@@ -1,5 +1,4 @@
 local not_vscode = require("my.conds").not_vscode
-local copilot = require("my.conds").copilot
 local personal = require("my.conds").personal
 local domain = require("my.parameters").domain
 local pick = domain.pick
@@ -8,9 +7,33 @@ local ai_insert = require("my.parameters").ai_insert
 local reverse = require("my.parameters").reverse
 
 -- TODO: tabnine: codota/tabnine-nvim
-local completion_with_avante = "supermaven" -- "windsurf" | "supermaven" | "none"
+local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" | "supermaven" | "none"
+local chat = personal("sidekick", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'none'
 
 return {
+	{
+		dependencies = "zbirenbaum/copilot.lua",
+		"folke/sidekick.nvim",
+		keys = {
+			{
+				ai .. "a",
+				function()
+					require("sidekick.cli").select_prompt()
+				end,
+				mode = { "n", "x" },
+				desc = "Sidekick Ask Prompt",
+			},
+			{
+				ai .. "i",
+				function()
+					require("sidekick.cli").toggle({ focus = true })
+				end,
+				desc = "Sidekick Chat",
+			},
+		},
+		cond = not_vscode,
+		enabled = chat == "sidekick",
+	},
 	{
 		name = "amazonq",
 		url = "https://github.com/awslabs/amazonq.nvim.git",
@@ -18,8 +41,8 @@ return {
 			ssoStartUrl = "https://view.awsapps.com/start", -- Authenticate with Amazon Q Free Tier
 		},
 		cmd = { "AmazonQ" },
-    cond = personal,
-    enabled = not_vscode,
+		cond = personal,
+		enabled = not_vscode,
 	},
 	{
 		"yetone/avante.nvim",
@@ -118,7 +141,7 @@ return {
 			"AvanteSwitchProvider",
 			"AvanteClear",
 		},
-		enabled = copilot(false, true),
+		enabled = chat == "avante",
 		cond = not_vscode,
 	},
 	{
@@ -134,7 +157,7 @@ return {
 		},
 		event = "InsertEnter",
 		cmd = "Codeium",
-		enabled = copilot(false, completion_with_avante == "windsurf"),
+		enabled = completion == "windsurf",
 		cond = not_vscode,
 	},
 	{
@@ -160,7 +183,7 @@ return {
 			"SupermavenToggle",
 		},
 		event = "InsertEnter",
-		enabled = copilot(false, completion_with_avante == "supermaven"),
+		enabled = completion == "supermaven",
 		cond = not_vscode,
 	},
 	{
@@ -191,7 +214,7 @@ return {
 		},
 		cmd = { "Copilot" },
 		event = "InsertEnter",
-		enabled = copilot,
+		enabled = completion == "copilot",
 		cond = not_vscode,
 	},
 	{
@@ -256,7 +279,7 @@ return {
 				desc = "Coplot Chat Agents",
 			},
 		},
-		enabled = copilot,
+		enabled = chat == "copilotchat",
 		cond = not_vscode,
 		cmd = {
 			"CopilotChat",
