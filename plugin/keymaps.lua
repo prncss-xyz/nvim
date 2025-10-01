@@ -57,7 +57,7 @@ vim.keymap.set("n", edit .. ",", "i,<left>", { desc = "Insert Argument" })
 vim.keymap.set("n", edit .. " ", "i <left>", { desc = "Insert Word" })
 
 vim.keymap.set("n", move .. move, "``", { desc = "Last Jump" })
-vim.keymap.set("n", move .. ";", "g;", { desc = "Last Change" })
+vim.keymap.set("n", move .. "h", "g;", { desc = "Last Change" })
 
 vim.keymap.set({ "n", "x", "i" }, "<m-w>", function()
 	vim.api.nvim_win_close(0, true)
@@ -194,10 +194,10 @@ vim.keymap.set({ "n", "x" }, "ocb", function()
 end, { desc = "Compare diff" })
 
 for _, key in pairs({ "j", "k", "l", ";" }) do
-	vim.keymap.set("n", "z" .. key, function()
+	vim.keymap.set("n", move .. key, function()
 		require("my.targets").recover(key)
 	end, { desc = "Target Recover " .. key })
-	vim.keymap.set("n", "z" .. reverse(key), function()
+	vim.keymap.set("n", move .. reverse(key), function()
 		require("my.targets").register(key)
 	end, { desc = "Target Register " .. key })
 end
