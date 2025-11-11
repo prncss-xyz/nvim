@@ -60,30 +60,6 @@ table.insert(
     )
   )
 )
-table.insert(
-  M,
-  s(
-    'object map',
-    fmt(
-      [[
-      const <> = Object.fromEntries(
-        Object.entries(<>).map(([<>, <>]) =<> { <>return [<>, <>] }),
-      )
-    ]],
-      {
-        i(1, 'target'),
-        i(2, 'source'),
-        i(3, 'key'),
-        i(4, 'value'),
-        t '>',
-        i(5),
-        f(to_same, { 3 }),
-        f(to_same, { 4 }),
-      },
-      { delimiters = '<>' }
-    )
-  )
-)
 
 table.insert(
   M,
@@ -461,6 +437,219 @@ table.insert(
         i(3, ''),
       },
       { delimiters = '[]' }
+    )
+  )
+)
+
+
+-- React hooks
+table.insert(
+  M,
+  s(
+    'const useEffect',
+    fmt(
+      [[
+        useEffect(() => {}, [])
+      ]],
+      {
+        i(1, ''),
+      },
+      {
+        delimiters = '{}',
+      }
+    )
+  )
+)
+
+table.insert(
+  M,
+  s(
+    'const useLayoutEffect',
+    fmt(
+      [[
+        useLayoutEffect(() => {}, [])
+      ]],
+      {
+        i(1, ''),
+      },
+      {
+        delimiters = '{}',
+      }
+    )
+  )
+)
+
+table.insert(
+  M,
+  s(
+    'const useEffectEvent',
+    fmt(
+      [[
+        useEffectEvent(() => {})
+      ]],
+      {
+        i(1, ''),
+      },
+      {
+        delimiters = '{}',
+      }
+    )
+  )
+)
+
+local function to_set(args)
+  return 'set' .. args[1][1]:gsub('^%l', string.upper)
+end
+
+local function to_atom(args)
+  return args[1][1] .. 'Atom'
+end
+
+table.insert(
+  M,
+  s(
+    'const useState',
+    fmt(
+      [[
+        const [{}, {}] = useState{}({})
+      ]],
+      {
+        i(1, ''),
+        f(to_set, { 1 }),
+        i(2, ''),
+        i(3, ''),
+      },
+      {
+        delimiters = '{}',
+      }
+    )
+  )
+)
+
+table.insert(
+  M,
+  s(
+    'const useActionState',
+    fmt(
+      [[
+        const [{}, {}, {}] = useActionState({}, {}, {})
+      ]],
+      {
+        i(1, 'state'),
+        i(2, 'formAction'),
+        i(3, 'isPending'),
+        i(4, ''),
+        i(5, ''),
+        i(6, ''),
+      },
+      {
+        delimiters = '{}',
+      }
+    )
+  )
+)
+
+table.insert(
+  M,
+  s(
+    'const useOptimistic',
+    fmt(
+      [[
+        const [{}, {}] = useOptimistic({}, ({}, {}) => {})
+      ]],
+      {
+        i(1, 'optimisticState'),
+        i(2, 'addOptimistic'),
+        i(3, ''),
+        i(4, 'last'),
+        i(5, 'next'),
+        i(6, ''),
+      },
+      {
+        delimiters = '{}',
+      }
+    )
+  )
+)
+
+table.insert(
+  M,
+  s(
+    'const useTransition',
+    fmt(
+      [[
+        const [{}, {}] = useTransition()
+      ]],
+      {
+        i(1, 'isPending'),
+        i(2, 'startTransition'),
+      },
+      {
+        delimiters = '{}',
+      }
+    )
+  )
+)
+
+table.insert(
+  M,
+  s(
+    'const useReducer',
+    fmt(
+      [[
+        const [{}, {}] = useReducer({}, {})
+      ]],
+      {
+        i(1, 'state'),
+        i(2, 'send'),
+        i(3, ''),
+        i(4, ''),
+      },
+      {
+        delimiters = '{}',
+      }
+    )
+  )
+)
+
+table.insert(
+  M,
+  s(
+    'const useRef',
+    fmt(
+      [[
+        const [{}, {}] = useRef{}({}, {})
+      ]],
+      {
+        i(1, 'state'),
+        i(2, 'send'),
+        i(3, ''),
+        i(4, ''),
+        i(5, ''),
+      },
+      {
+        delimiters = '{}',
+      }
+    )
+  )
+)
+
+table.insert(
+  M,
+  s(
+    'const useAtom',
+    fmt(
+      [[
+        const [{}, {}] = useAtom({})
+      ]],
+      {
+        i(1, ''),
+        f(to_set, { 1 }),
+        f(to_atom, { 1 }),
+      },
+      {
+        delimiters = '{}',
+      }
     )
   )
 )

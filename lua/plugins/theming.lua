@@ -97,6 +97,7 @@ return {
 		} or {},
 		event = "VeryLazy",
 		cond = tui,
+    enabled = false,
 	},
 	{
 		"f-person/auto-dark-mode.nvim",

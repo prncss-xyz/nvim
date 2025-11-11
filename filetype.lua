@@ -9,8 +9,8 @@ vim.filetype.add({
 	},
 	extension = { mdx = "mdx" },
 	pattern = {
-		[".*/%.config/waybar/config"] = "json",
-		[".*/%.config/systemd/user/.*%.service"] = "toml",
+		[".*/waybar/config"] = "json",
+		[".*/systemd/user/.*%.service"] = "toml",
 		[".*/sway/.*"] = "sway",
 	},
 })

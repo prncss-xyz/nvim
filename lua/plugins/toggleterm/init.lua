@@ -41,14 +41,14 @@ return {
 			{
 				"oe",
 				function()
-					require("plugins.toggleterm.terms").terms.zsh_e:toggle()
+					require("plugins.toggleterm.terms").terms.term_e:toggle()
 				end,
 				desc = "Toggle Terminal e",
 			},
 			{
 				"or",
 				function()
-					require("plugins.toggleterm.terms").terms.zsh_r:toggle()
+					require("plugins.toggleterm.terms").terms.term_r:toggle()
 				end,
 				desc = "Toggle Terminal r",
 			},
@@ -60,9 +60,25 @@ return {
 				desc = "Toggle Terminal Filetype",
 			},
 			{
+				"ols",
+				function()
+					require("plugins.toggleterm.terms").terms.dev:spawn({
+						close_on_exit = false,
+					})
+				end,
+				desc = "Spawn Terminal Dev",
+			},
+			{
+				"ow",
+				function()
+					require("plugins.toggleterm.terms").terms.dev:toggle()
+				end,
+				desc = "Toggle Terminal Dev",
+			},
+			{
 				"oo",
 				function()
-					require("plugins.toggleterm.terms").terms.zsh_o:toggle()
+					require("plugins.toggleterm.terms").terms.term_o:toggle()
 				end,
 				desc = "Toggle Terminal Current file",
 			},

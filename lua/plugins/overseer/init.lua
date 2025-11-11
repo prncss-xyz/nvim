@@ -6,6 +6,7 @@ local theme = require("my.parameters").theme
 return {
 	{
 		"stevearc/overseer.nvim",
+		branch = "v1.6.0",
 		opts = {
 			strategy = { "toggleterm", open_on_start = true },
 			templates = {

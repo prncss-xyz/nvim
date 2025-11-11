@@ -3,10 +3,9 @@
 - yank: fix stop always line-wise
 
 - startup
-    - make DAP/cmp lazy again
+  - make DAP/cmp lazy again
 
 - flies
-
   - select current word
   - comments opterations
     - currently only comments out the first line
@@ -20,7 +19,6 @@
   - comments as part of fly borrough
 
 - dap
-
   - browser
 
 ## Later
@@ -28,15 +26,12 @@
 - picker: proximity bonus
 
 - window
-
   - implement alt buffer per window
 
 - snippets
-
   - create file (template)
 
 - yanky
-
   - blink
     - port `https://github.com/chrisgrieser/cmp_yanky`
 

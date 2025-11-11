@@ -14,9 +14,10 @@ M.B = {
 	left = "(",
 	right = ")",
 	snip = not_vscode({
-		all = fmt("([][])", {
-			contents,
+		all = fmt("([][][])", {
 			i(1, ""),
+			contents,
+			i(2, ""),
 		}, { delimiters = "[]" }),
 	}),
 }
@@ -25,9 +26,10 @@ M.b = {
 	left = "{",
 	right = "}",
 	snip = not_vscode({
-		all = fmt("{[][]}", {
+		all = fmt("{[][][]}", {
+      i(1, ""),
 			contents,
-			i(1, ""),
+			i(2, ""),
 		}, { delimiters = "[]" }),
 	}),
 }
@@ -65,10 +67,11 @@ M.i = {
 
 M.k = {
 	snip = not_vscode({
-		all = fmt([[<>(<><>) ]], {
+		all = fmt([[<>(<><><>) ]], {
 			i(1, "name"),
-			contents,
 			i(2, ""),
+			contents,
+			i(3, ""),
 		}, { delimiters = "<>" }),
 	}),
 }
@@ -78,26 +81,28 @@ M.l = {
 		javascript = fmt(
 			[[
 	          while ([]) {
-	            [][]
+	            [][][]
 	          }
 	        ]],
 			{
 				i(1, "true"),
-				contents,
 				i(2, ""),
+				contents,
+				i(3, ""),
 			},
 			{ delimiters = "[]" }
 		),
 		lua = fmt(
 			[[
 	          while [] do
-	            [][]
+	            [][][]
 	          end
 	        ]],
 			{
 				i(1, "true"),
-				contents,
 				i(2, ""),
+				contents,
+				i(3, ""),
 			},
 			{ delimiters = "[]" }
 		),
@@ -108,9 +113,10 @@ M.Q = {
 	left = '"',
 	right = '"',
 	snip = not_vscode({
-		all = fmt('"[][]"', {
-			contents,
+		all = fmt('"[][][]"', {
 			i(1, ""),
+			contents,
+			i(2, ""),
 		}, { delimiters = "[]" }),
 	}),
 }
@@ -119,14 +125,15 @@ M.q = {
 	left = "`",
 	right = "`",
 	snip = not_vscode({
-		all = fmt("`[][]`", {
-			contents,
+		all = fmt("`[][][]`", {
 			i(1, ""),
+			contents,
+			i(2, ""),
 		}, { delimiters = "[]" }),
 	}),
 }
 
-M.h = {
+M.y = {
 	snip = not_vscode({
 		javascript = fmt(
 			[[
@@ -170,13 +177,14 @@ M.t = {
 		all = fmt(
 			[[
 	          <[]>
-	            [][]
+	            [][][]
 	          </[]>
 	        ]],
 			{
 				i(1, ""),
-				contents,
 				i(2, ""),
+				contents,
+				i(3, ""),
 				f(to_tag, { 1 }),
 			},
 			{ delimiters = "[]" }
@@ -184,18 +192,13 @@ M.t = {
 	}),
 }
 
-M.v = {
-	left = "_",
-	right = "_",
-}
-
 -- TODO:
 M.pw = {
 	left = " ",
 	snip = not_vscode({
 		all = fmt("[] []", {
-			contents,
 			i(1, ""),
+			contents,
 		}, { delimiters = "[]" }),
 	}),
 }
@@ -204,8 +207,8 @@ M.w = {
 	left = " ",
 	snip = not_vscode({
 		all = fmt("[] []", {
-			i(1, ""),
 			contents,
+			i(1, ""),
 		}, { delimiters = "[]" }),
 	}),
 }
@@ -214,8 +217,8 @@ M[","] = {
 	left = ", ",
 	snip = not_vscode({
 		all = fmt("[], []", {
-			i(1, ""),
 			contents,
+			i(1, ""),
 		}, { delimiters = "[]" }),
 	}),
 }

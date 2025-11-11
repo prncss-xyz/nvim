@@ -13,34 +13,15 @@ end
 table.insert(
   M,
   s(
-    'set Props Type',
-    fmt(
-      [[{}: {}; set{}: Disaptch<SetStateAction<{}>>; ]],
-      {
-        i(1, ''),
-        i(2, ''),
-        f(to_upper, {1}),
-        f(to_same, {2}),
-      },
-      {
-        delimiters = '{}',
-      }
-    )
-  )
-)
-
-table.insert(
-  M,
-  s(
     'component',
     fmt(
       [[
-        function []({[] children }: {[] children: ReactNode }) {
-          return []
+        function []({[]}: {[]}) {
+          []
         }
       ]],
       {
-        i(1, 'Name'),
+        i(1, ''),
         i(3, ''),
         i(2, ''),
         i(4, ''),
@@ -58,12 +39,12 @@ table.insert(
     'export component',
     fmt(
       [[
-        export function []({[] children }: {[] children: ReactNode }) {
-          return []
+        export function []({[]}: {[]}) {
+          []
         }
       ]],
       {
-        i(1, 'Name'),
+        i(1, ''),
         i(3, ''),
         i(2, ''),
         i(4, ''),

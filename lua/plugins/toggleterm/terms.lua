@@ -12,15 +12,11 @@ local filetype_to_key = {
 }
 
 local opts = {
-	zsh_r = {
-		cmd = "zsh",
-	},
-	zsh_e = {
-		cmd = "zsh",
-	},
-	zsh_o = function()
+	dev = { cmd = "pnpm run dev" },
+	lua = { cmd = "lua" },
+	node = { cmd = "node" },
+	term_o = function()
 		return {
-			cmd = "zsh",
 			dir = vim.fn.expand("%:p:h"),
 		}
 	end,
@@ -36,12 +32,11 @@ M.terms = cached(function(key)
 		o = o()
 	end
 	o.display_name = o.display_name or key
-	o.cmd = o.cmd or key
 	return Terminal:new(o)
 end)
 
 function M.from_filetype()
-	local key = filetype_to_key[vim.bo.filetype] or "zsh"
+	local key = filetype_to_key[vim.bo.filetype]
 	return M.terms[key]
 end
 

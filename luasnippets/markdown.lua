@@ -48,6 +48,7 @@ for _, lang in ipairs({
 	"json",
 	"svg",
 	"mermaid",
+	"fish",
 }) do
 	table.insert(
 		M,

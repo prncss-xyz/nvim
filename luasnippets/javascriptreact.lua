@@ -2,139 +2,6 @@
 
 local M = {}
 
-table.insert(
-  M,
-  s(
-    'useCallback',
-    fmt(
-      [[
-        const {} = useCallback(({}) => {}, [])
-      ]],
-      {
-        i(1, ''),
-        i(2, ''),
-        i(2, ''),
-      },
-      {
-        delimiters = '{}',
-      }
-    )
-  )
-)
-
-table.insert(
-  M,
-  s(
-    'useEffect',
-    fmt(
-      [[
-        useEffect(() => {}, [])
-      ]],
-      {
-        i(1, ''),
-      },
-      {
-        delimiters = '{}',
-      }
-    )
-  )
-)
-
-table.insert(
-  M,
-  s(
-    'useMemo',
-    fmt(
-      [[
-        const {} = useMemo(() => {}, [])
-      ]],
-      {
-        i(1, ''),
-        i(2, ''),
-      },
-      {
-        delimiters = '{}',
-      }
-    )
-  )
-)
-
-local function to_set(args)
-  return 'set' .. args[1][1]:gsub('^%l', string.upper)
-end
-
-local function to_atom(args)
-  return args[1][1] .. 'Atom'
-end
-
-table.insert(
-  M,
-  s(
-    'set args',
-    fmt([[<>={<>} <>={<>} ]], {
-      i(1, ''),
-      i(2, ''),
-      f(to_set, { 1 }),
-      f(to_set, { 2 }),
-    }, {
-      delimiters = '<>',
-    })
-  )
-)
-
-table.insert(
-  M,
-  s(
-    'set props',
-    fmt([[{}, {}, ]], {
-      i(1, ''),
-      f(to_set, { 1 }),
-    }, {
-      delimiters = '{}',
-    })
-  )
-)
-
-table.insert(
-  M,
-  s(
-    'useState',
-    fmt(
-      [[
-        const [{}, {}] = useState({});
-      ]],
-      {
-        i(1, ''),
-        f(to_set, { 1 }),
-        i(2, ''),
-      },
-      {
-        delimiters = '{}',
-      }
-    )
-  )
-)
-
-table.insert(
-  M,
-  s(
-    'useAtom',
-    fmt(
-      [[
-        const [{}, {}] = useAtom({});
-      ]],
-      {
-        i(1, ''),
-        f(to_set, { 1 }),
-        f(to_atom, { 1 }),
-      },
-      {
-        delimiters = '{}',
-      }
-    )
-  )
-)
-
 local preferred_quote = require('my.parameters').preferred_quote
 
 local function quote(str)
@@ -159,16 +26,16 @@ table.insert(
     'vitest-react',
     fmt(
       [[
-        import { } from "@testing-library/react";
-        import { [] } from [];
+        import { } from "@testing-library/react"
+        import { [] } from []
 
         describe([], () => {
           it("[]", () => {
             const { container } = render(
               <[] []/>
-            );
-            expect(container).toMatchSnapshot();
-          });
+            )
+            expect(container).toMatchSnapshot()
+          })
         })
       ]],
       {

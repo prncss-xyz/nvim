@@ -7,8 +7,8 @@ local ai_insert = require("my.parameters").ai_insert
 local reverse = require("my.parameters").reverse
 
 -- TODO: tabnine: codota/tabnine-nvim
-local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" | "supermaven" | "none"
-local chat = personal("sidekick", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'none'
+local completion = personal("none", "copilot") -- "copilot" | "windsurf" | "supermaven" | "none"
+local chat = personal("none", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'none'
 
 return {
 	{

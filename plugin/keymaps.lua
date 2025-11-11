@@ -46,10 +46,13 @@ vim.keymap.set("n", edit .. "<cr>", function()
 	require("my.blank_line").blank_line(true)
 end, { desc = "Blank Line Below" })
 
-vim.keymap.set("n", "ow", function()
-	local bufnr = vim.api.nvim_get_current_buf()
-	dd(require("illuminate.reference").buf_get_references(bufnr))
-end, { desc = "Surround" })
+if false then
+	vim.keymap.set("n", "ow", function()
+		local bufnr = vim.api.nvim_get_current_buf()
+		dd(require("illuminate.reference").buf_get_references(bufnr))
+	end, { desc = "Surround" })
+	vim.keymap.set("n", "oq", require("my.lsp").stop_client, { desc = "Stop Lsp Client" })
+end
 
 vim.keymap.set({ "n", "x" }, edit .. "t", "=", { desc = "Reindent" })
 vim.keymap.set("n", edit .. ".", "i.<left>", { desc = "Insert Method" })
@@ -161,8 +164,6 @@ end, { desc = "Alternative File" })
 vim.keymap.set("n", "oml", "<cmd>Lazy<cr>", { desc = "Lazy" })
 
 vim.keymap.set("n", win .. "q", require("my.ui_toggle").toggle, { desc = "Close Widget" })
-
-vim.keymap.set("n", "oq", require("my.lsp").stop_client, { desc = "Stop Lsp Clien" })
 
 vim.keymap.set({ "n", "i" }, "<c-s>", function()
 	vim.cmd("stopinsert")

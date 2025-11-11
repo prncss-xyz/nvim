@@ -20,8 +20,8 @@ deep_merge(vim, {
 		completeopt = "menuone,noselect",
 		cursorline = true,
 		expandtab = true,
-		--[[ guifont = 'Fira Code:h8', ]]
-		guifont = "Victor Mono:h9",
+		-- guifont = 'Fira Code:h8', 
+		-- guifont = "Victor Mono:h9",
 		hidden = true,
 		ignorecase = true,
 		incsearch = true,

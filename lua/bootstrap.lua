@@ -31,7 +31,7 @@ require("lazy").setup({
 		lazy = true,
 	},
 	rocks = { hererocks = true },
-	dev = dev,
+	-- dev = dev,
 })
 
 -- TODO: files

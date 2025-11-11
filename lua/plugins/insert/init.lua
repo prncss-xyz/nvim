@@ -57,6 +57,12 @@ return {
 					"buffer",
 				}),
 				providers = {
+					snippets = {
+						score_offset = 200,
+					},
+					buffer = {
+						score_offset = -100,
+					},
 					lazydev = {
 						name = "LazyDev",
 						module = "lazydev.integrations.blink",

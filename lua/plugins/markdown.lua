@@ -4,6 +4,7 @@ local personal = require("my.conds").personal
 return {
 	{
 		"barreiroleo/ltex_extra.nvim",
+		branch = "dev",
 		dependencies = { "neovim/nvim-lspconfig" },
 		opts = {
 			server_opts = {
