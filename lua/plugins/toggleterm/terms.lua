@@ -15,7 +15,7 @@ local opts = {
 	dev = { cmd = "pnpm run dev" },
 	lua = { cmd = "lua" },
 	node = { cmd = "node" },
-	term_o = function()
+	current = function()
 		return {
 			dir = vim.fn.expand("%:p:h"),
 		}

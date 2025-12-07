@@ -13,12 +13,12 @@ return {
 				always_show_tabline = false,
 			},
 			tabline = {
-        lualine_a = {},
-      },
+				lualine_a = {},
+			},
 			sections = {
 				lualine_a = { "branch" },
 				lualine_b = { require("plugins.lualine.file") },
-				lualine_c = { require("plugins.lualine.overseer") },
+				lualine_c = {},
 				lualine_x = { require("plugins.lualine.coordinates") },
 				lualine_y = {},
 				lualine_z = {},
