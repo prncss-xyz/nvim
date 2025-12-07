@@ -8,12 +8,12 @@ local pick = domain.pick
 local win = domain.win
 local web = domain.web
 local move = domain.move
+local git = domain.git
 local projects = require("plugins.snacks.projects")
 
 return {
 	{
 		"folke/snacks.nvim",
-		-- commit = "dec29f55666f8f4545835636077a86b150faf630",
 		priority = 1000,
 		lazy = false,
 		---@type snacks.Config
@@ -321,7 +321,14 @@ return {
 				desc = "Pick Picker",
 			},
 			{
-				"<m-o>",
+				git .. "b",
+				function()
+					Snacks.picker.git_branches()
+				end,
+				desc = "Pick Zoxide",
+			},
+			{
+				pick .. "x",
 				function()
 					Snacks.picker.zoxide()
 				end,

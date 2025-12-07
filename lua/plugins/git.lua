@@ -66,15 +66,6 @@ return {
 				desc = "Neogit Bisect",
 			},
 			{
-				git .. "b",
-				function()
-					require("my.ui_toggle").activate("neogit", function()
-						require("neogit").open({ "branch" })
-					end)
-				end,
-				desc = "Neogit Branch",
-			},
-			{
 				git .. ",b",
 				function()
 					require("my.ui_toggle").activate("neogit", function()

@@ -7,33 +7,10 @@ local ai_insert = require("my.parameters").ai_insert
 local reverse = require("my.parameters").reverse
 
 -- TODO: tabnine: codota/tabnine-nvim
-local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" | "supermaven" | "none"
-local chat = personal("sidekick", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'none'
+local completion = not_vscode(personal("windsurf", "copilot"), "none") -- "copilot" | "windsurf" |  "none"
+local chat = not_vscode(personal("sidekick", "copilotchat"), "none") -- 'sidekick' | 'avante' | 'copilotchat' | 'none'
 
 return {
-	{
-		dependencies = "zbirenbaum/copilot.lua",
-		"folke/sidekick.nvim",
-		keys = {
-			{
-				ai .. "a",
-				function()
-					require("sidekick.cli").prompt()
-				end,
-				mode = { "n", "x" },
-				desc = "Sidekick Ask Prompt",
-			},
-			{
-				ai .. "i",
-				function()
-					require("sidekick.cli").toggle({ focus = true })
-				end,
-				desc = "Sidekick Chat",
-			},
-		},
-		cond = not_vscode,
-		enabled = chat == "sidekick",
-	},
 	{
 		name = "amazonq",
 		url = "https://github.com/awslabs/amazonq.nvim.git",
@@ -42,7 +19,6 @@ return {
 		},
 		cmd = { "AmazonQ" },
 		cond = personal,
-		enabled = not_vscode,
 	},
 	{
 		"yetone/avante.nvim",
@@ -142,10 +118,9 @@ return {
 			"AvanteClear",
 		},
 		enabled = chat == "avante",
-		cond = not_vscode,
+		cond = personal,
 	},
 	{
-		-- FIXME:
 		"Exafunction/windsurf.nvim",
 		dependencies = { "nvim-lua/plenary.nvim" },
 		opts = {
@@ -155,41 +130,38 @@ return {
 				key_bindings = ai_insert,
 			},
 		},
+		name = "codeium",
 		event = "InsertEnter",
 		cmd = "Codeium",
 		enabled = completion == "windsurf",
-		cond = not_vscode,
+		cond = personal,
 	},
 	{
-		"supermaven-inc/supermaven-nvim",
-		opts = {
-			keymaps = {
-				accept_suggestion = ai_insert.accept,
-				clear_suggestion = ai_insert.clear,
-				next = ai_insert.next,
-				prev = ai_insert.prev,
+		dependencies = "zbirenbaum/copilot.lua",
+		"folke/sidekick.nvim",
+		keys = {
+			{
+				ai .. "i",
+				function()
+					require("sidekick.cli").toggle({ focus = true })
+				end,
+				desc = "Sidekick Chat",
 			},
-			ignore_filetypes = { markdown = true },
+			{
+				ai .. "a",
+				function()
+					require("sidekick.cli").prompt()
+				end,
+				mode = { "n", "x" },
+				desc = "Sidekick Ask Prompt",
+			},
 		},
-		cmd = {
-			"SupermavenUseFree",
-			"SupermavenLogout",
-			"SupermavenStop",
-			"SupermavenStart",
-			"SupermavenRestart",
-			"SupermavenStatus",
-			"SupermavenShowLog",
-			"SupermavenClearLog",
-			"SupermavenToggle",
-		},
-		event = "InsertEnter",
-		enabled = completion == "supermaven",
-		cond = not_vscode,
+		enabled = chat == "sidekick",
 	},
 	{
 		"zbirenbaum/copilot.lua",
 		opts = {
-			suggestion = {
+			suggestion = completion == "completion" and {
 				auto_trigger = true,
 				keymap = {
 					accept = ai_insert.accept,
@@ -197,7 +169,7 @@ return {
 					prev = ai_insert.prev,
 					dismiss = ai_insert.clear,
 				},
-			},
+			} or nil,
 			server = {
 				type = "binary", -- "nodejs" | "binary"
 			},
@@ -214,8 +186,7 @@ return {
 		},
 		cmd = { "Copilot" },
 		event = "InsertEnter",
-		enabled = completion == "copilot",
-		cond = not_vscode,
+		enabled = completion == "copilot" or chat == "copilotchat" or chat == "sidekick",
 	},
 	{
 		"CopilotC-Nvim/CopilotChat.nvim",
@@ -280,7 +251,6 @@ return {
 			},
 		},
 		enabled = chat == "copilotchat",
-		cond = not_vscode,
 		cmd = {
 			"CopilotChat",
 			"CopilotChatOpen",

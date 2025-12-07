@@ -60,7 +60,7 @@ return {
 				desc = "Toggle Terminal Filetype",
 			},
 			{
-				"ols",
+				"opw",
 				function()
 					require("plugins.toggleterm.terms").terms.dev:spawn({
 						close_on_exit = false,
@@ -74,6 +74,25 @@ return {
 					require("plugins.toggleterm.terms").terms.dev:toggle()
 				end,
 				desc = "Toggle Terminal Dev",
+			},
+			{
+				"olm",
+				function()
+					require("plugins.toggleterm.terms").terms.mocks:toggle()
+				end,
+				desc = "Toggle Terminal Mocks",
+			},
+			{
+				"ols",
+				function()
+					require("plugins.toggleterm.terms").terms.dev:spawn({
+						close_on_exit = false,
+					})
+					require("plugins.toggleterm.terms").terms.mocks:spawn({
+						close_on_exit = false,
+					})
+				end,
+				desc = "Spawn Dev",
 			},
 			{
 				"oo",
