@@ -23,6 +23,7 @@ return {
 				["<c-p>"] = { "show", "select_prev", "fallback" },
 				["<c-n>"] = { "show", "select_next", "fallback" },
 				["<c-g>"] = { "accept", "fallback" },
+				["<s-tab>"] = { "snippet_backward" },
 				["<tab>"] = {
 					"snippet_forward",
 					function()
@@ -57,9 +58,6 @@ return {
 					"buffer",
 				}),
 				providers = {
-					snippets = {
-						score_offset = 200,
-					},
 					buffer = {
 						score_offset = -100,
 					},

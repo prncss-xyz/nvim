@@ -106,6 +106,4 @@ if false then
   )
 end
 
-require('plugins.flies.utils').add_snips(M, 'javascriptreact')
-
 return M

@@ -70,6 +70,4 @@ for _, lang in ipairs({
 	)
 end
 
-require("plugins.flies.utils").add_snips(M, "markdown")
-
 return M

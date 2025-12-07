@@ -28,29 +28,6 @@ return {
 		build = "make install_jsregexp",
 		keys = {
 			{
-				"<s-tab>",
-				function()
-					require("luasnip").jump(-1)
-				end,
-				mode = { "i" },
-				desc = "prev insert point",
-			},
-			{
-				"<tab>",
-				function()
-					require("luasnip").jump(1)
-				end,
-				mode = { "i" },
-				desc = "next insert point",
-			},
-			{
-				snippets .. "b",
-				function()
-					require("luasnip.loaders").edit_snippet_files()
-				end,
-				desc = "edit snippets",
-			},
-			{
 				snippets,
 				function()
 					require("luasnip.loaders").edit_snippet_files()

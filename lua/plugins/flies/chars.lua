@@ -5,18 +5,20 @@ local not_vscode = require("my.conds").not_vscode
 local ls = require("luasnip")
 local i = ls.insert_node
 local f = ls.function_node
-local contents = ls.function_node(function(_, snip)
-	return snip.captures.contents
-end, {})
+local function contents()
+	return ls.function_node(function(_, snip)
+		return snip.captures.contents
+	end, {})
+end
 local fmt = require("luasnip.extras.fmt").fmt
 
 M.B = {
 	left = "(",
 	right = ")",
 	snip = not_vscode({
-		all = fmt("([][][])", {
+		fmt("([][][])", {
 			i(1, ""),
-			contents,
+			contents(),
 			i(2, ""),
 		}, { delimiters = "[]" }),
 	}),
@@ -26,9 +28,9 @@ M.b = {
 	left = "{",
 	right = "}",
 	snip = not_vscode({
-		all = fmt("{[][][]}", {
-      i(1, ""),
-			contents,
+		fmt("{[][][]}", {
+			i(1, ""),
+			contents(),
 			i(2, ""),
 		}, { delimiters = "[]" }),
 	}),
@@ -44,7 +46,7 @@ M.i = {
 	        ]],
 			{
 				i(1, "true"),
-				contents,
+				contents(),
 				i(2, ""),
 			},
 			{ delimiters = "[]" }
@@ -57,7 +59,7 @@ M.i = {
 	        ]],
 			{
 				i(1, "true"),
-				contents,
+				contents(),
 				i(2, ""),
 			},
 			{ delimiters = "[]" }
@@ -67,12 +69,12 @@ M.i = {
 
 M.k = {
 	snip = not_vscode({
-		all = fmt([[<>(<><><>) ]], {
-			i(1, "name"),
+		all = fmt("[]([][][])", {
+			i(1, ""),
 			i(2, ""),
-			contents,
+			contents(),
 			i(3, ""),
-		}, { delimiters = "<>" }),
+		}, { delimiters = "[]" }),
 	}),
 }
 
@@ -87,7 +89,7 @@ M.l = {
 			{
 				i(1, "true"),
 				i(2, ""),
-				contents,
+				contents(),
 				i(3, ""),
 			},
 			{ delimiters = "[]" }
@@ -101,7 +103,7 @@ M.l = {
 			{
 				i(1, "true"),
 				i(2, ""),
-				contents,
+				contents(),
 				i(3, ""),
 			},
 			{ delimiters = "[]" }
@@ -115,7 +117,7 @@ M.Q = {
 	snip = not_vscode({
 		all = fmt('"[][][]"', {
 			i(1, ""),
-			contents,
+			contents(),
 			i(2, ""),
 		}, { delimiters = "[]" }),
 	}),
@@ -127,7 +129,7 @@ M.q = {
 	snip = not_vscode({
 		all = fmt("`[][][]`", {
 			i(1, ""),
-			contents,
+			contents(),
 			i(2, ""),
 		}, { delimiters = "[]" }),
 	}),
@@ -144,7 +146,7 @@ M.y = {
 			{
 				i(1, "name"),
 				i(2, ""),
-				contents,
+				contents(),
 				i(3, ""),
 			},
 			{ delimiters = "[]" }
@@ -158,7 +160,7 @@ M.y = {
 			{
 				i(1, "name"),
 				i(2, ""),
-				contents,
+				contents(),
 				i(3, ""),
 			},
 			{ delimiters = "[]" }
@@ -183,7 +185,7 @@ M.t = {
 			{
 				i(1, ""),
 				i(2, ""),
-				contents,
+				contents(),
 				i(3, ""),
 				f(to_tag, { 1 }),
 			},
@@ -198,7 +200,7 @@ M.pw = {
 	snip = not_vscode({
 		all = fmt("[] []", {
 			i(1, ""),
-			contents,
+			contents(),
 		}, { delimiters = "[]" }),
 	}),
 }
@@ -207,7 +209,7 @@ M.w = {
 	left = " ",
 	snip = not_vscode({
 		all = fmt("[] []", {
-			contents,
+			contents(),
 			i(1, ""),
 		}, { delimiters = "[]" }),
 	}),
@@ -217,7 +219,7 @@ M[","] = {
 	left = ", ",
 	snip = not_vscode({
 		all = fmt("[], []", {
-			contents,
+			contents(),
 			i(1, ""),
 		}, { delimiters = "[]" }),
 	}),

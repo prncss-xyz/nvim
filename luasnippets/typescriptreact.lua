@@ -56,6 +56,4 @@ table.insert(
   )
 )
 
-require('plugins.flies.utils').add_snips(M, 'typescriptreact')
-
 return M

@@ -13,6 +13,7 @@ local projects = require("plugins.snacks.projects")
 return {
 	{
 		"folke/snacks.nvim",
+		-- commit = "dec29f55666f8f4545835636077a86b150faf630",
 		priority = 1000,
 		lazy = false,
 		---@type snacks.Config
