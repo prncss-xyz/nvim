@@ -43,6 +43,7 @@ M.domain = {
 	dap = "od",
 	language = "ol",
 	tests = "ot",
+	tabs = "x",
 }
 
 M.directions = {

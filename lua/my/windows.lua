@@ -19,10 +19,11 @@ local history = {}
 local function on_focus()
 	local current_win_id = vim.api.nvim_get_current_win()
 	if valid_win(current_win_id) then
-		history = vim.tbl_filter(function(v)
+		local current_tab_id = vim.api.nvim_win_get_tabpage(0)
+		history[current_tab_id] = vim.tbl_filter(function(v)
 			return v ~= current_win_id
-		end, history)
-		table.insert(history, current_win_id)
+		end, history[current_tab_id] or {})
+		table.insert(history[current_tab_id], current_win_id)
 	end
 end
 
@@ -49,37 +50,11 @@ function M.is_file_cur_win()
 	return buf_type == ""
 end
 
-local function focus_last_win2(cb, ...)
-	if not cb then
-		return
-	end
-	local current_win_id = vim.api.nvim_get_current_win()
-	local function cond(win_id)
-		return win_id ~= current_win_id and valid_win(win_id) and cb(win_id)
-	end
-	for i = #history - 1, 1, -1 do
-		local win_id = history[i]
-		if cond(win_id) then
-			return win_id
-		end
-	end
-	-- this is useful after splitting
-	local windows = vim.api.nvim_tabpage_list_wins(0)
-	for _, win_id in ipairs(windows) do
-		if cond(win_id) then
-			return win_id
-		end
-	end
-	if last then
-		return
-	end
-	return focus_last_win(...)
-end
-
 function M.get_last_n(n, win_id)
+	local current_tab_id = vim.api.nvim_win_get_tabpage(win_id)
 	local res = {}
-	for i = #history - 1, 1, -1 do
-		local h_win_id = history[i]
+	for i = #history[current_tab_id] - 1, 1, -1 do
+		local h_win_id = history[current_tab_id][i]
 		if is_win_file(h_win_id) then
 			if win_id == h_win_id then
 				table.insert(res, h_win_id)
@@ -92,13 +67,17 @@ function M.get_last_n(n, win_id)
 	return res
 end
 
-local function focus_last_win(file, last)
+local function focus_last_win(file, tabid)
 	local current_win_id = vim.api.nvim_get_current_win()
+	local current_tab_id = vim.api.nvim_win_get_tabpage(current_win_id)
+	local h = history[current_tab_id]
 	local function cond(win_id)
-		return win_id ~= current_win_id and valid_win(win_id) and is_win_file(win_id) == file
+		return win_id ~= current_win_id
+			and valid_win(win_id)
+			and is_win_file(win_id) == file
 	end
-	for i = #history - 1, 1, -1 do
-		local win_id = history[i]
+	for i = #history[current_tab_id] - 1, 1, -1 do
+		local win_id = history[current_tab_id][i]
 		if cond(win_id) then
 			return win_id
 		end
@@ -110,14 +89,11 @@ local function focus_last_win(file, last)
 			return win_id
 		end
 	end
-	if last then
-		return
-	end
-	return focus_last_win(not file, true)
 end
 
 function M.focus_last_win(file)
-	local target = focus_last_win(file)
+	local tabid = vim.api.nvim_win_get_tabpage(0)
+	local target = focus_last_win(file) or focus_last_win(not file, tabid)
 	if target then
 		vim.api.nvim_set_current_win(target)
 	end

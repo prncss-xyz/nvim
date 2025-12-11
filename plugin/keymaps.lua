@@ -4,6 +4,7 @@ local edit = domain.edit
 local move = domain.move
 local web = domain.web
 local win = domain.win
+local tabs = domain.tabs
 local directions = require("my.parameters").directions
 local theme = require("my.parameters").theme
 
@@ -201,6 +202,19 @@ for _, key in pairs({ "j", "k", "l", ";" }) do
 	vim.keymap.set("n", move .. reverse(key), function()
 		require("my.targets").register(key)
 	end, { desc = "Target Register " .. key })
+end
+
+vim.keymap.set("n", tabs .. "x", "<cmd>tabclose<cr>", { desc = "Tab Close" })
+vim.keymap.set("n", tabs .. "n", "<cmd>tabnew<cr>", { desc = "Tab New" })
+vim.keymap.set("n", tabs .. "o", "<cmd>tabonly<cr>", { desc = "Tab Only" })
+for i, key in pairs({ "j", "k", "l", ";" }) do
+	vim.keymap.set("n", tabs .. key, i .. "gt", { desc = "Open Tab " .. key .. " (" .. i .. "gt" .. ")" })
+	vim.keymap.set(
+		"n",
+		tabs .. reverse(key),
+		"<cmd>" .. i .. "tabclose<cr>",
+		{ desc = "Close Tab " .. key .. " (" .. i .. ")" }
+	)
 end
 
 if vim.g.neovide then

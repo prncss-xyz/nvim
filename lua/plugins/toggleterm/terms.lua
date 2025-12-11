@@ -14,7 +14,7 @@ local filetype_to_key = {
 
 local opts = {
 	dev = { cmd = personal("pnpm run dev", "yarn run dev local") },
-	mocks = { cmd = personal(nil, "yarn mocks") },
+	mocks = { cmd = personal(nil, "yarn shared:mocks") },
 	lua = { cmd = "lua" },
 	node = { cmd = "node" },
 	current = function()

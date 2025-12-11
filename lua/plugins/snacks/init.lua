@@ -325,7 +325,21 @@ return {
 				function()
 					Snacks.picker.git_branches()
 				end,
-				desc = "Pick Zoxide",
+				desc = "Pick Branch",
+			},
+			{
+				git .. "r",
+				function()
+					Snacks.picker.gh_pr()
+				end,
+				desc = "Pick GitHub PR",
+			},
+			{
+				git .. "y",
+				function()
+					Snacks.gitbrowse()
+				end,
+				desc = "Git Browse",
 			},
 			{
 				pick .. "x",

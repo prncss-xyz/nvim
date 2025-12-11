@@ -156,15 +156,6 @@ return {
 				desc = "Neogit Push",
 			},
 			{
-				git .. "r",
-				function()
-					require("my.ui_toggle").activate("neogit", function()
-						require("neogit").open({ "rebase" })
-					end)
-				end,
-				desc = "Neogit Rebase",
-			},
-			{
 				git .. "M",
 				function()
 					require("my.ui_toggle").activate("neogit", function()
