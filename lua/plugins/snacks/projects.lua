@@ -77,21 +77,20 @@ end
 
 function M.pick_project()
 	Snacks.picker.pick({
-		cwd = "~",
 		finder = function(opts, ctx)
-			return require("snacks.picker.source.proc").proc({
-				opts,
-				{
+			return require("snacks.picker.source.proc").proc(
+				ctx:opts({
 					cwd = vim.env.HOME .. "/Projects",
 					-- fd '\.git$' -a --prune -u -t d -x echo {//}
-					cmd = "fd",
+					cmd =  "fd" ,
 					args = { "\\.git$", "-a", "--prune", "-u", "-t", "d", "-x", "echo", "{//}" },
 					transform = function(item)
 						item.file = item.text
 						item.dir = true
 					end,
-				},
-			}, ctx)
+				}),
+				ctx
+			)
 		end,
 		format = "file",
 		confirm = { { "tcd", "open_project" } },

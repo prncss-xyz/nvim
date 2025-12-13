@@ -209,12 +209,6 @@ vim.keymap.set("n", tabs .. "n", "<cmd>tabnew<cr>", { desc = "Tab New" })
 vim.keymap.set("n", tabs .. "o", "<cmd>tabonly<cr>", { desc = "Tab Only" })
 for i, key in pairs({ "j", "k", "l", ";" }) do
 	vim.keymap.set("n", tabs .. key, i .. "gt", { desc = "Open Tab " .. key .. " (" .. i .. "gt" .. ")" })
-	vim.keymap.set(
-		"n",
-		tabs .. reverse(key),
-		"<cmd>" .. i .. "tabclose<cr>",
-		{ desc = "Close Tab " .. key .. " (" .. i .. ")" }
-	)
 end
 
 if vim.g.neovide then

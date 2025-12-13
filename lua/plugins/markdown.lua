@@ -4,38 +4,10 @@ local personal = require("my.conds").personal
 return {
 	{
 		"barreiroleo/ltex_extra.nvim",
-		branch = "dev",
 		dependencies = { "neovim/nvim-lspconfig" },
 		opts = {
-			server_opts = {
-				load_langs = { "en-US", "fr" },
-				capabilities = require("plugins.lsp.utils").cmp_capabilities,
-				flags = {
-					debounce_text_changes = 10000,
-					allow_incremental_sync = true,
-				},
-				settings = {
-					ltex = {
-						enabled = { "markdown" },
-						language = "auto",
-						additionalRules = {
-							enablePickyRules = true,
-						},
-						disabledRules = {
-							en = {
-								"UPPERCASE_SENTENCE_START",
-								"PUNCTUATION_PARAGRAPH_END",
-							},
-							fr = {
-								"APOS_TYP",
-								"FRENCH_WHITESPACE",
-								"UPPERCASE_SENTENCE_START",
-								"PUNCTUATION_PARAGRAPH_END",
-							},
-						},
-					},
-				},
-			},
+			load_langs = { "en-US", "fr" },
+			init_check = true,
 		},
 		enabled = personal,
 		cond = not_vscode,

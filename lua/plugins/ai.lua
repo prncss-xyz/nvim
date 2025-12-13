@@ -7,8 +7,8 @@ local ai_insert = require("my.parameters").ai_insert
 local reverse = require("my.parameters").reverse
 
 -- TODO: tabnine: codota/tabnine-nvim
-local completion = not_vscode(personal("windsurf", "copilot"), "none") -- "copilot" | "windsurf" |  "none"
-local chat = not_vscode(personal("sidekick", "copilotchat"), "none") -- 'sidekick' | 'avante' | 'copilotchat' | 'none'
+local completion = personal("windsurf", "copilot") -- "copilot" | "windsurf" |  "none"
+local chat = personal("sidekick", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'none'
 
 return {
 	{
@@ -18,7 +18,8 @@ return {
 			ssoStartUrl = "https://view.awsapps.com/start", -- Authenticate with Amazon Q Free Tier
 		},
 		cmd = { "AmazonQ" },
-		cond = personal,
+		enabled = personal,
+		cond = not_vscode,
 	},
 	{
 		"yetone/avante.nvim",
@@ -118,7 +119,7 @@ return {
 			"AvanteClear",
 		},
 		enabled = chat == "avante",
-		cond = personal,
+		cond = not_vscode,
 	},
 	{
 		"Exafunction/windsurf.nvim",
@@ -134,7 +135,7 @@ return {
 		event = "InsertEnter",
 		cmd = "Codeium",
 		enabled = completion == "windsurf",
-		cond = personal,
+		cond = not_vscode,
 	},
 	{
 		dependencies = "zbirenbaum/copilot.lua",
@@ -157,6 +158,7 @@ return {
 			},
 		},
 		enabled = chat == "sidekick",
+		cond = not_vscode,
 	},
 	{
 		"zbirenbaum/copilot.lua",
@@ -186,7 +188,8 @@ return {
 		},
 		cmd = { "Copilot" },
 		event = "InsertEnter",
-		enabled = completion == "copilot" or chat == "copilotchat" or chat == "sidekick",
+		enabled = completion == "copilot" or chat == "copilotchat",
+		cond = not_vscode,
 	},
 	{
 		"CopilotC-Nvim/CopilotChat.nvim",
@@ -251,6 +254,7 @@ return {
 			},
 		},
 		enabled = chat == "copilotchat",
+		cond = not_vscode,
 		cmd = {
 			"CopilotChat",
 			"CopilotChatOpen",
