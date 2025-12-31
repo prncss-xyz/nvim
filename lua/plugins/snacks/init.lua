@@ -158,10 +158,9 @@ return {
 			{
 				pick .. ".",
 				function()
-					dd(vim.env.HOME .. "/Dotfiles")
 					if personal() then
 						Snacks.picker.files({
-							cwd = vim.env.HOME .. "/Dotfiles",
+							cwd = vim.env.HOME .. "/.local/share/chezmoi",
 							matcher = {
 								frecency = true,
 							},

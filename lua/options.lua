@@ -74,7 +74,7 @@ deep_merge(vim, {
 		spelloptions = "camel",
 		--[[ titlestring = "%{v:lua.my_title()}", -- defined in `globals.lua` ]]
 		virtualedit = "block", -- allow cursor to move where there is no text in visual block mode,
-    guifont = 'mono:h12',
+    guifont = 'mono:h11',
 	},
 	g = {
 		neovide_cursor_vfx_mode = "torpedo",

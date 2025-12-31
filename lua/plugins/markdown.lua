@@ -5,13 +5,8 @@ return {
 	{
 		"barreiroleo/ltex_extra.nvim",
 		dependencies = { "neovim/nvim-lspconfig" },
-		opts = {
-			load_langs = { "en-US", "fr" },
-			init_check = true,
-		},
 		enabled = personal,
 		cond = not_vscode,
-		ft = { "markdown", "tex", "gitcommit", "text", "mdx" },
 	},
 	{
 		"MeanderingProgrammer/render-markdown.nvim",

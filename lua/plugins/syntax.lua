@@ -35,7 +35,6 @@ return {
 	},
 	{
 		"HiPhish/rainbow-delimiters.nvim",
-		commit = "55ad4fb",
 		dependencies = { "nvim-treesitter/nvim-treesitter" },
 		opts = function()
 			local rainbow_delimiters = require("rainbow-delimiters")

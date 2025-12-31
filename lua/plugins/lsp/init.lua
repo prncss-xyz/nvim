@@ -54,12 +54,13 @@ return {
 			automatic_installation = true,
 		},
 	},
-  {
-    'esmuellert/nvim-eslint',
-    config = function()
-      require('nvim-eslint').setup({})
-    end,
-  },
+	{
+		"esmuellert/nvim-eslint",
+		config = function()
+			require("nvim-eslint").setup({})
+		end,
+		enabled = false,
+	},
 	{
 		"nvimtools/none-ls.nvim",
 		dependencies = {

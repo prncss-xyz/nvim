@@ -2,7 +2,7 @@ for _, lsp in pairs({
 	"bashls",
 	"gopls",
 	"marksman",
-	-- "eslint",
+	"eslint",
 }) do
 	vim.lsp.config(lsp, {
 		capabilities = require("plugins.lsp.utils").cmp_capabilities,
@@ -22,9 +22,15 @@ vim.lsp.config("lua_ls", {
 		},
 	},
 })
-vim.lsp.config("ltex-ls-plus", {
+vim.lsp.config("ltex-ls", {
 	capabilities = require("plugins.lualine").cmp_capabilities,
 	load_langs = { "en-US", "fr" },
+	on_attach = function()
+		require("ltex_extra").setup({
+			load_langs = { "en-US", "fr" },
+			init_check = true,
+		})
+	end,
 	settings = {
 		ltex = {
 			enabled = { "markdown" },
@@ -52,8 +58,8 @@ vim.lsp.enable({
 	"bashls",
 	"gopls",
 	"marksman",
-	-- "eslint",
+	"eslint",
 	"graphql",
 	"lua_ls",
-	"ltex_plus",
+	"ltex",
 })
