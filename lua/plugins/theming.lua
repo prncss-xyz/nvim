@@ -28,6 +28,8 @@ local function colorscheme(names, config)
 		function config.config()
 			vim.o.background = theme.background
 			vim.cmd.colorscheme(theme.colors_name)
+			-- vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
+			-- vim.api.nvim_set_hl(0, "NonText", { bg = "none" })
 		end
 	end
 	return config
@@ -97,7 +99,7 @@ return {
 		} or {},
 		event = "VeryLazy",
 		cond = tui,
-    enabled = false,
+		enabled = false,
 	},
 	{
 		"f-person/auto-dark-mode.nvim",

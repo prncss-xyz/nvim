@@ -200,14 +200,14 @@ return {
 				function()
 					Snacks.picker.pick({
 						finder = function(opts, ctx)
-							return require("snacks.picker.source.proc").proc({
-								opts,
-								{
+							return require("snacks.picker.source.proc").proc(
+								ctx:opts({
 									cmd = "git",
 									args = { "ls-files", "-mo", "--exclude-standard" },
 									transform = require("plugins.snacks.transform").hunk(),
-								},
-							}, ctx)
+								}),
+								ctx
+							)
 						end,
 						format = "file",
 						title = "Diff Files",
