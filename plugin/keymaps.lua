@@ -114,6 +114,10 @@ vim.keymap.set({ "i", "s" }, "<c-f>", function()
 	require("my.readline").fwd()
 end, { desc = "EOC" })
 
+vim.keymap.set({ "i", "n", "x" }, "<c-i>", function()
+	require("my.windows").list()
+end, { desc = "List Windows" })
+
 vim.keymap.set({ "n", "x" }, "<c-a>", "I", { desc = "BOL" })
 vim.keymap.set({ "n", "x" }, "<c-e>", "A", { desc = "EOL" })
 vim.keymap.set({ "i", "s" }, "<c-e>", function()

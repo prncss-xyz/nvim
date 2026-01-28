@@ -150,14 +150,6 @@ return {
 		},
 		keys = {
 			{
-				"<c-i>",
-				function()
-					require("my.windows").list()
-				end,
-				mode = { "n", "x", "i" },
-				desc = "List Windows",
-			},
-			{
 				"rw",
 				function()
 					local id = require("window-picker").pick_window({

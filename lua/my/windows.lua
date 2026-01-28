@@ -67,10 +67,9 @@ function M.get_last_n(n, win_id)
 	return res
 end
 
-local function focus_last_win(tabid)
+local function focus_last_win()
 	local current_win_id = vim.api.nvim_get_current_win()
 	local current_tab_id = vim.api.nvim_win_get_tabpage(current_win_id)
-	local h = history[current_tab_id]
 	local function cond(win_id)
 		return win_id ~= current_win_id and valid_win(win_id)
 	end
@@ -90,10 +89,12 @@ local function focus_last_win(tabid)
 end
 
 function M.focus_last_win()
-	local tabid = vim.api.nvim_win_get_tabpage(0)
-	local target = focus_last_win(tabid)
+	local target = focus_last_win()
 	if target then
 		vim.api.nvim_set_current_win(target)
+		if vim.bo.buftype == "terminal" then
+			vim.cmd("startinsert")
+		end
 	end
 end
 
@@ -104,7 +105,6 @@ function M.setup()
 end
 
 function M.list()
-	local current_win_id = vim.api.nvim_get_current_win()
 	local windows = vim.api.nvim_tabpage_list_wins(0)
 	local infos = {}
 	for _, win_id in ipairs(windows) do
@@ -112,10 +112,9 @@ function M.list()
 		table.insert(infos, {
 			filetype = vim.api.nvim_buf_get_option(buf_id, "filetype"),
 			buftype = vim.api.nvim_buf_get_option(buf_id, "buftype"),
-			test = valid_win(win_id),
-			current = (win_id == current_win_id) and true or nil,
 		})
 	end
+	print(vim.inspect(infos))
 end
 
 function M.swap(winid)
