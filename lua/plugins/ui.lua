@@ -181,9 +181,12 @@ return {
 					local id = require("window-picker").pick_window()
 					if id then
 						vim.api.nvim_set_current_win(id)
+						if vim.bo.buftype == "terminal" then
+							vim.cmd("startinsert")
+						end
 					end
 				end,
-				mode = { "n", "x", "i" },
+				mode = { "n", "x", "i", "t" },
 				desc = "Pick Window",
 			},
 		},

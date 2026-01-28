@@ -1,5 +1,12 @@
 # TOOD
 
+- use starship for statusline
+- better binding for openai
+- replace toggleterm with snack's built-in terminal
+- intergrate opencode windows to toggle
+- TODO: auto insert mode when picking opencode
+- darkmode sync
+
 - yank: fix stop always line-wise
 
 - startup

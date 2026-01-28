@@ -85,8 +85,9 @@ end
 
 local function get_name_iconified()
   local res = ''
-  res = res .. (get_buffer_type_icon() or get_file_icon())
   res = res .. get_displayed_name()
+  res = res .. ' '
+  res = res .. (get_buffer_type_icon() or get_file_icon())
   return res
 end
 

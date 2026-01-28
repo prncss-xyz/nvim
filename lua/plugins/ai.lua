@@ -8,7 +8,7 @@ local reverse = require("my.parameters").reverse
 
 -- TODO: tabnine: codota/tabnine-nvim
 local completion = personal("windsurf", "copilot") -- "copilot" | "windsurf" |  "none"
-local chat = personal("sidekick", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'none'
+local chat = personal("opencode", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'none'
 
 return {
 	{
@@ -128,13 +128,41 @@ return {
 			enable_cmp_source = false,
 			virtual_text = {
 				enabled = true,
-				key_bindings = ai_insert,
+				key_bindings = {
+					accept = "<c-l>",
+					clear = "<c-c>",
+					next = "<c-x>",
+					prev = "<c-z>",
+				},
 			},
 		},
 		name = "codeium",
 		event = "InsertEnter",
 		cmd = "Codeium",
 		enabled = completion == "windsurf",
+		cond = not_vscode,
+	},
+	{
+		"NickvanDyke/opencode.nvim",
+		keys = {
+			{
+				"<c-.>",
+				function()
+					require("opencode").toggle()
+				end,
+				mode = { "n", "i", "t" },
+				desc = "Opencode Chat",
+			},
+			{
+				ai .. "a",
+				function()
+					require("opencode").ask("@this: ", { submit = true })
+				end,
+				mode = { "n", "x" },
+				desc = "Opencode Ask Prompt",
+			},
+		},
+		enabled = chat == "opencode",
 		cond = not_vscode,
 	},
 	{

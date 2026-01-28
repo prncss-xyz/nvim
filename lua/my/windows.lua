@@ -67,14 +67,12 @@ function M.get_last_n(n, win_id)
 	return res
 end
 
-local function focus_last_win(file, tabid)
+local function focus_last_win(tabid)
 	local current_win_id = vim.api.nvim_get_current_win()
 	local current_tab_id = vim.api.nvim_win_get_tabpage(current_win_id)
 	local h = history[current_tab_id]
 	local function cond(win_id)
-		return win_id ~= current_win_id
-			and valid_win(win_id)
-			and is_win_file(win_id) == file
+		return win_id ~= current_win_id and valid_win(win_id)
 	end
 	for i = #history[current_tab_id] - 1, 1, -1 do
 		local win_id = history[current_tab_id][i]
@@ -91,9 +89,9 @@ local function focus_last_win(file, tabid)
 	end
 end
 
-function M.focus_last_win(file)
+function M.focus_last_win()
 	local tabid = vim.api.nvim_win_get_tabpage(0)
-	local target = focus_last_win(file) or focus_last_win(not file, tabid)
+	local target = focus_last_win(tabid)
 	if target then
 		vim.api.nvim_set_current_win(target)
 	end
