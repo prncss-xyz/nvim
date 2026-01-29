@@ -1,5 +1,4 @@
 local not_vscode = require("my.conds").not_vscode
-local work = require("my.conds").work
 local tui = require("my.conds").tui
 local domain = require("my.parameters").domain
 
@@ -22,9 +21,7 @@ local function colorscheme(names, config)
 	if find(theme.colors_name, names) then
 		config.priority = 1000
 		config.lazy = false
-		config.dependencies = work({
-			"f-person/auto-dark-mode.nvim",
-		}, nil)
+		config.dependencies = { "f-person/auto-dark-mode.nvim" }
 		function config.config()
 			vim.o.background = theme.background
 			vim.cmd.colorscheme(theme.colors_name)

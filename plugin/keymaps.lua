@@ -73,7 +73,7 @@ end, {
 	nowait = true,
 	desc = "Close Window",
 })
-vim.keymap.set({ "n", "x", "i", "t" }, "<c-i>", function()
+vim.keymap.set({ "n", "x", "i", "t" }, "<c-r>", function()
 	require("my.windows").focus_last_win()
 end, { desc = "Window Toggle File" })
 vim.keymap.set("n", win .. "k", function()
