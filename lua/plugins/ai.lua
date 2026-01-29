@@ -199,6 +199,9 @@ return {
 			},
 		},
 		opts = {
+			filetypes = {
+				markdown = false,
+			},
 			nes = {
 				enabled = true,
 				keymap = {
