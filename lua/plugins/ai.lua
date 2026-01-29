@@ -6,7 +6,7 @@ local ai = domain.ai
 local ai_insert = require("my.parameters").ai_insert
 local reverse = require("my.parameters").reverse
 
--- TODO: tabnine: codota/tabnine-nvim
+-- TODO: augmentcode
 local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" |  "none"
 local chat = personal("opencode", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'none'
 
@@ -190,11 +190,13 @@ return {
 	},
 	{
 		"zbirenbaum/copilot.lua",
-		requires = {
-			"copilotlsp-nvim/copilot-lsp",
-			init = function()
-				vim.g.copilot_nes_debounce = 500
-			end,
+		dependencies = {
+			{
+				"copilotlsp-nvim/copilot-lsp",
+				init = function()
+					vim.g.copilot_nes_debounce = 500
+				end,
+			},
 		},
 		opts = {
 			nes = {
