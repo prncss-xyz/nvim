@@ -4,6 +4,7 @@ local edit = domain.edit
 local move = domain.move
 local web = domain.web
 local win = domain.win
+local file = domain.file
 local tabs = domain.tabs
 local directions = require("my.parameters").directions
 local theme = require("my.parameters").theme
@@ -69,7 +70,7 @@ end, {
 	nowait = true,
 	desc = "Close Window",
 })
-vim.keymap.set({ "n", "x", "i", "t" }, "<c-j>", function()
+vim.keymap.set({ "n", "x", "i", "t" }, "<c-i>", function()
 	require("my.windows").focus_last_win()
 end, { desc = "Window Toggle File" })
 vim.keymap.set("n", win .. "k", function()
@@ -114,7 +115,7 @@ vim.keymap.set({ "i", "s" }, "<c-f>", function()
 	require("my.readline").fwd()
 end, { desc = "EOC" })
 
-vim.keymap.set({ "i", "n", "x" }, "<c-i>", function()
+vim.keymap.set({ "i", "n", "x" }, domain.file .. "i", function()
 	require("my.windows").list()
 end, { desc = "List Windows" })
 

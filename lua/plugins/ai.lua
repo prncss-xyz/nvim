@@ -7,7 +7,7 @@ local ai_insert = require("my.parameters").ai_insert
 local reverse = require("my.parameters").reverse
 
 -- TODO: tabnine: codota/tabnine-nvim
-local completion = personal("windsurf", "copilot") -- "copilot" | "windsurf" |  "none"
+local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" |  "none"
 local chat = personal("opencode", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'none'
 
 return {
@@ -129,10 +129,10 @@ return {
 			virtual_text = {
 				enabled = true,
 				key_bindings = {
-					accept = "<c-l>",
-					clear = "<c-c>",
-					next = "<c-x>",
-					prev = "<c-z>",
+					accept = ai_insert.accept,
+					next = ai_insert.next,
+					prev = ai_insert.prev,
+					clear = ai_insert.clear,
 				},
 			},
 		},
@@ -166,8 +166,8 @@ return {
 		cond = not_vscode,
 	},
 	{
-		dependencies = "zbirenbaum/copilot.lua",
 		"folke/sidekick.nvim",
+		dependencies = "zbirenbaum/copilot.lua",
 		keys = {
 			{
 				ai .. "i",
@@ -190,8 +190,22 @@ return {
 	},
 	{
 		"zbirenbaum/copilot.lua",
+		requires = {
+			"copilotlsp-nvim/copilot-lsp",
+			init = function()
+				vim.g.copilot_nes_debounce = 500
+			end,
+		},
 		opts = {
-			suggestion = completion == "completion" and {
+			nes = {
+				enabled = true,
+				keymap = {
+					accept_and_goto = "<c-;>",
+					accept = false,
+					dismiss = false,
+				},
+			},
+			suggestion = completion == "copilot" and {
 				auto_trigger = true,
 				keymap = {
 					accept = ai_insert.accept,
@@ -200,9 +214,6 @@ return {
 					dismiss = ai_insert.clear,
 				},
 			} or nil,
-			server = {
-				type = "binary", -- "nodejs" | "binary"
-			},
 		},
 		keys = {
 			{
