@@ -56,6 +56,9 @@ if false then
 	vim.keymap.set("n", "oq", require("my.lsp").stop_client, { desc = "Stop Lsp Client" })
 end
 
+vim.keymap.set({ "n", }, file .. "t", "<cmd>edit TODO.md<cr>", { desc = "Edit TODO.md" })
+vim.keymap.set({ "n", }, file .. "j", "<cmd>edit package.json<cr>", { desc = "Edit package.json" })
+
 vim.keymap.set({ "n", "x" }, edit .. "t", "=", { desc = "Reindent" })
 vim.keymap.set("n", edit .. ".", "i.<left>", { desc = "Insert Method" })
 vim.keymap.set("n", edit .. ",", "i,<left>", { desc = "Insert Argument" })
@@ -115,7 +118,7 @@ vim.keymap.set({ "i", "s" }, "<c-f>", function()
 	require("my.readline").fwd()
 end, { desc = "EOC" })
 
-vim.keymap.set({ "i", "n", "x" }, domain.file .. "i", function()
+vim.keymap.set({ "n" }, domain.file .. "i", function()
 	require("my.windows").list()
 end, { desc = "List Windows" })
 

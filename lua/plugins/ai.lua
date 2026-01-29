@@ -144,6 +144,27 @@ return {
 	},
 	{
 		"NickvanDyke/opencode.nvim",
+		opts = {
+			prompts = {
+				ask_append = { prompt = "", ask = true }, -- Handy to insert context mid-prompt. Simpler than exposing every context as a prompt by default.
+				ask_this = { prompt = "@this: ", ask = true, submit = true },
+				diagnostics = { prompt = "Explain @diagnostics", submit = true },
+				diff = {
+					prompt = "Review the following git diff for correctness and readability: @diff",
+					submit = true,
+				},
+				document = { prompt = "Add comments documenting @this", submit = true },
+				explain = { prompt = "Explain @this and its context", submit = true },
+				fix = { prompt = "Fix @diagnostics", submit = true },
+				implement = { prompt = "Implement @this", submit = true },
+				optimize = { prompt = "Optimize @this for performance and readability", submit = true },
+				review = { prompt = "Review @this for correctness and readability", submit = true },
+				test = { prompt = "Add tests for @this", submit = true },
+			},
+		},
+		config = function(_, opts)
+			vim.g.opencode_opts = opts
+		end,
 		keys = {
 			{
 				"<c-.>",
@@ -154,12 +175,20 @@ return {
 				desc = "Opencode Chat",
 			},
 			{
-				ai .. "a",
+				ai .. "i",
 				function()
-					require("opencode").ask("@this: ", { submit = true })
+					require("opencode").ask()
 				end,
 				mode = { "n", "x" },
 				desc = "Opencode Ask Prompt",
+			},
+			{
+				ai .. "a",
+				function()
+					require("opencode").select()
+				end,
+				mode = { "n", "x" },
+				desc = "Opencode Prompt",
 			},
 		},
 		enabled = chat == "opencode",

@@ -250,15 +250,20 @@ return {
 				theirs = conflict .. "t",
 				none = conflict .. "x",
 				both = conflict .. "b",
-				next = conflict .. "n",
-				prev = conflict .. "p",
+				next = conflict .. "j",
+				prev = conflict .. "k",
 			},
 			default_commands = true,
 			disable_diagnostics = false,
-			list_opener = "copen",
+			list_opener = function()
+				require("trouble").open({ mode = "quickfix" })
+			end,
 			highlights = {
 				incoming = "DiffAdd",
 				current = "DiffText",
+			},
+			keys = {
+				{ conflict .. "l", "<cmd>GitConflictListQf<cr>", desc = "Diffview Current File History" },
 			},
 		},
 	},

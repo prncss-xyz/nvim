@@ -1,8 +1,9 @@
 # TOOD
 
-- better binding for openai
+- harpoon like: opn bind, on go; 
+
+- maybe flies jump
 - replace toggleterm with snack's built-in terminal
-- darkmode sync
 
 - yank: fix stop always line-wise
 
@@ -28,7 +29,7 @@
 ## Later
 
 - https://github.com/ThePrimeagen/git-worktree.nvim
-- https://github.com/akinsho/git-conflict.nvim
+- maybe: https://github.com/otavioschwanck/arrow.nvim/tree/master
 - https://github.com/saghen/blink.pairs
 - https://github.com/dmtrKovalenko/fff.nvim
 

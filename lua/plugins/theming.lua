@@ -103,8 +103,16 @@ return {
 	},
 	{
 		"f-person/auto-dark-mode.nvim",
-		commit = "c31de12",
-		opts = {},
-		enabled = false,
+		opts = {
+			update_interval = 1000,
+			set_dark_mode = function()
+				vim.api.nvim_set_option_value("background", "dark", {})
+				-- Optional: vim.cmd("colorscheme your-dark-theme")
+			end,
+			set_light_mode = function()
+				vim.api.nvim_set_option_value("background", "light", {})
+				-- Optional: vim.cmd("colorscheme your-light-theme")
+			end,
+		},
 	},
 }
