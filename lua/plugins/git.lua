@@ -1,6 +1,7 @@
 local not_vscode = require("my.conds").not_vscode
 local theme = require("my.parameters").theme
 local git = require("my.parameters").domain.git
+local conflict = require("my.parameters").domain.conflict
 
 return {
 	{
@@ -238,6 +239,27 @@ return {
 			{ git .. "F", "<cmd>DiffviewFocusFiles<CR>", desc = "Diffview Focus Files" },
 			{ git .. "T", "<cmd>DiffviewToggleFiles<CR>", desc = "Diffview Toggle Files" },
 			{ git .. "R", "<cmd>DiffviewRefresh<CR>", desc = "Diffview Refresh" },
+		},
+	},
+	{
+		"akinsho/git-conflict.nvim",
+		version = "*",
+		config = {
+			default_mappings = {
+				ours = conflict .. "o",
+				theirs = conflict .. "t",
+				none = conflict .. "x",
+				both = conflict .. "b",
+				next = conflict .. "n",
+				prev = conflict .. "p",
+			},
+			default_commands = true,
+			disable_diagnostics = false,
+			list_opener = "copen",
+			highlights = {
+				incoming = "DiffAdd",
+				current = "DiffText",
+			},
 		},
 	},
 }

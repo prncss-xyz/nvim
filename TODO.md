@@ -1,10 +1,7 @@
 # TOOD
 
-- use starship for statusline
 - better binding for openai
 - replace toggleterm with snack's built-in terminal
-- intergrate opencode windows to toggle
-- TODO: auto insert mode when picking opencode
 - darkmode sync
 
 - yank: fix stop always line-wise
@@ -30,6 +27,11 @@
 
 ## Later
 
+- https://github.com/ThePrimeagen/git-worktree.nvim
+- https://github.com/akinsho/git-conflict.nvim
+- https://github.com/saghen/blink.pairs
+- https://github.com/dmtrKovalenko/fff.nvim
+
 - picker: proximity bonus
 
 - window
@@ -51,4 +53,3 @@
     - https://github.com/kbwo/testing-language-server
     - https://github.com/kbwo/testing-ls.nvim
 
-- https://github.com/dmtrKovalenko/fff.nvim (not ready)

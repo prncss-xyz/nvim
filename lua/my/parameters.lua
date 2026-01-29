@@ -29,6 +29,7 @@ M.theme = {
 }
 
 M.domain = {
+  conflict = "oj",
 	move = "b",
 	edit = "h",
 	file = "of",
