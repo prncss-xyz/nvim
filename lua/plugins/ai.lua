@@ -238,7 +238,7 @@ return {
 			nes = {
 				enabled = true,
 				keymap = {
-					accept_and_goto = "<c-;>",
+					accept_and_goto = ai_insert.nes,
 					accept = false,
 					dismiss = false,
 				},

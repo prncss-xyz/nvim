@@ -24,8 +24,8 @@ return {
 				["<c-p>"] = { "show", "select_prev", "fallback" },
 				["<c-n>"] = { "show", "select_next", "fallback" },
 				["<c-g>"] = { "accept", "fallback" },
-				["<s-tab>"] = { "snippet_backward" },
-				["<tab>"] = { "snippet_forward" },
+				["<s-tab>"] = { "snippet_backward", "fallback" },
+				["<Tab>"] = { "snippet_forward", "fallback" },
 			},
 			snippets = { preset = "luasnip" },
 			completion = {

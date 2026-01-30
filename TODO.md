@@ -42,15 +42,11 @@
 - snippets
   - create file (template)
 
-- yanky
-  - blink
-    - port `https://github.com/chrisgrieser/cmp_yanky`
-
 ## Stuck
 
 - `mdx_analyzer`
 
-- test server
+- test server, not developed
   - not ready to use
     - https://github.com/kbwo/testing-language-server
     - https://github.com/kbwo/testing-ls.nvim
