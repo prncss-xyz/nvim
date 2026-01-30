@@ -8,7 +8,7 @@ local reverse = require("my.parameters").reverse
 
 -- TODO: augmentcode
 local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" |  "none"
-local chat = personal("opencode", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'none'
+local chat = personal("sidekick", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'none'
 
 return {
 	{
@@ -167,7 +167,7 @@ return {
 		end,
 		keys = {
 			{
-				"<c-.>",
+				ai_insert.toggle,
 				function()
 					require("opencode").toggle()
 				end,
@@ -197,11 +197,15 @@ return {
 	{
 		"folke/sidekick.nvim",
 		dependencies = "zbirenbaum/copilot.lua",
+		opts = { nes = { enabled = false } },
 		keys = {
 			{
-				ai .. "i",
+				ai_insert.toggle,
 				function()
-					require("sidekick.cli").toggle({ focus = true })
+					require("sidekick.cli").toggle({
+						name = "claude",
+						focus = true,
+					})
 				end,
 				desc = "Sidekick Chat",
 			},
@@ -280,7 +284,7 @@ return {
 		},
 		keys = {
 			{
-				ai .. "a",
+				ai_insert.accept,
 				function()
 					require("my.ui_toggle").activate("copilot")
 				end,
@@ -308,7 +312,7 @@ return {
 				desc = "Coplot Chat Load",
 			},
 			{
-				pick .. "a",
+				ai .. "a",
 				function()
 					require("my.ui_toggle").activate("copilot", "CopilotChatPrompts")
 				end,

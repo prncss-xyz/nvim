@@ -11,7 +11,8 @@ return {
 		dependencies = {
 			personal({
 				"L3MON4D3/LuaSnip",
-				"Kaiser-Yang/blink-cmp-avante",
+				"marcoSven/blink-cmp-yanky",
+				-- "Kaiser-Yang/blink-cmp-avante",
 			}, {
 				"L3MON4D3/LuaSnip",
 			}),
@@ -35,20 +36,15 @@ return {
 				},
 			},
 			sources = {
-				default = personal({
+				default = {
 					"avante",
 					"lazydev",
 					"lsp",
 					"path",
 					"snippets",
 					"buffer",
-				}, {
-					"lazydev",
-					"lsp",
-					"path",
-					"snippets",
-					"buffer",
-				}),
+					"yank",
+				},
 				providers = {
 					buffer = {
 						score_offset = -100,
@@ -62,6 +58,16 @@ return {
 						module = "blink-cmp-avante",
 						name = "Avante",
 						opts = {},
+					},
+					yank = {
+						name = "yank",
+						module = "blink-yanky",
+						opts = {
+							minLength = 5,
+							onlyCurrentFiletype = true,
+							trigger_characters = { '"' },
+							kind_icon = "󰅍",
+						},
 					},
 					path = {
 						enabled = function()

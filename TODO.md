@@ -28,12 +28,13 @@
 
 ## Later
 
+- https://github.com/coder/claudecode.nvim
 - https://github.com/ThePrimeagen/git-worktree.nvim
-- maybe: https://github.com/otavioschwanck/arrow.nvim/tree/master
+
+## Maybe
+
 - https://github.com/saghen/blink.pairs
 - https://github.com/dmtrKovalenko/fff.nvim
-
-- picker: proximity bonus
 
 - window
   - implement alt buffer per window

@@ -5,10 +5,11 @@ function M.reverse(key)
 end
 
 M.ai_insert = {
-	accept = "<c-j>",
+  toggle = "<c-.>",
+	accept = "<c-k>",
 	clear = "<c-c>",
-	next = "<c-k>",
-	prev = "<c-l>",
+	next = "<c-l>",
+	prev = "<c-;>",
 }
 
 M.theme = {
