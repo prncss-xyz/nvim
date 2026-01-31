@@ -2,9 +2,6 @@
 
 - harpoon like: opn bind, on go; 
 
-- maybe flies jump
-- replace toggleterm with snack's built-in terminal
-
 - yank: fix stop always line-wise
 
 - startup
@@ -12,7 +9,7 @@
 
 - flies
   - select current word
-  - comments opterations
+  - comments operations
     - currently only comments out the first line
   - buffer: we, ee
   - remove to bracket

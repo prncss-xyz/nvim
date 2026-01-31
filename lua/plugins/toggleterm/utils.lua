@@ -15,7 +15,6 @@ M.conf = {
 		lua = get_repl_opts("lua"),
 		yaegi = get_repl_opts("yaegi"),
 	},
-	default_float = { "zk" },
 	default_non_float = nil,
 }
 
@@ -42,8 +41,8 @@ end
 function M.toggle_float()
 	if last_float_terminal then
 		last_float_terminal:toggle()
-	elseif M.conf.default_float then
-		M.terminal(unpack(M.conf.default_float))
+	else
+		require("plugins.toggleterm.terms").terms.term_e:toggle()
 	end
 end
 

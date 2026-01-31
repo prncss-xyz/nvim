@@ -18,9 +18,7 @@ local opts = {
 	lua = { cmd = "lua" },
 	node = { cmd = "node" },
 	current = function()
-		return {
-			dir = vim.fn.expand("%:p:h"),
-		}
+		return { dir = vim.fn.expand("%:p:h") }
 	end,
 	diff = {
 		cmd = "wdiff  __master.txt __diff.txt",
@@ -28,12 +26,16 @@ local opts = {
 	},
 }
 
-M.terms = cached(function(key)
+M.terms, M.remove_term = cached(function(key)
 	local o = opts[key] or {}
 	if type(o) == "function" then
 		o = o()
 	end
 	o.display_name = o.display_name or key
+	o.on_exit = function()
+		M.remove_term(key)
+	end
+
 	return Terminal:new(o)
 end)
 

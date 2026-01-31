@@ -3,15 +3,10 @@ local personal = require("my.conds").personal
 
 return {
 	{
-		"Kaiser-Yang/blink-cmp-avante",
-		cond = personal,
-	},
-	{
 		"saghen/blink.cmp",
 		dependencies = {
 			personal({
 				"L3MON4D3/LuaSnip",
-				"marcoSven/blink-cmp-yanky",
 				-- "Kaiser-Yang/blink-cmp-avante",
 			}, {
 				"L3MON4D3/LuaSnip",
@@ -37,13 +32,12 @@ return {
 			},
 			sources = {
 				default = {
-					"avante",
+					-- "avante",
 					"lazydev",
 					"lsp",
 					"path",
 					"snippets",
 					"buffer",
-					"yank",
 				},
 				providers = {
 					buffer = {
@@ -58,16 +52,6 @@ return {
 						module = "blink-cmp-avante",
 						name = "Avante",
 						opts = {},
-					},
-					yank = {
-						name = "yank",
-						module = "blink-yanky",
-						opts = {
-							minLength = 5,
-							onlyCurrentFiletype = true,
-							trigger_characters = { '"' },
-							kind_icon = "󰅍",
-						},
 					},
 					path = {
 						enabled = function()

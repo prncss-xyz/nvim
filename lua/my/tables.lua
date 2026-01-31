@@ -21,7 +21,10 @@ function M.cached(create)
 		cache[key] = cache[key] or create(key)
 		return cache[key]
 	end
-	return setmetatable({}, mt)
+	function remove(key)
+		cache[key] = nil
+	end
+	return setmetatable({}, mt), remove
 end
 
 return M
