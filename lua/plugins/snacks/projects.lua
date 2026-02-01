@@ -1,6 +1,6 @@
 local M = {}
 
-local notes = vim.env.HOME .. "/Projects/notes"
+local notes = require("my.parameters").dirs.notes
 
 local is_file_cur_win = require("my.windows").is_file_cur_win
 
@@ -154,7 +154,7 @@ function M.pick_project()
 		finder = function(opts, ctx)
 			return require("snacks.picker.source.proc").proc(
 				ctx:opts({
-					cwd = vim.env.HOME .. "/Projects",
+					cwd = notes,
 					-- fd '\.git$' -a --prune -u -t d -x echo {//}
 					cmd = "fd",
 					args = { "\\.git$", "-a", "--prune", "-u", "-t", "d", "-x", "echo", "{//}" },

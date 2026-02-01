@@ -4,13 +4,20 @@ function M.reverse(key)
 	return "p" .. key
 end
 
+local projects = vim.env.HOME .. "/projects"
+
+M.dirs = {
+	projects = projects,
+	notes = projects .. "/notes",
+}
+
 M.ai_insert = {
-  toggle = "<c-.>",
+	toggle = "<c-.>",
 	accept = "<c-k>",
 	clear = "<c-c>",
 	next = "<c-l>",
 	prev = "<c-;>",
-  nes = "<c-s>"
+	nes = "<c-s>",
 }
 
 M.theme = {
@@ -31,7 +38,7 @@ M.theme = {
 }
 
 M.domain = {
-  conflict = "oj",
+	conflict = "oj",
 	move = "b",
 	edit = "h",
 	file = "of",

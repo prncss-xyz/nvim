@@ -11,6 +11,7 @@ local web = domain.web
 local move = domain.move
 local git = domain.git
 local projects = require("plugins.snacks.projects")
+local notes = require("my.parameters").dirs.notes
 
 return {
 	{
@@ -20,9 +21,7 @@ return {
 		---@type snacks.Config
 		opts = function()
 			return {
-				image = work({
-					doc = { enabled = true },
-				}),
+				image = work({ doc = { enabled = true } }),
 				bigfile = { enabled = true },
 				indent = { enabled = true },
 				input = { enabled = true },
@@ -137,7 +136,7 @@ return {
 				pick .. "n",
 				function()
 					Snacks.picker.files({
-						cwd = vim.env.HOME .. "/Projects/notes",
+						cwd = notes,
 						matcher = {
 							frecency = true,
 						},
