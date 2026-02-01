@@ -82,20 +82,26 @@ deep_merge(vim, {
 		neovide_scale_factor = 1.2,
 		mapleader = " ",
 		maplocalleader = ",",
-		clipboard = {
-			name = "OSC 52",
-			copy = {
-				["+"] = require("vim.ui.clipboard.osc52").copy("+"),
-				["*"] = require("vim.ui.clipboard.osc52").copy("*"),
-			},
-			paste = {
-				["+"] = require("vim.ui.clipboard.osc52").paste("+"),
-				["*"] = require("vim.ui.clipboard.osc52").paste("*"),
-			},
-		},
 	},
-	env = {},
 })
+
+if vim.env.TERMUX == "TERMUX" then
+	vim.g.clipboard = {
+		name = "OSC 52",
+		copy = {
+			["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+			["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+		},
+		paste = {
+			["+"] = function()
+				return vim.fn.getreg("+")
+			end, -- Read from internal reg only
+			["*"] = function()
+				return vim.fn.getreg("*")
+			end,
+		},
+	}
+end
 
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = "markdown",

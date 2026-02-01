@@ -1,4 +1,4 @@
-# TOOD
+# TODO
 
 - harpoon like: opn bind, on go; 
 
