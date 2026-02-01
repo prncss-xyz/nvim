@@ -264,16 +264,29 @@ return {
 			{
 				ai_insert.clear,
 				function()
+					local touched = false
 					local suggestion = require("copilot.suggestion")
 					if suggestion.is_visible() then
+						touched = true
 						suggestion.dismiss()
 					end
-					local nes = require("copilot.nes")
-					if nes.is_visible() then
-						nes.dismiss()
+					if require("copilot-lsp.nes").clear() then
+						touched = true
+					end
+					if not touched then
+						vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+						vim.lsp.buf.format({
+							async = false,
+							filter = function(client)
+								return not vim.tbl_contains({
+									"lua_ls",
+									"vtsls",
+								}, client.name)
+							end,
+						})
 					end
 				end,
-				desc = "Coplot Clear suggestions",
+				desc = "Coplot Clear suggestions or Leave insert mode",
 				mode = { "n", "v", "i" },
 			},
 		},
