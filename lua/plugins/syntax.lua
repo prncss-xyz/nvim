@@ -5,9 +5,10 @@ return {
 	{
 		"nvim-treesitter/nvim-treesitter",
 		build = ":TSUpdate",
+    branch = "master",
 		opts = {
 			ensure_installed = {
-        "fish",
+				"fish",
 				"markdown",
 				"markdown_inline",
 				"bash",
@@ -22,15 +23,15 @@ return {
 				"yaml",
 				"regex",
 			},
-			indent = {
-				enable = true,
-			},
+			highlight = { enable = true },
+			indent = { enable = true },
 		},
 		config = function(_, opts)
 			require("nvim-treesitter.configs").setup(opts)
+			vim.treesitter.language.register("typescript", "typescript")
 			vim.treesitter.language.register("markdown", "mdx")
-      -- for unknown reason, this is needed to make proper highlighting of markdown codeblocks
-      vim.cmd('TSEnable highlight')
+			-- for unknown reason, this is needed to make proper highlighting of markdown codeblocks
+			vim.cmd("TSEnable highlight")
 		end,
 	},
 	{

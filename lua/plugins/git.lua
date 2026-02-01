@@ -244,7 +244,7 @@ return {
 	{
 		"akinsho/git-conflict.nvim",
 		version = "*",
-		config = {
+		opts = {
 			default_mappings = {
 				ours = conflict .. "o",
 				theirs = conflict .. "t",

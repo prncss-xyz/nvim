@@ -29,7 +29,7 @@ vim.keymap.set("x", "d", '"_d', { desc = "Cut Void" })
 vim.keymap.set("x", edit .. "d", '"+d', { desc = "Cut" })
 
 vim.keymap.set("x", "v", "V", { desc = "Visual Line" })
-vim.keymap.set({ "n", "x" }, "V", "<c-v>", {
+vim.keymap.set({ "n", "x", "s" }, "V", "<c-v>", {
 	desc = "Visual Bloc",
 })
 vim.keymap.set("n", "<c-q>", "<cmd>quitall!<cr>", { desc = "quitall" })

@@ -23,6 +23,6 @@ return {
 		},
 		ft = { "markdown", "Avante", "mdx" },
 		cmd = { "RenderMarkdown" },
-		cond = not_vscode,
+		cond = false,
 	},
 }

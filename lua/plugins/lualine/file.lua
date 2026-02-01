@@ -21,7 +21,7 @@ local function get_file_icon()
   end
   local ok, devicons = pcall(require, 'nvim-web-devicons')
   if not ok then
-    print "No icon plugin found. Please install 'kyazdani42/nvim-web-devicons'"
+    print "No icon plugin found. Please install 'nvim-web-devicons'"
     return ''
   end
   local f_name = vim.fn.expand '%:t'

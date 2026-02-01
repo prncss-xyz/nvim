@@ -19,6 +19,10 @@ end
 return {
 	{
 		"nvim-lualine/lualine.nvim",
+		dependencies = {
+			"MunifTanjim/nui.nvim",
+			"nvim-tree/nvim-web-devicons",
+		},
 		event = "VeryLazy",
 		opts = {
 			options = {
@@ -40,7 +44,6 @@ return {
 				lualine_z = {},
 			},
 		},
-		dependencies = "MunifTanjim/nui.nvim",
 		cond = not_vscode,
 	},
 }
