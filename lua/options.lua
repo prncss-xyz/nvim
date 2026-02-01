@@ -20,7 +20,7 @@ deep_merge(vim, {
 		completeopt = "menuone,noselect",
 		cursorline = true,
 		expandtab = true,
-		-- guifont = 'Fira Code:h8', 
+		-- guifont = 'Fira Code:h8',
 		-- guifont = "Victor Mono:h9",
 		hidden = true,
 		ignorecase = true,
@@ -59,9 +59,9 @@ deep_merge(vim, {
 		signcolumn = "yes",
 	},
 	opt = {
-		clipboard = "unnamedplus",
 		diffopt = "internal,filler,closeoff,algorithm:patience",
 		cc = "+1",
+		clipboard = "unnamedplus",
 		conceallevel = 2,
 		exrc = false, -- allow project local vimrc files example .nvimrc see :h exrc
 		fillchars = "eob: ", -- remove annoying tildes in gutter beneath file buffer
@@ -74,14 +74,25 @@ deep_merge(vim, {
 		spelloptions = "camel",
 		--[[ titlestring = "%{v:lua.my_title()}", -- defined in `globals.lua` ]]
 		virtualedit = "block", -- allow cursor to move where there is no text in visual block mode,
-    guifont = 'mono:h11',
+		guifont = "mono:h11",
 	},
 	g = {
 		neovide_cursor_vfx_mode = "torpedo",
 		neovide_opacity = 0.85,
-    neovide_scale_factor = 1.2,
+		neovide_scale_factor = 1.2,
 		mapleader = " ",
 		maplocalleader = ",",
+		clipboard = {
+			name = "OSC 52",
+			copy = {
+				["+"] = require("vim.ui.clipboard.osc52").copy("+"),
+				["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+			},
+			paste = {
+				["+"] = require("vim.ui.clipboard.osc52").paste("+"),
+				["*"] = require("vim.ui.clipboard.osc52").paste("*"),
+			},
+		},
 	},
 	env = {},
 })
