@@ -10,8 +10,8 @@ local function starship()
 	if not result then
 		return ""
 	end
-	-- Strip ANSI colors
-	result = result:gsub("\27%[[0-9;]*m", "")
+	-- Strip all ANSI escape sequences
+	result = result:gsub("\27%[[^a-zA-Z]*[a-zA-Z]", "")
 	-- Flatten and trim
 	return result:gsub("\n", " "):gsub("^%s*(.-)%s*$", "%1")
 end
