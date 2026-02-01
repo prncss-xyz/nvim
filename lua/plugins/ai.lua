@@ -249,7 +249,6 @@ return {
 					accept = ai_insert.accept,
 					next = ai_insert.next,
 					prev = ai_insert.prev,
-					dismiss = ai_insert.clear,
 				},
 			} or nil,
 		},
@@ -261,6 +260,21 @@ return {
 				end,
 				desc = "Coplot Toggle Autocomplete",
 				mode = { "n", "x" },
+			},
+			{
+				ai_insert.clear,
+				function()
+					local suggestion = require("copilot.suggestion")
+					if suggestion.is_visible() then
+						suggestion.dismiss()
+					end
+					local nes = require("copilot.nes")
+					if nes.is_visible() then
+						nes.dismiss()
+					end
+				end,
+				desc = "Coplot Clear suggestions",
+				mode = { "n", "v", "i" },
 			},
 		},
 		cmd = { "Copilot" },

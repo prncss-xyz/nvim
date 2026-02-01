@@ -135,7 +135,7 @@ return {
 				pick .. "n",
 				function()
 					Snacks.picker.files({
-						cwd = personal(vim.env.HOME .. "/Personal/notes", vim.env.HOME .. "/Projects/notes"),
+						cwd = vim.env.HOME .. "/Projects/notes",
 						matcher = {
 							frecency = true,
 						},

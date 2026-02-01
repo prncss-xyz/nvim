@@ -56,7 +56,11 @@ if false then
 	vim.keymap.set("n", "oq", require("my.lsp").stop_client, { desc = "Stop Lsp Client" })
 end
 
-vim.keymap.set({ "n" }, file .. "t", "<cmd>edit TODO.md<cr>", { desc = "Edit TODO.md" })
+vim.keymap.set({ "n" }, file .. "t", function()
+	local dirname = vim.env.HOME .. "/Projects/notes/dev/projects/" .. vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
+	vim.fn.mkdir(dirname, "p")
+	vim.cmd.edit(dirname .. "/index.md")
+end, { desc = "Edit Project Note" })
 vim.keymap.set({ "n" }, file .. "j", "<cmd>edit package.json<cr>", { desc = "Edit package.json" })
 
 vim.keymap.set({ "n", "x" }, edit .. "t", "=", { desc = "Reindent" })
@@ -243,4 +247,3 @@ if vim.g.neovide then
 	)
 	vim.api.nvim_set_keymap("n", "<C-)>", ":lua vim.g.neovide_transparency = 0.9<CR>", { silent = true })
 end
-
