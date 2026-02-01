@@ -4,6 +4,7 @@ local not_vscode = require("my.conds").not_vscode
 local reverse = require("my.parameters").reverse
 local theme = require("my.parameters").theme
 local domain = require("my.parameters").domain
+local file = domain.file
 local pick = domain.pick
 local win = domain.win
 local web = domain.web
@@ -26,6 +27,7 @@ return {
 				indent = { enabled = true },
 				input = { enabled = true },
 				picker = {
+					auto_confirm = true,
 					enabled = true,
 					actions = {
 						open_project = {
@@ -139,9 +141,20 @@ return {
 						matcher = {
 							frecency = true,
 						},
+						args = { "-e", "md" },
 					})
 				end,
 				desc = "Pick Note File",
+			},
+			{
+				file .. "l",
+				projects.pick_current_lang_note,
+				desc = "Edit Lang Note",
+			},
+			{
+				file .. "n",
+				projects.pick_current_project_note,
+				desc = "Edit Project Note",
 			},
 			{
 				pick .. ",",

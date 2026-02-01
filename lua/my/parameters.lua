@@ -10,7 +10,7 @@ M.ai_insert = {
 	clear = "<c-c>",
 	next = "<c-l>",
 	prev = "<c-;>",
-  nes = "<c-,>"
+  nes = "<c-s>"
 }
 
 M.theme = {

@@ -56,11 +56,6 @@ if false then
 	vim.keymap.set("n", "oq", require("my.lsp").stop_client, { desc = "Stop Lsp Client" })
 end
 
-vim.keymap.set({ "n" }, file .. "t", function()
-	local dirname = vim.env.HOME .. "/Projects/notes/dev/projects/" .. vim.fn.fnamemodify(vim.fn.getcwd(), ":t")
-	vim.fn.mkdir(dirname, "p")
-	vim.cmd.edit(dirname .. "/index.md")
-end, { desc = "Edit Project Note" })
 vim.keymap.set({ "n" }, file .. "j", "<cmd>edit package.json<cr>", { desc = "Edit package.json" })
 
 vim.keymap.set({ "n", "x" }, edit .. "t", "=", { desc = "Reindent" })
@@ -174,18 +169,6 @@ vim.keymap.set("n", "oml", "<cmd>Lazy<cr>", { desc = "Lazy" })
 
 vim.keymap.set("n", win .. "q", require("my.ui_toggle").toggle, { desc = "Close Widget" })
 
-vim.keymap.set({ "n", "i" }, "<c-s>", function()
-	vim.cmd("stopinsert")
-	vim.lsp.buf.format({
-		async = false,
-		filter = function(client)
-			return not vim.tbl_contains({
-				"lua_ls",
-				"vtsls",
-			}, client.name)
-		end,
-	})
-end, { desc = "LSP Format" })
 vim.keymap.set("n", edit .. theme.symbol, function()
 	vim.lsp.buf.rename()
 end, { desc = "LSP Rename" })

@@ -20,7 +20,7 @@ return {
 		end,
 		keys = {
 			{
-				file .. "l",
+				file .. "$",
 				mode = { "n", "x" },
 				"<cmd>Yazi toggle<cr>",
 				desc = "Yazi Last",

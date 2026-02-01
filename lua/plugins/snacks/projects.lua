@@ -1,6 +1,47 @@
 local M = {}
 
+local notes = vim.env.HOME .. "/Projects/notes"
+
 local is_file_cur_win = require("my.windows").is_file_cur_win
+
+function M.is_binary_by_ext(filepath)
+	if not filepath then
+		return false
+	end
+
+	-- Extract the extension (handles cases like .tar.gz by taking the last part)
+	local ext = filepath:match("^.+(%..+)$")
+	if not ext then
+		return false
+	end
+	ext = ext:lower()
+
+	-- Define binary extensions
+	local binary_extensions = {
+		[".bin"] = true,
+		[".exe"] = true,
+		[".dll"] = true,
+		[".so"] = true,
+		[".o"] = true,
+		[".pyc"] = true,
+		[".pyd"] = true,
+		[".node"] = true,
+		[".png"] = true,
+		[".jpg"] = true,
+		[".jpeg"] = true,
+		[".gif"] = true,
+		[".pdf"] = true,
+		[".zip"] = true,
+		[".tar"] = true,
+		[".gz"] = true,
+		[".7z"] = true,
+		[".wasm"] = true,
+		[".sqlite"] = true,
+		[".db"] = true,
+	}
+
+	return binary_extensions[ext] or false
+end
 
 function M.toggle_project()
 	if is_file_cur_win() then
@@ -75,6 +116,39 @@ function M.open_project(cwd, exclude, fallback)
 	end
 end
 
+local filetype_to_lang = {
+	javascript = "typescript",
+	javascriptreact = "typescript",
+	typescript = "typescript",
+	typescriptreact = "typescript",
+}
+
+function M.pick_current_lang_note()
+	return M.pick_note_with("/dev/lang/" .. (filetype_to_lang[vim.bo.filetype] or vim.bo.filetype))
+end
+
+function M.pick_current_project_note()
+	return M.pick_note_with("/dev/projects/" .. vim.fn.fnamemodify(vim.fn.getcwd(), ":t"))
+end
+
+function M.pick_note_with(stem)
+	local dirname = notes .. stem
+	vim.fn.mkdir(dirname, "p")
+	Snacks.picker.files({
+		cwd = dirname,
+		matcher = {
+			frecency = true,
+		},
+		on_show = function(picker)
+			if #picker:items() == 0 then
+				picker:close()
+				vim.cmd.edit(dirname .. "/index.md")
+			end
+		end,
+		args = { "-e", "md" },
+	})
+end
+
 function M.pick_project()
 	Snacks.picker.pick({
 		finder = function(opts, ctx)
@@ -82,7 +156,7 @@ function M.pick_project()
 				ctx:opts({
 					cwd = vim.env.HOME .. "/Projects",
 					-- fd '\.git$' -a --prune -u -t d -x echo {//}
-					cmd =  "fd" ,
+					cmd = "fd",
 					args = { "\\.git$", "-a", "--prune", "-u", "-t", "d", "-x", "echo", "{//}" },
 					transform = function(item)
 						item.file = item.text
