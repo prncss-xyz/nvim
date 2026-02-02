@@ -85,21 +85,18 @@ deep_merge(vim, {
 	},
 })
 
-if vim.env.TERMUX == "TERMUX" then
+if vim.fn.has("wsl") == 1 then
 	vim.g.clipboard = {
-		name = "OSC 52",
+		name = "WslClipboard",
 		copy = {
-			["+"] = require("vim.ui.clipboard.osc52").copy("+"),
-			["*"] = require("vim.ui.clipboard.osc52").copy("*"),
+			["+"] = "clip.exe",
+			["*"] = "clip.exe",
 		},
 		paste = {
-			["+"] = function()
-				return vim.fn.getreg("+")
-			end, -- Read from internal reg only
-			["*"] = function()
-				return vim.fn.getreg("*")
-			end,
+			["+"] = 'powershell.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))',
+			["*"] = 'powershell.exe -c [Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r", ""))',
 		},
+		cache_enabled = 0,
 	}
 end
 
