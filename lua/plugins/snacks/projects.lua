@@ -150,6 +150,8 @@ function M.pick_note_with(stem)
 end
 
 function M.pick_project()
+            print(require("my.parameters").dirs.projects)
+
 	Snacks.picker.pick({
 		finder = function(opts, ctx)
 			return require("snacks.picker.source.proc").proc(
