@@ -154,7 +154,7 @@ function M.pick_project()
 		finder = function(opts, ctx)
 			return require("snacks.picker.source.proc").proc(
 				ctx:opts({
-					cwd = notes,
+					cwd = require("my.parameters").dirs.projects,
 					-- fd '\.git$' -a --prune -u -t d -x echo {//}
 					cmd = "fd",
 					args = { "\\.git$", "-a", "--prune", "-u", "-t", "d", "-x", "echo", "{//}" },
