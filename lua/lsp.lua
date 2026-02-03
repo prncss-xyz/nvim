@@ -1,11 +1,17 @@
 for _, lsp in pairs({
-	"bashls",
-	"gopls",
 	"marksman",
-	"eslint",
 }) do
 	vim.lsp.config(lsp, {
 		capabilities = require("plugins.lsp.utils").cmp_capabilities,
+	})
+end
+for _, lsp in pairs({
+	"bashls",
+	"gopls",
+	"eslint",
+}) do
+	vim.lsp.config(lsp, {
+		capabilities = require("plugins.lsp.utils").capabilities,
 	})
 end
 vim.lsp.config("graphql", {

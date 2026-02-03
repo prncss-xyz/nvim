@@ -10,19 +10,33 @@ return {
 	},
 	{
 		"MeanderingProgrammer/render-markdown.nvim",
-		opts = {
-			-- FIXME: not working
-			completions = { lsp = { enabled = true } },
-			file_types = { "markdown", "mdx" },
-			-- FIXME: not working
-			code = { enabled = true },
-		},
 		dependencies = {
 			"nvim-treesitter/nvim-treesitter",
 			"nvim-tree/nvim-web-devicons",
 		},
+		opts = {
+			completions = { lsp = { enabled = true } },
+			file_types = { "markdown", "mdx" },
+			code = { enabled = false },
+		},
 		ft = { "markdown", "Avante", "mdx" },
 		cmd = { "RenderMarkdown" },
-		cond = false,
+	},
+	{
+		"obsidian-nvim/obsidian.nvim",
+		version = "*", -- use latest release, remove to use latest commit
+		ft = "markdown",
+		---@module 'obsidian'
+		---@type obsidian.config
+		opts = {
+			legacy_commands = false, -- this will be removed in the next major release
+			workspaces = {
+				{
+					name = "notes",
+					path = "~/projects/notes",
+				},
+			},
+		},
+    enabled = false,
 	},
 }

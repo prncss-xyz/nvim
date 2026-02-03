@@ -2,19 +2,30 @@
 
 local M = {}
 
+table.insert(M, s("tsk", fmt("- [ ] ", {}, { delimiters = "{}" })))
+
 table.insert(
 	M,
 	s(
-		"link",
+		"lnk",
 		fmt("[{}]({})", {
-			i(1, "text"),
-			i(2, "url"),
+			i(1, ""),
+			i(2, ""),
 		}, { delimiters = "{}" })
 	)
 )
 
-table.insert(M, s("quote", fmt("`{}`", { i(1, "") }, { delimiters = "{}" })))
-table.insert(M, s("img", fmt("![{}]({})", { i(1, "alt"), i(2, "url") }, { delimiters = "{}" })))
+table.insert(
+	M,
+	s(
+		"wlk",
+		fmt("[[{}]]", {
+			i(1, ""),
+		}, { delimiters = "{}" })
+	)
+)
+
+table.insert(M, s("img", fmt("![{}]({})", { i(1, ""), i(2, "") }, { delimiters = "{}" })))
 table.insert(
 	M,
 	s(
@@ -26,8 +37,8 @@ table.insert(
         ```
       ]],
 			{
-				i(1, "lang"),
-				i(2, "code"),
+				i(1, ""),
+				i(2, ""),
 			},
 			{ delimiters = "{}" }
 		)
@@ -38,11 +49,11 @@ for _, lang in ipairs({
 	"lua",
 	"haskell",
 	"go",
-	"bash",
+	"sh",
 	"c",
 	"cpp",
-	"javascript",
-	"typescript",
+	"js",
+	"ts",
 	"jsx",
 	"tsx",
 	"json",
