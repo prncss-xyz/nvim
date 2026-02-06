@@ -7,7 +7,6 @@ return {
 		"yioneko/nvim-vtsls",
 		config = function()
 			vim.lsp.enable("vtsls", require("vtsls").config)
-			-- require("lspconfig").vtsls.setup({ on_attach = require("workspace-diagnostics").populate_workspace_diagnostics, })
 		end,
 		keys = {
 			{
@@ -64,8 +63,5 @@ return {
 		ft = { "javascript", "typescript", "javascriptreact", "typescriptreact" },
 		cond = not_vscode,
 		enabled = false and personal,
-	},
-	{
-		"artemave/workspace-diagnostics.nvim",
 	},
 }

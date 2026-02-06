@@ -1,13 +1,21 @@
 for _, lsp in pairs({
+	"bashls",
+	"gopls",
 	"marksman",
 }) do
 	vim.lsp.config(lsp, {
 		capabilities = require("plugins.lsp.utils").cmp_capabilities,
 	})
 end
+
+vim.lsp.config("marksman", {
+	cmd = { "marksman", "server" },
+	filetypes = { "markdown", "markdown.mdx" },
+	root_markers = { ".marksman.toml", ".git" },
+	capabilities = require("plugins.lsp.utils").cmp_capabilities,
+})
+
 for _, lsp in pairs({
-	"bashls",
-	"gopls",
 	"eslint",
 }) do
 	vim.lsp.config(lsp, {

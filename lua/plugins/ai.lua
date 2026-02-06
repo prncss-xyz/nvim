@@ -18,7 +18,7 @@ return {
 			ssoStartUrl = "https://view.awsapps.com/start", -- Authenticate with Amazon Q Free Tier
 		},
 		cmd = { "AmazonQ" },
-		enabled = personal,
+		enabled = false,
 		cond = not_vscode,
 	},
 	{
