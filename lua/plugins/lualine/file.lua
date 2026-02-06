@@ -4,15 +4,6 @@ local skip_lock = {}
 
 local user_icons = {}
 
--- TODO: find icons for relevant buffer types
-local buf_icon = {
-  help = '  ',
-  Trouble = '  ',
-  Outline = '  ',
-  DiffviewFiles = '  ',
-  ['neo-tree'] = '  ',
-}
-
 local function get_file_icon()
   local icon = ''
   if vim.fn.exists '*WebDevIconsGetFileTypeSymbol' == 1 then
@@ -37,8 +28,17 @@ local function get_file_icon()
       icon = unknown_icon
     end
   end
-  return icon .. '  '
+  return icon .. ' '
 end
+
+-- TODO: find icons for relevant buffer types
+local buf_icon = {
+  help = '  ',
+  Trouble = '  ',
+  Outline = '  ',
+  DiffviewFiles = '  ',
+  ['neo-tree'] = '  ',
+}
 
 local function get_buffer_type_icon()
   return buf_icon[vim.bo.filetype]
@@ -85,9 +85,8 @@ end
 
 local function get_name_iconified()
   local res = ''
-  res = res .. get_displayed_name()
-  res = res .. ' '
   res = res .. (get_buffer_type_icon() or get_file_icon())
+  res = res .. get_displayed_name()
   return res
 end
 
