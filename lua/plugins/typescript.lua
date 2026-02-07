@@ -2,6 +2,8 @@ local not_vscode = require("my.conds").not_vscode
 local personal = require("my.conds").personal
 local language = require("my.parameters").domain.language
 
+local ft = { "javascript", "typescript", "javascriptreact", "typescriptreact" }
+
 return {
 	{
 		"yioneko/nvim-vtsls",
@@ -14,6 +16,7 @@ return {
 				function()
 					require("vtsls").commands.restart_tsserver()
 				end,
+				ft = ft,
 				desc = "TS Restart TSServer",
 			},
 			{
@@ -21,6 +24,7 @@ return {
 				function()
 					require("vtsls").commands.goto_source_definition()
 				end,
+				ft = ft,
 				desc = "TS Goto Source Definition",
 			},
 			{
@@ -28,6 +32,7 @@ return {
 				function()
 					require("vtsls").commands.fix_all()
 				end,
+				ft = ft,
 				desc = "TS Fix All",
 			},
 			{
@@ -35,6 +40,7 @@ return {
 				function()
 					require("vtsls").commands.remove_unused()
 				end,
+				ft = ft,
 				desc = "TS Remove Unused",
 			},
 			{
@@ -42,6 +48,7 @@ return {
 				function()
 					require("vtsls").commands.add_missing_imports()
 				end,
+				ft = ft,
 				desc = "TS Add Missing Imports",
 			},
 			{
@@ -49,6 +56,7 @@ return {
 				function()
 					require("vtsls").commands.source_actions()
 				end,
+				ft = ft,
 				desc = "TS Source Actions",
 			},
 		},

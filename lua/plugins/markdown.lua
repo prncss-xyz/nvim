@@ -1,5 +1,7 @@
 local not_vscode = require("my.conds").not_vscode
+local language = require("my.parameters").domain.language
 local personal = require("my.conds").personal
+local ft = { "markdown", "Avante", "mdx" }
 
 return {
 	{
@@ -19,24 +21,51 @@ return {
 			file_types = { "markdown", "mdx" },
 			code = { enabled = false },
 		},
-		ft = { "markdown", "Avante", "mdx" },
-		cmd = { "RenderMarkdown" },
+		ft = ft,
+		cond = not_vscode,
 	},
 	{
-		"obsidian-nvim/obsidian.nvim",
-		version = "*", -- use latest release, remove to use latest commit
-		ft = "markdown",
-		---@module 'obsidian'
-		---@type obsidian.config
+		"zk-org/zk-nvim",
+		name = "zk",
 		opts = {
-			legacy_commands = false, -- this will be removed in the next major release
-			workspaces = {
-				{
-					name = "notes",
-					path = "~/projects/notes",
-				},
+			picker = "snacks_picker",
+		},
+		ft = ft,
+		cond = not_vscode,
+	},
+	{
+		"jmbuhr/otter.nvim",
+		dependencies = {
+			"nvim-treesitter/nvim-treesitter",
+		},
+		opts = {},
+		keys = {
+			{
+				language .. "a",
+				function()
+					require("otter").activate()
+				end,
+				ft = ft,
+				desc = "Toggle Otter",
 			},
 		},
-    enabled = false,
+		ft = ft,
+		cond = not_vscode,
+	},
+	{
+		"michaelb/sniprun",
+		branch = "master",
+		build = "sh install.sh 1",
+		-- do 'sh install.sh 1' if you want to force compile locally
+		-- (instead of fetching a binary from the github release). Requires Rust >= 1.65
+		opts = {},
+		cmd = { "SnipRun", "SnipInfo" },
+		keys = {
+			{
+				language .. "<cr>",
+				":%SnipRun<cr>",
+				desc = "Run Current file (cumulative)",
+			},
+		},
 	},
 }
