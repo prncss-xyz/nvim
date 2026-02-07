@@ -1,19 +1,22 @@
 local not_vscode = require("my.conds").not_vscode
 
 local function starship()
-	local handle = io.popen("starship prompt --status=0 --jobs=0")
-	if not handle then
-		return ""
-	end
-	local result = handle:read("*a")
-	handle:close()
-	if not result then
-		return ""
-	end
-	-- Strip all ANSI escape sequences
-	result = result:gsub("\27%[[^a-zA-Z]*[a-zA-Z]", "")
-	-- Flatten and trim
-	return result:gsub("\n", " "):gsub("^%s*(.-)%s*$", "%1")
+	local ok, result = pcall(function()
+		local handle = io.popen("starship prompt --status=0 --jobs=0 2>/dev/null")
+		if not handle then
+			return ""
+		end
+		local output = handle:read("*a")
+		handle:close()
+		if not output then
+			return ""
+		end
+		-- Strip all ANSI escape sequences
+		output = output:gsub("\27%[[^a-zA-Z]*[a-zA-Z]", "")
+		-- Flatten and trim
+		return output:gsub("\n", " "):gsub("^%s*(.-)%s*$", "%1")
+	end)
+	return ok and result or ""
 end
 
 return {

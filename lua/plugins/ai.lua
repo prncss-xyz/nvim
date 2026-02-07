@@ -8,7 +8,7 @@ local reverse = require("my.parameters").reverse
 
 -- TODO: augmentcode
 local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" |  "none"
-local chat = personal("sidekick", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'none'
+local chat = personal("sidekick", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'claude' | 'none'
 
 return {
 	{
@@ -141,6 +141,27 @@ return {
 		cmd = "Codeium",
 		enabled = completion == "windsurf",
 		cond = not_vscode,
+	},
+	{
+		"coder/claudecode.nvim",
+		dependencies = { "folke/snacks.nvim" },
+		config = true,
+		keys = {
+			{
+				ai_insert.toggle,
+				"<cmd>ClaudeCode<cr>",
+				mode = { "n", "i", "t" },
+				desc = "ClaudeCode Chat",
+			},
+			{ ai .. "r", "<cmd>ClaudeCode --resume<cr>", desc = "Resume Claude" },
+			{ ai .. "c", "<cmd>ClaudeCode --continue<cr>", desc = "Continue Claude" },
+			{ ai .. "m", "<cmd>ClaudeCodeSelectModel<cr>", desc = "Select Claude model" },
+			{ ai .. "e", "<cmd>ClaudeCodeAdd %<cr>", desc = "Add current buffer" },
+			{ ai .. "e", "<cmd>ClaudeCodeSend<cr>", mode = "v", desc = "Send to Claude" },
+			{ ai .. "o", "<cmd>ClaudeCodeDiffAccept<cr>", desc = "Accept diff" },
+			{ ai .. "t", "<cmd>ClaudeCodeDiffDeny<cr>", desc = "Deny diff" },
+		},
+		enabled = chat == "claude",
 	},
 	{
 		"NickvanDyke/opencode.nvim",

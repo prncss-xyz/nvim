@@ -8,6 +8,7 @@ return {
     branch = "master",
 		opts = {
 			ensure_installed = {
+        "gotmpl",
 				"fish",
 				"markdown",
 				"markdown_inline",
