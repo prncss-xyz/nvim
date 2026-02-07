@@ -167,7 +167,7 @@ function M.pick_project()
 				ctx
 			)
 		end,
-		format = "file",
+		format = require("plugins.snacks.format").directory_with_parent,
 		confirm = { { "tcd", "open_project" } },
 		recent = true,
 		matcher = {
