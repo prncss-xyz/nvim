@@ -150,16 +150,15 @@ function M.pick_note_with(stem)
 end
 
 function M.pick_project()
-            print(require("my.parameters").dirs.projects)
+	print(require("my.parameters").dirs.projects)
 
 	Snacks.picker.pick({
 		finder = function(opts, ctx)
 			return require("snacks.picker.source.proc").proc(
 				ctx:opts({
 					cwd = require("my.parameters").dirs.projects,
-					-- fd '\.git$' -a --prune -u -t d -x echo {//}
 					cmd = "fd",
-					args = { "\\.git$", "-a", "--prune", "-u", "-t", "d", "-x", "echo", "{//}" },
+					args = { "\\.git$", "-a", "--prune", "-u", "-x", "echo", "{//}" },
 					transform = function(item)
 						item.file = item.text
 						item.dir = true
