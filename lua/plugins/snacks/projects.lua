@@ -158,7 +158,7 @@ function M.pick_project()
 				ctx:opts({
 					cwd = require("my.parameters").dirs.projects,
 					cmd = "fd",
-					args = { "\\.git$", "-a", "--prune", "-u", "-x", "echo", "{//}" },
+					args = { "\\.git$", "-a", "--prune", "-u", "-d", "3", "-x", "echo", "{//}" },
 					transform = function(item)
 						item.file = item.text
 						item.dir = true

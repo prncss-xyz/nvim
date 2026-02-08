@@ -1,6 +1,7 @@
 local M = {}
 
--- Custom formatter for directories that shows parent directory before directory name
+-- require("my.parameters").dirs.projects
+-- Custom formatter that shows file path relative to projects directory
 function M.directory_with_parent(item, picker)
 	local ret = {} ---@type snacks.picker.Highlight[]
 
@@ -26,32 +27,36 @@ function M.directory_with_parent(item, picker)
 	local base_hl = item.dir and "SnacksPickerDirectory" or "SnacksPickerFile"
 	local dir_hl = "SnacksPickerDir"
 
-	-- For directories, extract parent and show parent/dirname
-	if item.dir then
-		-- Remove trailing slash if present
-		local clean_path = path:gsub("/$", "")
+	-- Get projects directory and calculate relative path
+	local projects_dir = require("my.parameters").dirs.projects
+	-- Ensure projects_dir has trailing slash for proper matching
+	local projects_dir_normalized = projects_dir:gsub("/$", "") .. "/"
 
-		-- Extract parent directory and directory name
-		local parent_path, dirname = clean_path:match("^(.*)/([^/]+)$")
+	-- Remove trailing slash from path if present
+	local clean_path = path:gsub("/$", "")
 
-		if parent_path and dirname then
-			-- Get just the parent directory name (not full path)
-			local parent_name = parent_path:match("([^/]+)$") or parent_path
-
-			ret[#ret + 1] = { parent_name .. "/", dir_hl, field = "file" }
-			ret[#ret + 1] = { dirname, base_hl, field = "file" }
-		else
-			-- No parent, just show the directory name
-			ret[#ret + 1] = { clean_path, base_hl, field = "file" }
-		end
+	-- Calculate relative path
+	local relative_path
+	if clean_path:sub(1, #projects_dir_normalized) == projects_dir_normalized then
+		-- Path is under projects directory, get relative portion
+		relative_path = clean_path:sub(#projects_dir_normalized + 1)
 	else
-		-- For files, use standard file formatting
-		local dir, base = path:match("^(.*)/(.+)$")
+		-- Path is not under projects directory, use full path
+		relative_path = clean_path
+	end
+
+	-- Display the relative path
+	if relative_path == "" then
+		-- This is the projects directory itself
+		ret[#ret + 1] = { ".", base_hl, field = "file" }
+	else
+		-- Split path into directory and basename
+		local dir, base = relative_path:match("^(.*)/(.+)$")
 		if base and dir then
 			ret[#ret + 1] = { dir .. "/", dir_hl, field = "file" }
 			ret[#ret + 1] = { base, base_hl, field = "file" }
 		else
-			ret[#ret + 1] = { path, base_hl, field = "file" }
+			ret[#ret + 1] = { relative_path, base_hl, field = "file" }
 		end
 	end
 
@@ -59,22 +64,12 @@ function M.directory_with_parent(item, picker)
 	return ret
 end
 
--- Pretty keymaps using which-key icons when available
 function M.keymap(item, picker)
 	local ret = {} ---@type snacks.picker.Highlight[]
 	---@type vim.api.keyset.get_keymap
 	local k = item.item
 	local a = Snacks.picker.util.align
 
-	if package.loaded["which-key"] then
-		local Icons = require("which-key.icons")
-		local icon, hl = Icons.get({ keymap = k, desc = k.desc })
-		if icon then
-			ret[#ret + 1] = { a(icon, 3), hl }
-		else
-			ret[#ret + 1] = { "   " }
-		end
-	end
 	local lhs = Snacks.util.normkey(k.lhs)
 	ret[#ret + 1] = { k.mode, "SnacksPickerKeymapMode" }
 	ret[#ret + 1] = { " " }
