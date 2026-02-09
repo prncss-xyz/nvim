@@ -13,8 +13,15 @@ local function starship()
 		end
 		-- Strip all ANSI escape sequences
 		output = output:gsub("\27%[[^a-zA-Z]*[a-zA-Z]", "")
-		-- Flatten and trim
-		return output:gsub("\n", " "):gsub("^%s*(.-)%s*$", "%1")
+		-- Join non-empty lines and trim
+		local parts = {}
+		for line in output:gmatch("[^\n]+") do
+			local trimmed = line:gsub("^%s*(.-)%s*$", "%1")
+			if trimmed ~= "" then
+				parts[#parts + 1] = trimmed
+			end
+		end
+		return table.concat(parts, " ")
 	end)
 	return ok and result or ""
 end
