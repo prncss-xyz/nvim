@@ -6,6 +6,7 @@ return {
 		commit = "7689d05",
 		opts = {
 			rooter_patterns = { ".git", ".hg", ".svn" },
+			exclude_filetypes = { "neo-tree", "snacks_picker_input" },
 		},
 		name = "nvim-rooter",
 		event = "VimEnter",
