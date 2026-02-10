@@ -21,9 +21,9 @@ function M.edit_most_recent_file()
 			on_exit = function(j, _)
 				local filename = j:result()[1]
 				if filename then
-					vim.defer_fn(function()
+					vim.schedule(function()
 						vim.cmd.edit(filename)
-					end, 0)
+					end)
 				end
 			end,
 		})

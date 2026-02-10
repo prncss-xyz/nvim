@@ -75,9 +75,9 @@ function M.send_str(key, message)
 		terminal:toggle()
 	end
 	local job_id = terminal.job_id
-	vim.defer_fn(function()
+	vim.schedule(function()
 		vim.api.nvim_chan_send(job_id, message)
-	end, 0)
+	end)
 end
 
 function M.send_lines(key, contents)

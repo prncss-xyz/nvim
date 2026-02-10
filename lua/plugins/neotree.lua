@@ -15,11 +15,11 @@ return {
 				end
 				-- doing it seperately because multiple paths doesn't open work when passed with open
 				-- updating the prefills without clearing the search and other fields
-				vim.defer_fn(function()
+				vim.schedule(function()
 					require("my.ui_toggle").activate("grugfar", function()
 						grug_far.get_instance("explorer"):update_input_values(prefills, false)
 					end)
-				end, 0)
+				end)
 			end
 			local khutulun = require("khutulun")
 			local events = require("neo-tree.events")
