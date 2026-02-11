@@ -6,6 +6,8 @@ end
 
 local projects = vim.env.HOME .. "/projects"
 
+M.rooter_patterns = { ".git", ".hg", ".svn" }
+
 M.dirs = {
 	projects = projects,
 	notes = projects .. "/notes",

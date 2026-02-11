@@ -128,7 +128,22 @@ function M.pick_current_lang_note()
 end
 
 function M.pick_current_project_note()
-	return M.pick_note_with("/dev/projects/" .. vim.fn.fnamemodify(vim.fn.getcwd(), ":t"))
+	local path = vim.fn.getcwd()
+	local root = path
+	while true do
+		for _, pattern in pairs(require("my.parameters").rooter_patterns) do
+			if vim.uv.fs_stat(path .. "/" .. pattern) then
+				root = path
+			end
+		end
+		local parent = vim.fn.fnamemodify(path, ":h")
+		if parent == path then
+			break
+		end
+		path = parent
+	end
+	local project_name = vim.fn.fnamemodify(root, ":t")
+	return M.pick_note_with("/dev/projects/" .. project_name)
 end
 
 function M.pick_note_with(stem)

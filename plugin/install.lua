@@ -1,6 +1,6 @@
 local function system_upgrade()
 	vim.cmd(
-		"MasonInstall json-lsp prettierd ltex-ls lua-language-server marksman stylua vtsls yaml-language-server"
+		"MasonInstall ltex-ls lua-language-server stylua"
 	)
 end
 
