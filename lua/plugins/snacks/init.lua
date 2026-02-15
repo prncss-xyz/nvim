@@ -77,16 +77,13 @@ return {
 			{
 				domain.appearance .. "d",
 				function()
-					Snacks.dim()
+					if Snacks.dim.enabled then
+						Snacks.dim.disable()
+					else
+						Snacks.dim.enable()
+					end
 				end,
 				desc = "Window Dim",
-			},
-			{
-				domain.appearance .. reverse("d"),
-				function()
-					Snacks.dim.disable()
-				end,
-				desc = "Window Un Dim",
 			},
 			{
 				win .. "x",

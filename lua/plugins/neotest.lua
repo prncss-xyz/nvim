@@ -11,7 +11,7 @@ return {
 			{ "antoinemadec/FixCursorHold.nvim", commit = "1900f89" },
 			"nvim-treesitter/nvim-treesitter",
 			{ "nvim-neotest/neotest-plenary", commit = "3523adc" },
-			{ "marilari88/neotest-vitest", commit = "a6099e1" },
+			{ "marilari88/neotest-vitest", commit = "f01addc6f07b79ef1be5f4297eafbee9e0959018" },
 		},
 		config = function()
 			require("neotest").setup({
@@ -51,13 +51,6 @@ return {
 				desc = "Neotest Run All Test Files",
 			},
 			{
-				tests .. "r",
-				function()
-					require("neotest").run.run()
-				end,
-				desc = "Neotest Run Nearest",
-			},
-			{
 				tests .. "l",
 				function()
 					require("neotest").run.run_last()
@@ -94,10 +87,8 @@ return {
 			},
 			{
 				tests .. "w",
-				function()
-					require("neotest").watch.toggle(vim.fn.expand("%"))
-				end,
-				desc = "Neotest Toggle Watch",
+				"<cmd>lua require('neotest').run.run({ vitestCommand = 'vitest --watch' })<cr>",
+				desc = "Neotest Watch",
 			},
 		},
 

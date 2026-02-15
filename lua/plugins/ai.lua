@@ -9,6 +9,9 @@ local reverse = require("my.parameters").reverse
 -- TODO: augmentcode
 local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" |  "none"
 local chat = personal("sidekick", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'claude' | 'none'
+if vim.fn.has("wsl") == 1 and chat == "claude" then
+	chat = "sidekick"
+end
 
 return {
 	{
@@ -213,6 +216,49 @@ return {
 			},
 		},
 		enabled = chat == "opencode",
+		cond = not_vscode,
+	},
+	{
+		"carlos-algms/agentic.nvim",
+		opts = {
+			provider = "claude-acp",
+		},
+		keys = {
+			{
+				ai_insert.toggle,
+				function()
+					require("agentic").toggle()
+				end,
+				mode = { "n", "v", "i" },
+				desc = "Toggle Agentic Chat",
+			},
+			{
+				ai .. "i",
+				function()
+					require("agentic").add_selection_or_file_to_context()
+				end,
+				mode = { "n", "v" },
+				desc = "Add file or selection to Agentic to Context",
+			},
+			{
+				ai .. "a",
+				function()
+					require("agentic").new_session()
+				end,
+				mode = { "n", "v", "i" },
+				desc = "New Agentic Session",
+			},
+			{
+				ai .. "r",
+				function()
+					require("agentic").restore_session()
+				end,
+				desc = "Agentic Restore session",
+				silent = true,
+				mode = { "n", "v", "i" },
+			},
+		},
+		enabled = chat == "agentic",
 		cond = not_vscode,
 	},
 	{

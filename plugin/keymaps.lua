@@ -38,6 +38,7 @@ vim.keymap.set({ "n", "x", "o" }, directions.right, "l", { desc = "Right" })
 vim.keymap.set({ "n", "x", "o" }, directions.up, "gk", { desc = "Up" })
 vim.keymap.set({ "n", "x", "o" }, directions.down, "gj", { desc = "Down" })
 vim.keymap.set("n", edit .. reverse("o"), "O", { desc = "Insert Line Above" })
+vim.keymap.set("n", edit .. "ls", vim.lsp.codelens.run, { desc = "LSP Code Lens Run" })
 vim.keymap.set("n", edit .. "o", "o", { desc = "Insert Line Below" })
 vim.keymap.set("n", edit .. reverse("<tab>"), "<<", { desc = "Indent Decrease" })
 vim.keymap.set("n", edit .. "<tab>", ">>", { desc = "Indent Increase" })
@@ -130,6 +131,10 @@ end, { desc = "EOL" })
 vim.keymap.set("n", domain.appearance .. "n", function()
 	vim.wo.number = not vim.wo.number
 end, { desc = "Toggle Line Numbers" })
+
+vim.keymap.set("n", domain.appearance .. "h", function()
+	vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+end, { desc = "Toggle Inlay Hints" })
 
 vim.keymap.set("n", domain.appearance .. "g", function()
 	vim.o.background = vim.o.background == "light" and "dark" or "light"
