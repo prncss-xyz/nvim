@@ -133,7 +133,7 @@ vim.keymap.set("n", domain.appearance .. "n", function()
 end, { desc = "Toggle Line Numbers" })
 
 vim.keymap.set("n", domain.appearance .. "h", function()
-	vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+	require("my.hints").toggle()
 end, { desc = "Toggle Inlay Hints" })
 
 vim.keymap.set("n", domain.appearance .. "g", function()
