@@ -8,7 +8,7 @@ local reverse = require("my.parameters").reverse
 
 -- TODO: augmentcode
 local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" |  "none"
-local chat = personal("sidekick", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'claude' | 'none'
+local chat = personal("sidekick", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'claude' | 'agentic' | 'none'
 if vim.fn.has("wsl") == 1 and chat == "claude" then
 	chat = "sidekick"
 end
@@ -221,7 +221,7 @@ return {
 	{
 		"carlos-algms/agentic.nvim",
 		opts = {
-			provider = "claude-acp",
+			provider = "opencode-acp", -- "gemini-cli" | "opencode"
 		},
 		keys = {
 			{
@@ -263,14 +263,13 @@ return {
 	},
 	{
 		"folke/sidekick.nvim",
-		dependencies = "zbirenbaum/copilot.lua",
 		opts = { nes = { enabled = false } },
 		keys = {
 			{
 				ai_insert.toggle,
 				function()
 					require("sidekick.cli").toggle({
-						name = "claude",
+						name = "opencode",
 						focus = true,
 					})
 				end,
