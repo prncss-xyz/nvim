@@ -9,8 +9,10 @@ local reverse = require("my.parameters").reverse
 -- TODO: augmentcode
 local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" |  "none"
 local chat = personal("claude", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'claude' | 'agentic' | 'none'
+local sidekick_chat = "opencode" -- "opencode" | "claude"
 if vim.fn.has("wsl") == 1 and chat == "claude" then
 	chat = "sidekick"
+	sidekick_chat = "claude"
 end
 
 return {
@@ -269,7 +271,7 @@ return {
 				ai_insert.toggle,
 				function()
 					require("sidekick.cli").toggle({
-						name = "opencode",
+						name = sidekick_chat,
 						focus = true,
 					})
 				end,
