@@ -73,6 +73,7 @@ end, {
 	nowait = true,
 	desc = "Close Window",
 })
+-- FIXME: no working in sidekick.nvim, but working in other terminal buffers
 vim.keymap.set({ "n", "x", "i", "t" }, "<c-j>", function()
 	require("my.windows").focus_last_win()
 end, { desc = "Window Toggle File" })
