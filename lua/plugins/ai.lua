@@ -8,7 +8,7 @@ local reverse = require("my.parameters").reverse
 
 -- TODO: augmentcode
 local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" |  "none"
-local chat = personal("sidekick", "copilotchat") -- 'sidekick' | 'avante' | 'copilotchat' | 'claude' | 'agentic' | 'none'
+local chat = personal("sidekick", "sidekick") -- 'sidekick' | 'avante' | 'copilotchat' | 'claude' | 'agentic' | 'none'
 local sidekick_chat = nil -- "opencode" | "claude" | "gemini"
 
 return {
