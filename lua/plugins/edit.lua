@@ -3,8 +3,8 @@ local win = require("my.parameters").domain.win
 local theme = require("my.parameters").theme
 local personal = require("my.conds").personal
 
-local engine = "rigrep"
--- local engine = "astgrep"
+-- local engine = "rigrep"
+local engine = "astgrep"
 
 return {
 	{
