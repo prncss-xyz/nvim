@@ -21,7 +21,7 @@ local opts = {
 		return { dir = vim.fn.expand("%:p:h") }
 	end,
 	diff = {
-		cmd = "wdiff  __master.txt __diff.txt",
+		cmd = require("my.diff").get_cmd(),
 		close_on_exit = false,
 	},
 }

@@ -186,10 +186,10 @@ vim.keymap.set("n", win .. theme.definition, function()
 end, { desc = "LSP Hover" })
 
 vim.keymap.set({ "n", "x" }, "oca", function()
-	require("my.diff").cp("__master.txt")
+	require("my.diff").master()
 end, { desc = "Compare diff, master" })
 vim.keymap.set({ "n", "x" }, "ocb", function()
-	require("my.diff").cp("__diff.txt")
+	require("my.diff").variant()
 end, { desc = "Compare diff, variant" })
 
 for _, key in pairs({ "j", "k", "l", ";" }) do
