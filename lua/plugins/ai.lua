@@ -307,16 +307,20 @@ return {
 					dismiss = false,
 				},
 			},
-			suggestion = completion == "copilot" and {
-				auto_trigger = true,
-				keymap = {
-					accept = ai_insert.accept,
-					next = ai_insert.next,
-					prev = ai_insert.prev,
-				},
-			} or nil,
 		},
 		keys = {
+			{
+				ai_insert.nes,
+				function()
+					local nes_api = require("copilot.nes.api")
+					local result = nes_api.nes_apply_pending_nes()
+					if result then
+						nes_api.nes_walk_cursor_end_edit()
+					end
+				end,
+				desc = "Copilot accept NES",
+				mode = { "n", "x", "i" },
+			},
 			{
 				ai .. "t",
 				function()

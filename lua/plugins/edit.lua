@@ -1,10 +1,8 @@
 local edit = require("my.parameters").domain.edit
 local win = require("my.parameters").domain.win
 local theme = require("my.parameters").theme
+local reverse = require("my.parameters").reverse
 local personal = require("my.conds").personal
-
--- local engine = "rigrep"
-local engine = "astgrep"
 
 return {
 	{
@@ -13,23 +11,42 @@ return {
 		cmd = { "GrugFar" },
 		keys = {
 			{
-				win .. theme.find,
+				win .. reverse(theme.find),
 				function()
 					require("my.ui_toggle").activate("grugfar", function()
-						require("grug-far").open({ engine = engine })
+						require("grug-far").open({ engine = "astgrep" })
 					end)
 				end,
-				desc = "GrugFar",
+				desc = "GrugFar, AstGrep",
 			},
 			{
 				win .. theme.find,
 				function()
 					require("my.ui_toggle").activate("grugfar", function()
-						require("grug-far").with_visual_selection({ engine = engine })
+						require("grug-far").open({ engine = "rigrep" })
+					end)
+				end,
+				desc = "GrugFar, RipGrep",
+			},
+			{
+				win .. reverse(theme.find),
+				function()
+					require("my.ui_toggle").activate("grugfar", function()
+						require("grug-far").with_visual_selection({ engine = "astgrep" })
 					end)
 				end,
 				mode = { "x" },
-				desc = "GrugFar",
+				desc = "GrugFar, AstGrep",
+			},
+			{
+				win .. theme.find,
+				function()
+					require("my.ui_toggle").activate("grugfar", function()
+						require("grug-far").with_visual_selection({ engine = "rigrep" })
+					end)
+				end,
+				mode = { "x" },
+				desc = "GrugFar, RipGrep",
 			},
 		},
 	},
