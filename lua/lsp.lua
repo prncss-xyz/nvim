@@ -26,6 +26,12 @@ vim.lsp.config("graphql", {
 	capabilities = require("plugins.lsp.utils").cmp_capabilities,
 	filetypes = { "graphql", "javascript", "typescript", "javascriptreact", "typescriptreact" },
 })
+vim.lsp.config("knip", {
+	cmd = { "knip-language-server", "--stdio" },
+	capabilities = require("plugins.lsp.utils").cmp_capabilities,
+	filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "json" },
+	root_markers = { "knip.json", "knip.ts", "knip.js", "package.json", ".git" },
+})
 vim.lsp.config("lua_ls", {
 	capabilities = require("plugins.lualine").cmp_capabilities,
 	settings = {
@@ -74,6 +80,7 @@ vim.lsp.enable({
 	"marksman",
 	"eslint",
 	"graphql",
+	"knip",
 	"lua_ls",
 	"ltex",
 })

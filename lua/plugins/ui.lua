@@ -93,6 +93,15 @@ return {
 		event = "VimEnter",
 		cmd = "Noice",
 		opts = {
+			routes = {
+				{
+					filter = {
+						event = "notify",
+						find = "No information available",
+					},
+					opts = { skip = true },
+				},
+			},
 			commands = {
 				history = {
 					view = "popup",
