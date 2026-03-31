@@ -257,7 +257,7 @@ return {
 				ai_insert.toggle,
 				function()
 					require("sidekick.cli").toggle({
-						name = sidekick_chat,
+						-- name = sidekick_chat,
 						focus = true,
 					})
 				end,
