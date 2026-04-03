@@ -8,7 +8,6 @@ return {
 		dependencies = {
 			"nvim-neotest/nvim-nio",
 			"nvim-lua/plenary.nvim",
-			{ "antoinemadec/FixCursorHold.nvim", commit = "1900f89" },
 			"nvim-treesitter/nvim-treesitter",
 			{ "nvim-neotest/neotest-plenary", commit = "3523adc" },
 			{ "marilari88/neotest-vitest", commit = "f01addc6f07b79ef1be5f4297eafbee9e0959018" },
