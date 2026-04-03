@@ -9,7 +9,7 @@ local reverse = require("my.parameters").reverse
 -- TODO: augmentcode
 local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" |  "none"
 local chat = personal("sidekick", "sidekick") -- 'sidekick' | 'avante' | 'copilotchat' | 'claude' | 'agentic' | 'none'
-local sidekick_chat = personal("opencode", "claude") -- "opencode" | "claude" | "gemini"
+local sidekick_chat = personal(function() end, "claude") -- "opencode" | "claude" | "gemini"
 
 return {
 	{
@@ -251,17 +251,31 @@ return {
 	},
 	{
 		"folke/sidekick.nvim",
-		opts = { nes = { enabled = false } },
+		opts = {
+			nes = { enabled = false },
+			cli = {
+				tools = {
+					pi = { cmd = { "pi" } },
+				},
+			},
+		},
 		keys = {
 			{
 				ai_insert.toggle,
 				function()
 					require("sidekick.cli").toggle({
-						-- name = sidekick_chat,
+						name = sidekick_chat,
 						focus = true,
 					})
 				end,
 				desc = "Sidekick Chat",
+			},
+			{
+				ai .. "s",
+				function()
+					require("sidekick.cli").select()
+				end,
+				desc = "Sidekick Select CLI",
 			},
 			{
 				ai .. "a",
