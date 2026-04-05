@@ -8,7 +8,7 @@ local reverse = require("my.parameters").reverse
 
 -- TODO: augmentcode
 local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" |  "none"
-local chat = personal("sidekick", "sidekick") -- 'sidekick' | 'avante' | 'copilotchat' | 'claude' | 'agentic' | 'none'
+local chat = personal("none", "sidekick") -- 'sidekick' | 'avante' | 'copilotchat' | 'claude' | 'agentic' | 'none'
 local sidekick_chat = personal(function() end, "claude") -- "opencode" | "claude" | "gemini"
 
 return {
@@ -326,14 +326,6 @@ return {
 				mode = { "n", "x", "i" },
 			},
 			{
-				ai .. "t",
-				function()
-					require("my.ui_toggle").activate("copilot")
-				end,
-				desc = "Coplot Toggle Autocomplete",
-				mode = { "n", "x" },
-			},
-			{
 				ai_insert.clear,
 				function()
 					local touched = false
@@ -366,83 +358,5 @@ return {
 		event = "InsertEnter",
 		enabled = completion == "copilot" or chat == "copilotchat",
 		cond = not_vscode,
-	},
-	{
-		"CopilotC-Nvim/CopilotChat.nvim",
-		dependencies = {
-			{ "zbirenbaum/copilot.lua" },
-			{ "nvim-lua/plenary.nvim" },
-		},
-		opts = {
-			prompts = {
-				Todo = {
-					prompt = "Replace all TODO comments with relevent code",
-					description = "Complete the work.",
-				},
-			},
-		},
-		keys = {
-			{
-				ai_insert.accept,
-				function()
-					require("my.ui_toggle").activate("copilot")
-				end,
-				desc = "Coplot Chat Open",
-				mode = { "n", "x" },
-			},
-			{
-				ai .. "x",
-				"<cmd>CopilotChatStop<cr>",
-				desc = "Coplot Chat Stop",
-			},
-			{
-				ai .. "r",
-				"<cmd>CopilotChatReset<cr>",
-				desc = "Coplot Chat Reset",
-			},
-			{
-				ai .. "s",
-				"<cmd>CopilotChatSave<cr>",
-				desc = "Coplot Chat Save",
-			},
-			{
-				ai .. "l",
-				"<cmd>CopilotChatLoad<cr>",
-				desc = "Coplot Chat Load",
-			},
-			{
-				ai .. "a",
-				function()
-					require("my.ui_toggle").activate("copilot", "CopilotChatPrompts")
-				end,
-				desc = "Coplot Chat Prompts",
-				mode = { "n", "x" },
-			},
-			{
-				ai .. "m",
-				"<cmd>CopilotChatModels<cr>",
-				desc = "Coplot Chat Models",
-			},
-			{
-				ai .. "g",
-				"<cmd>CopilotChatAgents<cr>",
-				desc = "Coplot Chat Agents",
-			},
-		},
-		enabled = chat == "copilotchat",
-		cond = not_vscode,
-		cmd = {
-			"CopilotChat",
-			"CopilotChatOpen",
-			"CopilotChatClose",
-			"CopilotChatToggle",
-			"CopilotChatStop",
-			"CopilotChatReset",
-			"CopilotChatSave",
-			"CopilotChatLoad",
-			"CopilotChatPrompts",
-			"CopilotChatModels",
-			"CopilotChatAgents",
-		},
 	},
 }

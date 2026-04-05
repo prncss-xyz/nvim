@@ -1,13 +1,8 @@
 local M = {}
 
--- copilot-chat
 local config = {
 	default = "Neotree",
 	keys = {
-		copilot = {
-			ft = { "copilot-chat" },
-			raise = "CopilotChat",
-		},
 		dapview = {
 			ft = { "dap-view", "dap-view-term" },
 			raise = "DapViewOpen",

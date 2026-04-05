@@ -53,11 +53,6 @@ return {
 						name = "Avante",
 						opts = {},
 					},
-					path = {
-						enabled = function()
-							return vim.bo.filetype ~= "copilot-chat"
-						end,
-					},
 				},
 			},
 		},

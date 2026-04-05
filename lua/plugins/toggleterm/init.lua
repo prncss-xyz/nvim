@@ -1,6 +1,8 @@
 local not_vscode = require("my.conds").not_vscode
 local domain = require("my.parameters").domain
 local theme = require("my.parameters").theme
+local ai = domain.ai
+local ai_insert = require("my.parameters").ai_insert
 
 return {
 	{
@@ -8,7 +10,7 @@ return {
 		opts = {
 			direction = "vertical",
 			on_open = function(term)
-				require("plugins.toggleterm.utils").on_open(term)
+				require("plugins.toggleterm.terms").on_open(term)
 			end,
 		},
 		cmd = {
@@ -25,49 +27,66 @@ return {
 				desc = "Select Terminal",
 			},
 			{
-				"<m-u>",
+				ai_insert.toggle,
 				function()
-					require("plugins.toggleterm.utils").toggle_float()
+					require("plugins.toggleterm.terms").toggle_last()
 				end,
+				desc = "Toggle Last Terminal",
 				mode = { "n", "x", "i", "t" },
-				desc = "Toggle Terminal",
 			},
 			{
-				"oao",
+				"oi",
 				function()
-					require("plugins.toggleterm.terms").term("agent"):toggle()
+					local op = require("flies.operations._with_contents"):new({
+						cb = function(lang, contents)
+							local term = require("plugins.toggleterm.terms").from_filetype(lang)
+							if not term then
+								return
+							end
+							require("plugins.toggleterm.terms").send_lines(term, contents)
+						end,
+					})
+					op:call({}, {
+						i = function()
+							local lang = require("flies.utils.editor").get_lang_at_cursor()
+							local term = require("plugins.toggleterm.terms").from_filetype(lang)
+							if not term then
+								return
+							end
+							require("plugins.toggleterm.terms").term(term):toggle()
+						end,
+					})
 				end,
-				desc = "Toggle Terminal agent",
+				desc = "Toggle REPL",
 			},
 			{
-				"oaf",
+				ai,
 				function()
-					require("plugins.toggleterm.terms").send_lines(
-						"agent",
-						{ require("plugins.toggleterm.agent").current_file_ref() }
-					)
+					local op = require("flies.operations._with_contents"):new({
+						cb = function(lang, contents)
+							table.insert(contents, 1, require("plugins.toggleterm.agent").current_position_ref())
+							require("plugins.toggleterm.terms").send_lines("agent", contents)
+						end,
+					})
+					op:call({}, {
+						a = function()
+							require("plugins.toggleterm.terms").term("agent"):toggle()
+						end,
+						c = function()
+							require("plugins.toggleterm.terms").send_lines(
+								"agent",
+								{ require("plugins.toggleterm.agent").current_position_ref() }
+							)
+						end,
+						e = function()
+							require("plugins.toggleterm.terms").send_lines(
+								"agent",
+								{ require("plugins.toggleterm.agent").current_file_ref() }
+							)
+						end,
+					})
 				end,
-				desc = "Send current file to agent",
-			},
-			{
-				"oal",
-				function()
-					require("plugins.toggleterm.terms").send_lines(
-						"agent",
-						{ require("plugins.toggleterm.agent").current_line_ref() }
-					)
-				end,
-				desc = "Send current line to agent",
-			},
-			{
-				"oac",
-				function()
-					require("plugins.toggleterm.terms").send_lines(
-						"agent",
-						{ require("plugins.toggleterm.agent").current_position_ref() }
-					)
-				end,
-				desc = "Send current position to agent",
+				desc = "Toggle agent",
 			},
 			{
 				"oe",
@@ -82,16 +101,6 @@ return {
 					require("plugins.toggleterm.terms").term("term_r"):toggle()
 				end,
 				desc = "Toggle Terminal r",
-			},
-			{
-				"oi",
-				function()
-					local term = require("plugins.toggleterm.terms").from_filetype()
-					if term then
-						term:toggle()
-					end
-				end,
-				desc = "Toggle Terminal Filetype",
 			},
 			{
 				"opw",

@@ -27,7 +27,29 @@ local opts = {
 	},
 }
 
-M.term, M.remove_term = cachedFn(function(key)
+local last_terminal
+
+function M.toggle_float()
+	if last_terminal then
+		last_terminal:toggle()
+	else
+		require("plugins.toggleterm.terms").term("term_e"):toggle()
+	end
+end
+
+local term_width = 80
+
+function M.on_open(terminal)
+	last_terminal = terminal
+	if terminal.direction == "vertical" then
+		vim.cmd("wincmd L")
+		vim.api.nvim_win_set_width(0, term_width)
+	end
+end
+
+local get_term
+
+get_term, M.remove_term = cachedFn(function(key)
 	local o = opts[key] or {}
 	if type(o) == "function" then
 		o = o()
@@ -40,12 +62,35 @@ M.term, M.remove_term = cachedFn(function(key)
 	return Terminal:new(o)
 end)
 
-function M.from_filetype()
-	local key = filetype_to_key[vim.bo.filetype]
-	if not key then
+local last_term_key
+
+function M.term(key)
+	local terminal = get_term(key)
+	last_term_key = key
+	return terminal
+end
+
+function M.last_term()
+	if not last_term_key then
 		return
 	end
-	return M.term(key)
+	return get_term(last_term_key)
+end
+
+function M.toggle_last()
+	local terminal = M.last_term()
+	if terminal then
+		terminal:toggle()
+	end
+end
+
+function M.from_filetype(lang)
+	local key = filetype_to_key[lang]
+	if not key then
+		print("unknown lang", vim.inspect(lang))
+		return
+	end
+	return key
 end
 
 function M.send_str(key, message)

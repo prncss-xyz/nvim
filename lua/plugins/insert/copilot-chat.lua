@@ -1,6 +1,6 @@
 local M = {}
 
-local Source = {}
+local Soure = {}
 Source.__index = Source
 
 function Source:get_trigger_characters()
