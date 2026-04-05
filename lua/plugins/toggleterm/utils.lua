@@ -120,6 +120,10 @@ function M.on_open(terminal)
 	else
 		last_non_float_terminal = terminal
 	end
+	if terminal.direction == "vertical" then
+		vim.cmd("wincmd L")
+		vim.api.nvim_win_set_width(0, 100)
+	end
 end
 
 return M

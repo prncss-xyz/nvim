@@ -6,15 +6,9 @@ return {
 	{
 		"akinsho/toggleterm.nvim",
 		opts = {
-			direction = "float",
+			direction = "vertical",
 			on_open = function(term)
 				require("plugins.toggleterm.utils").on_open(term)
-			end,
-			size = function(term)
-				if term.direction == "horizontal" then
-					return require("my.parameters").pane_width
-				end
-				return vim.o.columns * 0.4
 			end,
 		},
 		cmd = {
@@ -48,21 +42,30 @@ return {
 			{
 				"oaf",
 				function()
-					require("plugins.toggleterm.terms").send_lines("agent", { require("plugins.toggleterm.agent").current_file_ref() })
+					require("plugins.toggleterm.terms").send_lines(
+						"agent",
+						{ require("plugins.toggleterm.agent").current_file_ref() }
+					)
 				end,
 				desc = "Send current file to agent",
 			},
 			{
 				"oal",
 				function()
-					require("plugins.toggleterm.terms").send_lines("agent", { require("plugins.toggleterm.agent").current_line_ref() })
+					require("plugins.toggleterm.terms").send_lines(
+						"agent",
+						{ require("plugins.toggleterm.agent").current_line_ref() }
+					)
 				end,
 				desc = "Send current line to agent",
 			},
 			{
 				"oac",
 				function()
-					require("plugins.toggleterm.terms").send_lines("agent", { require("plugins.toggleterm.agent").current_position_ref() })
+					require("plugins.toggleterm.terms").send_lines(
+						"agent",
+						{ require("plugins.toggleterm.agent").current_position_ref() }
+					)
 				end,
 				desc = "Send current position to agent",
 			},
