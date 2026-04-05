@@ -17,14 +17,21 @@ function M.current_position_ref()
 end
 
 local agents = { "pi", "gemini", "claude" }
-local last_agent = "pi"
+local default_agent = "pi"
+
+local last_agent
+
+-- TODO: scope agent by working directory
+local function get_agent()
+	return last_agent or default_agent
+end
 
 function M.send_lines(lines)
-	require("plugins.toggleterm.terms").send_lines(last_agent, lines)
+	require("plugins.toggleterm.terms").send_lines(get_agent(), lines)
 end
 
 function M.toggle()
-	require("plugins.toggleterm.terms").term(last_agent):toggle()
+	require("plugins.toggleterm.terms").term(get_agent()):toggle()
 end
 
 function M.send_current_line()

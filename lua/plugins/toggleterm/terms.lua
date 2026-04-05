@@ -16,20 +16,18 @@ local opts = {
 	current = function()
 		return { dir = vim.fn.expand("%:p:h") }
 	end,
+  term_e = {},
+  term_r = {},
 	diff = {
 		cmd = require("my.diff").get_cmd(),
 		close_on_exit = false,
 	},
 }
 
-local last_terminal
+local last_terminal = "term_e"
 
 function M.toggle_float()
-	if last_terminal then
-		last_terminal:toggle()
-	else
-		require("plugins.toggleterm.terms").term("term_e"):toggle()
-	end
+	require("plugins.toggleterm.terms").term(last_terminal):toggle()
 end
 
 local term_width = 80

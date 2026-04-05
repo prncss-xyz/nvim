@@ -106,7 +106,7 @@ return {
 			{
 				"oo",
 				function()
-					require("plugins.toggleterm.terms").term("term_o"):toggle()
+					require("plugins.toggleterm.terms").term("current"):toggle()
 				end,
 				desc = "Toggle Terminal Current file",
 			},
