@@ -69,6 +69,9 @@ return {
 								{ require("plugins.toggleterm.agent").current_file_ref() }
 							)
 						end,
+						p = function()
+							require("plugins.toggleterm.prompts").prompt()
+						end,
 					})
 				end,
 				desc = "Toggle agent",

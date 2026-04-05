@@ -13,11 +13,10 @@ local filetype_to_key = {
 }
 
 local opts = {
-	dev = { cmd = personal("pnpm run dev", "yarn run dev local") },
-	mocks = { cmd = personal(nil, "yarn shared:mocks") },
+	dev = { cmd = "pnpm run dev" },
 	lua = { cmd = "lua" },
 	node = { cmd = "node" },
-	agent = { cmd = "pi" },
+	agent = { cmd = personal("pi", "claude") },
 	current = function()
 		return { dir = vim.fn.expand("%:p:h") }
 	end,
@@ -47,20 +46,21 @@ function M.on_open(terminal)
 	end
 end
 
-local get_term
-
-get_term, M.remove_term = cachedFn(function(key)
-	local o = opts[key] or {}
-	if type(o) == "function" then
-		o = o()
-	end
-	o.display_name = o.display_name or key
-	o.on_exit = function()
-		M.remove_term(key)
-	end
-
-	return Terminal:new(o)
+local scoped = cachedFn(function()
+	return cachedFn(function(key, remove)
+		local o = opts[key] or {}
+		if type(o) == "function" then
+			o = o()
+		end
+		o.display_name = o.display_name or key
+		o.on_exit = remove
+		return Terminal:new(o)
+	end)
 end)
+
+local function get_term(key)
+	return scoped(vim.fn.getcwd())(key)
+end
 
 local last_term_key
 
@@ -115,6 +115,9 @@ function M.send_lines(key, contents)
 		message = message .. line .. "\n"
 	end
 	M.send_str(key, message)
+	if contents.cr then
+		M.cr(key)
+	end
 end
 
 function M.cr(key)

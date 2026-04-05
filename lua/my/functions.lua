@@ -2,14 +2,12 @@ local M = {}
 
 function M.cachedFn(create)
 	local cache = {}
-	local function get(key)
-		cache[key] = cache[key] or create(key)
+	return function (key)
+		cache[key] = cache[key] or create(key, function()
+			cache[key] = nil
+		end)
 		return cache[key]
 	end
-	local function remove(key)
-		cache[key] = nil
-	end
-	return get, remove
 end
 
 return M
