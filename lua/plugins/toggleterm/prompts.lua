@@ -11,7 +11,6 @@ local prompts = {
 	end,
 	fixme = function()
 		return {
-			cr = true,
 			"fix this",
 			require("plugins.toggleterm.agents").current_line_ref(),
 			require("plugins.toggleterm.agents").current_line_content(),

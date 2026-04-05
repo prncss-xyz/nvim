@@ -19,11 +19,10 @@ end
 local agents = { "pi", "gemini", "claude" }
 local default_agent = "pi"
 
-local last_agent
+local agents_by_cwd = {}
 
--- TODO: scope agent by working directory
 local function get_agent()
-	return last_agent or default_agent
+	return agents_by_cwd[vim.fn.getcwd()] or default_agent
 end
 
 function M.send_lines(lines)
@@ -45,13 +44,13 @@ end
 function M.select_agent()
 	vim.ui.select(agents, {
 		prompt = "Select agent",
-		default = last_agent,
+		default = get_agent(),
 	}, function(choice)
 		if not choice then
 			return
 		end
 
-		last_agent = choice
+		agents_by_cwd[vim.fn.getcwd()] = choice
 		M.toggle()
 	end)
 end
