@@ -39,30 +39,61 @@ return {
 				desc = "Toggle Terminal",
 			},
 			{
+				"oao",
+				function()
+					require("plugins.toggleterm.terms").term("agent"):toggle()
+				end,
+				desc = "Toggle Terminal agent",
+			},
+			{
+				"oaf",
+				function()
+					require("plugins.toggleterm.terms").send_lines("agent", { require("plugins.toggleterm.agent").current_file_ref() })
+				end,
+				desc = "Send current file to agent",
+			},
+			{
+				"oal",
+				function()
+					require("plugins.toggleterm.terms").send_lines("agent", { require("plugins.toggleterm.agent").current_line_ref() })
+				end,
+				desc = "Send current line to agent",
+			},
+			{
+				"oac",
+				function()
+					require("plugins.toggleterm.terms").send_lines("agent", { require("plugins.toggleterm.agent").current_position_ref() })
+				end,
+				desc = "Send current position to agent",
+			},
+			{
 				"oe",
 				function()
-					require("plugins.toggleterm.terms").terms.term_e:toggle()
+					require("plugins.toggleterm.terms").term("term_e"):toggle()
 				end,
 				desc = "Toggle Terminal e",
 			},
 			{
 				"or",
 				function()
-					require("plugins.toggleterm.terms").terms.term_r:toggle()
+					require("plugins.toggleterm.terms").term("term_r"):toggle()
 				end,
 				desc = "Toggle Terminal r",
 			},
 			{
 				"oi",
 				function()
-					require("plugins.toggleterm.terms").from_filetype():toggle()
+					local term = require("plugins.toggleterm.terms").from_filetype()
+					if term then
+						term:toggle()
+					end
 				end,
 				desc = "Toggle Terminal Filetype",
 			},
 			{
 				"opw",
 				function()
-					require("plugins.toggleterm.terms").terms.dev:spawn({
+					require("plugins.toggleterm.terms").term("dev"):spawn({
 						close_on_exit = false,
 					})
 				end,
@@ -71,24 +102,24 @@ return {
 			{
 				"ow",
 				function()
-					require("plugins.toggleterm.terms").terms.dev:toggle()
+					require("plugins.toggleterm.terms").term("dev"):toggle()
 				end,
 				desc = "Toggle Terminal Dev",
 			},
 			{
 				"olm",
 				function()
-					require("plugins.toggleterm.terms").terms.mocks:toggle()
+					require("plugins.toggleterm.terms").term("mocks"):toggle()
 				end,
 				desc = "Toggle Terminal Mocks",
 			},
 			{
 				"ols",
 				function()
-					require("plugins.toggleterm.terms").terms.dev:spawn({
+					require("plugins.toggleterm.terms").term("dev"):spawn({
 						close_on_exit = false,
 					})
-					require("plugins.toggleterm.terms").terms.mocks:spawn({
+					require("plugins.toggleterm.terms").term("mocks"):spawn({
 						close_on_exit = false,
 					})
 				end,
@@ -97,14 +128,14 @@ return {
 			{
 				"oo",
 				function()
-					require("plugins.toggleterm.terms").terms.term_o:toggle()
+					require("plugins.toggleterm.terms").term("term_o"):toggle()
 				end,
 				desc = "Toggle Terminal Current file",
 			},
 			{
 				"occ",
 				function()
-					require("plugins.toggleterm.terms").terms.diff:toggle()
+					require("plugins.toggleterm.terms").term("diff"):toggle()
 				end,
 				desc = "Toggle Terminal Diff",
 			},

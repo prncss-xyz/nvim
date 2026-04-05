@@ -42,7 +42,7 @@ function M.toggle_float()
 	if last_float_terminal then
 		last_float_terminal:toggle()
 	else
-		require("plugins.toggleterm.terms").terms.term_e:toggle()
+		require("plugins.toggleterm.terms").term("term_e"):toggle()
 	end
 end
 
