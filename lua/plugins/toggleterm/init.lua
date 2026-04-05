@@ -37,7 +37,7 @@ return {
 			{
 				"oi",
 				function()
-					require("plugins.toggleterm.op").repl_op:call({}, {
+					require("plugins.toggleterm.ops").repl_op:call({}, {
 						i = function()
 							local lang = require("flies.utils.editor").get_lang_at_cursor()
 							local term = require("plugins.toggleterm.terms").from_filetype(lang)
@@ -53,24 +53,21 @@ return {
 			{
 				ai,
 				function()
-					require("plugins.toggleterm.op").agent_op:call({}, {
+					require("plugins.toggleterm.ops").agent_op:call({}, {
 						a = function()
-							require("plugins.toggleterm.terms").term("agent"):toggle()
+							require("plugins.toggleterm.agents").toggle()
 						end,
 						c = function()
-							require("plugins.toggleterm.terms").send_lines(
-								"agent",
-								{ require("plugins.toggleterm.agent").current_position_ref() }
-							)
+							require("plugins.toggleterm.agents").send_current_line()
 						end,
 						e = function()
-							require("plugins.toggleterm.terms").send_lines(
-								"agent",
-								{ require("plugins.toggleterm.agent").current_file_ref() }
-							)
+							require("plugins.toggleterm.agents").send_current_file()
 						end,
 						p = function()
 							require("plugins.toggleterm.prompts").prompt()
+						end,
+						s = function()
+							require("plugins.toggleterm.agents").select_agent()
 						end,
 					})
 				end,
@@ -105,25 +102,6 @@ return {
 					require("plugins.toggleterm.terms").term("dev"):toggle()
 				end,
 				desc = "Toggle Terminal Dev",
-			},
-			{
-				"olm",
-				function()
-					require("plugins.toggleterm.terms").term("mocks"):toggle()
-				end,
-				desc = "Toggle Terminal Mocks",
-			},
-			{
-				"ols",
-				function()
-					require("plugins.toggleterm.terms").term("dev"):spawn({
-						close_on_exit = false,
-					})
-					require("plugins.toggleterm.terms").term("mocks"):spawn({
-						close_on_exit = false,
-					})
-				end,
-				desc = "Spawn Dev",
 			},
 			{
 				"oo",

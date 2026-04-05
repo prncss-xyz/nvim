@@ -1,6 +1,5 @@
 local M = {}
 
-local personal = require("my.conds").personal
 local cachedFn = require("my.functions").cachedFn
 local Terminal = require("toggleterm.terminal").Terminal
 
@@ -14,9 +13,6 @@ local filetype_to_key = {
 
 local opts = {
 	dev = { cmd = "pnpm run dev" },
-	lua = { cmd = "lua" },
-	node = { cmd = "node" },
-	agent = { cmd = personal("pi", "claude") },
 	current = function()
 		return { dir = vim.fn.expand("%:p:h") }
 	end,
@@ -48,7 +44,7 @@ end
 
 local scoped = cachedFn(function()
 	return cachedFn(function(key, remove)
-		local o = opts[key] or {}
+		local o = opts[key] or { cmd = key }
 		if type(o) == "function" then
 			o = o()
 		end
