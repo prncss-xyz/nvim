@@ -37,16 +37,7 @@ return {
 			{
 				"oi",
 				function()
-					local op = require("flies.operations._with_contents"):new({
-						cb = function(lang, contents)
-							local term = require("plugins.toggleterm.terms").from_filetype(lang)
-							if not term then
-								return
-							end
-							require("plugins.toggleterm.terms").send_lines(term, contents)
-						end,
-					})
-					op:call({}, {
+					require("plugins.toggleterm.op").repl_op:call({}, {
 						i = function()
 							local lang = require("flies.utils.editor").get_lang_at_cursor()
 							local term = require("plugins.toggleterm.terms").from_filetype(lang)
@@ -62,13 +53,7 @@ return {
 			{
 				ai,
 				function()
-					local op = require("flies.operations._with_contents"):new({
-						cb = function(lang, contents)
-							table.insert(contents, 1, require("plugins.toggleterm.agent").current_position_ref())
-							require("plugins.toggleterm.terms").send_lines("agent", contents)
-						end,
-					})
-					op:call({}, {
+					require("plugins.toggleterm.op").agent_op:call({}, {
 						a = function()
 							require("plugins.toggleterm.terms").term("agent"):toggle()
 						end,
