@@ -8,6 +8,9 @@ function M.cp(filename, after)
 		cb = function(_, contents)
 			local txt = table.concat(contents, ", ")
 			local file = io.open(filename, "w")
+			if not file then
+				return
+			end
 			file:write(txt)
 			file:close()
 			if after then
