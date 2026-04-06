@@ -14,13 +14,22 @@ local opts = {
 		cmd = require("my.diff").get_cmd(),
 		close_on_exit = false,
 	},
-	agent = require("plugins.toggleterm.agents").get_agent,
 	repl = require("plugins.toggleterm.repl").get_REPL,
 	['git add --all; git commit -m "ongoing work" --no-verify; git push'] = true,
 	["git-sync-all"] = true,
 	["git-sync"] = true,
+	pi = { cmd = "pi", tag = "agent" },
+	pi_minimal = {
+		cmd = "pi --no-extensions --no-skills --no-prompt-templates --no-themes --no-session",
+		tag = "agent",
+	},
+	gemini = { cmd = "gemini", tag = "agent" },
+	claude = { cmd = "claude", tag = "agent" },
+	opencode = { cmd = "opencode", tag = "agent" },
+	agent = true,
 }
 
+local last_by_tag = { agent = "pi_minimal" }
 local default_terminal = "term_e"
 local last_terminal = nil
 
@@ -36,22 +45,31 @@ local function get_term_conf(cwd, key, o)
 	return key, type(o) == "table" and o or { cmd = key }
 end
 
+local function cache2(p, q, cache, gen)
+	cache[p] = cache[p] or {}
+	if not cache[p][q] then
+		cache[p][q] = gen(p, q)
+	end
+	return cache[p][q]
+end
+
 local function get_term_(cwd, k)
+	if last_by_tag[k] then
+		k = last_by_tag[k]
+	end
 	local key, o = get_term_conf(cwd, k, opts[k])
-
-	term_cache[cwd] = term_cache[cwd] or {}
-	if term_cache[cwd][key] then
-		return term_cache[cwd][key]
+	local res = cache2(cwd, key, term_cache, function()
+		o = vim.deepcopy(o)
+		o.display_name = o.display_name or key
+		o.on_exit = function()
+			term_cache[cwd][key] = nil
+		end
+		return Terminal:new(o)
+	end)
+	if o.tag then
+		last_by_tag[o.tag] = k
 	end
-
-	o = vim.deepcopy(o)
-	o.display_name = o.display_name or key
-	o.on_exit = function()
-		term_cache[cwd][key] = nil
-	end
-
-	term_cache[cwd][key] = Terminal:new(o)
-	return term_cache[cwd][key]
+	return res
 end
 
 local function list_terms()
