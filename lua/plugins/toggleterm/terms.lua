@@ -19,16 +19,6 @@ local opts = {
 local default_terminal = "term_e"
 local last_terminal = nil
 
-function M.toggle_float()
-	last_terminal = last_terminal or M.term(default_terminal)
-	M.term(last_terminal):toggle()
-end
-
-function M.toggle_terminal(key)
-	local next_terminal = M.term(key)
-	next_terminal:toggle()
-end
-
 function M.on_open(terminal)
 	last_terminal = terminal
 end
@@ -49,37 +39,47 @@ local function get_term(key)
 	return scoped(vim.fn.getcwd())(key)
 end
 
-local last_term_key
-
-function M.term(key)
-	local terminal = get_term(key)
-	last_term_key = key
-	return terminal
+function M.toggle_last()
+	last_terminal = last_terminal or get_term(default_terminal)
+	last_terminal:toggle()
 end
 
-function M.last_term()
-	if not last_term_key then
+local function prepare_term(key)
+	local next_terminal = get_term(key)
+	if not next_terminal then
 		return
 	end
-	return get_term(last_term_key)
+	if last_terminal and last_terminal ~= next_terminal then
+		last_terminal:toggle()
+	end
+	last_terminal = next_terminal
+	return last_terminal
 end
 
-function M.toggle_last()
-	local terminal = M.last_term()
-	if terminal then
-		terminal:toggle()
+function M.toggle_term(key)
+	local next_terminal = prepare_term(key)
+	if next_terminal then
+		next_terminal:toggle()
 	end
+end
+
+function M.show_term(key)
+	local next_terminal = prepare_term(key)
+	if not next_terminal then
+		return
+	end
+	local winnr = next_terminal.window
+	local is_visible = winnr and vim.api.nvim_win_is_valid(winnr)
+	if not is_visible then
+		next_terminal:toggle()
+	end
+	return next_terminal
 end
 
 function M.send_str(key, message)
-	local terminal = M.term(key)
-	if not terminal then
+	local terminal = M.show_term(key)
+	if terminal == nil then
 		return
-	end
-	local winnr = terminal.window
-	local is_visible = winnr and vim.api.nvim_win_is_valid(winnr)
-	if not is_visible then
-		terminal:toggle()
 	end
 	local job_id = terminal.job_id
 	vim.schedule(function()
@@ -111,7 +111,7 @@ function M.clear(key)
 end
 
 function M.stop(key)
-	local terminal = M.term(key)
+	local terminal = M.show_term(key)
 	if not terminal then
 		return
 	end

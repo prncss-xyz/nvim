@@ -8,7 +8,8 @@ return {
 	{
 		"akinsho/toggleterm.nvim",
 		opts = {
-			direction = "float",
+			direction = "vertical",
+      size = 80,
 			on_open = function(term)
 				require("plugins.toggleterm.terms").on_open(term)
 			end,
@@ -72,35 +73,35 @@ return {
 			{
 				"oe",
 				function()
-					require("plugins.toggleterm.terms").toggle_terminal("term_e")
+					require("plugins.toggleterm.terms").toggle_term("term_e")
 				end,
 				desc = "Toggle Terminal e",
 			},
 			{
 				"or",
 				function()
-					require("plugins.toggleterm.terms").toggle_terminal("term_r")
+					require("plugins.toggleterm.terms").toggle_term("term_r")
 				end,
 				desc = "Toggle Terminal r",
 			},
 			{
 				"ow",
 				function()
-					require("plugins.toggleterm.terms").toggle_terminal("dev")
+					require("plugins.toggleterm.terms").toggle_term("dev")
 				end,
 				desc = "Toggle Terminal Dev",
 			},
 			{
 				"oo",
 				function()
-					require("plugins.toggleterm.terms").toggle_terminal("current")
+					require("plugins.toggleterm.terms").toggle_term("current")
 				end,
 				desc = "Toggle Terminal Current file",
 			},
 			{
 				"occ",
 				function()
-					require("plugins.toggleterm.terms").toggle_terminal("diff")
+					require("plugins.toggleterm.terms").toggle_term("diff")
 				end,
 				desc = "Toggle Terminal Diff",
 			},
