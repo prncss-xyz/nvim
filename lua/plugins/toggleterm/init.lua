@@ -61,9 +61,6 @@ return {
 						p = function()
 							require("plugins.toggleterm.prompts").prompt()
 						end,
-						s = function()
-							require("plugins.toggleterm.agents").select_agent()
-						end,
 					})
 				end,
 				desc = "Toggle agent",
@@ -91,13 +88,6 @@ return {
 			},
 			{
 				"oo",
-				function()
-					require("plugins.toggleterm.terms").focus_term("current")
-				end,
-				desc = "Toggle Terminal Current file",
-			},
-			{
-				"occ",
 				function()
 					require("plugins.toggleterm.terms").focus_term("diff")
 				end,
