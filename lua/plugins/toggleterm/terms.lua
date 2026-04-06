@@ -4,6 +4,7 @@ local Terminal = require("toggleterm.terminal").Terminal
 
 local opts = {
 	dev = { cmd = "pnpm run dev" },
+	test = { cmd = "pnpm run test --watch" },
 	current = function()
 		return { dir = vim.fn.expand("%:p:h") }
 	end,
@@ -15,7 +16,9 @@ local opts = {
 	},
 	agent = require("plugins.toggleterm.agents").get_agent,
 	repl = require("plugins.toggleterm.repl").get_REPL,
-	['git add --all; git commit -m "ongoing work" --no-verify'] = true,
+	['git add --all; git commit -m "ongoing work" --no-verify; git push'] = true,
+	["git-sync-all"] = true,
+	["git-sync"] = true,
 }
 
 local default_terminal = "term_e"
