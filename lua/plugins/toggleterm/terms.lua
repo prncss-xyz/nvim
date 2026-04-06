@@ -36,12 +36,30 @@ local scoped = cachedFn(function()
 end)
 
 local function get_term(key)
+	if not key then
+		return nil
+	end
 	return scoped(vim.fn.getcwd())(key)
 end
 
 function M.toggle_last()
 	last_terminal = last_terminal or get_term(default_terminal)
-	last_terminal:toggle()
+	if last_terminal then
+		last_terminal:toggle()
+	end
+end
+
+function M.hide_term(key)
+	local next_terminal = get_term(key)
+	if not next_terminal then
+		return
+	end
+	local winnr = next_terminal.window
+	local is_visible = winnr and vim.api.nvim_win_is_valid(winnr)
+	if is_visible then
+		next_terminal:toggle()
+	end
+	return next_terminal
 end
 
 local function prepare_term(key)
@@ -50,7 +68,7 @@ local function prepare_term(key)
 		return
 	end
 	if last_terminal and last_terminal ~= next_terminal then
-		last_terminal:toggle()
+		M.hide_term(last_terminal)
 	end
 	last_terminal = next_terminal
 	return last_terminal
@@ -78,7 +96,7 @@ end
 
 function M.send_str(key, message)
 	local terminal = M.show_term(key)
-	if terminal == nil then
+	if not terminal then
 		return
 	end
 	local job_id = terminal.job_id

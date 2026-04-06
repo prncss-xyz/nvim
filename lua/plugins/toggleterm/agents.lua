@@ -34,7 +34,7 @@ function M.send_lines(lines)
 end
 
 function M.toggle()
-	require("plugins.toggleterm.terms").toggle_terminal(get_agent())
+	require("plugins.toggleterm.terms").toggle_term(get_agent())
 end
 
 function M.send_current_line()

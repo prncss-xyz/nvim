@@ -18,11 +18,7 @@ function M.from_filetype(lang)
 end
 
 function M.toggle(lang)
-	local key = M.from_filetype(lang)
-	if not key then
-		return
-	end
-	require("plugins.toggleterm.terms").toggle_terminal(key)
+	require("plugins.toggleterm.terms").toggle_term(M.from_filetype(lang))
 end
 
 function M.with(lang, cb)
