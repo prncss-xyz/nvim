@@ -16,7 +16,13 @@ function M.current_position_ref()
 	return M.current_line_ref() .. ":C" .. vim.fn.col(".")
 end
 
-local agents = { "pi", "gemini", "claude", "opencode" }
+local agents = {
+	"pi",
+	"gemini",
+	"claude",
+	"opencode",
+	"pi --no-extensions --no-skills --no-prompt-templates --no-themes --no-session",
+}
 local default_agent = "pi"
 
 local agents_by_cwd = {}
