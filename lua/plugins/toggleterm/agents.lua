@@ -43,7 +43,7 @@ function M.select_agent()
 		end
 
 		agents_by_cwd[vim.fn.getcwd()] = choice
-		M.toggle()
+		require("plugins.toggleterm.terms").focus_term("agent")
 	end)
 end
 

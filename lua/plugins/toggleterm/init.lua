@@ -10,9 +10,6 @@ return {
 		opts = {
 			direction = "vertical",
 			size = 80,
-			on_open = function(term)
-				require("plugins.toggleterm.terms").on_open(term)
-			end,
 		},
 		cmd = {
 			"ToggleTerm",
@@ -42,7 +39,7 @@ return {
 				function()
 					require("plugins.toggleterm.ops").repl_op:call({}, {
 						i = function()
-							require("plugins.toggleterm.terms").toggle_term("repl")
+							require("plugins.toggleterm.terms").focus_term("repl")
 						end,
 					})
 				end,
@@ -53,7 +50,7 @@ return {
 				function()
 					require("plugins.toggleterm.ops").agent_op:call({}, {
 						a = function()
-							require("plugins.toggleterm.terms").toggle_term("agent")
+							require("plugins.toggleterm.terms").focus_term("agent")
 						end,
 						c = function()
 							require("plugins.toggleterm.agents").send_current_position()
@@ -74,35 +71,35 @@ return {
 			{
 				"oe",
 				function()
-					require("plugins.toggleterm.terms").toggle_term("term_e")
+					require("plugins.toggleterm.terms").focus_term("term_e")
 				end,
 				desc = "Toggle Terminal e",
 			},
 			{
 				"or",
 				function()
-					require("plugins.toggleterm.terms").toggle_term("term_r")
+					require("plugins.toggleterm.terms").focus_term("term_r")
 				end,
 				desc = "Toggle Terminal r",
 			},
 			{
 				"ow",
 				function()
-					require("plugins.toggleterm.terms").toggle_term("dev")
+					require("plugins.toggleterm.terms").select_command()
 				end,
 				desc = "Toggle Terminal Dev",
 			},
 			{
 				"oo",
 				function()
-					require("plugins.toggleterm.terms").toggle_term("current")
+					require("plugins.toggleterm.terms").focus_term("current")
 				end,
 				desc = "Toggle Terminal Current file",
 			},
 			{
 				"occ",
 				function()
-					require("plugins.toggleterm.terms").toggle_term("diff")
+					require("plugins.toggleterm.terms").focus_term("diff")
 				end,
 				desc = "Toggle Terminal Diff",
 			},

@@ -15,14 +15,11 @@ local opts = {
 	},
 	agent = require("plugins.toggleterm.agents").get_agent,
 	repl = require("plugins.toggleterm.repl").get_REPL,
+	['git add --all; git commit -m "ongoing work" --no-verify'] = true,
 }
 
 local default_terminal = "term_e"
 local last_terminal = nil
-
-function M.on_open(terminal)
-	last_terminal = terminal
-end
 
 local term_cache = {}
 
@@ -33,11 +30,7 @@ local function get_term_conf(cwd, key, o)
 	if type(o) == "function" then
 		return get_term_conf(cwd, key, o())
 	end
-	if o == nil then
-		return key, { cmd = key }
-	end
-
-	return key, o
+	return key, type(o) == "table" and o or { cmd = key }
 end
 
 local function get_term_(cwd, k)
@@ -79,7 +72,7 @@ function M.select_term()
 		if not key then
 			return
 		end
-		M.show_term(key)
+		M.focus_term(key)
 	end)
 end
 
@@ -103,8 +96,10 @@ end
 
 local function prepare_term(key)
 	local next_terminal = get_term(key)
-	hide_term(last_terminal)
-	last_terminal = next_terminal
+	if last_terminal ~= next_terminal then
+		hide_term(last_terminal)
+		last_terminal = next_terminal
+	end
 	return next_terminal
 end
 
@@ -115,7 +110,7 @@ function M.toggle_term(key)
 	end
 end
 
-function M.show_term(key)
+function M.focus_term(key)
 	local next_terminal = prepare_term(key)
 	if not next_terminal then
 		return
@@ -124,12 +119,14 @@ function M.show_term(key)
 	local is_visible = winnr and vim.api.nvim_win_is_valid(winnr)
 	if not is_visible then
 		next_terminal:toggle()
+	else
+		vim.api.nvim_set_current_win(winnr)
 	end
 	return next_terminal
 end
 
 function M.send_str(key, message)
-	local terminal = M.show_term(key)
+	local terminal = M.focus_term(key)
 	if not terminal then
 		return
 	end
@@ -163,7 +160,7 @@ function M.clear(key)
 end
 
 function M.stop(key)
-	local terminal = M.show_term(key)
+	local terminal = M.focus_term(key)
 	if not terminal then
 		return
 	end
@@ -172,6 +169,18 @@ function M.stop(key)
 		return
 	end
 	vim.fn.jobstop(job_id)
+end
+
+function M.select_command()
+	local choices = vim.tbl_keys(opts)
+	vim.ui.select(choices, {
+		prompt = "Select command: ",
+	}, function(choice)
+		if not choice then
+			return
+		end
+		M.focus_term(choice)
+	end)
 end
 
 return M
