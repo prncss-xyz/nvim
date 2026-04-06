@@ -1,6 +1,5 @@
 local M = {}
 
-local cache2 = require("my.functions").cache2
 local Terminal = require("toggleterm.terminal").Terminal
 
 local opts = {
@@ -14,6 +13,8 @@ local opts = {
 		cmd = require("my.diff").get_cmd(),
 		close_on_exit = false,
 	},
+	agent = require("plugins.toggleterm.agents").get_agent,
+	repl = require("plugins.toggleterm.repl").get_REPL,
 }
 
 local default_terminal = "term_e"
@@ -25,21 +26,32 @@ end
 
 local term_cache = {}
 
-local get_term_ = cache2(term_cache, function(scope, key)
-	local o = opts[key] or { cmd = key }
-	if type(o) == "function" then
-		o = o()
+local function get_term_(cwd, key, o)
+	if type(o) == "string" then
+		return get_term_(cwd, o, opts[o])
 	end
+	if type(o) == "function" then
+		return get_term_(cwd, key, o())
+	end
+
+	term_cache[cwd] = term_cache[cwd] or {}
+	if term_cache[cwd][key] then
+		return term_cache[cwd][key]
+	end
+
+	o = o or { cmd = key }
 	o.display_name = o.display_name or key
 	o.on_exit = function()
-		term_cache[scope][key] = nil
+		term_cache[cwd][key] = nil
 	end
-	return Terminal:new(o)
-end)
+
+	term_cache[cwd][key] = Terminal:new(o)
+	return term_cache[cwd][key]
+end
 
 local function list_terms()
-	local scope = vim.fn.getcwd()
-	local cache = term_cache[scope] or {}
+	local cwd = vim.fn.getcwd()
+	local cache = term_cache[cwd] or {}
 	return vim.tbl_keys(cache)
 end
 
@@ -47,8 +59,8 @@ local function get_term(key)
 	if key == nil then
 		return nil
 	end
-	local scope = vim.fn.getcwd()
-	return get_term_(scope, key)
+	local cwd = vim.fn.getcwd()
+	return get_term_(cwd, key, opts[key])
 end
 
 function M.select_terminal()

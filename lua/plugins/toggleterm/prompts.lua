@@ -38,7 +38,7 @@ function M.prompt()
 		local prompt_fn = prompts[choice]
 		local prompt_data = prompt_fn()
 
-		require("plugins.toggleterm.agents").send_lines(prompt_data)
+		require("plugins.toggleterm.terms").send_lines("agent", prompt_data)
 	end)
 end
 

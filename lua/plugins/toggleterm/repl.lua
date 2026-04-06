@@ -1,6 +1,6 @@
 local M = {}
 
-local filetype_to_key = {
+local lang_to_key = {
 	lua = "lua",
 	javascript = "node",
 	javascriptreact = "node",
@@ -8,8 +8,8 @@ local filetype_to_key = {
 	typescriptreact = "node",
 }
 
-function M.from_filetype(lang)
-	local key = filetype_to_key[lang]
+function M.from_lang(lang)
+	local key = lang_to_key[lang]
 	if not key then
 		print("unknown lang", vim.inspect(lang))
 		return
@@ -17,14 +17,10 @@ function M.from_filetype(lang)
 	return key
 end
 
-function M.toggle(lang)
-	require("plugins.toggleterm.terms").toggle_term(M.from_filetype(lang))
+function M.get_REPL()
+	local lang = require("flies.utils.editor").get_lang_at_cursor()
+  dd(lang)
+	return M.from_lang(lang)
 end
 
-function M.with(lang, cb)
-	local key = M.from_filetype(lang)
-	if not key then
-		return
-	end
-	cb()
-end
+return M

@@ -2,16 +2,15 @@ local M = {}
 
 M.repl_op = require("flies.operations._with_contents"):new({
 	cb = function(lang, contents)
-		require("plugins.toggleterm.repl").with(lang, function(key)
-			require("plugins.toggleterm.terms").send_lines(key, contents)
-		end)
+		local key = require("plugins.toggleterm.repl").from_lang(lang)
+		require("plugins.toggleterm.terms").send_lines(key, contents)
 	end,
 })
 
 M.agent_op = require("flies.operations._with_contents"):new({
 	cb = function(_, contents)
 		table.insert(contents, 1, require("plugins.toggleterm.agents").current_position_ref())
-		require("plugins.toggleterm.agents").send_lines(contents)
+		require("plugins.toggleterm.terms").send_lines("agent", contents)
 	end,
 })
 

@@ -42,8 +42,7 @@ return {
 				function()
 					require("plugins.toggleterm.ops").repl_op:call({}, {
 						i = function()
-							local lang = require("flies.utils.editor").get_lang_at_cursor()
-							require("plugins.toggleterm.repl").toggle(lang)
+							require("plugins.toggleterm.terms").toggle_term("repl")
 						end,
 					})
 				end,
@@ -54,10 +53,10 @@ return {
 				function()
 					require("plugins.toggleterm.ops").agent_op:call({}, {
 						a = function()
-							require("plugins.toggleterm.agents").toggle()
+							require("plugins.toggleterm.terms").toggle_term("agent")
 						end,
 						c = function()
-							require("plugins.toggleterm.agents").send_current_line()
+							require("plugins.toggleterm.agents").send_current_position()
 						end,
 						e = function()
 							require("plugins.toggleterm.agents").send_current_file()

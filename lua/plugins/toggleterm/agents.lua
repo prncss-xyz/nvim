@@ -21,34 +21,22 @@ local default_agent = "pi"
 
 local agents_by_cwd = {}
 
-local function get_agent()
+function M.get_agent()
 	return agents_by_cwd[vim.fn.getcwd()] or default_agent
 end
 
-function M.with(cb)
-	cb(get_agent())
-end
-
-function M.send_lines(lines)
-	require("plugins.toggleterm.terms").send_lines(get_agent(), lines)
-end
-
-function M.toggle()
-	require("plugins.toggleterm.terms").toggle_term(get_agent())
-end
-
-function M.send_current_line()
-	M.send_lines({ M.current_position_ref() })
+function M.send_current_position()
+	require("plugins.toggleterm.terms").send_lines("agent", { M.current_position_ref() })
 end
 
 function M.send_current_file()
-	M.send_lines({ M.current_file_ref() })
+	require("plugins.toggleterm.terms").send_lines("agent", { M.current_file_ref() })
 end
 
 function M.select_agent()
 	vim.ui.select(agents, {
 		prompt = "Select agent",
-		default = get_agent(),
+		default = M.get_agent(),
 	}, function(choice)
 		if not choice then
 			return
