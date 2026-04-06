@@ -1,6 +1,6 @@
 local M = {}
 
-local cachedFn = require("my.functions").cachedFn
+local cache2 = require("my.functions").cache2
 local Terminal = require("toggleterm.terminal").Terminal
 
 local opts = {
@@ -23,23 +23,43 @@ function M.on_open(terminal)
 	last_terminal = terminal
 end
 
-local scoped = cachedFn(function()
-	return cachedFn(function(key, remove)
-		local o = opts[key] or { cmd = key }
-		if type(o) == "function" then
-			o = o()
-		end
-		o.display_name = o.display_name or key
-		o.on_exit = remove
-		return Terminal:new(o)
-	end)
+local term_cache = {}
+
+local get_term_ = cache2(term_cache, function(scope, key)
+	local o = opts[key] or { cmd = key }
+	if type(o) == "function" then
+		o = o()
+	end
+	o.display_name = o.display_name or key
+	o.on_exit = function()
+		term_cache[scope][key] = nil
+	end
+	return Terminal:new(o)
 end)
 
+local function list_terms()
+	local scope = vim.fn.getcwd()
+	local cache = term_cache[scope] or {}
+	return vim.tbl_keys(cache)
+end
+
 local function get_term(key)
-	if not key then
+	if key == nil then
 		return nil
 	end
-	return scoped(vim.fn.getcwd())(key)
+	local scope = vim.fn.getcwd()
+	return get_term_(scope, key)
+end
+
+function M.select_terminal()
+	vim.ui.select(list_terms(), {
+		prompt = "Select term",
+	}, function(key)
+		if not key then
+			return
+		end
+		M.show_term(key)
+	end)
 end
 
 function M.toggle_last()
@@ -49,17 +69,16 @@ function M.toggle_last()
 	end
 end
 
-function M.hide_term(key)
-	local next_terminal = get_term(key)
-	if not next_terminal then
+function M.hide_term(terminal)
+	if not terminal then
 		return
 	end
-	local winnr = next_terminal.window
+	local winnr = terminal.window
 	local is_visible = winnr and vim.api.nvim_win_is_valid(winnr)
 	if is_visible then
-		next_terminal:toggle()
+		terminal:toggle()
 	end
-	return next_terminal
+	return terminal
 end
 
 local function prepare_term(key)

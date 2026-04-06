@@ -9,7 +9,7 @@ return {
 		"akinsho/toggleterm.nvim",
 		opts = {
 			direction = "vertical",
-      size = 80,
+			size = 80,
 			on_open = function(term)
 				require("plugins.toggleterm.terms").on_open(term)
 			end,
@@ -24,7 +24,9 @@ return {
 		keys = {
 			{
 				domain.pick .. theme.run,
-				"<cmd>TermSelect<cr>",
+				function()
+					require("plugins.toggleterm.terms").select_terminal()
+				end,
 				desc = "Select Terminal",
 			},
 			{

@@ -1,12 +1,10 @@
 local M = {}
 
-function M.cachedFn(create)
-	local cache = {}
-	return function (key)
-		cache[key] = cache[key] or create(key, function()
-			cache[key] = nil
-		end)
-		return cache[key], cache
+function M.cache2(cache, create)
+	return function(p, q)
+    cache[p] = cache[p] or {}
+    cache[p][q] = cache[p][q] or create(p, q)
+    return cache[p][q]
 	end
 end
 
