@@ -25,14 +25,14 @@ return {
 			{
 				domain.pick .. theme.run,
 				function()
-					require("plugins.toggleterm.terms").select_terminal()
+					require("plugins.toggleterm.terms").select_term()
 				end,
 				desc = "Select Terminal",
 			},
 			{
 				ai_insert.toggle,
 				function()
-					require("plugins.toggleterm.terms").toggle_last()
+					require("plugins.toggleterm.terms").toggle_last_term()
 				end,
 				desc = "Toggle Last Terminal",
 				mode = { "n", "x", "i", "t" },

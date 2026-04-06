@@ -11,7 +11,7 @@ local lang_to_key = {
 function M.from_lang(lang)
 	local key = lang_to_key[lang]
 	if not key then
-		print("unknown lang", vim.inspect(lang))
+		print("unknown lang", lang)
 		return
 	end
 	return key
@@ -19,7 +19,6 @@ end
 
 function M.get_REPL()
 	local lang = require("flies.utils.editor").get_lang_at_cursor()
-  dd(lang)
 	return M.from_lang(lang)
 end
 

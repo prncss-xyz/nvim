@@ -136,7 +136,6 @@ return {
 					require("agentic").restore_session()
 				end,
 				desc = "Agentic Restore session",
-				mode = { "n", "v", "i" },
 			},
 		},
 		enabled = chat == "agentic",

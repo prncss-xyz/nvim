@@ -26,20 +26,29 @@ end
 
 local term_cache = {}
 
-local function get_term_(cwd, key, o)
+local function get_term_conf(cwd, key, o)
 	if type(o) == "string" then
-		return get_term_(cwd, o, opts[o])
+		return get_term_conf(cwd, o, opts[o])
 	end
 	if type(o) == "function" then
-		return get_term_(cwd, key, o())
+		return get_term_conf(cwd, key, o())
 	end
+	if o == nil then
+		return key, { cmd = key }
+	end
+
+	return key, o
+end
+
+local function get_term_(cwd, k)
+	local key, o = get_term_conf(cwd, k, opts[k])
 
 	term_cache[cwd] = term_cache[cwd] or {}
 	if term_cache[cwd][key] then
 		return term_cache[cwd][key]
 	end
 
-	o = o or { cmd = key }
+	o = vim.deepcopy(o)
 	o.display_name = o.display_name or key
 	o.on_exit = function()
 		term_cache[cwd][key] = nil
@@ -60,10 +69,10 @@ local function get_term(key)
 		return nil
 	end
 	local cwd = vim.fn.getcwd()
-	return get_term_(cwd, key, opts[key])
+	return get_term_(cwd, key)
 end
 
-function M.select_terminal()
+function M.select_term()
 	vim.ui.select(list_terms(), {
 		prompt = "Select term",
 	}, function(key)
@@ -74,14 +83,14 @@ function M.select_terminal()
 	end)
 end
 
-function M.toggle_last()
+function M.toggle_last_term()
 	last_terminal = last_terminal or get_term(default_terminal)
 	if last_terminal then
 		last_terminal:toggle()
 	end
 end
 
-function M.hide_term(terminal)
+local function hide_term(terminal)
 	if not terminal then
 		return
 	end
@@ -90,19 +99,13 @@ function M.hide_term(terminal)
 	if is_visible then
 		terminal:toggle()
 	end
-	return terminal
 end
 
 local function prepare_term(key)
 	local next_terminal = get_term(key)
-	if not next_terminal then
-		return
-	end
-	if last_terminal and last_terminal ~= next_terminal then
-		M.hide_term(last_terminal)
-	end
+	hide_term(last_terminal)
 	last_terminal = next_terminal
-	return last_terminal
+	return next_terminal
 end
 
 function M.toggle_term(key)
@@ -143,11 +146,11 @@ function M.send_lines(key, contents)
 	end
 	M.send_str(key, message)
 	if contents.cr then
-		M.cr(key)
+		M.send_cr(key)
 	end
 end
 
-function M.cr(key)
+function M.send_cr(key)
 	M.send_str(key, string.char(13))
 end
 
