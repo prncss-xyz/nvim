@@ -16,13 +16,17 @@ function M.current_position_ref()
 	return M.current_line_ref() .. ":C" .. vim.fn.col(".")
 end
 
-local agents = { "pi", "gemini", "claude" }
+local agents = { "pi", "gemini", "claude", "opencode" }
 local default_agent = "pi"
 
 local agents_by_cwd = {}
 
 local function get_agent()
 	return agents_by_cwd[vim.fn.getcwd()] or default_agent
+end
+
+function M.with(cb)
+	cb(get_agent())
 end
 
 function M.send_lines(lines)

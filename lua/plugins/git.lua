@@ -263,7 +263,7 @@ return {
 				current = "DiffText",
 			},
 			keys = {
-				{ conflict .. "l", "<cmd>GitConflictListQf<cr>", desc = "Diffview Current File History" },
+				{ conflict .. "l", "<cmd>GitConflictListQf<cr>", desc = "List Conflicts" },
 			},
 		},
 	},

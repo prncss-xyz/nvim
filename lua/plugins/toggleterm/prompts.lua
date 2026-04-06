@@ -27,8 +27,8 @@ local prompts = {
 }
 
 function M.prompt()
-	local keys = vim.tbl_keys(prompts)
-	vim.ui.select(keys, {
+	local choices = vim.tbl_keys(prompts)
+	vim.ui.select(choices, {
 		prompt = "Select prompt: ",
 	}, function(choice)
 		if not choice then

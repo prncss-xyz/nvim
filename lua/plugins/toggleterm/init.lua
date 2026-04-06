@@ -8,7 +8,7 @@ return {
 	{
 		"akinsho/toggleterm.nvim",
 		opts = {
-			direction = "vertical",
+			direction = "float",
 			on_open = function(term)
 				require("plugins.toggleterm.terms").on_open(term)
 			end,
@@ -40,11 +40,7 @@ return {
 					require("plugins.toggleterm.ops").repl_op:call({}, {
 						i = function()
 							local lang = require("flies.utils.editor").get_lang_at_cursor()
-							local term = require("plugins.toggleterm.terms").from_filetype(lang)
-							if not term then
-								return
-							end
-							require("plugins.toggleterm.terms").term(term):toggle()
+							require("plugins.toggleterm.repl").toggle(lang)
 						end,
 					})
 				end,
@@ -76,44 +72,35 @@ return {
 			{
 				"oe",
 				function()
-					require("plugins.toggleterm.terms").term("term_e"):toggle()
+					require("plugins.toggleterm.terms").toggle_terminal("term_e")
 				end,
 				desc = "Toggle Terminal e",
 			},
 			{
 				"or",
 				function()
-					require("plugins.toggleterm.terms").term("term_r"):toggle()
+					require("plugins.toggleterm.terms").toggle_terminal("term_r")
 				end,
 				desc = "Toggle Terminal r",
 			},
 			{
-				"opw",
-				function()
-					require("plugins.toggleterm.terms").term("dev"):spawn({
-						close_on_exit = false,
-					})
-				end,
-				desc = "Spawn Terminal Dev",
-			},
-			{
 				"ow",
 				function()
-					require("plugins.toggleterm.terms").term("dev"):toggle()
+					require("plugins.toggleterm.terms").toggle_terminal("dev")
 				end,
 				desc = "Toggle Terminal Dev",
 			},
 			{
 				"oo",
 				function()
-					require("plugins.toggleterm.terms").term("current"):toggle()
+					require("plugins.toggleterm.terms").toggle_terminal("current")
 				end,
 				desc = "Toggle Terminal Current file",
 			},
 			{
 				"occ",
 				function()
-					require("plugins.toggleterm.terms").term("diff"):toggle()
+					require("plugins.toggleterm.terms").toggle_terminal("diff")
 				end,
 				desc = "Toggle Terminal Diff",
 			},

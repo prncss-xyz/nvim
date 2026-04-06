@@ -3,41 +3,34 @@ local M = {}
 local cachedFn = require("my.functions").cachedFn
 local Terminal = require("toggleterm.terminal").Terminal
 
-local filetype_to_key = {
-	lua = "lua",
-	javascript = "node",
-	javascriptreact = "node",
-	typescript = "node",
-	typescriptreact = "node",
-}
-
 local opts = {
 	dev = { cmd = "pnpm run dev" },
 	current = function()
 		return { dir = vim.fn.expand("%:p:h") }
 	end,
-  term_e = {},
-  term_r = {},
+	term_e = {},
+	term_r = {},
 	diff = {
 		cmd = require("my.diff").get_cmd(),
 		close_on_exit = false,
 	},
 }
 
-local last_terminal = "term_e"
+local default_terminal = "term_e"
+local last_terminal = nil
 
 function M.toggle_float()
-	require("plugins.toggleterm.terms").term(last_terminal):toggle()
+	last_terminal = last_terminal or M.term(default_terminal)
+	M.term(last_terminal):toggle()
 end
 
-local term_width = 80
+function M.toggle_terminal(key)
+	local next_terminal = M.term(key)
+	next_terminal:toggle()
+end
 
 function M.on_open(terminal)
 	last_terminal = terminal
-	if terminal.direction == "vertical" then
-		vim.cmd("wincmd L")
-		vim.api.nvim_win_set_width(0, term_width)
-	end
 end
 
 local scoped = cachedFn(function()
@@ -76,15 +69,6 @@ function M.toggle_last()
 	if terminal then
 		terminal:toggle()
 	end
-end
-
-function M.from_filetype(lang)
-	local key = filetype_to_key[lang]
-	if not key then
-		print("unknown lang", vim.inspect(lang))
-		return
-	end
-	return key
 end
 
 function M.send_str(key, message)

@@ -6,7 +6,7 @@ function M.cachedFn(create)
 		cache[key] = cache[key] or create(key, function()
 			cache[key] = nil
 		end)
-		return cache[key]
+		return cache[key], cache
 	end
 end
 
