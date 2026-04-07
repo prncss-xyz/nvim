@@ -1,5 +1,7 @@
 local M = {}
 
+local global = {}
+
 local Terminal = require("toggleterm.terminal").Terminal
 local config = require("plugins.toggleterm.config")
 
@@ -14,7 +16,7 @@ local function get_term_conf(cwd, key, o)
 		return
 	end
 	if type(o) == "string" then
-		return get_term_conf(cwd, o, config.opts[o])
+		return get_term_conf(cwd, o, config.commands[o])
 	end
 	if type(o) == "function" then
 		return get_term_conf(cwd, key, o())
@@ -34,15 +36,16 @@ local function get_term_(cwd, k)
 	if last_by_tag[k] then
 		k = last_by_tag[k]
 	end
-	local key, o = get_term_conf(cwd, k, config.opts[k])
+	local key, o = get_term_conf(cwd, k, config.commands[k])
 	if key == nil or o == nil then
 		return
 	end
-	local res = cache2(cwd, key, term_cache, function()
+	local scope = o.global and global or cwd
+	local res = cache2(scope, key, term_cache, function()
 		o = vim.deepcopy(o)
 		o.display_name = o.display_name or key
 		o.on_exit = function()
-			term_cache[cwd][key] = nil
+			term_cache[scope][key] = nil
 		end
 		return Terminal:new(o)
 	end)
@@ -53,9 +56,10 @@ local function get_term_(cwd, k)
 end
 
 local function list_terms()
-	local cwd = vim.rn.getcwd()
-	local cache = term_cache[cwd] or {}
-	return vim.tbl_keys(cache)
+	local cwd = vim.fn.getcwd()
+	local res = vim.tbl_keys(term_cache[cwd] or {})
+	vim.list_extend(res, vim.tbl_keys(term_cache[global] or {}))
+	return res
 end
 
 local function get_term(key)
@@ -174,7 +178,7 @@ end
 
 function M.select_command()
 	local choices = vim.tbl_keys(last_by_tag)
-	for key, value in pairs(config.opts) do
+	for key, value in pairs(config.commands) do
 		if (not vim.tbl_contains(choices, key)) and (type(value) ~= "function" or value()) then
 			table.insert(choices, key)
 		end

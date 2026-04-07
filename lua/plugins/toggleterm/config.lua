@@ -8,7 +8,8 @@ M.lang_to_REPL = {
 	typescriptreact = "node",
 }
 
-M.opts = {
+M.commands = {
+	tilt = { cmd = "echo toto", global = true },
 	dev = { cmd = "pnpm run dev" },
 	test = { cmd = "pnpm run test --watch" },
 	current = function()
