@@ -59,7 +59,7 @@ return {
 							require("plugins.toggleterm.agents").send_current_file()
 						end,
 						p = function()
-							require("plugins.toggleterm.prompts").prompt()
+							require("plugins.toggleterm.agents").prompt()
 						end,
 					})
 				end,

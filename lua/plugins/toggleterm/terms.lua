@@ -1,43 +1,20 @@
 local M = {}
 
 local Terminal = require("toggleterm.terminal").Terminal
+local config = require("plugins.toggleterm.config")
 
-local opts = {
-	dev = { cmd = "pnpm run dev" },
-	test = { cmd = "pnpm run test --watch" },
-	current = function()
-		return { dir = vim.fn.expand("%:p:h") }
-	end,
-	term_e = {},
-	term_r = {},
-	diff = {
-		cmd = require("my.diff").get_cmd(),
-		close_on_exit = false,
-	},
-	repl = require("plugins.toggleterm.repl").get_REPL,
-	['git add --all; git commit -m "ongoing work" --no-verify; git push'] = true,
-	["git-sync-all"] = true,
-	["git-sync"] = true,
-	pi = { cmd = "pi", tag = "agent" },
-	pi_minimal = {
-		cmd = "pi --no-extensions --no-skills --no-prompt-templates --no-themes --no-session",
-		tag = "agent",
-	},
-	gemini = { cmd = "gemini", tag = "agent" },
-	claude = { cmd = "claude", tag = "agent" },
-	opencode = { cmd = "opencode", tag = "agent" },
-	agent = true,
-}
-
-local last_by_tag = { agent = "pi_minimal" }
 local default_terminal = "term_e"
 local last_terminal = nil
+local last_by_tag = vim.deepcopy(config.default_by_tag)
 
 local term_cache = {}
 
 local function get_term_conf(cwd, key, o)
+	if not o then
+		return
+	end
 	if type(o) == "string" then
-		return get_term_conf(cwd, o, opts[o])
+		return get_term_conf(cwd, o, config.opts[o])
 	end
 	if type(o) == "function" then
 		return get_term_conf(cwd, key, o())
@@ -57,7 +34,10 @@ local function get_term_(cwd, k)
 	if last_by_tag[k] then
 		k = last_by_tag[k]
 	end
-	local key, o = get_term_conf(cwd, k, opts[k])
+	local key, o = get_term_conf(cwd, k, config.opts[k])
+	if key == nil or o == nil then
+		return
+	end
 	local res = cache2(cwd, key, term_cache, function()
 		o = vim.deepcopy(o)
 		o.display_name = o.display_name or key
@@ -73,7 +53,7 @@ local function get_term_(cwd, k)
 end
 
 local function list_terms()
-	local cwd = vim.fn.getcwd()
+	local cwd = vim.rn.getcwd()
 	local cache = term_cache[cwd] or {}
 	return vim.tbl_keys(cache)
 end
@@ -193,7 +173,13 @@ function M.stop(key)
 end
 
 function M.select_command()
-	local choices = vim.tbl_keys(opts)
+	local choices = vim.tbl_keys(last_by_tag)
+	for key, value in pairs(config.opts) do
+		if (not vim.tbl_contains(choices, key)) and (type(value) ~= "function" or value()) then
+			table.insert(choices, key)
+		end
+	end
+
 	vim.ui.select(choices, {
 		prompt = "Select command: ",
 	}, function(choice)

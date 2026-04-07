@@ -1,25 +1,16 @@
 local M = {}
 
-local lang_to_key = {
-	lua = "lua",
-	javascript = "node",
-	javascriptreact = "node",
-	typescript = "node",
-	typescriptreact = "node",
-}
-
-function M.from_lang(lang)
-	local key = lang_to_key[lang]
+function M.get_REPL_from_lang(lang)
+	local key = require("plugins.toggleterm.config").lang_to_REPL[lang]
 	if not key then
-		print("unknown lang", lang)
-		return
+		return nil
 	end
 	return key
 end
 
 function M.get_REPL()
 	local lang = require("flies.utils.editor").get_lang_at_cursor()
-	return M.from_lang(lang)
+	return M.get_REPL_from_lang(lang)
 end
 
 return M

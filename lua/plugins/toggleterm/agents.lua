@@ -24,4 +24,21 @@ function M.send_current_file()
 	require("plugins.toggleterm.terms").send_lines("agent", { M.current_file_ref() })
 end
 
+function M.prompt()
+	local prompts = require("plugins.toggleterm.config").prompts
+	local choices = vim.tbl_keys(prompts)
+	vim.ui.select(choices, {
+		prompt = "Select prompt: ",
+	}, function(choice)
+		if not choice then
+			return
+		end
+
+		local prompt_fn = prompts[choice]
+		local prompt_data = prompt_fn()
+
+		require("plugins.toggleterm.terms").send_lines("agent", prompt_data)
+	end)
+end
+
 return M
