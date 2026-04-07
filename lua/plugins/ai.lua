@@ -7,9 +7,115 @@ local ai_insert = require("my.parameters").ai_insert
 -- TODO: augmentcode
 local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" |  "none"
 local chat = personal("agentic", "sidekick") -- 'sidekick' | 'avante' | 'copilotchat' | 'claude' | 'agentic' | 'none'
-local sidekick_chat = personal(function() end, "claude") -- "opencode" | "claude" | "gemini"
 
 return {
+	{
+		"zbirenbaum/copilot.lua",
+		dependencies = {
+			{
+				"copilotlsp-nvim/copilot-lsp",
+				init = function()
+					vim.g.copilot_nes_debounce = 500
+				end,
+			},
+		},
+		opts = {
+			filetypes = {
+				markdown = false,
+			},
+			nes = {
+				enabled = true,
+				keymap = {
+					accept_and_goto = ai_insert.nes,
+					accept = false,
+					dismiss = false,
+				},
+			},
+		},
+		keys = {
+			{
+				ai_insert.nes,
+				function()
+					local nes_api = require("copilot.nes.api")
+					local result = nes_api.nes_apply_pending_nes()
+					if result then
+						nes_api.nes_walk_cursor_end_edit()
+					end
+				end,
+				desc = "Copilot accept NES",
+				mode = { "n", "x", "i" },
+			},
+			{
+				ai_insert.clear,
+				function()
+					local touched = false
+					local suggestion = require("copilot.suggestion")
+					if suggestion.is_visible() then
+						touched = true
+						suggestion.dismiss()
+					end
+					if require("copilot-lsp.nes").clear() then
+						touched = true
+					end
+					if not touched then
+						vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+						vim.lsp.buf.format({
+							async = false,
+							filter = function(client)
+								return not vim.tbl_contains({
+									"lua_ls",
+									"vtsls",
+								}, client.name)
+							end,
+						})
+					end
+				end,
+				desc = "Coplot Clear suggestions or Leave insert mode",
+				mode = { "n", "v", "i" },
+			},
+		},
+		cmd = { "Copilot" },
+		event = "InsertEnter",
+		enabled = completion == "copilot" or chat == "copilotchat",
+		cond = not_vscode,
+	},
+	{
+		"carlos-algms/agentic.nvim",
+		opts = { provider = "gemini-acp" },
+		keys = {
+			{
+				"okk",
+				function()
+					require("agentic").toggle()
+				end,
+				desc = "Toggle Agentic Chat",
+			},
+			{
+				"ok" .. "i",
+				function()
+					require("agentic").add_selection_or_file_to_context()
+				end,
+				mode = { "n", "v" },
+				desc = "Add file or selection to Agentic to Context",
+			},
+			{
+				"ok" .. "a",
+				function()
+					require("agentic").new_session()
+				end,
+				desc = "New Agentic Session",
+			},
+			{
+				"ok" .. "r",
+				function()
+					require("agentic").restore_session()
+				end,
+				desc = "Agentic Restore session",
+			},
+		},
+		enabled = chat == "agentic",
+		cond = not_vscode,
+	},
 	{
 		"Exafunction/windsurf.nvim",
 		dependencies = { "nvim-lua/plenary.nvim" },
@@ -102,153 +208,6 @@ return {
 			},
 		},
 		enabled = chat == "opencode",
-		cond = not_vscode,
-	},
-	{
-		"carlos-algms/agentic.nvim",
-		opts = { provider = "gemini-acp" },
-		keys = {
-			{
-				"okk",
-				function()
-					require("agentic").toggle()
-				end,
-				desc = "Toggle Agentic Chat",
-			},
-			{
-				"ok" .. "i",
-				function()
-					require("agentic").add_selection_or_file_to_context()
-				end,
-				mode = { "n", "v" },
-				desc = "Add file or selection to Agentic to Context",
-			},
-			{
-				"ok" .. "a",
-				function()
-					require("agentic").new_session()
-				end,
-				desc = "New Agentic Session",
-			},
-			{
-				"ok" .. "r",
-				function()
-					require("agentic").restore_session()
-				end,
-				desc = "Agentic Restore session",
-			},
-		},
-		enabled = chat == "agentic",
-		cond = not_vscode,
-	},
-	{
-		"folke/sidekick.nvim",
-		opts = {
-			nes = { enabled = false },
-			cli = {
-				tools = {
-					pi = { cmd = { "pi" } },
-				},
-			},
-		},
-		keys = {
-			{
-				ai_insert.toggle,
-				function()
-					require("sidekick.cli").toggle({
-						name = sidekick_chat,
-						focus = true,
-					})
-				end,
-				desc = "Sidekick Chat",
-			},
-			{
-				ai .. "s",
-				function()
-					require("sidekick.cli").select()
-				end,
-				desc = "Sidekick Select CLI",
-			},
-			{
-				ai .. "a",
-				function()
-					require("sidekick.cli").prompt()
-				end,
-				mode = { "n", "x" },
-				desc = "Sidekick Ask Prompt",
-			},
-		},
-		enabled = chat == "sidekick",
-		cond = not_vscode,
-	},
-	{
-		"zbirenbaum/copilot.lua",
-		dependencies = {
-			{
-				"copilotlsp-nvim/copilot-lsp",
-				init = function()
-					vim.g.copilot_nes_debounce = 500
-				end,
-			},
-		},
-		opts = {
-			filetypes = {
-				markdown = false,
-			},
-			nes = {
-				enabled = true,
-				keymap = {
-					accept_and_goto = ai_insert.nes,
-					accept = false,
-					dismiss = false,
-				},
-			},
-		},
-		keys = {
-			{
-				ai_insert.nes,
-				function()
-					local nes_api = require("copilot.nes.api")
-					local result = nes_api.nes_apply_pending_nes()
-					if result then
-						nes_api.nes_walk_cursor_end_edit()
-					end
-				end,
-				desc = "Copilot accept NES",
-				mode = { "n", "x", "i" },
-			},
-			{
-				ai_insert.clear,
-				function()
-					local touched = false
-					local suggestion = require("copilot.suggestion")
-					if suggestion.is_visible() then
-						touched = true
-						suggestion.dismiss()
-					end
-					if require("copilot-lsp.nes").clear() then
-						touched = true
-					end
-					if not touched then
-						vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
-						vim.lsp.buf.format({
-							async = false,
-							filter = function(client)
-								return not vim.tbl_contains({
-									"lua_ls",
-									"vtsls",
-								}, client.name)
-							end,
-						})
-					end
-				end,
-				desc = "Coplot Clear suggestions or Leave insert mode",
-				mode = { "n", "v", "i" },
-			},
-		},
-		cmd = { "Copilot" },
-		event = "InsertEnter",
-		enabled = completion == "copilot" or chat == "copilotchat",
 		cond = not_vscode,
 	},
 }
