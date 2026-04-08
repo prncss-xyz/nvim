@@ -32,7 +32,7 @@ local function cache2(p, q, cache, gen)
 	return cache[p][q]
 end
 
-local function get_term_(cwd, k)
+local function get_term_(cwd, k, background)
 	if last_by_tag[k] then
 		k = last_by_tag[k]
 	end
@@ -47,7 +47,14 @@ local function get_term_(cwd, k)
 		o.on_exit = function()
 			term_cache[scope][key] = nil
 		end
-		return Terminal:new(o)
+		if background then
+			o.hidden = true
+		end
+		local term = Terminal:new(o)
+		if background then
+			term:spawn()
+		end
+		return term
 	end)
 	if o.tag then
 		last_by_tag[o.tag] = k
@@ -62,12 +69,12 @@ local function list_terms()
 	return res
 end
 
-local function get_term(key)
+local function get_term(key, background)
 	if key == nil then
 		return nil
 	end
 	local cwd = vim.fn.getcwd()
-	return get_term_(cwd, key)
+	return get_term_(cwd, key, background)
 end
 
 function M.select_term()
@@ -192,6 +199,33 @@ function M.select_command()
 		end
 		M.focus_term(choice)
 	end)
+end
+
+local seen_cwds = {}
+local setup_start_initialized = false
+
+function M.setup_start()
+	if setup_start_initialized then
+		return
+	end
+	setup_start_initialized = true
+
+	local function setup()
+		local cwd = vim.fn.getcwd()
+		if seen_cwds[cwd] then
+			return
+		end
+		seen_cwds[cwd] = true
+		config.start(function(key)
+			get_term_(cwd, key, true)
+		end, cwd)
+	end
+
+	setup()
+
+	vim.api.nvim_create_autocmd("DirChanged", {
+		callback = setup,
+	})
 end
 
 return M

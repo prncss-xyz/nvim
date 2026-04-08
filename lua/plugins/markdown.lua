@@ -67,5 +67,7 @@ return {
 				desc = "Run Current file (cumulative)",
 			},
 		},
+		enabled = personal,
+		cond = not_vscode,
 	},
 }

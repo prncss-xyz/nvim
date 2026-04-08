@@ -37,7 +37,7 @@ return {
 			{
 				"oi",
 				function()
-					require("plugins.toggleterm.ops").repl_op:call({}, {
+					require("plugins.toggleterm.ops").repl_op:call({ domain = "outer" }, {
 						i = function()
 							require("plugins.toggleterm.terms").focus_term("repl")
 						end,
@@ -48,7 +48,7 @@ return {
 			{
 				ai,
 				function()
-					require("plugins.toggleterm.ops").agent_op:call({}, {
+					require("plugins.toggleterm.ops").agent_op:call({ domain = "outer" }, {
 						a = function()
 							require("plugins.toggleterm.terms").focus_term("agent")
 						end,
