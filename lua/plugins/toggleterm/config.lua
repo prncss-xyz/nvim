@@ -27,10 +27,7 @@ M.commands = {
 	repl = require("plugins.toggleterm.repl").get_REPL,
 	["commit ongoing work"] = 'git add --all; git commit -m "ongoing work" --no-verify; git push',
 	["git-sync-all"] = personal(),
-	["git-sync"] = personal({
-    cmd = "git-sync",
-    direction = "float",
-  }),
+	["git-sync"] = personal({ cmd = "git-sync" }),
 	pi = personal({ cmd = "pi --provider github-copilot --model gpt-5.3-codex", tag = "agent" }),
 	pi_minimal = personal({
 		cmd = "pi --no-extensions --no-skills --no-prompt-templates --no-themes --no-session --provider cerebras --model qwen-3-235b-a22b-instruct-2507",
