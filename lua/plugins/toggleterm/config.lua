@@ -12,9 +12,16 @@ M.lang_to_REPL = {
 }
 
 M.commands = {
-	tilt = work({ cmd = "make tilt", global = true }),
-	dev = { cmd = "pnpm run dev" },
-	test = { cmd = "pnpm run test --watch" },
+	tilt = work({
+		cmd = "make tilt",
+		close_on_exit = false,
+		global = true,
+	}),
+	dev = {
+		cmd = "pnpm run dev",
+		close_on_exit = false,
+	},
+	test = { cmd = "pnpm run test --watch", },
 	current = function()
 		return { dir = vim.fn.expand("%:p:h") }
 	end,
@@ -25,17 +32,26 @@ M.commands = {
 		close_on_exit = false,
 	},
 	repl = require("plugins.toggleterm.repl").get_REPL,
-	["commit ongoing work"] = 'git add --all; git commit -m "ongoing work" --no-verify; git push',
-	["git-sync-all"] = personal(),
-	["git-sync"] = personal({ cmd = "git-sync" }),
+	["commit ongoing work"] = {
+		cmd = 'git add --all; git commit -m "ongoing work" --no-verify; git push',
+		close_on_exit = false,
+	},
+	["git-sync-all"] = personal({
+		cmd = "git-sync-all",
+		close_on_exit = false,
+	}),
+	["git-sync"] = personal({
+		cmd = "git-sync",
+		close_on_exit = false,
+	}),
 	pi = personal({ cmd = "pi --provider github-copilot --model gpt-5.3-codex", tag = "agent" }),
 	pi_minimal = personal({
-		cmd = "pi --no-extensions --no-skills --no-prompt-templates --no-themes --no-session --provider cerebras --model qwen-3-235b-a22b-instruct-2507",
+		cmd = "pi --continue --no-extensions --no-skills --no-prompt-templates --no-themes --no-session --provider cerebras --model qwen-3-235b-a22b-instruct-2507",
 		tag = "agent",
 	}),
-	gemini = personal({ cmd = "gemini", tag = "agent" }),
-	claude = { cmd = "claude", tag = "agent" },
-	opencode = personal({ cmd = "opencode", tag = "agent" }),
+	gemini = personal({ cmd = "gemini --resume", tag = "agent" }),
+	claude = { cmd = "claude --continue", tag = "agent" },
+	opencode = personal({ cmd = "opencode --continue", tag = "agent" }),
 }
 
 M.default_by_tag = { agent = personal("gemini", "claude") }
