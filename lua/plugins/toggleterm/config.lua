@@ -16,12 +16,13 @@ M.commands = {
 		cmd = "make tilt",
 		close_on_exit = false,
 		global = true,
+		auto = true,
 	}),
 	dev = {
 		cmd = "pnpm run dev",
 		close_on_exit = false,
 	},
-	test = { cmd = "pnpm run test --watch", },
+	test = { cmd = "pnpm run test --watch" },
 	current = function()
 		return { dir = vim.fn.expand("%:p:h") }
 	end,
@@ -49,12 +50,14 @@ M.commands = {
 		cmd = "pi --continue --no-extensions --no-skills --no-prompt-templates --no-themes --no-session --provider cerebras --model qwen-3-235b-a22b-instruct-2507",
 		tag = "agent",
 	}),
-	gemini = personal({ cmd = "gemini --resume", tag = "agent" }),
+	gemini = personal({
+		cmd = "gemini --resume",
+		tag = "agent",
+		auto = true,
+	}),
 	claude = { cmd = "claude --continue", tag = "agent" },
 	opencode = personal({ cmd = "opencode --continue", tag = "agent" }),
 }
-
-M.default_by_tag = { agent = personal("gemini", "claude") }
 
 M.prompts = {
 	todo = function()
@@ -81,9 +84,5 @@ M.prompts = {
 		}
 	end,
 }
-function M.start(start)
-	start("agent")
-	start("tilt")
-end
 
 return M

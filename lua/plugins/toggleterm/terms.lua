@@ -7,21 +7,25 @@ local config = require("plugins.toggleterm.config")
 
 local default_terminal = "term_e"
 local last_terminal = nil
-local last_by_tag = vim.deepcopy(config.default_by_tag)
+local last_by_tag = {}
 
 local term_cache = {}
 
-local function get_term_conf(cwd, key, o)
+local function get_term_conf0(cwd, key, o)
 	if not o then
-		return
+		return nil
 	end
 	if type(o) == "string" then
-		return get_term_conf(cwd, o, config.commands[o])
+		return get_term_conf0(cwd, o, config.commands[o])
 	end
 	if type(o) == "function" then
-		return get_term_conf(cwd, key, o())
+		return get_term_conf0(cwd, key, o())
 	end
 	return key, type(o) == "table" and o or { cmd = key }
+end
+
+local function get_term_conf(cwd, key)
+	return get_term_conf0(cwd, key, config.commands[key])
 end
 
 local function cache2(p, q, cache, gen)
@@ -36,7 +40,7 @@ local function get_term_(cwd, k, background)
 	if last_by_tag[k] then
 		k = last_by_tag[k]
 	end
-	local key, o = get_term_conf(cwd, k, config.commands[k])
+	local key, o = get_term_conf(cwd, k)
 	if key == nil or o == nil then
 		return
 	end
@@ -184,9 +188,11 @@ function M.stop(key)
 end
 
 function M.select_command()
+	local cwd = vim.fn.getcwd()
 	local choices = vim.tbl_keys(last_by_tag)
 	for key, value in pairs(config.commands) do
-		if (not vim.tbl_contains(choices, key)) and (type(value) ~= "function" or value()) then
+		local _, o = get_term_conf0(cwd, key, value)
+		if o then
 			table.insert(choices, key)
 		end
 	end
@@ -204,22 +210,25 @@ end
 local seen_cwds = {}
 local setup_start_initialized = false
 
+local function setup()
+	local cwd = vim.fn.getcwd()
+	if seen_cwds[cwd] then
+		return
+	end
+	seen_cwds[cwd] = true
+	for key, value in pairs(config.commands) do
+		local _, o = get_term_conf0(cwd, key, value)
+		if o and o.auto then
+			get_term_(cwd, key, true)
+		end
+	end
+end
+
 function M.setup_start()
 	if setup_start_initialized then
 		return
 	end
 	setup_start_initialized = true
-
-	local function setup()
-		local cwd = vim.fn.getcwd()
-		if seen_cwds[cwd] then
-			return
-		end
-		seen_cwds[cwd] = true
-		config.start(function(key)
-			get_term_(cwd, key, true)
-		end, cwd)
-	end
 
 	setup()
 
