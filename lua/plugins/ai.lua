@@ -10,11 +10,6 @@ local chat = personal("agentic", "sidekick") -- 'sidekick' | 'avante' | 'copilot
 
 return {
 	{
-		"linw1995/nvim-mcp",
-		build = "cargo install --path .",
-		opts = {},
-	},
-	{
 		"zbirenbaum/copilot.lua",
 		dependencies = {
 			{
