@@ -45,7 +45,11 @@ M.commands = {
 		cmd = "git-sync",
 		close_on_exit = false,
 	}),
-	pi = personal({ cmd = "pi --provider github-copilot --model gpt-5.3-codex", tag = "agent" }),
+	pi = personal({
+		cmd = "pi --provider opencode --model big-pickle",
+		auto = true,
+		tag = "agent",
+	}),
 	pi_minimal = personal({
 		cmd = "pi --continue --no-extensions --no-skills --no-prompt-templates --no-themes --no-session --provider cerebras --model qwen-3-235b-a22b-instruct-2507",
 		tag = "agent",
@@ -53,7 +57,6 @@ M.commands = {
 	gemini = personal({
 		cmd = "gemini --resume",
 		tag = "agent",
-		auto = true,
 	}),
 	claude = { cmd = "claude --continue", tag = "agent" },
 	opencode = personal({ cmd = "opencode --continue", tag = "agent" }),

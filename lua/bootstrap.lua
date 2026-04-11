@@ -16,13 +16,6 @@ end
 
 vim.opt.rtp:prepend(lazypath)
 
-local dev = require("my.conds").personal()
-		and {
-			path = "~/Projects/github.com/prncss-xyz/",
-			patterns = { "prncss-xyz" },
-		}
-	or nil
-
 require("lazy").setup({
 	spec = {
 		{ import = "plugins" },
@@ -30,8 +23,11 @@ require("lazy").setup({
 	defaults = {
 		lazy = true,
 	},
-	rocks = { hererocks = true },
-	-- dev = dev,
+	dev = {
+		path = "~/projects/",
+		patterns = { "prncss-xyz" },
+		fallback = true,
+	},
 })
 
 -- TODO: files

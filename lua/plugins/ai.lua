@@ -10,6 +10,11 @@ local chat = personal("agentic", "sidekick") -- 'sidekick' | 'avante' | 'copilot
 
 return {
 	{
+		"linw1995/nvim-mcp",
+		build = "cargo install --path .",
+		opts = {},
+	},
+	{
 		"zbirenbaum/copilot.lua",
 		dependencies = {
 			{
@@ -81,7 +86,15 @@ return {
 	},
 	{
 		"carlos-algms/agentic.nvim",
-		opts = { provider = "gemini-acp" },
+		opts = {
+			provider = "opencode-acp",
+			session_manager = {
+				get_session_id = function()
+					return vim.fn.sha256(vim.fn.getcwd())
+				end,
+				storage_path = vim.fn.stdpath("data") .. "/agent_sessions/",
+			},
+		},
 		keys = {
 			{
 				"okk",
