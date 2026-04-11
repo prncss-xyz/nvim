@@ -5,10 +5,39 @@ local ai = domain.ai
 local ai_insert = require("my.parameters").ai_insert
 
 -- TODO: augmentcode
-local completion = personal("copilot", "copilot") -- "copilot" | "windsurf" |  "none"
+local completion = personal("stride", "copilot") -- "copilot" | "windsurf" | "stride" | "none"
 local chat = personal("agentic", "sidekick") -- 'sidekick' | 'avante' | 'copilotchat' | 'claude' | 'agentic' | 'none'
 
 return {
+	{
+		"jim-at-jibba/nvim-stride",
+		name = "stride",
+		requires = {
+			"nvim-lua/plenary.nvim",
+			"nvim-treesitter/nvim-treesitter",
+			"folke/snacks.nvim",
+		},
+		enabled = completion == "stride",
+		cond = not_vscode,
+		config = {
+			api_key = os.getenv("MISTRAL_API_KEY"),
+			endpoint = "https://api.mistral.ai/v1/chat/completions",
+			model = "codestrat-latest",
+			accept_keymap = ai_insert.nes,
+			dismiss_keymap = ai_insert.clear,
+			use_treesitter = true,
+
+			-- Mode settings
+			mode = "both", -- "completion" | "refactor" | "both"
+			show_remote = true,
+
+			notify = {
+				enabled = true,
+				timeout = 2000,
+				backend = "builtin",
+			},
+		},
+	},
 	{
 		"zbirenbaum/copilot.lua",
 		dependencies = {

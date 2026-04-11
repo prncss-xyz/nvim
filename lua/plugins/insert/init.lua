@@ -4,14 +4,7 @@ local personal = require("my.conds").personal
 return {
 	{
 		"saghen/blink.cmp",
-		dependencies = {
-			personal({
-				"L3MON4D3/LuaSnip",
-				-- "Kaiser-Yang/blink-cmp-avante",
-			}, {
-				"L3MON4D3/LuaSnip",
-			}),
-		},
+		dependencies = { "L3MON4D3/LuaSnip" },
 		version = "*",
 		opts = {
 			keymap = {
