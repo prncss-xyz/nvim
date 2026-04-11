@@ -19,10 +19,10 @@ return {
 		},
 		enabled = completion == "stride",
 		cond = not_vscode,
-		config = {
+		opts = {
 			api_key = os.getenv("MISTRAL_API_KEY"),
 			endpoint = "https://api.mistral.ai/v1/chat/completions",
-			model = "codestrat-latest",
+			model = "codestral-latest",
 			accept_keymap = ai_insert.nes,
 			dismiss_keymap = ai_insert.clear,
 			use_treesitter = true,
@@ -37,6 +37,25 @@ return {
 				backend = "builtin",
 			},
 		},
+		config = function(_, opts)
+			-- stride hardcodes `reasoning_effort` in its payload, which Mistral
+			-- rejects (422) for non-reasoning models like codestral. Strip it
+			-- from outgoing requests to stride's endpoint.
+			local curl = require("plenary.curl")
+			local orig_post = curl.post
+			curl.post = function(url, post_opts)
+				if url == opts.endpoint and post_opts and type(post_opts.body) == "string" then
+					local ok, decoded = pcall(vim.fn.json_decode, post_opts.body)
+					if ok and type(decoded) == "table" and decoded.reasoning_effort ~= nil then
+						decoded.reasoning_effort = nil
+						post_opts.body = vim.fn.json_encode(decoded)
+					end
+				end
+				return orig_post(url, post_opts)
+			end
+			require("stride").setup(opts)
+		end,
+		event = "VeryLazy",
 	},
 	{
 		"zbirenbaum/copilot.lua",

@@ -5,16 +5,18 @@ return {
 	{
 		"nvim-treesitter/nvim-treesitter",
 		build = ":TSUpdate",
-    branch = "master",
-		opts = {
-			ensure_installed = {
-        "gotmpl",
+		branch = "main",
+		lazy = false,
+		config = function()
+			local ts = require("nvim-treesitter")
+
+			local parsers = {
+				"gotmpl",
 				"fish",
 				"markdown",
 				"markdown_inline",
 				"bash",
 				"css",
-				"graphql",
 				"html",
 				"javascript",
 				"json",
@@ -23,16 +25,32 @@ return {
 				"typescript",
 				"yaml",
 				"regex",
-			},
-			highlight = { enable = true },
-			indent = { enable = true },
-		},
-		config = function(_, opts)
-			require("nvim-treesitter.configs").setup(opts)
-			vim.treesitter.language.register("typescript", "typescript")
+			}
+
+			local installed = ts.get_installed()
+			local to_install = {}
+			for _, parser in ipairs(parsers) do
+				if not vim.list_contains(installed, parser) then
+					table.insert(to_install, parser)
+				end
+			end
+			if #to_install > 0 then
+				ts.install(to_install)
+			end
+
 			vim.treesitter.language.register("markdown", "mdx")
-			-- for unknown reason, this is needed to make proper highlighting of markdown codeblocks
-			vim.cmd("TSEnable highlight")
+
+			vim.api.nvim_create_autocmd("FileType", {
+				callback = function(args)
+					local ft = args.match
+					local lang = vim.treesitter.language.get_lang(ft) or ft
+					local ok = pcall(vim.treesitter.language.inspect, lang)
+					if ok then
+						vim.treesitter.start()
+						vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+					end
+				end,
+			})
 		end,
 	},
 	{
