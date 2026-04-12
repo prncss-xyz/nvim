@@ -66,6 +66,7 @@ M.commands = {
     auto = work() and ai_term
   },
 	opencode = personal({ cmd = "opencode --continue", tag = "agent" }),
+	kilo = personal({ cmd = "kilo --continue", tag = "agent" }),
 }
 
 M.prompts = {
