@@ -1,5 +1,7 @@
 local M = {}
 
+local personal = require("my.conds").personal
+
 function M.reverse(key)
 	return "p" .. key
 end
@@ -11,6 +13,11 @@ M.rooter_patterns = { ".git", ".hg", ".svn" }
 M.dirs = {
 	projects = projects,
 	notes = projects .. "/notes",
+}
+
+M.ai_config = {
+  completion = personal("stride", "copilot"), -- "copilot" | "windsurf" | "stride" | "none"
+  chat = personal("toggleterm", "sidekick"), -- 'sidekick' | 'avante' | 'copilotchat' | 'claude' | 'agentic' | '' 'none'
 }
 
 M.ai_insert = {

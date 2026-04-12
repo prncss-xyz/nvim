@@ -1,12 +1,12 @@
 local not_vscode = require("my.conds").not_vscode
-local personal = require("my.conds").personal
 local domain = require("my.parameters").domain
 local ai = domain.ai
 local ai_insert = require("my.parameters").ai_insert
+local ai_config = require("my.parameters").ai_config
 
 -- TODO: augmentcode
-local completion = personal("stride", "copilot") -- "copilot" | "windsurf" | "stride" | "none"
-local chat = personal("agentic", "sidekick") -- 'sidekick' | 'avante' | 'copilotchat' | 'claude' | 'agentic' | 'none'
+local completion = ai_config.completion
+local chat =  ai_config.chat
 
 return {
 	{

@@ -3,6 +3,8 @@ local M = {}
 local personal = require("my.conds").personal
 local work = require("my.conds").work
 
+local ai_term = require("my.parameters").ai_config.chat == "toggleterm"
+
 M.lang_to_REPL = {
 	lua = "lua",
 	javascript = "node",
@@ -47,7 +49,7 @@ M.commands = {
 	}),
 	pi = personal({
 		cmd = "pi --provider opencode --model big-pickle",
-		auto = true,
+		auto = ai_term,
 		tag = "agent",
 	}),
 	pi_minimal = personal({
@@ -58,7 +60,11 @@ M.commands = {
 		cmd = "gemini --resume",
 		tag = "agent",
 	}),
-	claude = { cmd = "claude --continue", tag = "agent" },
+	claude = {
+    cmd = "claude --continue",
+    tag = "agent",
+    auto = work() and ai_term
+  },
 	opencode = personal({ cmd = "opencode --continue", tag = "agent" }),
 }
 
