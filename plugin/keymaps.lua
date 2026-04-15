@@ -60,6 +60,9 @@ end
 vim.keymap.set({ "n" }, file .. "j", "<cmd>edit package.json<cr>", { desc = "Edit package.json" })
 
 vim.keymap.set({ "n", "x" }, edit .. "t", "=", { desc = "Reindent" })
+vim.keymap.set({ "n", "x", "i" }, "<c-c>", function()
+	require("my.lsp").format()
+end, { desc = "Clear Completion, Format, Normal" })
 vim.keymap.set("n", edit .. ".", "i.<left>", { desc = "Insert Method" })
 vim.keymap.set("n", edit .. ",", "i,<left>", { desc = "Insert Argument" })
 vim.keymap.set("n", edit .. " ", "i <left>", { desc = "Insert Word" })

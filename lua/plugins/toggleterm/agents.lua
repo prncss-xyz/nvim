@@ -1,27 +1,22 @@
 local M = {}
 
-function M.current_file_ref()
-	return "@" .. vim.fn.expand("%:.")
+function M.current_file()
+  return string.format("@%s", vim.fn.expand("%:."))
+end
+function M.current_line()
+  return string.format("@%s :L%d", vim.fn.expand("%:."), vim.fn.line("."))
 end
 
-function M.current_line_ref()
-	return M.current_file_ref() .. ":L" .. vim.fn.line(".")
-end
-
-function M.current_line_content()
-	return vim.fn.getline(".")
-end
-
-function M.current_position_ref()
-	return M.current_line_ref() .. ":C" .. vim.fn.col(".")
+function M.current_position()
+  return string.format("@%s :L%d:C%d", vim.fn.expand("%:."), vim.fn.line("."), vim.fn.col("."))
 end
 
 function M.send_current_position()
-	require("plugins.toggleterm.terms").send_lines("agent", { M.current_position_ref() })
+	require("plugins.toggleterm.terms").send_lines("agent", { M.current_position() })
 end
 
 function M.send_current_file()
-	require("plugins.toggleterm.terms").send_lines("agent", { M.current_file_ref() })
+	require("plugins.toggleterm.terms").send_lines("agent", { M.current_file() .. " " })
 end
 
 function M.prompt()

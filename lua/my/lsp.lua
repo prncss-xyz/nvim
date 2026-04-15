@@ -1,5 +1,4 @@
 local M = {}
-
 function M.stop_client()
 	vim.ui.select(vim.lsp.get_clients(), {
 		prompt = "Stop LSP Client",
@@ -19,7 +18,7 @@ function M.display_code_actions()
 	local context = { diagnostics = vim.lsp.diagnostic.get_line_diagnostics() }
 	local params = vim.lsp.util.make_range_params()
 	params.context = context
-	local results_lsp, err = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, 10000)
+	local results_lsp, err = vim.lsp.buf_request_sync(-1, "textDocument/codeAction", params, 10000)
 	if err then
 		print("ERROR: " .. err)
 		return
@@ -39,6 +38,36 @@ function M.display_code_actions()
 		end
 	end
 	dd(commands)
+end
+
+function M.pre_format()
+	local completion = require("my.parameters").ai_config.completion
+	if completion == "copilot" then
+		local suggestion = require("copilot.suggestion")
+		if suggestion.is_visible() then
+			suggestion.dismiss()
+			return true
+		end
+		if require("copilot-lsp.nes").clear() then
+			return true
+		end
+	end
+	return false
+end
+
+function M.format()
+	if not M.pre_format() then
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+		vim.lsp.buf.format({
+			async = false,
+			filter = function(client)
+				return not vim.tbl_contains({
+					"lua_ls",
+					"vtsls",
+				}, client.name)
+			end,
+		})
+	end
 end
 
 return M

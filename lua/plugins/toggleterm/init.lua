@@ -44,6 +44,7 @@ return {
 					})
 				end,
 				desc = "Toggle REPL",
+        mode = {"n", "x"}
 			},
 			{
 				ai,
@@ -64,6 +65,7 @@ return {
 					})
 				end,
 				desc = "Toggle agent",
+        mode = {"n", "x"}
 			},
 			{
 				"oe",

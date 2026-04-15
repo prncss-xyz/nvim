@@ -9,36 +9,8 @@ local completion = ai_config.completion
 local chat = ai_config.chat
 
 return {
-  {
-    "jim-at-jibba/nvim-redraft",
-    dependencies = {
-      { "folke/snacks.nvim", opts = { input = {} } },
-    },
-    event = "VeryLazy",
-    build = "cd ts && npm install && npm run build",
-    opts = {
-      llm = {
-        models = {
-          {
-            provider = "openrouter",
-            model = "z-ai/glm-4.5-air:free",
-          },
-          {
-            provider = "openrouter",
-            model = "google/gemma-4-26b-a4b-it:free",
-          },
-        },
-      },
-      keys = {},
-    },
-    keys = {
-      { "ou", function() require("nvim-redraft").edit() end, mode = "x", desc = "Redraft Edit" },
-      { "ou", function() require("nvim-redraft").select_model() end, desc = "Redraft Select Model" },
-    },
-    enabled = personal,
-  },
 	{
-		"jim-at-jibba/nvim-stride",
+		"prncss-xyz/nvim-stride",
 		name = "stride",
 		requires = {
 			"nvim-lua/plenary.nvim",
@@ -60,7 +32,7 @@ return {
       -- endpoint = "https://openrouter.ai/api/v1/chat/completions",
       -- model = "google/gemma-4-26b-a4b-it:free",
 			accept_keymap = ai_insert.nes,
-			dismiss_keymap = ai_insert.clear,
+			dismiss_keymap = "<c-x>",
 			use_treesitter = true,
 
 			-- Mode settings
@@ -133,35 +105,7 @@ return {
 				end,
 				desc = "Copilot accept NES",
 				mode = { "n", "x", "i" },
-			},
-			{
-				ai_insert.clear,
-				function()
-					local touched = false
-					local suggestion = require("copilot.suggestion")
-					if suggestion.is_visible() then
-						touched = true
-						suggestion.dismiss()
-					end
-					if require("copilot-lsp.nes").clear() then
-						touched = true
-					end
-					if not touched then
-						vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
-						vim.lsp.buf.format({
-							async = false,
-							filter = function(client)
-								return not vim.tbl_contains({
-									"lua_ls",
-									"vtsls",
-								}, client.name)
-							end,
-						})
-					end
-				end,
-				desc = "Coplot Clear suggestions or Leave insert mode",
-				mode = { "n", "v", "i" },
-			},
+			}
 		} or nil,
 		cmd = { "Copilot" },
 		event = "InsertEnter",
@@ -307,4 +251,44 @@ return {
 		enabled = chat == "opencode",
 		cond = not_vscode,
 	},
+  {
+    "folke/sidekick.nvim",
+    opts = {
+      nes = { enabled = false },
+      cli = {
+        tools = {
+          pi = { cmd = { "pi" } },
+        },
+      },
+    },
+    keys = {
+      {
+        ai_insert.toggle,
+        function()
+          require("sidekick.cli").toggle({
+            name = sidekick_chat,
+            focus = true,
+          })
+        end,
+        desc = "Sidekick Chat",
+      },
+      {
+        ai .. "s",
+        function()
+          require("sidekick.cli").select()
+        end,
+        desc = "Sidekick Select CLI",
+      },
+      {
+        ai .. "a",
+        function()
+          require("sidekick.cli").prompt()
+        end,
+        mode = { "n", "x" },
+        desc = "Sidekick Ask Prompt",
+      },
+    },
+    enabled = chat == "sidekick",
+    cond = not_vscode,
+  },
 }

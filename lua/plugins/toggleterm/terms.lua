@@ -1,15 +1,36 @@
 local M = {}
 
-local global = {}
+local global = vim.env.HOME
 
 local Terminal = require("toggleterm.terminal").Terminal
 local config = require("plugins.toggleterm.config")
 
-local default_terminal = "term_e"
 local last_terminal = nil
 local last_by_tag = {}
 
 local term_cache = {}
+local idle_state = {}
+
+local nvim_has_focus = true
+vim.api.nvim_create_autocmd("FocusGained", {
+	callback = function()
+		nvim_has_focus = true
+	end,
+})
+vim.api.nvim_create_autocmd("FocusLost", {
+	callback = function()
+		nvim_has_focus = false
+	end,
+})
+
+local function is_visible(winnr)
+	return winnr and vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_get_current_win() == winnr
+end
+
+local function should_notify(winnr)
+	local visible = winnr and vim.api.nvim_win_is_valid(winnr)
+	return not (visible and nvim_has_focus)
+end
 
 local function get_term_conf0(cwd, key, o)
 	if not o then
@@ -36,6 +57,28 @@ local function cache2(p, q, cache, gen)
 	return cache[p][q]
 end
 
+local function start_idle_detection(term, scope, key)
+	if not term.bufnr or not vim.api.nvim_buf_is_valid(term.bufnr) then
+		return function() end
+	end
+
+	local handle = nil
+
+  -- TODO: start detection on focus_out, only detect if focus out
+	vim.api.nvim_buf_attach(term.bufnr, false, {
+		on_lines = function()
+			if handle then
+				vim.fn.timer_stop(handle)
+			end
+			handle = vim.fn.timer_start(config.idle_timeout, function()
+				if should_notify(term.window) then
+					config.on_idle(scope, key)
+				end
+			end)
+		end,
+	})
+end
+
 local function get_term_(cwd, k, background)
 	if last_by_tag[k] then
 		k = last_by_tag[k]
@@ -48,15 +91,28 @@ local function get_term_(cwd, k, background)
 	local res = cache2(scope, key, term_cache, function()
 		o = vim.deepcopy(o)
 		o.display_name = o.display_name or key
+		local ref = { term = nil }
 		o.on_exit = function()
 			term_cache[scope][key] = nil
+			if ref.term and idle_state[ref.term] then
+				idle_state[ref.term]()
+				idle_state[ref.term] = nil
+			end
 		end
 		if background then
 			o.hidden = true
 		end
 		local term = Terminal:new(o)
+		ref.term = term
 		if background then
 			term:spawn()
+			idle_state[term] = start_idle_detection(term, scope, key)
+		else
+			vim.schedule(function()
+				if term and term.bufnr and term.bufnr > 0 then
+					idle_state[term] = start_idle_detection(term, scope, key)
+				end
+			end)
 		end
 		return term
 	end)
@@ -93,7 +149,7 @@ function M.select_term()
 end
 
 function M.toggle_last_term()
-	last_terminal = last_terminal or get_term(default_terminal)
+	last_terminal = last_terminal or get_term(config.default_terminal)
 	if last_terminal then
 		last_terminal:toggle()
 	end
@@ -104,8 +160,7 @@ local function hide_term(terminal)
 		return
 	end
 	local winnr = terminal.window
-	local is_visible = winnr and vim.api.nvim_win_is_valid(winnr)
-	if is_visible then
+	if is_visible(winnr) then
 		terminal:toggle()
 	end
 end
@@ -132,8 +187,7 @@ function M.focus_term(key)
 		return
 	end
 	local winnr = next_terminal.window
-	local is_visible = winnr and vim.api.nvim_win_is_valid(winnr)
-	if not is_visible then
+	if not is_visible(winnr) then
 		next_terminal:toggle()
 	else
 		vim.api.nvim_set_current_win(winnr)

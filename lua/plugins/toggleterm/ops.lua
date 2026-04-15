@@ -9,7 +9,7 @@ M.repl_op = require("flies.operations._with_contents"):new({
 
 M.agent_op = require("flies.operations._with_contents"):new({
 	cb = function(_, contents)
-		table.insert(contents, 1, require("plugins.toggleterm.agents").current_position_ref())
+		table.insert(contents, 1, require("plugins.toggleterm.agents").current_position())
 		require("plugins.toggleterm.terms").send_lines("agent", contents)
 	end,
 })

@@ -2,8 +2,17 @@ local M = {}
 
 local personal = require("my.conds").personal
 local work = require("my.conds").work
+local notify = require("my.notify")
 
 local ai_term = require("my.parameters").ai_config.chat == "toggleterm"
+
+M.idle_timeout = 2
+M.default_terminal = "term_e" -- Default terminal name
+
+M.on_idle = function(scope, key)
+	local msg = string.format("%s in %s (idle)", key, scope)
+	notify.notify(msg)
+end
 
 M.lang_to_REPL = {
 	lua = "lua",
@@ -29,7 +38,10 @@ M.commands = {
 		return { dir = vim.fn.expand("%:p:h") }
 	end,
 	term_e = {},
-	term_r = {},
+	term_r = {
+		dir = vim.env.HOME,
+		global = true,
+	},
 	diff = {
 		cmd = require("my.diff").get_cmd(),
 		close_on_exit = false,
@@ -47,26 +59,22 @@ M.commands = {
 		cmd = "git-sync",
 		close_on_exit = false,
 	}),
-	pi = personal({
-		cmd = "pi --provider opencode --model big-pickle",
+	pi = ai_term and personal({
+		cmd = "pi",
 		auto = ai_term,
 		tag = "agent",
 	}),
-	pi_minimal = personal({
-		cmd = "pi --continue --no-extensions --no-skills --no-prompt-templates --no-themes --no-session --provider cerebras --model qwen-3-235b-a22b-instruct-2507",
-		tag = "agent",
-	}),
-	gemini = personal({
+	gemini = ai_term and personal({
 		cmd = "gemini --resume",
 		tag = "agent",
 	}),
-	claude = {
-    cmd = "claude --continue",
-    tag = "agent",
-    auto = work() and ai_term
-  },
-	opencode = personal({ cmd = "opencode --continue", tag = "agent" }),
-	kilo = personal({ cmd = "kilo --continue", tag = "agent" }),
+	claude = ai_term and {
+		cmd = "claude --continue",
+		tag = "agent",
+		auto = work() and ai_term,
+	},
+	opencode = ai_term and personal({ cmd = "opencode --continue", tag = "agent" }),
+	kilo = ai_term and personal({ cmd = "kilo --continue", tag = "agent" }),
 }
 
 M.prompts = {
@@ -75,14 +83,14 @@ M.prompts = {
 			cr = true,
 			"do this",
 			require("plugins.toggleterm.agents").current_line_ref(),
-			require("plugins.toggleterm.agents").current_line_content(),
+			require("plugins.toggleterm.agents").current_line(),
 		}
 	end,
 	fixme = function()
 		return {
 			"fix this",
 			require("plugins.toggleterm.agents").current_line_ref(),
-			require("plugins.toggleterm.agents").current_line_content(),
+			require("plugins.toggleterm.agents").current_line(),
 		}
 	end,
 	explain = function()
@@ -90,7 +98,7 @@ M.prompts = {
 			cr = true,
 			"explain this",
 			require("plugins.toggleterm.agents").current_line_ref(),
-			require("plugins.toggleterm.agents").current_line_content(),
+			require("plugins.toggleterm.agents").current_line(),
 		}
 	end,
 }
