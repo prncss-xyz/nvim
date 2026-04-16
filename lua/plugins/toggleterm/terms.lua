@@ -64,11 +64,15 @@ local function start_idle_detection(term, scope, key)
 
 	local handle = nil
 
+	local function clear()
+		if handle then
+			vim.fn.timer_stop(handle)
+		end
+	end
+
 	vim.api.nvim_buf_attach(term.bufnr, false, {
 		on_lines = function()
-			if handle then
-				vim.fn.timer_stop(handle)
-			end
+			clear()
 			if should_notify(term.window) then
 				handle = vim.fn.timer_start(config.idle_timeout, function()
 					if should_notify(term.window) then
@@ -78,6 +82,8 @@ local function start_idle_detection(term, scope, key)
 			end
 		end,
 	})
+
+	return clear()
 end
 
 local function get_term_(cwd, k, background)
