@@ -23,6 +23,10 @@ vim.api.nvim_create_autocmd("FocusLost", {
 	end,
 })
 
+local function is_open(winnr)
+	return winnr and vim.api.nvim_win_is_valid(winnr)
+end
+
 local function is_visible(winnr)
 	return winnr and vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_get_current_win() == winnr
 end
@@ -167,7 +171,7 @@ local function hide_term(terminal)
 		return
 	end
 	local winnr = terminal.window
-	if is_visible(winnr) then
+	if is_open(winnr) then
 		terminal:toggle()
 	end
 end
