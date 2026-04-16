@@ -4,13 +4,10 @@ local not_vscode = require("my.conds").not_vscode
 return {
 	{
 		"nvim-treesitter/nvim-treesitter",
-		build = ":TSUpdate",
 		branch = "main",
 		lazy = false,
-		config = function()
-			local ts = require("nvim-treesitter")
-
-			local parsers = {
+		init = function()
+			local ensureInstalled = {
 				"gotmpl",
 				"fish",
 				"markdown",
@@ -26,32 +23,24 @@ return {
 				"yaml",
 				"regex",
 			}
-
-			local installed = ts.get_installed()
-			local to_install = {}
-			for _, parser in ipairs(parsers) do
-				if not vim.list_contains(installed, parser) then
-					table.insert(to_install, parser)
-				end
-			end
-			if #to_install > 0 then
-				ts.install(to_install)
-			end
-
-			vim.treesitter.language.register("markdown", "mdx")
+			local alreadyInstalled = require("nvim-treesitter.config").get_installed()
+			local parsersToInstall = vim.iter(ensureInstalled)
+				:filter(function(parser)
+					return not vim.tbl_contains(alreadyInstalled, parser)
+				end)
+				:totable()
+			require("nvim-treesitter").install(parsersToInstall)
 
 			vim.api.nvim_create_autocmd("FileType", {
-				callback = function(args)
-					local ft = args.match
-					local lang = vim.treesitter.language.get_lang(ft) or ft
-					local ok = pcall(vim.treesitter.language.inspect, lang)
-					if ok then
-						vim.treesitter.start()
-						vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-					end
+				callback = function()
+					-- Enable treesitter highlighting and disable regex syntax
+					pcall(vim.treesitter.start)
+					-- Enable treesitter-based indentation
+					vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
 				end,
 			})
 		end,
+		config = {},
 	},
 	{
 		"HiPhish/rainbow-delimiters.nvim",
