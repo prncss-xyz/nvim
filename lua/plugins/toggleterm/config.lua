@@ -6,7 +6,7 @@ local notify = require("my.notify")
 
 local ai_term = require("my.parameters").ai_config.chat == "toggleterm"
 
-M.idle_timeout = 2
+M.idle_timeout = 2000
 M.default_terminal = "term_e" -- Default terminal name
 
 M.on_idle = function(scope, key)

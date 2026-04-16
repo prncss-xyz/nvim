@@ -64,17 +64,18 @@ local function start_idle_detection(term, scope, key)
 
 	local handle = nil
 
-  -- TODO: start detection on focus_out, only detect if focus out
 	vim.api.nvim_buf_attach(term.bufnr, false, {
 		on_lines = function()
 			if handle then
 				vim.fn.timer_stop(handle)
 			end
-			handle = vim.fn.timer_start(config.idle_timeout, function()
-				if should_notify(term.window) then
-					config.on_idle(scope, key)
-				end
-			end)
+			if should_notify(term.window) then
+				handle = vim.fn.timer_start(config.idle_timeout, function()
+					if should_notify(term.window) then
+						config.on_idle(scope, key)
+					end
+				end)
+			end
 		end,
 	})
 end
