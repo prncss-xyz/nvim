@@ -30,4 +30,28 @@ function M.edit_most_recent_file()
 		:start()
 end
 
+function M.edit()
+	local name = vim.fn.expand("<cWORD>")
+	if name == "" then
+		name = vim.fn.expand("<cfile>")
+	end
+	name = name:gsub("^['\"`({<[]+", "")
+	name = name:gsub("['\"`)}>%],.;]+$", "")
+
+	local path, line, col = name:match("^(.+):(%d+):(%d+)$")
+	if path then
+		vim.cmd.edit(vim.fn.fnameescape(path))
+		vim.cmd(line)
+		vim.cmd("normal! " .. col .. "|")
+		return
+	end
+	path, line = name:match("^(.+):(%d+)$")
+	if path then
+		vim.cmd.edit(vim.fn.fnameescape(path))
+		vim.cmd(line)
+		return
+	end
+	vim.cmd.edit(vim.fn.fnameescape(name))
+end
+
 return M

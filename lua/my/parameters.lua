@@ -16,9 +16,8 @@ M.dirs = {
 }
 
 M.ai_config = {
-  completion = personal("copilot", "copilot"), -- "copilot" | "windsurf" | "stride" | "none"
-  chat = personal("toggleterm", "sidekick"), -- 'sidekick' |  'claude' | 'agentic' | 'toggleterm' | 'none'
-    
+	completion = personal("copilot", "copilot"), -- "copilot" | "windsurf" | "stride" | "none"
+	chat = personal("toggleterm", "sidekick"), -- 'sidekick' |  'claude' | 'agentic' | 'toggleterm' | 'none'
 }
 
 M.ai_insert = {

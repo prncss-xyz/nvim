@@ -58,6 +58,7 @@ if false then
 end
 
 vim.keymap.set({ "n" }, file .. "j", "<cmd>edit package.json<cr>", { desc = "Edit package.json" })
+vim.keymap.set({ "n" }, file .. "o", function () require("my.files").edit() end, { desc = "Edit File" })
 
 vim.keymap.set({ "n", "x" }, edit .. "t", "=", { desc = "Reindent" })
 vim.keymap.set({ "n", "x", "i" }, "<c-c>", function()
