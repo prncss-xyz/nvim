@@ -44,7 +44,7 @@ return {
 					})
 				end,
 				desc = "Toggle REPL",
-        mode = {"n", "x"}
+				mode = { "n", "x" },
 			},
 			{
 				ai,
@@ -62,10 +62,13 @@ return {
 						p = function()
 							require("plugins.toggleterm.agents").prompt()
 						end,
+						x = function()
+							require("plugins.toggleterm.agents").new()
+						end,
 					})
 				end,
 				desc = "Toggle agent",
-        mode = {"n", "x"}
+				mode = { "n", "x" },
 			},
 			{
 				"oe",

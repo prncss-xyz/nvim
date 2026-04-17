@@ -77,6 +77,14 @@ M.commands = {
 	kilo = ai_term and personal({ cmd = "kilo --continue", tag = "agent" }),
 }
 
+M.new = {
+	pi = "new",
+	opencode = "new",
+	claude = "clear",
+	kilo = "new",
+	gemini = "clear",
+}
+
 M.prompts = {
 	todo = function()
 		return {

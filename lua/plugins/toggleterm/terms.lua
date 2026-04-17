@@ -302,4 +302,8 @@ function M.setup_start()
 	})
 end
 
+function M.get_last(key)
+	return last_by_tag[key]
+end
+
 return M
