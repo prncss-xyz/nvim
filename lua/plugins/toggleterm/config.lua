@@ -60,7 +60,7 @@ M.commands = {
 		close_on_exit = false,
 	}),
 	pi = ai_term and personal({
-		cmd = "pi",
+		cmd = "pi -c",
 		auto = ai_term,
 		tag = "agent",
 	}),
@@ -75,14 +75,27 @@ M.commands = {
 	},
 	opencode = ai_term and personal({ cmd = "opencode --continue", tag = "agent" }),
 	kilo = ai_term and personal({ cmd = "kilo --continue", tag = "agent" }),
-	["chezmoi apply"] = personal(function()
-		local source_path = vim.trim(vim.fn.system("chezmoi source-path"))
-		if vim.fn.getcwd() == source_path then
+	["make daily-login"] = function()
+		if vim.fn.filereadable(vim.fn.getcwd() .. "/Makefile") == 1 then
+			return { cmd = "make daily-login" }
+		else
+			return nil
+		end
+	end,
+	["make tilt"] = function()
+		if vim.fn.filereadable(vim.fn.getcwd() .. "/Makefile") == 1 then
+			return { cmd = "make tilt" }
+		else
+			return nil
+		end
+	end,
+	["chezmoi apply"] = function()
+		if vim.fn.executable("chezmoi") == 1 and vim.fn.getcwd() == vim.trim(vim.fn.system("chezmoi source-path")) then
 			return { cmd = "chezmoi apply" }
 		else
 			return nil
 		end
-	end),
+	end,
 }
 
 M.new = {
