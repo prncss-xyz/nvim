@@ -75,6 +75,14 @@ M.commands = {
 	},
 	opencode = ai_term and personal({ cmd = "opencode --continue", tag = "agent" }),
 	kilo = ai_term and personal({ cmd = "kilo --continue", tag = "agent" }),
+	["chezmoi apply"] = personal(function()
+		local source_path = vim.trim(vim.fn.system("chezmoi source-path"))
+		if vim.fn.getcwd() == source_path then
+			return { cmd = "chezmoi apply" }
+		else
+			return nil
+		end
+	end),
 }
 
 M.new = {

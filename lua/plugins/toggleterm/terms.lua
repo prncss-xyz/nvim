@@ -252,8 +252,8 @@ function M.select_command()
 	local cwd = vim.fn.getcwd()
 	local choices = vim.tbl_keys(last_by_tag)
 	for key, value in pairs(config.commands) do
-		local _, o = get_term_conf0(cwd, key, value)
-		if o then
+		local k = get_term_conf0(cwd, key, value)
+		if k then
 			table.insert(choices, key)
 		end
 	end

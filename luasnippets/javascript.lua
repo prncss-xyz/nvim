@@ -2,17 +2,6 @@
 
 local M = {}
 
--- local same = require('my.utils.snippets').same
-
-local preferred_quote = require('my.parameters').preferred_quote
-
-local function concat(t1, t2)
-  for i = 1, #t2 do
-    t1[#t1 + 1] = t2[i]
-  end
-  return t1
-end
-
 local function to_same(args)
   return args[1][1]
 end

@@ -2,14 +2,6 @@
 
 local M = {}
 
-local function to_same(args)
-  return args[1][1]
-end
-
-local function to_upper(args)
-  return args[1][1]:gsub("^%l", string.upper)
-end
-
 table.insert(
   M,
   s(
