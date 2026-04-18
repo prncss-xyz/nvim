@@ -27,10 +27,6 @@ local function is_open(winnr)
 	return winnr and vim.api.nvim_win_is_valid(winnr)
 end
 
-local function is_visible(winnr)
-	return winnr and vim.api.nvim_win_is_valid(winnr) and vim.api.nvim_get_current_win() == winnr
-end
-
 local function should_notify(winnr)
 	local visible = winnr and vim.api.nvim_win_is_valid(winnr)
 	return not (visible and nvim_has_focus)
@@ -198,7 +194,7 @@ function M.focus_term(key)
 		return
 	end
 	local winnr = next_terminal.window
-	if not is_visible(winnr) then
+	if not is_open(winnr) then
 		next_terminal:toggle()
 	else
 		vim.api.nvim_set_current_win(winnr)
