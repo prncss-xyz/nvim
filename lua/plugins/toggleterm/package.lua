@@ -1,8 +1,10 @@
 local M = {}
 
+-- TODO: package manager is last of kind (must be possible to extend to other langs)
+-- TODO: add function to create tag
+
 local checks = {
 	{ "pnpm-lock.yaml", "pnpm" },
-	{ "pnpm-workspace.yaml", "pnpm" },
 	{ "package-lock.json", "npm" },
 	{ "yarn.lock", "yarn" },
 	{ "bun.lockb", "bun" },
