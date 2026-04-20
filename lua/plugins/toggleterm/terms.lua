@@ -6,7 +6,7 @@ local Terminal = require("toggleterm.terminal").Terminal
 local config = require("plugins.toggleterm.config")
 
 local last_terminal = nil
-local last_by_tag = {}
+local term_to_key = {}
 
 local term_cache = {}
 local idle_state = {}
@@ -49,14 +49,6 @@ local function get_term_conf(cwd, key)
 	return get_term_conf0(cwd, key, config.commands[key])
 end
 
-local function cache2(p, q, cache, gen)
-	cache[p] = cache[p] or {}
-	if not cache[p][q] then
-		cache[p][q] = gen(p, q)
-	end
-	return cache[p][q]
-end
-
 local function start_idle_detection(term, scope, key)
 	if not term.bufnr or not vim.api.nvim_buf_is_valid(term.bufnr) then
 		return function() end
@@ -86,62 +78,71 @@ local function start_idle_detection(term, scope, key)
 	return clear()
 end
 
-local function get_term_(cwd, k, background)
-	if last_by_tag[k] then
-		k = last_by_tag[k]
+local function get_cache(scope)
+	term_cache[scope] = term_cache[scope] or {}
+	return term_cache[scope]
+end
+
+local function get_term_(cwd, k, background, conf)
+	local last = get_cache(cwd)[k] or get_cache(global)[k]
+	if last then
+		return last
 	end
-	local key, o = get_term_conf(cwd, k)
+	local key, o
+	if conf then
+		key, o = k, conf
+	else
+		key, o = get_term_conf(cwd, k)
+	end
 	if key == nil or o == nil then
 		return
 	end
 	local scope = o.global and global or cwd
-	local res = cache2(scope, key, term_cache, function()
-		o = vim.deepcopy(o)
-		o.display_name = o.display_name or key
-		local ref = { term = nil }
-		o.on_exit = function()
-			term_cache[scope][key] = nil
-			if ref.term and idle_state[ref.term] then
-				idle_state[ref.term]()
-				idle_state[ref.term] = nil
-			end
+	o = vim.deepcopy(o)
+	o.display_name = o.display_name or key
+	local ref = { term = nil }
+	o.on_exit = function()
+		term_cache[scope][key] = nil
+		if ref.term and idle_state[ref.term] then
+			idle_state[ref.term]()
+			idle_state[ref.term] = nil
 		end
-		if background then
-			o.hidden = true
-		end
-		local term = Terminal:new(o)
-		ref.term = term
-		if background then
-			term:spawn()
-			idle_state[term] = start_idle_detection(term, scope, key)
-		else
-			vim.schedule(function()
-				if term and term.bufnr and term.bufnr > 0 then
-					idle_state[term] = start_idle_detection(term, scope, key)
-				end
-			end)
-		end
-		return term
-	end)
-	if o.tag then
-		last_by_tag[o.tag] = k
 	end
-	return res
+	if background then
+		o.hidden = true
+	end
+	local term = Terminal:new(o)
+	ref.term = term
+	if background then
+		term:spawn()
+		idle_state[term] = start_idle_detection(term, scope, key)
+	else
+		vim.schedule(function()
+			if term and term.bufnr and term.bufnr > 0 then
+				idle_state[term] = start_idle_detection(term, scope, key)
+			end
+		end)
+	end
+	get_cache(scope)[key] = term
+	term_to_key[term] = key
+	if o.tag then
+		get_cache(scope)[o.tag] = term
+	end
+	return term
 end
 
 local function list_terms()
-	local cwd = vim.fn.getcwd()
-	local res = vim.tbl_keys(term_cache[cwd] or {})
-	vim.list_extend(res, vim.tbl_keys(term_cache[global] or {}))
+	local res = vim.tbl_keys(get_cache(vim.fn.getcwd()))
+	vim.list_extend(res, vim.tbl_keys(get_cache(global)))
 	return res
 end
 
-local function get_term(key, background)
+local function get_term(key, background, conf)
 	if key == nil then
 		return nil
 	end
 	local cwd = vim.fn.getcwd()
-	return get_term_(cwd, key, background)
+	return get_term_(cwd, key, background, conf)
 end
 
 function M.select_term()
@@ -172,8 +173,8 @@ local function hide_term(terminal)
 	end
 end
 
-local function prepare_term(key)
-	local next_terminal = get_term(key)
+local function prepare_term(key, conf)
+	local next_terminal = get_term(key, nil, conf)
 	if last_terminal ~= next_terminal then
 		hide_term(last_terminal)
 		last_terminal = next_terminal
@@ -188,8 +189,8 @@ function M.toggle_term(key)
 	end
 end
 
-function M.focus_term(key)
-	local next_terminal = prepare_term(key)
+function M.focus_term(key, conf)
+	local next_terminal = prepare_term(key, conf)
 	if not next_terminal then
 		return
 	end
@@ -250,21 +251,27 @@ end
 
 function M.select_command()
 	local cwd = vim.fn.getcwd()
-	local choices = vim.tbl_keys(last_by_tag)
+	local choices = {}
 	for key, value in pairs(config.commands) do
-		local k = get_term_conf0(cwd, key, value)
+		local k, conf = get_term_conf0(cwd, key, value)
 		if k then
-			table.insert(choices, key)
+			table.insert(choices, {
+				key = k,
+				conf = conf,
+			})
 		end
 	end
-
+	require("plugins.toggleterm.package").add_npm_scripts(choices)
 	vim.ui.select(choices, {
 		prompt = "Select command: ",
+		format_item = function(item)
+			return item.key
+		end,
 	}, function(choice)
 		if not choice then
 			return
 		end
-		M.focus_term(choice)
+		M.focus_term(choice.key, choice.conf)
 	end)
 end
 
@@ -299,7 +306,11 @@ function M.setup_start()
 end
 
 function M.get_last(key)
-	return last_by_tag[key]
+	local last = get_cache(vim.fn.getcwd())[key] or get_cache(global)[key]
+	if last then
+		return term_to_key[last]
+	end
+	return nil
 end
 
 return M

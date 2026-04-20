@@ -29,11 +29,6 @@ M.commands = {
 		global = true,
 		auto = true,
 	}),
-	dev = {
-		cmd = "pnpm run dev",
-		close_on_exit = false,
-	},
-	test = { cmd = "pnpm run test --watch" },
 	current = function()
 		return { dir = vim.fn.expand("%:p:h") }
 	end,
