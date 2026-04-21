@@ -137,6 +137,7 @@ end
 local function list_terms()
 	local res = vim.tbl_keys(get_cache(vim.fn.getcwd()))
 	vim.list_extend(res, vim.tbl_keys(get_cache(global)))
+	table.sort(res)
 	return res
 end
 
@@ -264,6 +265,9 @@ function M.select_command()
 		end
 	end
 	package.add_npm_scripts(choices)
+	table.sort(choices, function(a, b)
+		return a.key < b.key
+	end)
 	vim.ui.select(choices, {
 		prompt = "Select command: ",
 		format_item = function(item)
