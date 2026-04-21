@@ -4,6 +4,7 @@ local global = vim.env.HOME
 
 local Terminal = require("toggleterm.terminal").Terminal
 local config = require("plugins.toggleterm.config")
+local package = require("plugins.toggleterm.package")
 
 local last_terminal = nil
 local term_to_key = {}
@@ -261,7 +262,7 @@ function M.select_command()
 			})
 		end
 	end
-	require("plugins.toggleterm.package").add_npm_scripts(choices)
+	package.add_npm_scripts(choices)
 	vim.ui.select(choices, {
 		prompt = "Select command: ",
 		format_item = function(item)
@@ -284,11 +285,8 @@ local function setup()
 		return
 	end
 	seen_cwds[cwd] = true
-	for key, value in pairs(config.commands) do
-		local _, o = get_term_conf0(cwd, key, value)
-		if o and o.auto then
-			get_term_(cwd, key, true)
-		end
+	for _, key in ipairs(config.auto) do
+		get_term_(cwd, key, true)
 	end
 end
 

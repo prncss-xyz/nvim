@@ -49,11 +49,15 @@ local function from_package(root, prefix, acc)
 		if #prefix > 0 then
 			key = key .. string.format(" (%s)", prefix)
 		end
+		local tag = require("plugins.toggleterm.config").packages
+			and require("plugins.toggleterm.config").packages.tagger
+			and require("plugins.toggleterm.config").packages.tagger(key)
 		table.insert(acc, {
 			key = key,
 			conf = {
 				cmd = cmd,
 				cwd = root .. prefix,
+				tag,
 			},
 		})
 	end
@@ -87,6 +91,12 @@ end
 
 function M.add_npm_scripts(acc)
 	walk(vim.fn.getcwd(), "", 0, acc)
+end
+
+function M.find(key)
+	local acc = {}
+	walk(vim.fn.getcwd(), "", 0, acc)
+	return acc[key]
 end
 
 return M

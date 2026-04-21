@@ -8,6 +8,13 @@ local ai_term = require("my.parameters").ai_config.chat == "toggleterm"
 
 M.idle_timeout = 2000
 M.default_terminal = "term_e" -- Default terminal name
+M.packages = {
+	tagger = function(key)
+		if key:find("test") then
+			return "test"
+		end
+	end,
+}
 
 M.on_idle = function(scope, key)
 	local msg = string.format("%s in %s (idle)", key, scope)
@@ -21,6 +28,8 @@ M.lang_to_REPL = {
 	typescript = "node",
 	typescriptreact = "node",
 }
+
+M.auto = { "tilt", "pi", "pnpm run dev:test" }
 
 M.commands = {
 	tilt = work({

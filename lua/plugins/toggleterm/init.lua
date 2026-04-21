@@ -51,7 +51,11 @@ return {
 				function()
 					require("plugins.toggleterm.ops").agent_op:call({ domain = "outer" }, {
 						a = function()
-							require("plugins.toggleterm.terms").focus_term("agent")
+							local key = require("plugins.toggleterm.terms").get_last("agent")
+							if not key then
+								return
+							end
+							require("plugins.toggleterm.terms").focus_term(key)
 						end,
 						c = function()
 							require("plugins.toggleterm.agents").send_current_position()
