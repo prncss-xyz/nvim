@@ -33,21 +33,23 @@ local function should_notify(winnr)
 	return not (visible and nvim_has_focus)
 end
 
-local function get_term_conf0(cwd, key, o)
-	if not o then
-		return nil
-	end
-	if type(o) == "string" then
-		return get_term_conf0(cwd, o, config.commands[o])
+local function get_term_conf(key, o)
+	if o == nil then
+		o = config.commands[key]
 	end
 	if type(o) == "function" then
-		return get_term_conf0(cwd, key, o())
+		o = o()
 	end
-	return key, type(o) == "table" and o or { cmd = key }
-end
-
-local function get_term_conf(cwd, key)
-	return get_term_conf0(cwd, key, config.commands[key])
+	if not o then
+		return
+	end
+	if type(o) == "string" then
+		return { cmd = o }
+	end
+	if type(o) == "table" then
+		return o
+	end
+	return { cmd = key }
 end
 
 local function start_idle_detection(term, scope, key)
@@ -84,18 +86,18 @@ local function get_cache(scope)
 	return term_cache[scope]
 end
 
-local function get_term_(cwd, k, background, conf)
-	local last = get_cache(cwd)[k] or get_cache(global)[k]
+local function get_term_(cwd, key, background, conf)
+	local last = get_cache(cwd)[key] or get_cache(global)[key]
 	if last then
 		return last
 	end
-	local key, o
+	local o
 	if conf then
-		key, o = k, conf
+		o = conf
 	else
-		key, o = get_term_conf(cwd, k)
+		o = get_term_conf(key)
 	end
-	if key == nil or o == nil then
+	if o == nil then
 		return
 	end
 	local scope = o.global and global or cwd
@@ -251,13 +253,12 @@ function M.stop(key)
 end
 
 function M.select_command()
-	local cwd = vim.fn.getcwd()
 	local choices = {}
 	for key, value in pairs(config.commands) do
-		local k, conf = get_term_conf0(cwd, key, value)
-		if k then
+		local conf = get_term_conf(key, value)
+		if conf then
 			table.insert(choices, {
-				key = k,
+				key = key,
 				conf = conf,
 			})
 		end
