@@ -75,6 +75,13 @@ return {
 				mode = { "n", "x" },
 			},
 			{
+				"ou",
+				function()
+					require("plugins.toggleterm.terms").focus_term("test")
+				end,
+				desc = "Toggle Terminal Test",
+			},
+			{
 				"oe",
 				function()
 					require("plugins.toggleterm.terms").focus_term("term_e")

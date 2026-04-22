@@ -57,7 +57,7 @@ local function from_package(root, prefix, acc)
 			conf = {
 				cmd = cmd,
 				cwd = root .. prefix,
-				tag,
+				tag = tag,
 			},
 		})
 	end

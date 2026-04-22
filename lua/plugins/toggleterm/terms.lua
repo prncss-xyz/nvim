@@ -1,6 +1,6 @@
 local M = {}
 
-local global = vim.env.HOME
+local global = {}
 
 local Terminal = require("toggleterm.terminal").Terminal
 local config = require("plugins.toggleterm.config")
@@ -9,7 +9,6 @@ local package = require("plugins.toggleterm.package")
 local last_terminal = nil
 local term_to_key = {}
 
-local term_cache = {}
 local idle_state = {}
 
 local nvim_has_focus = true
@@ -81,13 +80,23 @@ local function start_idle_detection(term, scope, key)
 	return clear()
 end
 
-local function get_cache(scope)
+local term_cache = {}
+local function get_term_cache(scope)
 	term_cache[scope] = term_cache[scope] or {}
 	return term_cache[scope]
 end
 
+local tag_cache = {}
+local function get_tag_cache(scope)
+	tag_cache[scope] = tag_cache[scope] or {}
+	return tag_cache[scope]
+end
+
 local function get_term_(cwd, key, background, conf)
-	local last = get_cache(cwd)[key] or get_cache(global)[key]
+	local last = get_tag_cache(cwd)[key]
+		or get_tag_cache(global)[key]
+		or get_term_cache(cwd)[key]
+		or get_term_cache(global)[key]
 	if last then
 		return last
 	end
@@ -126,17 +135,17 @@ local function get_term_(cwd, key, background, conf)
 			end
 		end)
 	end
-	get_cache(scope)[key] = term
+	get_term_cache(scope)[key] = term
 	term_to_key[term] = key
 	if o.tag then
-		get_cache(scope)[o.tag] = term
+		get_tag_cache(scope)[o.tag] = term
 	end
 	return term
 end
 
 local function list_terms()
-	local res = vim.tbl_keys(get_cache(vim.fn.getcwd()))
-	vim.list_extend(res, vim.tbl_keys(get_cache(global)))
+	local res = vim.tbl_keys(get_term_cache(vim.fn.getcwd()))
+	vim.list_extend(res, vim.tbl_keys(get_term_cache(global)))
 	table.sort(res)
 	return res
 end
@@ -309,7 +318,10 @@ function M.setup_start()
 end
 
 function M.get_last(key)
-	local last = get_cache(vim.fn.getcwd())[key] or get_cache(global)[key]
+	local last = get_tag_cache(vim.fn.getcwd())[key]
+		or get_tag_cache(global)[key]
+		or get_term_cache(vim.fn.getcwd())[key]
+		or get_term_cache(global)[key]
 	if last then
 		return term_to_key[last]
 	end
