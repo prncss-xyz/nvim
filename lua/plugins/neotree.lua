@@ -1,6 +1,5 @@
 local win = require("my.parameters").domain.win
 local theme = require("my.parameters").theme
-local has_copilot = require("my.conds").copilot()
 
 return {
 	{
@@ -60,6 +59,10 @@ return {
 					},
 				},
 				close_if_last_window = true,
+				log_level = {
+					console = "warn",
+					file = "warn",
+				},
 				filesystem = {
 					follow_current_file = {
 						enabled = true,

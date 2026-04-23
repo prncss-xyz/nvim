@@ -7,7 +7,6 @@ local notify = require("my.notify")
 local ai_term = require("my.parameters").ai_config.chat == "toggleterm"
 
 M.idle_timeout = 2000
-M.default_terminal = "term_e" -- Default terminal name
 M.packages = {
 	tagger = function(key)
 		if key:find("test") then
@@ -29,9 +28,10 @@ M.lang_to_REPL = {
 	typescriptreact = "node",
 }
 
-M.start = {
+M.default_terminal = ai_term and personal("pi", "claude") or "term_e" -- Default terminal
+M.auto = {
 	"tilt",
-	"pnpm run dev:test",
+	"pnpm run dev:tests",
 	ai_term and personal("pi", "claude"),
 }
 
@@ -40,7 +40,6 @@ M.commands = {
 		cmd = "make tilt",
 		close_on_exit = false,
 		global = true,
-		auto = true,
 	}),
 	current = function()
 		return { dir = vim.fn.expand("%:p:h") }
@@ -69,7 +68,6 @@ M.commands = {
 	}),
 	pi = ai_term and personal({
 		cmd = "pi -c",
-		auto = ai_term,
 		tag = "agent",
 	}),
 	gemini = ai_term and personal({
@@ -79,7 +77,6 @@ M.commands = {
 	claude = ai_term and {
 		cmd = "claude --continue",
 		tag = "agent",
-		auto = work() and ai_term,
 	},
 	opencode = ai_term and personal({ cmd = "opencode --continue", tag = "agent" }),
 	kilo = ai_term and personal({ cmd = "kilo --continue", tag = "agent" }),

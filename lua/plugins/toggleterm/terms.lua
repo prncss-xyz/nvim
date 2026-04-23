@@ -299,7 +299,7 @@ local function setup()
 		return
 	end
 	seen_cwds[cwd] = true
-	for _, key in ipairs(config.start) do
+	for _, key in ipairs(config.auto) do
 		get_term(key, true)
 	end
 end
