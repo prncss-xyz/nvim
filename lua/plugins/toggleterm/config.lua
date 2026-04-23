@@ -29,7 +29,11 @@ M.lang_to_REPL = {
 	typescriptreact = "node",
 }
 
-M.auto = { "tilt", "pi", "pnpm run dev:test" }
+M.start = {
+	"tilt",
+	"pnpm run dev:test",
+	ai_term and personal("pi", "claude"),
+}
 
 M.commands = {
 	tilt = work({
