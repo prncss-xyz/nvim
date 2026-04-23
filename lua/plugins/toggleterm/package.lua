@@ -9,17 +9,20 @@ local checks = {
 	{ "bun.lockb", "bun" },
 }
 
-local function get_manager(root)
+local function get_npm(root, field)
+	if field then
+		return field:gsub("@.*", "")
+	end
 	-- Fallback to checking common lockfiles
 	for _, c in ipairs(checks) do
 		if vim.fn.filereadable(root .. "/" .. c[1]) == 1 then
 			return c[2]
 		end
 	end
-	return "npm"
 end
 
-local function from_package(root, prefix, acc)
+local function from_package(opts, prefix, acc)
+	local root = opts.root
 	local pkg_path = root .. prefix .. "/package.json"
 	if vim.fn.filereadable(pkg_path) == 0 then
 		return nil
@@ -39,11 +42,10 @@ local function from_package(root, prefix, acc)
 		return nil
 	end
 
-	local manager = pkg.packageManager or get_manager(root)
-	manager = manager:gsub("@.*", "")
+	local npm = get_npm(root, pkg.packageManager) or opts.npm
 
 	for name, _ in pairs(pkg.scripts) do
-		local cmd = string.format("%s run %s", manager, name)
+		local cmd = string.format("%s run %s", npm, name)
 		local key = cmd
 		if #prefix > 0 then
 			key = key .. string.format(" (%s)", prefix)
@@ -60,14 +62,17 @@ local function from_package(root, prefix, acc)
 			},
 		})
 	end
+
+	return npm
 end
 
 local function should_skip(name)
 	return name == "node_modules" or vim.startswith(name, ".")
 end
 
-local function walk(root, prefix, depth, acc)
-	from_package(root, prefix, acc)
+local function walk(opts, prefix, depth, acc)
+	local root = opts.root
+	local npm = from_package(opts, prefix, acc)
 	if depth >= 2 then
 		return
 	end
@@ -82,19 +87,20 @@ local function walk(root, prefix, depth, acc)
 		if not should_skip(name) then
 			local next_prefix = prefix .. "/" .. name
 			if vim.fn.isdirectory(root .. next_prefix) == 1 then
-				walk(root, next_prefix, depth + 1, acc)
+				local new_opts = vim.tbl_extend("force", opts, { npm = npm })
+				walk(new_opts, next_prefix, depth + 1, acc)
 			end
 		end
 	end
 end
 
 function M.add_npm_scripts(acc)
-	walk(vim.fn.getcwd(), "", 0, acc)
+	walk({ root = vim.fn.getcwd() }, "", 0, acc)
 end
 
 function M.find(key)
 	local acc = {}
-	walk(vim.fn.getcwd(), "", 0, acc)
+	walk({ root = vim.fn.getcwd() }, "", 0, acc)
 	for _, item in ipairs(acc) do
 		if item.key == key then
 			return item.conf

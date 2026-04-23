@@ -9,7 +9,7 @@ M.repl_op = require("flies.operations._with_contents"):new({
 
 M.agent_op = require("flies.operations._with_contents"):new({
 	cb = function(_, contents)
-		local key = require("plugins.toggleterm.terms").get_last("agent")
+		local key = require("plugins.toggleterm.terms").get_last_by_tag("agent")
 		if not key then
 			return
 		end
