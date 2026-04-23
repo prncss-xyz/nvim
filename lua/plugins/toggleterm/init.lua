@@ -51,7 +51,7 @@ return {
 				function()
 					require("plugins.toggleterm.ops").agent_op:call({ domain = "outer" }, {
 						a = function()
-							local key = require("plugins.toggleterm.terms").get_last("agent")
+							local key = require("plugins.toggleterm.terms").get_last_by_tag("agent")
 							if not key then
 								return
 							end

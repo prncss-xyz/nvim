@@ -1,7 +1,6 @@
 local M = {}
 
 -- TODO: package manager is last of kind (must be possible to extend to other langs)
--- TODO: add function to create tag
 
 local checks = {
 	{ "pnpm-lock.yaml", "pnpm" },
@@ -96,7 +95,11 @@ end
 function M.find(key)
 	local acc = {}
 	walk(vim.fn.getcwd(), "", 0, acc)
-	return acc[key]
+	for _, item in ipairs(acc) do
+		if item.key == key then
+			return item.conf
+		end
+	end
 end
 
 return M

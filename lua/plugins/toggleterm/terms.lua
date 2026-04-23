@@ -35,6 +35,9 @@ end
 local function get_term_conf(key, o)
 	if o == nil then
 		o = config.commands[key]
+		if o == nil then
+			o = require("plugins.toggleterm.package").find(key)
+		end
 	end
 	if type(o) == "function" then
 		o = o()
@@ -317,7 +320,7 @@ function M.setup_start()
 	})
 end
 
-function M.get_last(key)
+function M.get_last_by_tag(key)
 	local last = get_tag_cache(vim.fn.getcwd())[key]
 		or get_tag_cache(global)[key]
 		or get_term_cache(vim.fn.getcwd())[key]
