@@ -32,6 +32,21 @@ return {
 				},
 				show_on_completion_menu = true,
 			},
+			duet = {
+				provider = "openai_compatible",
+				request_timeout = 20,
+				provider_options = {
+					openai_compatible = {
+						model = "qwen-3-235b-a22b-instruct-2507",
+						end_point = "https://api.cerebras.ai/v1/chat/completions",
+						api_key = "CEREBRAS_API_KEY",
+						stream = false,
+						optional = {
+							max_tokens = 8192,
+						},
+					},
+				},
+			},
 		},
 		keys = completion == "minuet" and {
 			{
