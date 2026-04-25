@@ -57,6 +57,7 @@ return {
 			},
 		},
 		cond = not_vscode,
+		enable = false,
 		cmd = "GitConflictListQf",
 		keys = {
 			{ conflict .. "l", "<cmd>GitConflictListQf<cr>", desc = "List Conflicts" },

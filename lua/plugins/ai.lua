@@ -19,18 +19,18 @@ return {
 		},
 		cond = not_vscode,
 		opts = {
-      -- CODESTRAL
+			-- CODESTRAL
 			api_key = os.getenv("MISTRAL_API_KEY"),
 			endpoint = "https://api.mistral.ai/v1/chat/completions",
 			model = "codestral-latest",
-      -- GLM-4.5 AIR
-      -- api_key = os.getenv("OPENROUTER_API_KEY"),
-      -- endpoint = "https://openrouter.ai/api/v1/chat/completions",
-      -- model = "z-ai/glm-4.5-air",
-      -- GPT-OSS-120B
-      -- api_key = os.getenv("OPENROUTER_API_KEY"),
-      -- endpoint = "https://openrouter.ai/api/v1/chat/completions",
-      -- model = "google/gemma-4-26b-a4b-it:free",
+			-- GLM-4.5 AIR
+			-- api_key = os.getenv("OPENROUTER_API_KEY"),
+			-- endpoint = "https://openrouter.ai/api/v1/chat/completions",
+			-- model = "z-ai/glm-4.5-air",
+			-- GPT-OSS-120B
+			-- api_key = os.getenv("OPENROUTER_API_KEY"),
+			-- endpoint = "https://openrouter.ai/api/v1/chat/completions",
+			-- model = "google/gemma-4-26b-a4b-it:free",
 			accept_keymap = ai_insert.nes,
 			dismiss_keymap = "<c-x>",
 			use_treesitter = true,
@@ -51,18 +51,18 @@ return {
 			-- from outgoing requests to stride's endpoint.
 			local curl = require("plenary.curl")
 			local orig_post = curl.post
-      if true then
-			curl.post = function(url, post_opts)
-				if url == opts.endpoint and post_opts and type(post_opts.body) == "string" then
-					local ok, decoded = pcall(vim.fn.json_decode, post_opts.body)
-					if ok and type(decoded) == "table" and decoded.reasoning_effort ~= nil then
-						decoded.reasoning_effort = nil
-						post_opts.body = vim.fn.json_encode(decoded)
+			if true then
+				curl.post = function(url, post_opts)
+					if url == opts.endpoint and post_opts and type(post_opts.body) == "string" then
+						local ok, decoded = pcall(vim.fn.json_decode, post_opts.body)
+						if ok and type(decoded) == "table" and decoded.reasoning_effort ~= nil then
+							decoded.reasoning_effort = nil
+							post_opts.body = vim.fn.json_encode(decoded)
+						end
 					end
+					return orig_post(url, post_opts)
 				end
-				return orig_post(url, post_opts)
 			end
-      end
 			require("stride").setup(opts)
 		end,
 		enabled = completion == "stride",
@@ -82,8 +82,8 @@ return {
 			filetypes = {
 				markdown = false,
 			},
-      suggestion = { enabled = completion == "copilot" },
-      panel = { enabled = false },
+			suggestion = { enabled = completion == "copilot" },
+			panel = { enabled = false },
 			nes = {
 				enabled = completion == "copilot",
 				keymap = {
@@ -105,7 +105,7 @@ return {
 				end,
 				desc = "Copilot accept NES",
 				mode = { "n", "x", "i" },
-			}
+			},
 		} or nil,
 		cmd = { "Copilot" },
 		event = "InsertEnter",
@@ -251,44 +251,44 @@ return {
 		enabled = chat == "opencode",
 		cond = not_vscode,
 	},
-  {
-    "folke/sidekick.nvim",
-    opts = {
-      nes = { enabled = false },
-      cli = {
-        tools = {
-          pi = { cmd = { "pi" } },
-        },
-      },
-    },
-    keys = {
-      {
-        ai_insert.toggle,
-        function()
-          require("sidekick.cli").toggle({
-            name = sidekick_chat,
-            focus = true,
-          })
-        end,
-        desc = "Sidekick Chat",
-      },
-      {
-        ai .. "s",
-        function()
-          require("sidekick.cli").select()
-        end,
-        desc = "Sidekick Select CLI",
-      },
-      {
-        ai .. "a",
-        function()
-          require("sidekick.cli").prompt()
-        end,
-        mode = { "n", "x" },
-        desc = "Sidekick Ask Prompt",
-      },
-    },
-    enabled = chat == "sidekick",
-    cond = not_vscode,
-  },
+	{
+		"folke/sidekick.nvim",
+		opts = {
+			nes = { enabled = false },
+			cli = {
+				tools = {
+					pi = { cmd = { "pi" } },
+				},
+			},
+		},
+		keys = {
+			{
+				ai_insert.toggle,
+				function()
+					require("sidekick.cli").toggle({
+						name = sidekick_chat,
+						focus = true,
+					})
+				end,
+				desc = "Sidekick Chat",
+			},
+			{
+				ai .. "s",
+				function()
+					require("sidekick.cli").select()
+				end,
+				desc = "Sidekick Select CLI",
+			},
+			{
+				ai .. "a",
+				function()
+					require("sidekick.cli").prompt()
+				end,
+				mode = { "n", "x" },
+				desc = "Sidekick Ask Prompt",
+			},
+		},
+		enabled = chat == "sidekick",
+		cond = not_vscode,
+	},
 }

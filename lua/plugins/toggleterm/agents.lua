@@ -12,7 +12,7 @@ function M.current_position()
 end
 
 function M.send_current_position()
-	local key = require("plugins.toggleterm.terms").get_last("agent")
+	local key = require("plugins.toggleterm.terms").get_last_by_tag("agent")
 	if not key then
 		return
 	end
@@ -20,7 +20,7 @@ function M.send_current_position()
 end
 
 function M.send_current_file()
-	local key = require("plugins.toggleterm.terms").get_last("agent")
+	local key = require("plugins.toggleterm.terms").get_last_by_tag("agent")
 	if not key then
 		return
 	end
@@ -28,7 +28,7 @@ function M.send_current_file()
 end
 
 function M.prompt()
-	local key = require("plugins.toggleterm.terms").get_last("agent")
+	local key = require("plugins.toggleterm.terms").get_last_by_tag("agent")
 	if not key then
 		return
 	end
@@ -49,7 +49,7 @@ function M.prompt()
 end
 
 function M.new()
-	local key = require("plugins.toggleterm.terms").get_last("agent")
+	local key = require("plugins.toggleterm.terms").get_last_by_tag("agent")
 	if not key then
 		return
 	end
