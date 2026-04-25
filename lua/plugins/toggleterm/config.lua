@@ -28,11 +28,12 @@ M.lang_to_REPL = {
 	typescriptreact = "node",
 }
 
-M.default_terminal = ai_term and personal("pi", "claude") or "term_e" -- Default terminal
+M.default_terminal = ai_term and personal("pi_fast", "claude") or "term_e" -- Default terminal
 M.auto = {
 	"tilt",
 	"pnpm run dev:tests",
-	ai_term and personal("pi", "claude"),
+	ai_term and personal("pi_deep"),
+	ai_term and personal("pi_fast", "claude"),
 }
 
 M.commands = {
@@ -66,16 +67,22 @@ M.commands = {
 		cmd = "git-sync",
 		close_on_exit = false,
 	}),
-	pi = ai_term and personal({
-		cmd = "pi -c",
+	pi_fast = ai_term and personal({
+		cmd = "pi --provider cerebras --model qwen-3-235b-a22b-instruct-2507",
+		-- cmd = "pi --provider openrouter --model mercury-2",
+		tag = "agent",
+	}),
+	pi_deep = ai_term and personal({
+		cmd = "pi --provider openrouter --model moonshotai/kimi-k2.5",
+		-- cmd = "pi --provider opencode --model big-pickle",
 		tag = "agent",
 	}),
 	gemini = ai_term and personal({
-		cmd = "gemini --resume",
+		cmd = "gemini",
 		tag = "agent",
 	}),
 	claude = ai_term and {
-		cmd = "claude --continue",
+		cmd = "claude",
 		tag = "agent",
 	},
 	opencode = ai_term and personal({ cmd = "opencode --continue", tag = "agent" }),
@@ -104,7 +111,8 @@ M.commands = {
 }
 
 M.new = {
-	pi = "new",
+	pi_fast = "new",
+	pi_deep = "new",
 	opencode = "new",
 	claude = "clear",
 	kilo = "new",

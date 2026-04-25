@@ -8,15 +8,32 @@ local ai_config = require("my.parameters").ai_config
 local completion = ai_config.completion
 local chat = ai_config.chat
 
+local mercury_duet = {
+	model = "mercury-2",
+	end_point = "https://api.inceptionlabs.ai/v1/chat/completions",
+	api_key = "INCEPTION_API_KEY",
+	stream = true,
+}
+
+local qwen_duet = {
+	model = "qwen-3-235b-a22b-instruct-2507",
+	end_point = "https://api.cerebras.ai/v1/chat/completions",
+	api_key = "CEREBRAS_API_KEY",
+	stream = false,
+	optional = {
+		max_tokens = 8192,
+	},
+}
+
 return {
 	{
 		"milanglacier/minuet-ai.nvim",
 		opts = {
-			provider = "codestral",
+			provider = "openai_fim_compatible", -- "openai_fim_compatible" | "codestral",
 			provider_options = {
 				openai_fim_compatible = {
-					model = "mercury-coder",
-					end_point = "https://api.inceptionlabs.ai/v2/fim/completions",
+					model = "mercury-edit-2",
+					end_point = "https://api.inceptionlabs.ai/v1/fim/completions",
 					api_key = "INCEPTION_API_KEY",
 					stream = true,
 				},
@@ -25,10 +42,10 @@ return {
 				auto_trigger_ft = { "*" },
 				auto_trigger_ignore_ft = { "markdown" },
 				keymap = {
-					accept = ai_insert.accept,
+					-- accept = ai_insert.accept,
 					prev = ai_insert.prev,
 					next = ai_insert.next,
-					dismiss = ai_insert.clear,
+					-- dismiss = ai_insert.clear,
 				},
 				show_on_completion_menu = true,
 			},
@@ -36,33 +53,25 @@ return {
 				provider = "openai_compatible",
 				request_timeout = 20,
 				provider_options = {
-					openai_compatible = {
-						model = "qwen-3-235b-a22b-instruct-2507",
-						end_point = "https://api.cerebras.ai/v1/chat/completions",
-						api_key = "CEREBRAS_API_KEY",
-						stream = false,
-						optional = {
-							max_tokens = 8192,
-						},
-					},
+					openai_compatible = mercury_duet,
 				},
 			},
 		},
 		keys = completion == "minuet" and {
 			{
-				"hbb",
+				ai_insert.nes,
 				"<cmd>Minuet duet predict<cr>",
 				mode = { "n", "i" },
 				desc = "Minuet NES predict",
 			},
 			{
-				"hbk",
+				ai_insert.accept,
 				"<cmd>Minuet duet apply<cr>",
 				mode = { "n", "i" },
 				desc = "Minuet NES apply",
 			},
 			{
-				"hbx",
+				ai_insert.clear,
 				"<cmd>Minuet duet dismiss<cr>",
 				mode = { "n", "i" },
 				desc = "Minuet NES dismiss",
@@ -82,19 +91,14 @@ return {
 		},
 		cond = not_vscode,
 		opts = {
-			-- CODESTRAL
-			api_key = os.getenv("MISTRAL_API_KEY"),
-			reasoning_model = false,
-			endpoint = "https://api.mistral.ai/v1/chat/completions",
-			model = "codestral-latest",
-			-- GLM-4.5 AIR
-			-- api_key = os.getenv("OPENROUTER_API_KEY"),
-			-- endpoint = "https://openrouter.ai/api/v1/chat/completions",
-			-- model = "z-ai/glm-4.5-air",
-			-- GPT-OSS-120B
-			-- api_key = os.getenv("OPENROUTER_API_KEY"),
-			-- endpoint = "https://openrouter.ai/api/v1/chat/completions",
-			-- model = "google/gemma-4-26b-a4b-it:free",
+			-- INCEPTION MERCURY-2 (via their API - faster & cheaper)
+			api_key = os.getenv("INCEPTION_API_KEY"),
+			endpoint = "https://api.inceptionlabs.ai/v1/chat/completions",
+			model = "mercury-2",
+			-- MISTRAL CODESTRAL
+			-- api_key = os.getenv("MISTRAL_API_KEY"),
+			-- endpoint = "https://api.mistral.ai/v1/chat/completions",
+			-- model = "codestral-latest",
 			accept_keymap = ai_insert.nes,
 			dismiss_keymap = "<c-x>",
 			use_treesitter = true,
