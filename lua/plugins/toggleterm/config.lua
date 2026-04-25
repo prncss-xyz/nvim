@@ -68,12 +68,14 @@ M.commands = {
 		close_on_exit = false,
 	}),
 	pi_fast = ai_term and personal({
-		cmd = "pi --provider cerebras --model qwen-3-235b-a22b-instruct-2507",
+		cmd = "pi --provider github-copilot --model gemini-3-flash-preview",
+		-- cmd = "pi --provider cerebras --model qwen-3-235b-a22b-instruct-2507",
 		-- cmd = "pi --provider openrouter --model mercury-2",
 		tag = "agent",
 	}),
 	pi_deep = ai_term and personal({
-		cmd = "pi --provider openrouter --model moonshotai/kimi-k2.5",
+		cmd = "pi --provider github-copilot --model gpt-5.3-codex",
+		-- cmd = "pi --provider openrouter --model moonshotai/kimi-k2.5",
 		-- cmd = "pi --provider opencode --model big-pickle",
 		tag = "agent",
 	}),

@@ -42,10 +42,8 @@ return {
 				auto_trigger_ft = { "*" },
 				auto_trigger_ignore_ft = { "markdown" },
 				keymap = {
-					-- accept = ai_insert.accept,
 					prev = ai_insert.prev,
 					next = ai_insert.next,
-					-- dismiss = ai_insert.clear,
 				},
 				show_on_completion_menu = true,
 			},
@@ -66,15 +64,25 @@ return {
 			},
 			{
 				ai_insert.accept,
-				"<cmd>Minuet duet apply<cr>",
+				function()
+					local duet = require("minuet.duet").action
+					if duet.is_visible() then
+						duet.apply()
+					else
+						require("minuet.virtualtext").action.accept()
+					end
+				end,
 				mode = { "n", "i" },
-				desc = "Minuet NES apply",
+				desc = "Minuet complete or NES apply",
 			},
 			{
 				ai_insert.clear,
-				"<cmd>Minuet duet dismiss<cr>",
+				function()
+					require("minuet.virtualtext").action.dismiss()
+					require("minuet.duet").action.dismiss()
+				end,
 				mode = { "n", "i" },
-				desc = "Minuet NES dismiss",
+				desc = "Minuet clear or NES dismiss",
 			},
 		},
 		enabled = completion == "minuet",
