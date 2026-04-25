@@ -15,8 +15,9 @@ M.dirs = {
 	notes = projects .. "/notes",
 }
 
+
 M.ai_config = {
-	completion = personal("copilot", "copilot"), -- "copilot" | "windsurf" | "stride" | "none"
+	completion = personal("minuet", "copilot"), -- "minuet" | "copilot" | "windsurf" | "stride" | "none"
 	chat = personal("toggleterm", "sidekick"), -- 'sidekick' |  'claude' | 'agentic' | 'toggleterm' | 'none'
 }
 

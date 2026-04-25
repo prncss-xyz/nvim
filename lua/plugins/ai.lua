@@ -10,6 +10,54 @@ local chat = ai_config.chat
 
 return {
 	{
+		"milanglacier/minuet-ai.nvim",
+		opts = {
+			provider = "codestral",
+			provider_options = {
+				openai_fim_compatible = {
+					model = "mercury-coder",
+					end_point = "https://api.inceptionlabs.ai/v2/fim/completions",
+					api_key = "INCEPTION_API_KEY",
+					stream = true,
+				},
+			},
+			virtualtext = {
+				auto_trigger_ft = { "*" },
+				auto_trigger_ignore_ft = { "markdown" },
+				keymap = {
+					accept = ai_insert.accept,
+					prev = ai_insert.prev,
+					next = ai_insert.next,
+					dismiss = ai_insert.clear,
+				},
+				show_on_completion_menu = true,
+			},
+		},
+		keys = completion == "minuet" and {
+			{
+				"hbb",
+				"<cmd>Minuet duet predict<cr>",
+				mode = { "n", "i" },
+				desc = "Minuet NES predict",
+			},
+			{
+				"hbk",
+				"<cmd>Minuet duet apply<cr>",
+				mode = { "n", "i" },
+				desc = "Minuet NES apply",
+			},
+			{
+				"hbx",
+				"<cmd>Minuet duet dismiss<cr>",
+				mode = { "n", "i" },
+				desc = "Minuet NES dismiss",
+			},
+		},
+		enabled = completion == "minuet",
+		-- Load before FileType so Minuet's `virtualtext.auto_trigger_ft` hook is registered in time.
+		event = { "BufReadPre", "BufNewFile" },
+	},
+	{
 		"prncss-xyz/nvim-stride",
 		name = "stride",
 		requires = {
@@ -21,6 +69,7 @@ return {
 		opts = {
 			-- CODESTRAL
 			api_key = os.getenv("MISTRAL_API_KEY"),
+			reasoning_model = false,
 			endpoint = "https://api.mistral.ai/v1/chat/completions",
 			model = "codestral-latest",
 			-- GLM-4.5 AIR
@@ -45,28 +94,8 @@ return {
 				backend = "builtin",
 			},
 		},
-		config = function(_, opts)
-			-- stride hardcodes `reasoning_effort` in its payload, which Mistral
-			-- rejects (422) for non-reasoning models like codestral. Strip it
-			-- from outgoing requests to stride's endpoint.
-			local curl = require("plenary.curl")
-			local orig_post = curl.post
-			if true then
-				curl.post = function(url, post_opts)
-					if url == opts.endpoint and post_opts and type(post_opts.body) == "string" then
-						local ok, decoded = pcall(vim.fn.json_decode, post_opts.body)
-						if ok and type(decoded) == "table" and decoded.reasoning_effort ~= nil then
-							decoded.reasoning_effort = nil
-							post_opts.body = vim.fn.json_encode(decoded)
-						end
-					end
-					return orig_post(url, post_opts)
-				end
-			end
-			require("stride").setup(opts)
-		end,
 		enabled = completion == "stride",
-		event = "VeryLazy",
+		event = "InsertEnter",
 	},
 	{
 		"zbirenbaum/copilot.lua",
