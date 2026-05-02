@@ -177,6 +177,10 @@ end, { desc = "Alternative File" })
 
 vim.keymap.set("n", "oml", "<cmd>Lazy<cr>", { desc = "Lazy" })
 
+vim.keymap.set("n", "<c-i>", function()
+	vim.notify(vim.bo.filetype)
+end, { desc = "Show Filetype" })
+
 vim.keymap.set("n", win .. "q", require("my.ui_toggle").toggle, { desc = "Close Widget" })
 
 vim.keymap.set("n", edit .. theme.symbol, function()

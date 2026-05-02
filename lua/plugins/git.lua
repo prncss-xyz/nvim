@@ -60,7 +60,7 @@ return {
 		enable = false,
 		cmd = "GitConflictListQf",
 		keys = {
-			{ conflict .. "l", "<cmd>GitConflictListQf<cr>", desc = "List Conflicts" },
+			{ conflict .. "l", "<cmd>GitConflictListQf<cr>", desc = "Git List Conflicts" },
 		},
 	},
 }

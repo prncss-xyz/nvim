@@ -4,7 +4,6 @@ local ai = domain.ai
 local ai_insert = require("my.parameters").ai_insert
 local ai_config = require("my.parameters").ai_config
 
--- TODO: augmentcode
 local completion = ai_config.completion
 local chat = ai_config.chat
 
@@ -25,6 +24,8 @@ local qwen_duet = {
 	},
 }
 
+local duet_config = ai_config.duet == "qwen" and qwen_duet or mercury_duet
+
 return {
 	{
 		"milanglacier/minuet-ai.nvim",
@@ -40,20 +41,14 @@ return {
 			},
 			virtualtext = {
 				auto_trigger_ft = { "*" },
-				auto_trigger_ignore_ft = { "markdown" },
+				auto_trigger_ignore_ft = { "markdown", "prompt", "snacks_picker_input", "" },
 				keymap = {
 					prev = ai_insert.prev,
 					next = ai_insert.next,
 				},
 				show_on_completion_menu = true,
 			},
-			duet = {
-				provider = "openai_compatible",
-				request_timeout = 20,
-				provider_options = {
-					openai_compatible = mercury_duet,
-				},
-			},
+			duet = duet_config,
 		},
 		keys = completion == "minuet" and {
 			{
@@ -322,7 +317,7 @@ return {
 				ai_insert.toggle,
 				function()
 					require("sidekick.cli").toggle({
-						name = sidekick_chat,
+						name = ai_config.sidekick_chat,
 						focus = true,
 					})
 				end,
