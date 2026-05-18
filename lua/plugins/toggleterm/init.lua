@@ -69,6 +69,12 @@ return {
 						x = function()
 							require("plugins.toggleterm.agents").new()
 						end,
+            pz = function ()
+              require("plugins.toggleterm.agents").diagnostics()
+            end,
+            z = function ()
+              require("plugins.toggleterm.agents").diagnostic()
+            end
 					})
 				end,
 				desc = "Toggle agent",
