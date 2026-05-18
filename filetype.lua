@@ -1,6 +1,5 @@
 vim.filetype.add({
 	filename = {
-		[".eslintrc"] = "json",
 		[".stylelintrc"] = "json",
 		[".htmlhintrc"] = "json",
 		[".busted"] = "lua",

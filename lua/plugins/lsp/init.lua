@@ -55,13 +55,6 @@ return {
 		},
 	},
 	{
-		"esmuellert/nvim-eslint",
-		config = function()
-			require("nvim-eslint").setup({})
-		end,
-		enabled = false,
-	},
-	{
 		"nvimtools/none-ls.nvim",
 		dependencies = {
 			"jay-babu/mason-null-ls.nvim",
@@ -76,7 +69,6 @@ return {
 				null_ls.builtins.formatting.stylua,
 				null_ls.builtins.formatting.prettierd,
 				null_ls.builtins.formatting.golines,
-				-- TODO: fourmolu
 			}
 		end,
 		event = "VeryLazy",

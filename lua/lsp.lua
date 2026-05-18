@@ -15,13 +15,6 @@ vim.lsp.config("marksman", {
 	capabilities = require("plugins.lsp.utils").cmp_capabilities,
 })
 
-for _, lsp in pairs({
-	"eslint",
-}) do
-	vim.lsp.config(lsp, {
-		capabilities = require("plugins.lsp.utils").capabilities,
-	})
-end
 vim.lsp.config("graphql", {
 	capabilities = require("plugins.lsp.utils").cmp_capabilities,
 	filetypes = { "graphql", "javascript", "typescript", "javascriptreact", "typescriptreact" },
@@ -78,7 +71,6 @@ vim.lsp.enable({
 	"bashls",
 	"gopls",
 	"marksman",
-	"eslint",
 	"graphql",
 	"knip",
 	"lua_ls",
