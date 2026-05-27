@@ -6,7 +6,7 @@ local notify = require("my.notify")
 
 local ai_term = require("my.parameters").ai_config.chat == "toggleterm"
 
-M.idle_timeout = 2000
+M.idle_timeout = 10000
 M.packages = {
 	tagger = function(key)
 		if key:find("test") then
@@ -28,12 +28,12 @@ M.lang_to_REPL = {
 	typescriptreact = "node",
 }
 
-M.default_terminal = ai_term and personal("pi_fast", "claude") or "term_e" -- Default terminal
+M.default_terminal = ai_term and "agent" or "term_e" -- Default terminal
 M.auto = {
 	"tilt",
 	"pnpm run dev:tests",
 	ai_term and personal("pi_deep"),
-	ai_term and personal("pi_fast", "claude"),
+	ai_term and personal("gemini", "claude"),
 }
 
 M.commands = {
@@ -67,6 +67,10 @@ M.commands = {
 		cmd = "git-sync",
 		close_on_exit = false,
 	}),
+	agy = personal({
+		cmd = "agy",
+		tag = "agent",
+	}),
 	pi_fast = ai_term and personal({
 		cmd = "pi --provider github-copilot --model gemini-3-flash-preview",
 		-- cmd = "pi --provider cerebras --model qwen-3-235b-a22b-instruct-2507",
@@ -74,7 +78,7 @@ M.commands = {
 		tag = "agent",
 	}),
 	pi_deep = ai_term and personal({
-		cmd = "pi --provider github-copilot --model gpt-5.3-codex",
+		cmd = "pi --provider github-copilot --model gpt-5.4-codex",
 		-- cmd = "pi --provider openrouter --model moonshotai/kimi-k2.5",
 		-- cmd = "pi --provider opencode --model big-pickle",
 		tag = "agent",

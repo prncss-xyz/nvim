@@ -1,5 +1,6 @@
 local not_vscode = require("my.conds").not_vscode
 local conflict = require("my.parameters").domain.conflict
+local git = require("my.parameters").domain.git
 
 return {
 	{
@@ -23,6 +24,9 @@ return {
 			word_diff = false,
 		},
 		cmd = "Gitsigns",
+		keys = {
+			{ git .. "s", "<cmd>Gitsigns<cr>", desc = "Gitsigns" },
+		},
 		cond = not_vscode,
 	},
 	{
@@ -33,6 +37,10 @@ return {
 			},
 		},
 		cmd = "CodeDiff",
+		keys = {
+			{ git .. "q", "<cmd>CodeDiff<cr>", desc = "Git CodeDiff" },
+		},
+		cond = not_vscode,
 	},
 	{
 		"akinsho/git-conflict.nvim",

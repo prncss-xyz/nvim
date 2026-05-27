@@ -302,7 +302,8 @@ local function setup()
 		return
 	end
 	seen_cwds[cwd] = true
-	for _, key in ipairs(config.auto) do
+  -- we want to allow nil inside the array
+	for _, key in pairs(config.auto) do
 		get_term(key, true)
 	end
 end
