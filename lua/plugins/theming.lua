@@ -1,5 +1,4 @@
 local not_vscode = require("my.conds").not_vscode
-local tui = require("my.conds").tui
 local domain = require("my.parameters").domain
 
 local theme = require("my.theme_utils").load_theme()
@@ -21,7 +20,6 @@ local function colorscheme(names, config)
 	if find(theme.colors_name, names) then
 		config.priority = 1000
 		config.lazy = false
-		config.dependencies = { "f-person/auto-dark-mode.nvim" }
 		function config.config()
 			vim.o.background = theme.background
 			vim.cmd.colorscheme(theme.colors_name)
@@ -82,34 +80,5 @@ return {
 				desc = "Toggle Transparent",
 			},
 		},
-	},
-	{
-		"sphamba/smear-cursor.nvim",
-		opts = false and {
-			cursor_color = "#ff8800",
-			stiffness = 0.3,
-			trailing_stiffness = 0.1,
-			trailing_exponent = 5,
-			never_draw_over_target = true,
-			hide_target_hack = true,
-			gamma = 1,
-		} or {},
-		event = "VeryLazy",
-		cond = tui,
-		enabled = false,
-	},
-	{
-		"f-person/auto-dark-mode.nvim",
-		opts = {
-			update_interval = 1000,
-			set_dark_mode = function()
-				vim.api.nvim_set_option_value("background", "dark", {})
-				-- Optional: vim.cmd("colorscheme your-dark-theme")
-			end,
-			set_light_mode = function()
-				vim.api.nvim_set_option_value("background", "light", {})
-				-- Optional: vim.cmd("colorscheme your-light-theme")
-			end,
-		},
-	},
+	}
 }

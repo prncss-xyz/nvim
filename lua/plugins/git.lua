@@ -32,8 +32,19 @@ return {
 	{
 		"esmuellert/codediff.nvim",
 		opts = {
+			explorer = {
+				view_mode = "tree",
+			},
 			diff = {
 				layout = "inline",
+			},
+			keymaps = {
+				view = {
+					next_hunk = ",n",
+					prev_hunk = ",p",
+					next_file = ",N",
+					prev_file = ",P",
+				},
 			},
 		},
 		cmd = "CodeDiff",
