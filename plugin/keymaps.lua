@@ -110,7 +110,8 @@ vim.keymap.set("n", web .. "f", function()
 	require("my.browser").file()
 end, { desc = "Browse File" })
 
-vim.keymap.set("t", "<s-esc>", "<C-\\><C-n>", { desc = "Term Normal Mode" })
+vim.keymap.set("t", "<esc>", "<C-\\><C-n>", { desc = "Term Normal Mode" })
+vim.keymap.set("t", "<s-esc>", "<esc>", { desc = "Term Normal Mode" })
 vim.keymap.set("t", "<c-s-v>", '<c-\\><c-n>"+pi', { desc = "Paste" })
 
 -- readline
