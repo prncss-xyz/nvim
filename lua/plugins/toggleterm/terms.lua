@@ -8,6 +8,7 @@ local package = require("plugins.toggleterm.package")
 
 local last_terminal = nil
 local term_to_key = {}
+local term_to_tag = {}
 
 local idle_state = {}
 
@@ -96,11 +97,21 @@ local function get_tag_cache(scope)
 end
 
 local function get_term_(cwd, key, background, conf)
-	local last = get_tag_cache(cwd)[key]
-		or get_tag_cache(global)[key]
-		or get_term_cache(cwd)[key]
-		or get_term_cache(global)[key]
+	local last
+	last = get_tag_cache(cwd)[key] or get_term_cache(cwd)[key]
 	if last then
+		local tag = term_to_tag[last]
+		if last then
+			get_tag_cache(cwd)[tag] = last
+		end
+		return last
+	end
+	last = get_tag_cache(global)[key] or get_term_cache(global)[key]
+	if last then
+		local tag = term_to_tag[last]
+		if last then
+			get_tag_cache(global)[tag] = last
+		end
 		return last
 	end
 	local o
@@ -118,9 +129,13 @@ local function get_term_(cwd, key, background, conf)
 	local ref = { term = nil }
 	o.on_exit = function()
 		term_cache[scope][key] = nil
-		if ref.term and idle_state[ref.term] then
-			idle_state[ref.term]()
-			idle_state[ref.term] = nil
+		if ref.term then
+			term_to_key[ref.term] = nil
+			term_to_tag[ref.term] = nil
+			if idle_state[ref.term] then
+				idle_state[ref.term]()
+				idle_state[ref.term] = nil
+			end
 		end
 	end
 	if background then
@@ -142,6 +157,7 @@ local function get_term_(cwd, key, background, conf)
 	term_to_key[term] = key
 	if o.tag then
 		get_tag_cache(scope)[o.tag] = term
+		term_to_tag[term] = o.tag
 	end
 	return term
 end
@@ -302,7 +318,7 @@ local function setup()
 		return
 	end
 	seen_cwds[cwd] = true
-  -- we want to allow nil inside the array
+	-- we want to allow nil inside the array
 	for _, key in pairs(config.auto) do
 		get_term(key, true)
 	end
