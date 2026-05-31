@@ -70,6 +70,28 @@ end
 M.refresh = Util.debounce(M.refresh, { ms = 100 })
 M.update = Util.debounce(M.update, { ms = 100 })
 
+--- Stop watching a specific path
+---@param path string
+function M.stop(path)
+	local w = M.watches[path]
+	if w then
+		M.watches[path] = nil
+		return w:is_closing() or w:close()
+	end
+end
+
+--- Disable file system watching and stop all active watches
+function M.disable()
+	if not M.enabled then
+		return
+	end
+	M.enabled = false
+	pcall(vim.api.nvim_clear_autocmds, { group = "sidekick.watch" })
+	for path in pairs(M.watches) do
+		M.stop(path)
+	end
+end
+
 --- Enable file system watching for all loaded buffers
 function M.enable()
 	if M.enabled then

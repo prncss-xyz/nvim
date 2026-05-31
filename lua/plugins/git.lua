@@ -49,7 +49,7 @@ return {
 		},
 		cmd = "CodeDiff",
 		keys = {
-			{ git .. "q", "<cmd>CodeDiff<cr>", desc = "Git CodeDiff" },
+			{ git .. "d", "<cmd>CodeDiff<cr>", desc = "Git CodeDiff" },
 		},
 		cond = not_vscode,
 	},

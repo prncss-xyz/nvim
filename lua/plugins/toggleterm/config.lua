@@ -32,7 +32,7 @@ M.default_terminal = ai_term and "agent" or "term_e" -- Default terminal
 M.auto = {
 	"tilt",
 	"pnpm run dev:tests",
-	ai_term and personal("pi_deep"),
+	ai_term and personal("pi"),
 	ai_term and personal("gemini", "claude"),
 }
 
@@ -71,16 +71,10 @@ M.commands = {
 		cmd = "agy",
 		tag = "agent",
 	}),
-	pi_fast = ai_term and personal({
-		cmd = "pi --provider github-copilot --model gemini-3-flash-preview",
+	pi = ai_term and personal({
+		cmd = "pi",
 		-- cmd = "pi --provider cerebras --model qwen-3-235b-a22b-instruct-2507",
 		-- cmd = "pi --provider openrouter --model mercury-2",
-		tag = "agent",
-	}),
-	pi_deep = ai_term and personal({
-		cmd = "pi --provider github-copilot --model gpt-5.4-codex",
-		-- cmd = "pi --provider openrouter --model moonshotai/kimi-k2.5",
-		-- cmd = "pi --provider opencode --model big-pickle",
 		tag = "agent",
 	}),
 	gemini = ai_term and personal({
@@ -117,8 +111,7 @@ M.commands = {
 }
 
 M.new = {
-	pi_fast = "new",
-	pi_deep = "new",
+	pi = "new",
 	opencode = "new",
 	claude = "clear",
 	kilo = "new",
