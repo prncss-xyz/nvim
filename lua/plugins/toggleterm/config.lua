@@ -31,9 +31,8 @@ M.lang_to_REPL = {
 M.default_terminal = ai_term and "agent" or "term_e" -- Default terminal
 M.auto = {
 	"tilt",
-	"pnpm run dev:tests",
-	ai_term and personal("pi"),
-	ai_term and personal("gemini", "claude"),
+	"pnpm run dev:test",
+	ai_term and personal("pi", "claude"),
 }
 
 M.commands = {

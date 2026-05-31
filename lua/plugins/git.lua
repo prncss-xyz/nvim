@@ -26,6 +26,8 @@ return {
 		cmd = "Gitsigns",
 		keys = {
 			{ git .. "s", "<cmd>Gitsigns<cr>", desc = "Gitsigns" },
+			{ git .. "h", "<cmd>Gitsigns preview_hunk<cr>", desc = "Gitsigns Preview Hunk" },
+			{ git .. "x", "<cmd>Gitsigns reset_hunk<cr>", desc = "Gitsigns Preview Hunk" },
 		},
 		cond = not_vscode,
 	},

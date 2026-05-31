@@ -20,6 +20,7 @@ local function colorscheme(names, config)
 	if find(theme.colors_name, names) then
 		config.priority = 1000
 		config.lazy = false
+		config.dependencies = { "f-person/auto-dark-mode.nvim" }
 		function config.config()
 			vim.o.background = theme.background
 			vim.cmd.colorscheme(theme.colors_name)
@@ -80,5 +81,5 @@ return {
 				desc = "Toggle Transparent",
 			},
 		},
-	}
+	},
 }
