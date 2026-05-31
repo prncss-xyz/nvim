@@ -22,7 +22,6 @@ local function colorscheme(names, config)
 		config.lazy = false
 		config.dependencies = { "f-person/auto-dark-mode.nvim" }
 		function config.config()
-			vim.o.background = theme.background
 			vim.cmd.colorscheme(theme.colors_name)
 			-- vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
 			-- vim.api.nvim_set_hl(0, "NonText", { bg = "none" })

@@ -1,7 +1,6 @@
 local M = {}
 
-local module = "my/theme"
-local theme_file = vim.fn.stdpath("config") .. "/lua/" .. module .. ".lua"
+local theme_file = vim.fn.stdpath("state") .. "theme.json"
 local function file_exists(path)
 	local f = io.open(path, "r")
 	if f ~= nil then
@@ -13,23 +12,25 @@ local function file_exists(path)
 end
 
 function M.load_theme()
-	return file_exists(theme_file) and require(module) or {}
+	if not file_exists(theme_file) then
+		return {}
+	end
+	local file = io.open(theme_file, "r")
+	if not file then
+		return {}
+	end
+	local ok, data = pcall(vim.json.decode, file:read("*a"))
+	file:close()
+	return ok and data or {}
 end
 
 function M.save_theme()
 	local file = io.open(theme_file, "w")
 	if file then
 		local colors_name = vim.g.colors_name
-		local background = vim.o.background
-		file:write(string.format(
-			[[return {
-  colors_name = %q,
-  background = %q,
-}
-]],
-			colors_name,
-			background
-		))
+		file:write(vim.json.encode({
+			colors_name = colors_name,
+		}))
 		file:close()
 	else
 		print("error!")
