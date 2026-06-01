@@ -9,8 +9,7 @@ return {
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 			{
-				"phaazon/hop.nvim",
-				commit = "1a1ecea",
+				"prncss-xyz/hop.nvim",
 				module = "hop",
 				opts = {
 					jump_on_sole_occurrence = true,

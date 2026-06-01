@@ -10,6 +10,7 @@ return {
 		opts = {
 			direction = "vertical",
 			size = 80,
+			persist_size = false,
 		},
 		cmd = {
 			"ToggleTerm",
