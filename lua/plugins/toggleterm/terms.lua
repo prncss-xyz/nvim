@@ -101,7 +101,7 @@ local function get_term_(cwd, key, background, conf)
 	last = get_tag_cache(cwd)[key] or get_term_cache(cwd)[key]
 	if last then
 		local tag = term_to_tag[last]
-		if last then
+		if last and tag then
 			get_tag_cache(cwd)[tag] = last
 		end
 		return last
@@ -109,7 +109,7 @@ local function get_term_(cwd, key, background, conf)
 	last = get_tag_cache(global)[key] or get_term_cache(global)[key]
 	if last then
 		local tag = term_to_tag[last]
-		if last then
+		if last and tag then
 			get_tag_cache(global)[tag] = last
 		end
 		return last
@@ -235,6 +235,27 @@ function M.focus_term(key, conf)
 	return next_terminal
 end
 
+function M.create_term(key, conf)
+	local o
+	if conf then
+		o = conf
+	else
+		o = get_term_conf(key)
+	end
+	if o == nil then
+		return
+	end
+	local scope = o.global and global or vim.fn.getcwd()
+	local cache = get_term_cache(scope)
+	local i = 0
+	local key_ = key
+	while cache[key_] do
+		i = i + 1
+		key_ = key .. ":" .. tostring(i)
+	end
+	M.focus_term(key_, conf)
+end
+
 function M.send_str(key, message)
 	local terminal = M.focus_term(key)
 	if not terminal then
@@ -281,7 +302,7 @@ function M.stop(key)
 	vim.fn.jobstop(job_id)
 end
 
-function M.select_command()
+function M.select_command(create)
 	local choices = {}
 	for key, value in pairs(config.commands) do
 		local conf = get_term_conf(key, value)
@@ -305,7 +326,11 @@ function M.select_command()
 		if not choice then
 			return
 		end
-		M.focus_term(choice.key, choice.conf)
+		if create then
+			M.create_term(choice.key, choice.conf)
+		else
+			M.focus_term(choice.key, choice.conf)
+		end
 	end)
 end
 

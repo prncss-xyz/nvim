@@ -109,6 +109,13 @@ return {
 				desc = "Toggle Terminal Dev",
 			},
 			{
+				"opw",
+				function()
+					require("plugins.toggleterm.terms").select_command(true)
+				end,
+				desc = "Toggle Terminal Dev",
+			},
+			{
 				"oo",
 				function()
 					require("plugins.toggleterm.terms").focus_term("diff")
