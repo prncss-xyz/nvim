@@ -66,7 +66,7 @@ M.commands = {
 		cmd = "git-sync",
 		close_on_exit = false,
 	}),
-	agy = personal({
+	antigravity = personal({
 		cmd = "agy",
 		tag = "agent",
 	}),
@@ -74,10 +74,6 @@ M.commands = {
 		cmd = "pi",
 		-- cmd = "pi --provider cerebras --model qwen-3-235b-a22b-instruct-2507",
 		-- cmd = "pi --provider openrouter --model mercury-2",
-		tag = "agent",
-	}),
-	gemini = ai_term and personal({
-		cmd = "gemini",
 		tag = "agent",
 	}),
 	claude = ai_term and {
