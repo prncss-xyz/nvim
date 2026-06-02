@@ -162,10 +162,24 @@ local function get_term_(cwd, key, background, conf)
 	return term
 end
 
-local function list_terms()
-	local res = vim.tbl_keys(get_term_cache(vim.fn.getcwd()))
-	vim.list_extend(res, vim.tbl_keys(get_term_cache(global)))
-	table.sort(res)
+local function list_term_items()
+	local res = {}
+	local function collect(scope)
+		for key, term in pairs(get_term_cache(scope)) do
+			local title = vim.b[term.bufnr] and vim.b[term.bufnr].term_title
+				or term.display_name
+				or key
+			table.insert(res, {
+				key = key,
+				display_name = title,
+			})
+		end
+	end
+	collect(vim.fn.getcwd())
+	collect(global)
+	table.sort(res, function(a, b)
+		return a.key < b.key
+	end)
 	return res
 end
 
@@ -177,14 +191,28 @@ local function get_term(key, background, conf)
 	return get_term_(cwd, key, background, conf)
 end
 
+local function pad(s, len)
+	if #s >= len then
+		return s
+	end
+	return s .. string.rep(" ", len - #s)
+end
+
 function M.select_term()
-	vim.ui.select(list_terms(), {
+	vim.ui.select(list_term_items(), {
 		prompt = "Select term",
-	}, function(key)
-		if not key then
+		format_item = function(item)
+			local padded = pad(item.key, 20)
+			if item.display_name == item.key then
+				return padded
+			end
+			return padded .. "  \u{2014}  " .. item.display_name
+		end,
+	}, function(item)
+		if not item then
 			return
 		end
-		M.focus_term(key)
+		M.focus_term(item.key)
 	end)
 end
 
