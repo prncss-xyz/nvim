@@ -368,7 +368,13 @@ function M.get_last_by_tag(key)
 		or get_term_cache(vim.fn.getcwd())[key]
 		or get_term_cache(global)[key]
 	if last then
-		return term_to_key[last]
+		local is_valid = not last.bufnr or last.bufnr <= 0 or vim.api.nvim_buf_is_valid(last.bufnr)
+		if is_valid and term_to_key[last] then
+			return term_to_key[last]
+		end
+	end
+	if config.tags_defaults and config.tags_defaults[key] then
+		return config.tags_defaults[key]
 	end
 	return nil
 end
