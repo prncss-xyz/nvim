@@ -91,16 +91,16 @@ return {
 			{
 				"oe",
 				function()
-					require("plugins.toggleterm.terms").focus_term("term_e")
+					require("plugins.toggleterm.terms").focus_term("shell")
 				end,
-				desc = "Toggle Terminal e",
+				desc = "Toggle Terminal Shell",
 			},
 			{
 				"or",
 				function()
-					require("plugins.toggleterm.terms").focus_term("term_r")
+					require("plugins.toggleterm.terms").focus_term("home shell")
 				end,
-				desc = "Toggle Terminal r",
+				desc = "Toggle Terminal Home Shell",
 			},
 			{
 				"ow",

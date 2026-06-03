@@ -37,7 +37,7 @@ M.tags_defaults = {
 M.auto = {
 	"tilt",
 	"pnpm run dev:test",
-	"agent",
+	M.tags_defaults.agent,
 }
 
 M.commands = {
@@ -49,8 +49,8 @@ M.commands = {
 	current = function()
 		return { dir = vim.fn.expand("%:p:h") }
 	end,
-	term_e = {},
-	term_r = {
+	shell = {},
+	["home shell"] = {
 		dir = vim.env.HOME,
 		global = true,
 	},
