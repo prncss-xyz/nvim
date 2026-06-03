@@ -23,11 +23,36 @@ local function colorscheme(names, config)
 		config.dependencies = { "f-person/auto-dark-mode.nvim" }
 		function config.config()
 			vim.cmd.colorscheme(theme.colors_name)
-			-- vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
-			-- vim.api.nvim_set_hl(0, "NonText", { bg = "none" })
 		end
 	end
 	return config
+end
+
+local builtin_colorschemes = {
+	"habamax",
+	"lunaperche",
+	"quiet",
+	"vim",
+	"blue",
+	"darkblue",
+	"delek",
+	"desert",
+	"elflord",
+	"evening",
+	"industry",
+	"koehler",
+	"morning",
+	"murphy",
+	"pelf",
+	"ron",
+	"shine",
+	"slate",
+	"torte",
+	"zellner",
+}
+
+if find(theme.colors_name, builtin_colorschemes) then
+	vim.cmd.colorscheme(theme.colors_name)
 end
 
 return {

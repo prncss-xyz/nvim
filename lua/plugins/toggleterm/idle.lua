@@ -45,7 +45,7 @@ function M.start_idle_detection(term, idle_timeout, on_idle)
 		end,
 	})
 
-	return clear()
+	clear()
 end
 
 return M

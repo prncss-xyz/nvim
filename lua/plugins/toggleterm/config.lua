@@ -28,7 +28,7 @@ M.lang_to_REPL = {
 	typescriptreact = "node",
 }
 
-M.default_terminal = ai_term and "agent" or "term_e" -- Default terminal
+M.default_terminal = ai_term and "agent" or "shell" -- Default terminal
 
 M.tags_defaults = {
 	agent = personal("pi", "claude"),
