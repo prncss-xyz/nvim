@@ -1,4 +1,5 @@
 local M = {}
+
 function M.stop_client()
 	vim.ui.select(vim.lsp.get_clients(), {
 		prompt = "Stop LSP Client",

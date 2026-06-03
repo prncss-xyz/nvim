@@ -2,6 +2,9 @@ for _, lsp in pairs({
 	"bashls",
 	"gopls",
 	"marksman",
+	"oxlint",
+	"oxfmt",
+	"typos_lsp",
 }) do
 	vim.lsp.config(lsp, {
 		capabilities = require("plugins.lsp.utils").cmp_capabilities,
@@ -75,4 +78,7 @@ vim.lsp.enable({
 	"knip",
 	"lua_ls",
 	"ltex",
+	"oxlint",
+	"oxfmt",
+	"typos_lsp",
 })
