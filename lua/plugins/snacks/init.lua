@@ -359,6 +359,20 @@ return {
 				desc = "Git Browse",
 			},
 			{
+				pick .. "o",
+				function()
+					Snacks.picker.recent({ filter = { cwd = true } })
+				end,
+				desc = "Pick Oldfiles",
+			},
+			{
+				pick .. reverse("o"),
+				function()
+					Snacks.picker.recent()
+				end,
+				desc = "Pick Oldfiles",
+			},
+			{
 				pick .. "x",
 				function()
 					Snacks.picker.zoxide()
