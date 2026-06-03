@@ -64,15 +64,12 @@ return {
 						e = function()
 							require("plugins.toggleterm.agents").send_current_file()
 						end,
-						p = function()
+						u = function()
 							require("plugins.toggleterm.agents").prompt()
 						end,
 						x = function()
 							require("plugins.toggleterm.agents").new()
 						end,
-            pz = function ()
-              require("plugins.toggleterm.agents").diagnostics()
-            end,
             z = function ()
               require("plugins.toggleterm.agents").diagnostic()
             end

@@ -10,14 +10,17 @@ function M.stop_client()
 		if not res then
 			return
 		end
-		vim.lsp.stop_client(res.id, true)
+		res:stop(true)
 	end)
 end
 
 function M.display_code_actions()
 	M.bufnr = vim.api.nvim_get_current_buf()
 	local context = { diagnostics = vim.lsp.diagnostic.get_line_diagnostics() }
-	local params = vim.lsp.util.make_range_params()
+	local clients = vim.lsp.get_clients({ bufnr = 0 })
+	local offset_encoding = clients[1] and clients[1].offset_encoding or "utf-16"
+	local params = vim.lsp.util.make_range_params(0, offset_encoding)
+	---@diagnostic disable-next-line: inject-field
 	params.context = context
 	local results_lsp, err = vim.lsp.buf_request_sync(-1, "textDocument/codeAction", params, 10000)
 	if err then
