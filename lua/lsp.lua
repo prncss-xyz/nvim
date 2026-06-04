@@ -28,6 +28,36 @@ vim.lsp.config("knip", {
 	filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "json" },
 	root_markers = { "knip.json", "knip.ts", "knip.js", "package.json", ".git" },
 })
+vim.lsp.config("oxfmt", {
+	capabilities = require("plugins.lsp.utils").cmp_capabilities,
+	filetypes = {
+		"javascript",
+		"javascriptreact",
+		"typescript",
+		"typescriptreact",
+		"json",
+		"jsonc",
+		"json5",
+		"markdown",
+		"markdown.mdx",
+		"yaml",
+		"toml",
+		"html",
+		"css",
+		"scss",
+		"less",
+		"vue",
+		"svelte",
+		"graphql",
+	},
+	root_markers = {
+		".oxfmtrc.json",
+		".oxfmtrc.jsonc",
+		"oxfmt.config.ts",
+		"package.json",
+		".git",
+	},
+})
 vim.lsp.config("lua_ls", {
 	capabilities = require("plugins.lualine").cmp_capabilities,
 	settings = {

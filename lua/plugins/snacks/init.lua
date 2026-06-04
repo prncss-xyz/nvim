@@ -210,6 +210,7 @@ return {
 				pick .. theme.hunk,
 				function()
 					Snacks.picker.pick({
+						---@diagnostic disable-next-line: unused-local
 						finder = function(opts, ctx)
 							return require("snacks.picker.source.proc").proc(
 								ctx:opts({
@@ -288,6 +289,7 @@ return {
 			{
 				pick .. theme.work,
 				function()
+					---@diagnostic disable-next-line: undefined-field
 					Snacks.picker.todo_comments()
 				end,
 				desc = "Pick Todo Comment",
