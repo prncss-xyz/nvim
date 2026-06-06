@@ -67,7 +67,7 @@ function M.format()
 			filter = function(client)
 				return not vim.tbl_contains({
 					"lua_ls",
-					"vtsls",
+					"tsgo",
 				}, client.name)
 			end,
 		})

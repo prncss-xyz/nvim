@@ -1,9 +1,7 @@
 for _, lsp in pairs({
 	"bashls",
 	"gopls",
-	"marksman",
 	"oxlint",
-	"oxfmt",
 	"typos_lsp",
 }) do
 	vim.lsp.config(lsp, {
@@ -11,6 +9,7 @@ for _, lsp in pairs({
 	})
 end
 
+-- not working well with voidlinux
 vim.lsp.config("marksman", {
 	cmd = { "marksman", "server" },
 	filetypes = { "markdown", "markdown.mdx" },
@@ -18,10 +17,29 @@ vim.lsp.config("marksman", {
 	capabilities = require("plugins.lsp.utils").cmp_capabilities,
 })
 
+vim.lsp.config("tsgo", {
+	cmd = { "tsgo", "--lsp", "--stdio" },
+	root_markers = { "tsconfig.json", "jsconfig.json", "package.json", ".git" },
+	capabilities = require("plugins.lsp.utils").cmp_capabilities,
+	settings = {
+		typescript = {
+			inlayHints = {
+				parameterNames = { enabled = "all" },
+				parameterTypes = { enabled = true },
+				variableTypes = { enabled = true },
+				propertyDeclarationTypes = { enabled = true },
+				functionLikeReturnTypes = { enabled = true },
+				enumMemberValues = { enabled = true },
+			},
+		},
+	},
+})
+
 vim.lsp.config("graphql", {
 	capabilities = require("plugins.lsp.utils").cmp_capabilities,
 	filetypes = { "graphql", "javascript", "typescript", "javascriptreact", "typescriptreact" },
 })
+
 vim.lsp.config("knip", {
 	cmd = { "knip-language-server", "--stdio" },
 	capabilities = require("plugins.lsp.utils").cmp_capabilities,
@@ -110,5 +128,6 @@ vim.lsp.enable({
 	"ltex",
 	"oxlint",
 	"oxfmt",
+  "tsgo",
 	"typos_lsp",
 })
