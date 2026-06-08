@@ -62,6 +62,10 @@ end
 function M.format()
 	if not M.pre_format() then
 		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+		vim.lsp.buf.code_action({
+			context = { only = { "source.fixAll" }, diagnostics = {} },
+			apply = true,
+		})
 		vim.lsp.buf.format({
 			async = false,
 			filter = function(client)

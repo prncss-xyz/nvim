@@ -56,6 +56,11 @@ if find(theme.colors_name, builtin_colorschemes) then
 end
 
 return {
+	colorscheme({ "catppuccin-nvim", "catppuccin-latte", "catppuccin-mocha", "catppuccin-frappe" }, {
+		"catppuccin/nvim",
+		name = "catppuccin",
+		commit = "0303a7208dba448c459767486a38a6ec05c4216b",
+	}),
 	colorscheme({ "cyberdream", "cyberdream-light" }, {
 		"scottmckendry/cyberdream.nvim",
 	}),

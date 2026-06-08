@@ -93,6 +93,15 @@ local function get_term_(cwd, key, background, conf)
 			end
 		end
 	end
+	local original_on_open = o.on_open
+	o.on_open = function(term)
+		vim.schedule(function()
+			vim.cmd("startinsert")
+		end)
+		if original_on_open then
+			original_on_open(term)
+		end
+	end
 	if background then
 		o.hidden = true
 	end
