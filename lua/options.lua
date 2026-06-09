@@ -48,7 +48,7 @@ deep_merge(vim, {
 		-- timeoutlen = 300,
 		wildignorecase = true,
 		wildoptions = "pum",
-		wrap = false,
+		wrap = true,
 		grepprg = [[rg --glob "!.git" --no-heading --vimgrep --follow $*]],
 		-- bufhidden = "wipe", -- this option seams to crash auto_session
 		title = true,
