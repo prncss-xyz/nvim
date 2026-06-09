@@ -8,9 +8,38 @@ return {
 	{
 		"akinsho/toggleterm.nvim",
 		opts = {
-			direction = "vertical",
-			size = 80,
+			direction = "float",
 			persist_size = false,
+			float_opts = {
+				border = { "", "", "", "", "", "", "", "│" },
+				width = function()
+					return math.max(1, math.min(80, vim.o.columns - 4))
+				end,
+				height = function()
+					local showtabline = vim.opt.showtabline:get()
+					local has_tabline = showtabline == 2 or (showtabline == 1 and #vim.api.nvim_list_tabpages() > 1)
+					local row_offset = has_tabline and 1 or 0
+
+					local laststatus = vim.opt.laststatus:get()
+					local has_statusline = laststatus == 2
+						or laststatus == 3
+						or (laststatus == 1 and #vim.api.nvim_tabpage_list_wins(0) > 1)
+					local status_offset = has_statusline and 1 or 0
+
+					local cmdheight = vim.opt.cmdheight:get()
+					return vim.o.lines - row_offset - status_offset - cmdheight
+				end,
+				row = function()
+					local showtabline = vim.opt.showtabline:get()
+					local has_tabline = showtabline == 2 or (showtabline == 1 and #vim.api.nvim_list_tabpages() > 1)
+					return has_tabline and 1 or 0
+				end,
+				col = function()
+					local w = math.max(1, math.min(80, vim.o.columns - 4))
+					return vim.o.columns - w
+				end,
+				winblend = 0,
+			},
 		},
 		cmd = {
 			"ToggleTerm",
@@ -70,9 +99,9 @@ return {
 						x = function()
 							require("plugins.toggleterm.agents").new()
 						end,
-            z = function ()
-              require("plugins.toggleterm.agents").diagnostic()
-            end
+						z = function()
+							require("plugins.toggleterm.agents").diagnostic()
+						end,
 					})
 				end,
 				desc = "Toggle agent",
