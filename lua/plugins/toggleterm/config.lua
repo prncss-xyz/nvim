@@ -59,6 +59,9 @@ M.commands = {
 		close_on_exit = false,
 	},
 	repl = require("plugins.toggleterm.repl").get_REPL,
+	gwta = {
+		cmd = "gwta",
+	},
 	gac = {
 		cmd = "gac",
 	},

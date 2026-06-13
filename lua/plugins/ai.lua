@@ -43,7 +43,7 @@ return {
 				ignore_gitignored = true,
 			},
 			blink = {
-				enabled = false,
+				enabled = true,
 				ghost_text = true,
 			},
 		},
