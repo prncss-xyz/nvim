@@ -189,6 +189,48 @@ function M.diagnostic()
 	})
 end
 
+function M.file_diagnostics()
+	local key = require("plugins.toggleterm.terms").get_last_by_tag("agent")
+	if not key then
+		return
+	end
+
+	local bufnr = vim.api.nvim_get_current_buf()
+	local diagnostics = vim.diagnostic.get(bufnr)
+	if #diagnostics == 0 then
+		vim.notify("No diagnostics found", vim.log.levels.WARN)
+		return
+	end
+
+	table.sort(diagnostics, function(a, b)
+		local a_lnum = a.lnum or 0
+		local b_lnum = b.lnum or 0
+		if a_lnum ~= b_lnum then
+			return a_lnum < b_lnum
+		end
+
+		local a_col = a.col or 0
+		local b_col = b.col or 0
+		if a_col ~= b_col then
+			return a_col < b_col
+		end
+
+		return (a.severity or math.huge) < (b.severity or math.huge)
+	end)
+
+	local lines = {
+		cr = false,
+		"fix these diagnostics",
+	}
+
+	for _, diagnostic in ipairs(diagnostics) do
+		table.insert(lines, diagnostic_position(bufnr, diagnostic))
+		table.insert(lines, diagnostic.message or "")
+	end
+
+	require("plugins.toggleterm.terms").send_lines(key, lines)
+end
+
 function M.current_file()
 	return string.format("@%s", vim.fn.expand("%:."))
 end
