@@ -28,6 +28,30 @@ local duet_config = ai_config.duet == "qwen" and qwen_duet or mercury_duet
 
 return {
 	{
+		"cursortab/cursortab.nvim",
+		opts = {
+			provider = {
+				type = "mercuryapi",
+				api_key_env = "INCEPTION_API_KEY",
+			},
+			keymaps = {
+				accept = ai_insert.accept,
+				partial_accept = ai_insert.next,
+			},
+			behavior = {
+				ignore_filetypes = { "markdown", "prompt", "snacks_picker_input", "" },
+				ignore_gitignored = true,
+			},
+			blink = {
+				enabled = false,
+				ghost_text = true,
+			},
+		},
+		build = "cd server && go build",
+		enabled = completion == "cursortab",
+		event = { "BufReadPre", "BufNewFile" },
+	},
+	{
 		"milanglacier/minuet-ai.nvim",
 		opts = {
 			provider = "openai_fim_compatible", -- "openai_fim_compatible" | "codestral",

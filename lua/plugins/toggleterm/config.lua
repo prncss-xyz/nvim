@@ -59,9 +59,12 @@ M.commands = {
 		close_on_exit = false,
 	},
 	repl = require("plugins.toggleterm.repl").get_REPL,
-	gacp = personal({
+	gac = {
+		cmd = "gac",
+	},
+	gacp = {
 		cmd = "gacp",
-	}),
+	},
 	["commit ongoing work"] = {
 		cmd = 'git add --all; git commit -m "ongoing work" --no-verify; git push',
 		close_on_exit = false,
