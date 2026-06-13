@@ -51,21 +51,48 @@ local function get_tag_cache(scope)
 	return tag_cache[scope]
 end
 
+local function get_last_from_tag_cache(scope, tag)
+	local list = get_tag_cache(scope)[tag]
+	if not list then
+		return nil
+	end
+	for i = #list, 1, -1 do
+		local term = list[i]
+		if term_to_key[term] then
+			return term
+		else
+			table.remove(list, i)
+		end
+	end
+	return nil
+end
+
+local function add_to_tag_cache(scope, tag, term)
+	local list = get_tag_cache(scope)[tag] or {}
+	get_tag_cache(scope)[tag] = list
+	for i = #list, 1, -1 do
+		if list[i] == term then
+			table.remove(list, i)
+		end
+	end
+	table.insert(list, term)
+end
+
 local function get_term_(cwd, key, background, conf)
 	local last
-	last = get_tag_cache(cwd)[key] or get_term_cache(cwd)[key]
+	last = get_last_from_tag_cache(cwd, key) or get_term_cache(cwd)[key]
 	if last then
 		local tag = term_to_tag[last]
 		if last and tag then
-			get_tag_cache(cwd)[tag] = last
+			add_to_tag_cache(cwd, tag, last)
 		end
 		return last
 	end
-	last = get_tag_cache(global)[key] or get_term_cache(global)[key]
+	last = get_last_from_tag_cache(global, key) or get_term_cache(global)[key]
 	if last then
 		local tag = term_to_tag[last]
 		if last and tag then
-			get_tag_cache(global)[tag] = last
+			add_to_tag_cache(global, tag, last)
 		end
 		return last
 	end
@@ -122,9 +149,10 @@ local function get_term_(cwd, key, background, conf)
 	end
 	get_term_cache(scope)[key] = term
 	term_to_key[term] = key
-	if o.tag then
-		get_tag_cache(scope)[o.tag] = term
-		term_to_tag[term] = o.tag
+	local tag = o.tag or key
+	if tag then
+		add_to_tag_cache(scope, tag, term)
+		term_to_tag[term] = tag
 	end
 	return term
 end
@@ -184,6 +212,14 @@ end
 function M.toggle_last_term()
 	last_terminal = last_terminal or get_term(config.default_terminal)
 	if last_terminal then
+		local tag = term_to_tag[last_terminal]
+		if tag then
+			local key = M.get_last_by_tag(tag)
+			if key then
+				M.toggle_term(key)
+				return
+			end
+		end
 		last_terminal:toggle()
 	end
 end
@@ -356,8 +392,8 @@ function M.setup_start()
 end
 
 function M.get_last_by_tag(key)
-	local last = get_tag_cache(vim.fn.getcwd())[key]
-		or get_tag_cache(global)[key]
+	local last = get_last_from_tag_cache(vim.fn.getcwd(), key)
+		or get_last_from_tag_cache(global, key)
 		or get_term_cache(vim.fn.getcwd())[key]
 		or get_term_cache(global)[key]
 	if last then
