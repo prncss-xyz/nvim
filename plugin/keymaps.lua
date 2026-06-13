@@ -19,9 +19,7 @@ vim.keymap.set("n", "o", "<nop>")
 vim.keymap.set("n", "O", "<nop>")
 vim.keymap.set("n", "h", "<nop>")
 
-vim.keymap.set("n", "zz", function()
-	require("my.lsp").display_code_actions()
-end, { desc = "Experimental Code Action" })
+vim.keymap.set("n", "olr", "<cmd>lsp restart<cr>", { desc = "LSP Restart" })
 
 vim.keymap.set("x", "c", '"_c', { desc = "Cut Void" })
 vim.keymap.set("x", edit .. "c", '"+c', { desc = "Cut" })
@@ -58,7 +56,29 @@ if false then
 end
 
 vim.keymap.set({ "n" }, file .. "j", "<cmd>edit package.json<cr>", { desc = "Edit package.json" })
-vim.keymap.set({ "n" }, file .. "o", function () require("my.files").edit() end, { desc = "Edit File" })
+vim.keymap.set({ "n" }, file .. "o", function()
+	local name = vim.fn.expand("<cWORD>")
+	if name == "" then
+		name = vim.fn.expand("<cfile>")
+	end
+	name = name:gsub("^['\"`({<[]+", "")
+	name = name:gsub("['\"`)}>%],.;]+$", "")
+
+	local path, line, col = name:match("^(.+):(%d+):(%d+)$")
+	if path then
+		vim.cmd.edit(vim.fn.fnameescape(path))
+		vim.cmd(line)
+		vim.cmd("normal! " .. col .. "|")
+		return
+	end
+	path, line = name:match("^(.+):(%d+)$")
+	if path then
+		vim.cmd.edit(vim.fn.fnameescape(path))
+		vim.cmd(line)
+		return
+	end
+	vim.cmd.edit(vim.fn.fnameescape(name))
+end, { desc = "Edit File" })
 
 vim.keymap.set({ "n", "x" }, edit .. "t", "=", { desc = "Reindent" })
 vim.keymap.set({ "n", "x", "i" }, "<c-c>", function()
@@ -90,7 +110,42 @@ vim.keymap.set("n", win .. "g", function()
 	require("my.zoom").zoom(0)
 end, { desc = "Window Zoom" })
 
-vim.keymap.set("n", "bf", "gf", { desc = "open file" })
+vim.keymap.set("n", "bf", function()
+	local cfile = vim.fn.expand("<cfile>")
+	if cfile == "" then
+		vim.notify("No file under cursor", vim.log.levels.WARN)
+		return
+	end
+	local cur_win = vim.api.nvim_get_current_win()
+	-- Walk windows in last-accessed order (window doesn't help; use winnr('#') and scan)
+	local target_win
+	-- First, try the alternate (last visited) window
+	local alt_winnr = vim.fn.winnr("#")
+	if alt_winnr ~= 0 and alt_winnr ~= vim.fn.winnr() then
+		local alt_win = vim.fn.win_getid(alt_winnr)
+		local buf = vim.api.nvim_win_get_buf(alt_win)
+		local bt = vim.bo[buf].buftype
+		if bt == "" then
+			target_win = alt_win
+		end
+	end
+	-- If alternate window isn't a file window, scan all windows for a file buffer (skip current)
+	if not target_win then
+		for _, w in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+			if w ~= cur_win then
+				local buf = vim.api.nvim_win_get_buf(w)
+				if vim.bo[buf].buftype == "" then
+					target_win = w
+					break
+				end
+			end
+		end
+	end
+	if target_win then
+		vim.api.nvim_set_current_win(target_win)
+	end
+	vim.cmd("edit " .. vim.fn.fnameescape(cfile))
+end, { desc = "open file in last visited file window" })
 
 vim.keymap.set("n", "ov", "gv", { desc = "reselect" })
 
