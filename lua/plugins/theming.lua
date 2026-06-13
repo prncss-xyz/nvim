@@ -99,7 +99,9 @@ return {
 		event = "ColorScheme",
 		commit = "8ac5988",
 		config = function()
-			require("transparent").clear_prefix("lualine")
+			require("transparent").setup({
+				exclude_groups = { "StatusLine", "StatusLineNC" },
+			})
 		end,
 		keys = {
 			{
