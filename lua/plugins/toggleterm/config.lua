@@ -66,6 +66,10 @@ M.commands = {
 		cmd = "gacp",
 	},
 	["commit ongoing work"] = {
+		cmd = 'git add --all; git commit -m "ongoing work" --no-verify',
+		close_on_exit = false,
+	},
+	["commit ongoing work and push"] = {
 		cmd = 'git add --all; git commit -m "ongoing work" --no-verify; git push',
 		close_on_exit = false,
 	},
