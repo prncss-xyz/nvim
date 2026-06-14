@@ -1,6 +1,6 @@
 local not_vscode = require("my.conds").not_vscode
 local domain = require("my.parameters").domain
-local reverse = require("my.parameters")
+local reverse = require("my.parameters").reverse
 local theme = require("my.parameters").theme
 local ai = domain.ai
 local ai_insert = require("my.parameters").ai_insert
@@ -103,7 +103,7 @@ return {
 						z = function()
 							require("plugins.toggleterm.agents").diagnostic()
 						end,
-						Z = function()
+						[reverse("z")] = function()
 							require("plugins.toggleterm.agents").file_diagnostics()
 						end,
 					})
