@@ -21,7 +21,19 @@ local function get_term_conf(key, o)
 	if o == nil then
 		o = config.commands[key]
 		if o == nil then
+			local base = string.match(key, "^(.-):%d+$")
+			if base then
+				o = config.commands[base]
+			end
+		end
+		if o == nil then
 			o = require("plugins.toggleterm.package").find(key)
+			if o == nil then
+				local base = string.match(key, "^(.-):%d+$")
+				if base then
+					o = require("plugins.toggleterm.package").find(base)
+				end
+			end
 		end
 	end
 	if type(o) == "function" then
@@ -51,7 +63,7 @@ local function get_tag_cache(scope)
 	return tag_cache[scope]
 end
 
-local function get_last_from_tag_cache(scope, tag)
+local function get_last_from_tag_cache(scope, tag, suffix)
 	local list = get_tag_cache(scope)[tag]
 	if not list then
 		return nil
@@ -59,7 +71,9 @@ local function get_last_from_tag_cache(scope, tag)
 	for i = #list, 1, -1 do
 		local term = list[i]
 		if term_to_key[term] then
-			return term
+			if not suffix or string.match(term_to_key[term], suffix .. "$") then
+				return term
+			end
 		else
 			table.remove(list, i)
 		end
@@ -149,7 +163,7 @@ local function get_term_(cwd, key, background, conf)
 	end
 	get_term_cache(scope)[key] = term
 	term_to_key[term] = key
-	local tag = o.tag or key
+	local tag = o.tag or string.match(key, "^(.-):%d+$") or key
 	if tag then
 		add_to_tag_cache(scope, tag, term)
 		term_to_tag[term] = tag
@@ -179,6 +193,9 @@ end
 local function get_term(key, background, conf)
 	if key == nil then
 		return nil
+	end
+	if not string.match(key, ":%d+$") then
+		key = key .. ":1"
 	end
 	local cwd = vim.fn.getcwd()
 	return get_term_(cwd, key, background, conf)
@@ -325,11 +342,12 @@ function M.create_term(key, conf)
 	end
 	local scope = o.global and global or vim.fn.getcwd()
 	local cache = get_term_cache(scope)
-	local i = 0
-	local key_ = key
+	local base = string.match(key, "^(.-):%d+$") or key
+	local i = 1
+	local key_ = base .. ":1"
 	while cache[key_] do
 		i = i + 1
-		key_ = key .. ":" .. tostring(i)
+		key_ = base .. ":" .. tostring(i)
 	end
 	M.focus_term(key_, conf)
 end
@@ -441,10 +459,31 @@ function M.setup_start()
 end
 
 function M.get_last_by_tag(key)
-	local last = get_last_from_tag_cache(vim.fn.getcwd(), key)
-		or get_last_from_tag_cache(global, key)
-		or get_term_cache(vim.fn.getcwd())[key]
-		or get_term_cache(global)[key]
+	local suffix = vim.v.count > 0 and (":" .. vim.v.count) or nil
+
+	local function check_term_cache(scope)
+		local term = get_term_cache(scope)[key]
+		if term and term_to_key[term] and (not suffix or string.match(term_to_key[term], suffix .. "$")) then
+			return term
+		end
+		if suffix then
+			term = get_term_cache(scope)[key .. suffix]
+			if term then
+				return term
+			end
+		else
+			term = get_term_cache(scope)[key .. ":1"]
+			if term then
+				return term
+			end
+		end
+		return nil
+	end
+
+	local last = get_last_from_tag_cache(vim.fn.getcwd(), key, suffix)
+		or get_last_from_tag_cache(global, key, suffix)
+		or check_term_cache(vim.fn.getcwd())
+		or check_term_cache(global)
 	if last then
 		local is_valid = not last.bufnr or last.bufnr <= 0 or vim.api.nvim_buf_is_valid(last.bufnr)
 		if is_valid and term_to_key[last] then
@@ -452,7 +491,7 @@ function M.get_last_by_tag(key)
 		end
 	end
 	if config.tags_defaults and config.tags_defaults[key] then
-		return config.tags_defaults[key]
+		return config.tags_defaults[key] .. (suffix or "")
 	end
 	return nil
 end
