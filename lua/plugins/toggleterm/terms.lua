@@ -190,14 +190,61 @@ local function list_term_items()
 	return res
 end
 
+local function get_next_key_for_base(cwd, base, conf)
+	local o = conf or get_term_conf(base)
+	if not o then
+		return base .. ":1"
+	end
+	local tag = o.tag or string.match(base, "^(.-):%d+$") or base
+	local scope = o.global and global or cwd
+	local used_suffixes = {}
+	for _, t in ipairs(get_tag_cache(scope)[tag] or {}) do
+		local tk = term_to_key[t]
+		if tk then
+			local suffix_str = string.match(tk, ":(%d+)$")
+			if suffix_str then
+				used_suffixes[tonumber(suffix_str)] = true
+			end
+		end
+	end
+	local i = 1
+	while used_suffixes[i] do
+		i = i + 1
+	end
+	return base .. ":" .. tostring(i)
+end
+
 local function get_term(key, background, conf)
 	if key == nil then
 		return nil
 	end
-	if not string.match(key, ":%d+$") then
-		key = key .. ":1"
-	end
 	local cwd = vim.fn.getcwd()
+	if not string.match(key, ":%d+$") then
+		local existing_key
+		local function find_existing(scope)
+			local latest_i = -1
+			local found = nil
+			for k, _ in pairs(get_term_cache(scope)) do
+				if string.sub(k, 1, #key + 1) == key .. ":" then
+					local s = string.match(string.sub(k, #key + 2), "^%d+$")
+					if s then
+						local num = tonumber(s)
+						if num > latest_i then
+							latest_i = num
+							found = k
+						end
+					end
+				end
+			end
+			return found
+		end
+		existing_key = find_existing(cwd) or find_existing(global)
+		if existing_key then
+			key = existing_key
+		else
+			key = get_next_key_for_base(cwd, key, conf)
+		end
+	end
 	return get_term_(cwd, key, background, conf)
 end
 
@@ -340,15 +387,9 @@ function M.create_term(key, conf)
 	if o == nil then
 		return
 	end
-	local scope = o.global and global or vim.fn.getcwd()
-	local cache = get_term_cache(scope)
 	local base = string.match(key, "^(.-):%d+$") or key
-	local i = 1
-	local key_ = base .. ":1"
-	while cache[key_] do
-		i = i + 1
-		key_ = base .. ":" .. tostring(i)
-	end
+	local cwd = vim.fn.getcwd()
+	local key_ = get_next_key_for_base(cwd, base, conf)
 	M.focus_term(key_, conf)
 end
 

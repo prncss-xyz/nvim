@@ -6,7 +6,7 @@ local notify = require("my.notify")
 
 local ai_term = require("my.parameters").ai_config.chat == "toggleterm"
 
-M.idle_timeout = 10000
+M.idle_timeout = 30000
 M.packages = {
 	tagger = function(key)
 		if key:find("test") then
@@ -35,8 +35,8 @@ M.tags_defaults = {
 }
 
 M.auto = {
-	"tilt",
-	"pnpm run dev:test",
+	-- "tilt",
+	-- "pnpm run dev:test",
 	M.tags_defaults.agent,
 }
 
@@ -60,6 +60,9 @@ M.commands = {
 	},
 	repl = require("plugins.toggleterm.repl").get_REPL,
 	gwta = {
+		cmd = "gwta",
+	},
+	gwtr = {
 		cmd = "gwta",
 	},
 	gac = {
@@ -92,10 +95,10 @@ M.commands = {
 		cmd = "pi",
 		tag = "agent",
 	}),
-	claude = ai_term and {
+	claude = ai_term and work({
 		cmd = "claude",
 		tag = "agent",
-	},
+	}),
 	opencode = ai_term and personal({ cmd = "opencode --continue", tag = "agent" }),
 	kilo = ai_term and personal({ cmd = "kilo --continue", tag = "agent" }),
 	["make daily-login"] = function()
