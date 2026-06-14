@@ -209,6 +209,65 @@ function M.select_term()
 	end)
 end
 
+local function hide_term(terminal)
+	if not terminal then
+		return
+	end
+	local winnr = terminal.window
+	if is_open(winnr) then
+		terminal:toggle()
+	end
+end
+
+function M.select_any_term()
+	local items = {}
+	for scope, cache in pairs(term_cache) do
+		local scope_name = (scope == global) and "global" or tostring(scope)
+		for key, term in pairs(cache) do
+			local title = vim.b[term.bufnr] and vim.b[term.bufnr].term_title or term.display_name or key
+			table.insert(items, {
+				key = key,
+				display_name = title,
+				scope = scope_name,
+				term = term,
+			})
+		end
+	end
+	table.sort(items, function(a, b)
+		if a.key ~= b.key then
+			return a.key < b.key
+		end
+		return a.scope < b.scope
+	end)
+
+	vim.ui.select(items, {
+		prompt = "Select Any term",
+		format_item = function(item)
+			local key_with_scope = item.key .. " (" .. item.scope .. ")"
+			local padded = pad(key_with_scope, 20)
+			if item.display_name == item.key then
+				return padded
+			end
+			return padded .. "  \u{2014}  " .. item.display_name
+		end,
+	}, function(item)
+		if not item then
+			return
+		end
+		local term = item.term
+		if last_terminal ~= term then
+			hide_term(last_terminal)
+			last_terminal = term
+		end
+		local winnr = term.window
+		if not is_open(winnr) then
+			term:toggle()
+		else
+			vim.api.nvim_set_current_win(winnr)
+		end
+	end)
+end
+
 function M.toggle_last_term()
 	last_terminal = last_terminal or get_term(config.default_terminal)
 	if last_terminal then
@@ -221,16 +280,6 @@ function M.toggle_last_term()
 			end
 		end
 		last_terminal:toggle()
-	end
-end
-
-local function hide_term(terminal)
-	if not terminal then
-		return
-	end
-	local winnr = terminal.window
-	if is_open(winnr) then
-		terminal:toggle()
 	end
 end
 

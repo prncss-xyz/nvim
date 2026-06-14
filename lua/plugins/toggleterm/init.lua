@@ -58,6 +58,13 @@ return {
 				desc = "Select Terminal",
 			},
 			{
+				domain.pick .. reverse(theme.run),
+				function()
+					require("plugins.toggleterm.terms").select_any_term()
+				end,
+				desc = "Select Any Terminal",
+			},
+			{
 				ai_insert.toggle,
 				function()
 					require("plugins.toggleterm.terms").toggle_last_term()
