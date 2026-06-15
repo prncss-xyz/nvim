@@ -38,6 +38,7 @@ return {
 					"buffers",
 					"git_status",
 					"document_symbols",
+					"git_default",
 				},
 				open_files_do_not_replace_types = {
 					"terminal",
@@ -106,6 +107,10 @@ return {
 							{ "diagnostics" },
 							{ "git_status", highlight = "NeoTreeDimText" },
 						},
+					},
+					custom_sources = {
+						git_default = function(manager, renderer)
+						end,
 					},
 					commands = {
 						grug_far_replace = function(state)
