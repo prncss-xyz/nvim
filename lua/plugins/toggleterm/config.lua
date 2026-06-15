@@ -28,15 +28,11 @@ M.lang_to_REPL = {
 	typescriptreact = "node",
 }
 
-M.default_terminal = ai_term and "agent" or "shell" -- Default terminal
+M.default_terminal = ai_term and "pi" or "shell" -- Default terminal
 
-M.tags_defaults = {
-	agent = personal("antigravity", "claude"),
-}
+M.tags_defaults = {}
 
 M.auto = {
-	-- "tilt",
-	-- "pnpm run dev:test",
 	M.tags_defaults.agent,
 }
 

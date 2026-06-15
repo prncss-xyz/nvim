@@ -106,6 +106,51 @@ function M.open_project(cwd, exclude, fallback)
 			end
 		end
 	end
+	for i = #vim.v.oldfiles, 1, -1 do
+		if test(vim.v.oldfiles[i]) then
+			vim.cmd.edit(vim.v.oldfiles[i])
+			return
+		end
+	end
+	local git_dir = cwd .. ".git"
+	if vim.uv.fs_stat(git_dir) then
+		local function try_files(cmd)
+			for _, fname in ipairs(vim.fn.systemlist(cmd)) do
+				if fname ~= "" then
+					local full = cwd .. fname
+					if test(full) then
+						vim.cmd.edit(full)
+						return true
+					end
+				end
+			end
+		end
+		if try_files("git -C " .. cwd .. " diff --name-only")
+			or try_files("git -C " .. cwd .. " diff --cached --name-only")
+			or try_files("git -C " .. cwd .. " ls-files")
+		then
+			return
+		end
+		-- broader fallback: any tracked file not in hidden dir or node_modules
+		for _, fname in ipairs(vim.fn.systemlist("git -C " .. cwd .. " ls-files")) do
+			if fname ~= "" then
+				local visible = true
+				for part in vim.gsplit(fname, "/") do
+					if vim.startswith(part, ".") or part == "node_modules" then
+						visible = false
+						break
+					end
+				end
+				if visible then
+					local full = cwd .. fname
+					if vim.fn.filereadable(full) == 1 then
+						vim.cmd.edit(full)
+						return
+					end
+				end
+			end
+		end
+	end
 	if fallback then
 		fallback(cwd)
 	else
