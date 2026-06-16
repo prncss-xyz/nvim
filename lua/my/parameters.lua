@@ -47,6 +47,7 @@ M.theme = {
 	buffers = "b",
 	scratch = "o",
 	project = "c",
+	git = "g",
 }
 
 M.domain = {

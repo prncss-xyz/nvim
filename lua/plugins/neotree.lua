@@ -38,7 +38,7 @@ return {
 					"buffers",
 					"git_status",
 					"document_symbols",
-					"git_default",
+					"git_base",
 				},
 				open_files_do_not_replace_types = {
 					"terminal",
@@ -108,10 +108,7 @@ return {
 							{ "git_status", highlight = "NeoTreeDimText" },
 						},
 					},
-					custom_sources = {
-						git_default = function(manager, renderer)
-						end,
-					},
+
 					commands = {
 						grug_far_replace = function(state)
 							local node = state.tree:get_node()
@@ -186,6 +183,9 @@ return {
 						end,
 					},
 				},
+				git_base = {
+					-- mappings and renderers fall back to git_status defaults.
+				},
 				event_handlers = {
 					{ event = events.FILE_MOVED, handler = on_move },
 					{ event = events.FILE_RENAMED, handler = on_move },
@@ -214,6 +214,13 @@ return {
 					require("my.ui_toggle").activate("neotree", "Neotree git_status")
 				end,
 				desc = "Neotree git",
+			},
+			{
+				win .. theme.git,
+				function()
+					require("my.ui_toggle").activate("neotree", "Neotree git_base")
+				end,
+				desc = "Neotree git (main)",
 			},
 		},
 	},
