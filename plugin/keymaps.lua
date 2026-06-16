@@ -118,7 +118,7 @@ vim.keymap.set("n", win .. "k", function()
 end, { desc = "Keep Window (Close Other)" })
 vim.keymap.set("n", win .. directions.right, "<cmd>vsplit<cr>", { desc = "Window Split Right" })
 vim.keymap.set("n", win .. directions.down, "<cmd>split<cr>", { desc = "Window Split Down" })
-vim.keymap.set("n", win .. "g", function()
+vim.keymap.set("n", win .. "e", function()
 	require("my.zoom").zoom(0)
 end, { desc = "Window Zoom" })
 

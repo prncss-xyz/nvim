@@ -21,6 +21,11 @@ local M = {
 ---@type string
 M.config_git_base = "main"
 
+---@type fun(base: string)?
+M.config_on_base_change = nil
+
+M._on_base_change_last = {}
+
 local wrap = function(func)
 	return utils.wrap(func, M.name)
 end
@@ -50,6 +55,19 @@ M.navigate = function(state, path, path_to_reveal, callback, async)
 		renderer.position.set(state, path_to_reveal)
 	end
 	ensure_default_base(state, state.path)
+
+	-- Notify on_base_change callback when the effective git base changes
+	if M.config_on_base_change then
+		local worktree_root = git.find_worktree_info(state.path)
+		if worktree_root then
+			local current = state.git_base_by_worktree[worktree_root]
+			if current and current ~= M._on_base_change_last[worktree_root] then
+				M._on_base_change_last[worktree_root] = current
+				M.config_on_base_change(current)
+			end
+		end
+	end
+
 	items.get_git_status(state)
 
 	if type(callback) == "function" then
@@ -67,6 +85,10 @@ M.setup = function(config, global_config)
 	-- Read the configured default base branch from user config.
 	-- Falls back to "main" when omitted.
 	M.config_git_base = config.git_base or "main"
+
+	-- Optional callback invoked when the effective git base changes.
+	-- Receives the base string (e.g. "main", "HEAD~1").
+	M.config_on_base_change = config.on_base_change
 
 	if config.before_render then
 		manager.subscribe(M.name, {

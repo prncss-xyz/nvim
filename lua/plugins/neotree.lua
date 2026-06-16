@@ -186,6 +186,9 @@ return {
 				},
 				git_base = {
 					-- mappings and renderers fall back to git_status defaults.
+					on_base_change = function(base)
+						require("gitsigns").change_base(base, true)
+					end,
 				},
 				event_handlers = {
 					{ event = events.FILE_MOVED, handler = on_move },
@@ -212,9 +215,16 @@ return {
 			{
 				win .. theme.hunk,
 				function()
-					require("my.ui_toggle").activate("neotree", "Neotree git_status")
+					require("my.ui_toggle").activate("neotree", "Neotree git_base HEAD")
 				end,
-				desc = "Neotree git",
+				desc = "Neotree git_base HEAD",
+			},
+			{
+				win .. reverse(theme.hunk),
+				function()
+					require("my.ui_toggle").activate("neotree", "Neotree git_base HEAD~1")
+				end,
+				desc = "Neotree git_base last commit",
 			},
 			{
 				win .. theme.git,
@@ -222,13 +232,6 @@ return {
 					require("my.ui_toggle").activate("neotree", "Neotree git_base main")
 				end,
 				desc = "Neotree git_base default",
-			},
-			{
-				win .. reverse(theme.git),
-				function()
-					require("my.ui_toggle").activate("neotree", "Neotree git_base HEAD~1")
-				end,
-				desc = "Neotree git_base last commit",
 			},
 		},
 	},
