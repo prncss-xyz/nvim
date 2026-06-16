@@ -1,5 +1,6 @@
 local win = require("my.parameters").domain.win
 local theme = require("my.parameters").theme
+local reverse = require("my.parameters").reverse
 
 return {
 	{
@@ -218,9 +219,16 @@ return {
 			{
 				win .. theme.git,
 				function()
-					require("my.ui_toggle").activate("neotree", "Neotree git_base")
+					require("my.ui_toggle").activate("neotree", "Neotree git_base main")
 				end,
-				desc = "Neotree git (main)",
+				desc = "Neotree git_base default",
+			},
+			{
+				win .. reverse(theme.git),
+				function()
+					require("my.ui_toggle").activate("neotree", "Neotree git_base HEAD~1")
+				end,
+				desc = "Neotree git_base last commit",
 			},
 		},
 	},

@@ -23,15 +23,15 @@ vim.keymap.set("n", "olr", "<cmd>lsp restart<cr>", { desc = "LSP Restart" })
 
 vim.keymap.set("n", "ole", function()
 	require("my.last_win").put_last_file_name()
-end, { desc = "Paste Current File Path" })
+end, { desc = "Put Current File Path" })
 
 vim.keymap.set("n", "old", function()
 	require("my.last_win").put_last_file_line()
-end, { desc = "Paste Current File Line" })
+end, { desc = "Put Current File Line" })
 
 vim.keymap.set("n", "olc", function()
 	require("my.last_win").put_last_file_pos()
-end, { desc = "Paste Current File Position" })
+end, { desc = "Put Current File Position" })
 
 vim.keymap.set("x", "c", '"_c', { desc = "Cut Void" })
 vim.keymap.set("x", edit .. "c", '"+c', { desc = "Cut" })
