@@ -68,7 +68,25 @@ M.navigate = function(state, path, path_to_reveal, callback, async)
 		end
 	end
 
+	-- Temporarily patch git.status so the base diff survives cache-hits.
+	-- Upstream bug: when raw status text is unchanged the cache-hit path
+	-- returns only (status, root) and omits the third return value.
+	-- We wrap it locally during the navigate call to avoid global state.
+	local original_status = git.status
+	git.status = function(p, bl, sb, so)
+		local gs, wr, gsob = original_status(p, bl, sb, so)
+		if bl and not gsob and wr and gs then
+			local b = bl[wr]
+			if b then
+				gsob = require("neo-tree.git.diff").diff_name_status(wr, b, sb)
+			end
+		end
+		return gs, wr, gsob
+	end
+
 	items.get_git_status(state)
+
+	git.status = original_status
 
 	if type(callback) == "function" then
 		vim.schedule(callback)
