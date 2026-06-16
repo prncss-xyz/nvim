@@ -109,7 +109,6 @@ return {
 							{ "git_status", highlight = "NeoTreeDimText" },
 						},
 					},
-
 					commands = {
 						grug_far_replace = function(state)
 							local node = state.tree:get_node()
