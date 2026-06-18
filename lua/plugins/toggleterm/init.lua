@@ -42,6 +42,28 @@ return {
 				winblend = 0,
 			},
 		},
+		config = function(_, opts)
+			require("toggleterm").setup(opts)
+			-- toggleterm closes floating terminals on WinLeave by default.
+			-- replace that autocmd with one that preserves floats when focus moves away.
+			local group = "ToggleTermCommands"
+			local pattern = { "term://*#toggleterm#*", "term://*::toggleterm::*" }
+			vim.api.nvim_clear_autocmds({ event = "WinLeave", group = group })
+			vim.api.nvim_create_autocmd("WinLeave", {
+				pattern = pattern,
+				group = group,
+				callback = function()
+					local _, term = require("toggleterm.terminal").identify()
+					if not term then
+						return
+					end
+					if require("toggleterm.config").persist_mode then
+						term:persist_mode()
+					end
+					-- do NOT close floats on WinLeave
+				end,
+			})
+		end,
 		cmd = {
 			"ToggleTerm",
 			"ToggleTermToggleAll",

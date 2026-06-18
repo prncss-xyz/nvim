@@ -60,19 +60,19 @@ end
 
 function M.put_last_file_name()
 	M.put_with_last(function(ctx)
-		return { string.format("%s", ctx.path) }
+		return { string.format("%s ", ctx.path) }
 	end, "agent")
 end
 
 function M.put_last_file_line()
 	M.put_with_last(function(ctx)
-		return { string.format("%s:%i", ctx.path, ctx.row) }
+		return { string.format("%s:%i ", ctx.path, ctx.row) }
 	end, "agent")
 end
 
 function M.put_last_file_pos()
 	M.put_with_last(function(ctx)
-		return { string.format("%s:%i:%i", ctx.path, ctx.row, ctx.col) }
+		return { string.format("%s:%i:%i ", ctx.path, ctx.row, ctx.col) }
 	end, "agent")
 end
 
