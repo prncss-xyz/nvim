@@ -33,9 +33,11 @@ return {
 		agent = tags_defaults_agent,
 	},
 
+	-- TODO: make this accept tags
 	default_terminal = ai_term and tags_defaults_agent or "shell",
 
 	auto = {
+		-- TODO: make this accept tags
 		tags_defaults_agent,
 	},
 
@@ -114,7 +116,10 @@ return {
 			end
 		end,
 		["chezmoi apply"] = function()
-			if vim.fn.executable("chezmoi") == 1 and vim.fn.getcwd() == vim.trim(vim.fn.system("chezmoi source-path")) then
+			if
+				vim.fn.executable("chezmoi") == 1
+				and vim.fn.getcwd() == vim.trim(vim.fn.system("chezmoi source-path"))
+			then
 				return { cmd = "chezmoi apply" }
 			else
 				return nil

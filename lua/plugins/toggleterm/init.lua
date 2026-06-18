@@ -148,6 +148,62 @@ return {
 				end,
 				desc = "Toggle Terminal Diff",
 			},
+			{
+				"na",
+				function()
+					require("plugins.toggleterm.terms").with_tag("agent")
+				end,
+				desc = "Focus Agent",
+				mode = "n",
+			},
+			{
+				"na",
+				function()
+					require("plugins.toggleterm.last_win").put_selection_to_term("agent")
+				end,
+				desc = "Send Selection to Agent",
+				mode = "x",
+			},
+			{
+				"ne",
+				function()
+					require("plugins.toggleterm.last_win").put_last_file_name()
+				end,
+				desc = "Put Current File Path",
+				mode = "n",
+			},
+			{
+				"nd",
+				function()
+					require("plugins.toggleterm.last_win").put_last_file_line()
+				end,
+				desc = "Put Current File Line",
+				mode = "n",
+			},
+			{
+				"nc",
+				function()
+					require("plugins.toggleterm.last_win").put_last_file_pos()
+				end,
+				desc = "Put Current File Position",
+				mode = "n",
+			},
+			{
+				"nz",
+				function()
+					require("plugins.toggleterm.last_win").put_diagnostic_prompt()
+				end,
+				desc = "Put Diagnostic Prompt",
+				mode = "n",
+			},
+			{
+				"nz",
+				function()
+					require("plugins.toggleterm.last_win").put_file_diagnostics_prompt()
+				end,
+				desc = "Put File Diagnostics Prompt",
+				mode = "n",
+			},
 		},
 		cond = not_vscode,
 	},

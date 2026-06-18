@@ -51,14 +51,6 @@ return {
 		},
 	},
 	{
-		"ThePrimeagen/refactoring.nvim",
-		dependencies = {
-			{ "nvim-lua/plenary.nvim" },
-			{ "nvim-treesitter/nvim-treesitter" },
-		},
-		opts = {},
-	},
-	{
 		"danymat/neogen",
 		dependencies = { "nvim-treesitter/nvim-treesitter" },
 		opts = {
@@ -119,10 +111,11 @@ return {
 	{
 		"ThePrimeagen/refactoring.nvim",
 		dependencies = {
-			"lewis6991/async.nvim",
+			{ "nvim-lua/plenary.nvim" },
+			{ "nvim-treesitter/nvim-treesitter" },
 		},
 		cmd = { "Refactor" },
-		lazy = false,
+		opts = {},
 	},
 	{
 		"ckolkey/ts-node-action",

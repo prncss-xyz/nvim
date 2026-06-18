@@ -21,28 +21,6 @@ vim.keymap.set("n", "h", "<nop>")
 
 vim.keymap.set("n", "olr", "<cmd>lsp restart<cr>", { desc = "LSP Restart" })
 
-vim.keymap.set("n", "na", function()
-	require("plugins.toggleterm.terms").with_tag("agent")
-end, { desc = "Focus Agent" })
-vim.keymap.set("x", "na", function()
-	require("my.last_win").put_selection_to_term("agent")
-end, { desc = "Send Selection to Agent" })
-vim.keymap.set("n", "ne", function()
-	require("my.last_win").put_last_file_name()
-end, { desc = "Put Current File Path" })
-vim.keymap.set("n", "nd", function()
-	require("my.last_win").put_last_file_line()
-end, { desc = "Put Current File Line" })
-vim.keymap.set("n", "nc", function()
-	require("my.last_win").put_last_file_pos()
-end, { desc = "Put Current File Position" })
-vim.keymap.set("n", "nz", function()
-	require("my.last_win").put_diagnostic_prompt()
-end, { desc = "Put Diagnostic Prompt" })
-vim.keymap.set("n", "nz", function()
-	require("my.last_win").put_file_diagnostics_prompt()
-end, { desc = "Put File Diagnostics Prompt" })
-
 vim.keymap.set("x", "c", '"_c', { desc = "Cut Void" })
 vim.keymap.set("x", edit .. "c", '"+c', { desc = "Cut" })
 vim.keymap.set("x", "d", '"_d', { desc = "Cut Void" })
@@ -138,7 +116,7 @@ vim.keymap.set("n", "bf", function()
 		vim.notify("No file under cursor", vim.log.levels.WARN)
 		return
 	end
-	local target_win = require("my.last_win").get_last_file_win()
+	local target_win = require("plugins.toggleterm.last_win").get_last_file_win()
 	if target_win then
 		vim.api.nvim_set_current_win(target_win)
 	end

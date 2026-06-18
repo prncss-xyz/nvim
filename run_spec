@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+nvim -n --clean --noplugin -u NORC --headless -S "./spec/init.lua"

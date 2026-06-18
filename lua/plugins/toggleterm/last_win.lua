@@ -76,13 +76,13 @@ end
 
 function M.put_diagnostic_prompt()
 	M.put_with_last(function(ctx)
-		return require("my.last_win.diagnostics").get_diagnostic_prompt(ctx.bufnr)
+		return require("plugins.toggleterm.diagnostics").get_diagnostic_prompt(ctx.bufnr)
 	end, "agent")
 end
 
 function M.put_file_diagnostics_prompt()
 	M.put_with_last(function(ctx)
-		return require("my.last_win.diagnostics").get_file_diagnostics_prompt(ctx.bufnr)
+		return require("plugins.toggleterm.diagnostics").get_file_diagnostics_prompt(ctx.bufnr)
 	end, "agent")
 end
 
