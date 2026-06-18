@@ -332,6 +332,23 @@ function M.select_any_term()
 	end)
 end
 
+function M.focus_last_term(key)
+	if key then
+		return M.focus_term(key)
+	end
+	last_terminal = last_terminal or get_term(config.default_terminal)
+	if not last_terminal then
+		return
+	end
+	local winnr = last_terminal.window
+	if not is_open(winnr) then
+		last_terminal:toggle()
+	else
+		vim.api.nvim_set_current_win(winnr)
+	end
+	return last_terminal
+end
+
 function M.toggle_last_term()
 	last_terminal = last_terminal or get_term(config.default_terminal)
 	if last_terminal then
@@ -375,6 +392,17 @@ function M.focus_term(key, conf)
 		vim.api.nvim_set_current_win(winnr)
 	end
 	return next_terminal
+end
+
+function M.with_tag(tag, cb)
+	local key = M.get_last_by_tag(tag) or config.tags_defaults[key]
+	if not key then
+		return
+	end
+	M.focus_term(key)
+	if cb then
+		cb()
+	end
 end
 
 function M.create_term(key, conf)

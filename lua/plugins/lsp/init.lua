@@ -45,28 +45,18 @@ return {
 		enabled = false,
 	},
 	{
-		"jay-babu/mason-null-ls.nvim",
-		commit = "de19726",
-		dependencies = {
-			"williamboman/mason.nvim",
-		},
-		opts = {
-			automatic_installation = true,
-		},
-	},
-	{
 		"nvimtools/none-ls.nvim",
-		dependencies = {
-			"jay-babu/mason-null-ls.nvim",
-		},
 		opts = function(_, opts)
 			local null_ls = require("null-ls")
 			opts.sources = {
+				null_ls.builtins.code_actions.ts_node_action,
 				null_ls.builtins.code_actions.gitsigns,
-				null_ls.builtins.code_actions.refactoring,
+				null_ls.builtins.diagnostics.fish,
+				null_ls.builtins.formatting.fish_indent,
 				null_ls.builtins.formatting.shfmt,
 				null_ls.builtins.formatting.stylua,
 				null_ls.builtins.formatting.golines,
+				null_ls.builtins.hover.dictionary,
 			}
 		end,
 		event = "VeryLazy",

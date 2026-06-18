@@ -23,7 +23,7 @@ return {
 				win .. theme.find,
 				function()
 					require("my.ui_toggle").activate("grugfar", function()
-						require("grug-far").open({ engine = "rigrep" })
+						require("grug-far").open({ engine = "ripgrep" })
 					end)
 				end,
 				desc = "GrugFar, RipGrep",
@@ -42,7 +42,7 @@ return {
 				win .. theme.find,
 				function()
 					require("my.ui_toggle").activate("grugfar", function()
-						require("grug-far").with_visual_selection({ engine = "rigrep" })
+						require("grug-far").with_visual_selection({ engine = "ripgrep" })
 					end)
 				end,
 				mode = { "x" },
@@ -115,6 +115,19 @@ return {
 			},
 		},
 		enabled = personal,
+	},
+	{
+		"ThePrimeagen/refactoring.nvim",
+		dependencies = {
+			"lewis6991/async.nvim",
+		},
+		cmd = { "Refactor" },
+		lazy = false,
+	},
+	{
+		"ckolkey/ts-node-action",
+		opts = {},
+		lazy = false,
 	},
 	{
 		-- FIX: toggle block seeams not to work with certain syntaxes unless toggle multiline was called before

@@ -23,6 +23,8 @@ vim.lsp.config("tsgo", {
 	capabilities = require("plugins.lsp.utils").cmp_capabilities,
 	settings = {
 		typescript = {
+			updateImportsOnFileMove = { enabled = "always" },
+			suggest = { completeFunctionCalls = true },
 			inlayHints = {
 				parameterNames = { enabled = "all" },
 				parameterTypes = { enabled = true },
@@ -128,6 +130,6 @@ vim.lsp.enable({
 	"ltex",
 	"oxlint",
 	"oxfmt",
-  "tsgo",
+	"tsgo",
 	"typos_lsp",
 })
