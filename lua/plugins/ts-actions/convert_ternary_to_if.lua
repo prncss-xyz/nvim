@@ -33,10 +33,7 @@ local function construct_if_else_statement(ternary_expression)
 
 	local lines = {}
 
-	local cond_text = helpers.node_text(condition)
-	if type(cond_text) == "table" then
-		cond_text = table.concat(cond_text, " ")
-	end
+	local cond_text = utils.flat_text(condition)
 
 	table.insert(lines, "if (" .. cond_text .. ") {")
 
