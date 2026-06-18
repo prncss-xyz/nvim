@@ -172,7 +172,7 @@ function M.get_diagnostic_prompt(bufnr)
 	local diagnostic = get_current_diagnostic(bufnr)
 	if not diagnostic then
 		vim.notify("No diagnostic found", vim.log.levels.WARN)
-		return
+		return {}
 	end
 
 	return {
@@ -205,10 +205,7 @@ function M.get_file_diagnostics_prompt(bufnr)
 		return (a.severity or math.huge) < (b.severity or math.huge)
 	end)
 
-	local lines = {
-		cr = false,
-		"fix these diagnostics",
-	}
+	local lines = { "fix these diagnostics" }
 
 	for _, diagnostic in ipairs(diagnostics) do
 		table.insert(lines, diagnostic_position(bufnr, diagnostic))

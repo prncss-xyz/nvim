@@ -42,18 +42,16 @@ function M.put_with_last(cb, key)
 			local pos = vim.api.nvim_win_get_cursor(last_win)
 			local row = pos[1]
 			local col = pos[2]
-			vim.api.nvim_put(
-				cb({
-					bufnr = bufnr,
-					path = path,
-					row = row,
-					col = col,
-				}),
-				"c",
-				true,
-				true
-			)
-			vim.cmd.startinsert()
+			local lines = cb({
+				bufnr = bufnr,
+				path = path,
+				row = row,
+				col = col,
+			})
+			if lines and type(lines) == "table" and #lines > 0 then
+				vim.api.nvim_put(lines, "c", true, true)
+				vim.cmd.startinsert()
+			end
 		end
 	end)
 end
