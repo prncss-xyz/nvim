@@ -3,6 +3,18 @@ local utils = require("plugins.ts-actions.utils")
 
 local get_node_indent = utils.get_node_indent
 
+--- Ensure a statement text ends with a semicolon if needed.
+--- Expression nodes (call_expression, identifier, etc.) that become
+--- standalone then-clauses need a trailing ';' to form valid JS/TS.
+---@param text string
+---@return string
+local function ensure_semicolon(text)
+	if text:sub(-1) ~= ";" and text:sub(-1) ~= "}" then
+		return text .. ";"
+	end
+	return text
+end
+
 local flip_ops = {
 	["=="] = "!=",
 	["!="] = "==",
@@ -60,7 +72,7 @@ end
 
 --- Get the inner expression of a parenthesized_expression
 ---@param paren TSNode
----@return TSNode
+---@return TSNode|nil
 local function inner_expr(paren)
 	for child in paren:iter_children() do
 		if child:named() then
@@ -93,8 +105,8 @@ end
 ---@return table  lines
 local function block_body(node)
 	if node:type() ~= "statement_block" then
-		-- e.g. a single statement without braces — just return its text
-		return { helpers.node_text(node) }
+		-- e.g. a single expression without braces — ensure it forms a valid statement
+		return { ensure_semicolon(helpers.node_text(node)) }
 	end
 	local text = helpers.node_text(node)
 	if type(text) == "string" then
@@ -162,7 +174,7 @@ return function(node)
 
 	if braceless then
 		local if_text = helpers.node_text(consequence)
-		local else_text = helpers.node_text(else_body)
+		local else_text = ensure_semicolon(helpers.node_text(else_body))
 		if implicit_else then
 			-- if (!x) return b; return a;
 			return { "if (" .. new_condition .. ") " .. else_text, if_text }, {

@@ -107,40 +107,6 @@ return {
 				mode = { "n", "x" },
 			},
 			{
-				ai,
-				function()
-					require("plugins.toggleterm.ops").agent_op:call({ domain = "outer" }, {
-						a = function()
-							local key = require("plugins.toggleterm.terms").get_last_by_tag("agent")
-							if not key then
-								return
-							end
-							require("plugins.toggleterm.terms").focus_term(key)
-						end,
-						c = function()
-							require("plugins.toggleterm.agents").send_current_position()
-						end,
-						e = function()
-							require("plugins.toggleterm.agents").send_current_file()
-						end,
-						u = function()
-							require("plugins.toggleterm.agents").prompt()
-						end,
-						x = function()
-							require("plugins.toggleterm.agents").new()
-						end,
-						z = function()
-							require("plugins.toggleterm.agents").diagnostic()
-						end,
-						[reverse("z")] = function()
-							require("plugins.toggleterm.agents").file_diagnostics()
-						end,
-					})
-				end,
-				desc = "Toggle agent",
-				mode = { "n", "x" },
-			},
-			{
 				"ou",
 				function()
 					require("plugins.toggleterm.terms").focus_term("test")
