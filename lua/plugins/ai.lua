@@ -29,10 +29,17 @@ local duet_config = ai_config.duet == "qwen" and qwen_duet or mercury_duet
 return {
 	{
 		"cursortab/cursortab.nvim",
+		dependencies = {
+			{
+				"copilotlsp-nvim/copilot-lsp",
+				init = function()
+					vim.g.copilot_nes_debounce = 500
+				end,
+			},
+		},
 		opts = {
 			provider = {
-				type = "mercuryapi",
-				api_key_env = "INCEPTION_API_KEY",
+				type = "copilot",
 			},
 			keymaps = {
 				accept = ai_insert.accept,
@@ -43,7 +50,7 @@ return {
 				ignore_gitignored = true,
 			},
 			blink = {
-				enabled = true,
+				enabled = false,
 				ghost_text = true,
 			},
 		},
