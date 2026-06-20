@@ -11,6 +11,7 @@ local web = domain.web
 local move = domain.move
 local git = domain.git
 local projects = require("plugins.snacks.projects")
+local auto_confirm = require("plugins.snacks.auto_confirm")
 local dirs = require("my.parameters").dirs
 
 return {
@@ -27,6 +28,7 @@ return {
 				input = { enabled = true },
 				picker = {
 					auto_confirm = true,
+					config = auto_confirm.config,
 					enabled = true,
 					actions = {
 						open_project = {
