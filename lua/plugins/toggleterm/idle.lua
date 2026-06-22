@@ -21,7 +21,7 @@ end
 
 function M.start_idle_detection(term, idle_timeout, on_idle)
 	if not term.bufnr or not vim.api.nvim_buf_is_valid(term.bufnr) then
-		return function() end
+		return
 	end
 
 	local handle = nil

@@ -2,7 +2,6 @@ local not_vscode = require("my.conds").not_vscode
 local domain = require("my.parameters").domain
 local reverse = require("my.parameters").reverse
 local theme = require("my.parameters").theme
-local ai = domain.ai
 local ai_insert = require("my.parameters").ai_insert
 
 return {
@@ -197,7 +196,7 @@ return {
 				mode = "n",
 			},
 			{
-				"nz",
+				"npz",
 				function()
 					require("plugins.toggleterm.last_win").put_file_diagnostics_prompt()
 				end,
