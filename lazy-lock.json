@@ -58,7 +58,7 @@
   "refactoring.nvim": { "branch": "master", "commit": "7eaa150061ea18fdbe18fbb924d236e3ddccc57d" },
   "render-markdown.nvim": { "branch": "main", "commit": "f422cb5c6855f150e2ddcfaf44e7157b98b34f6a" },
   "rose-pine": { "branch": "main", "commit": "ff483051a47e27d84bdef47703538df1ed9f4a47" },
-  "schemastore.nvim": { "branch": "main", "commit": "c73e2b170a4927d1dc1b48e878bba6cf0ed9b07c" },
+  "schemastore.nvim": { "branch": "main", "commit": "e034560c0266d5a99d811f595b04ce839ab868ff" },
   "scratch-runner.nvim": { "branch": "master", "commit": "dab800e82e60950e01e2a1f59ec190b67ca7f77f" },
   "selenized.nvim": { "branch": "main", "commit": "a43e34d91c3ed9b9c6803150b62458f81e000f31" },
   "snacks.nvim": { "branch": "main", "commit": "882c996cf28183f4d63640de0b4c02ec886d01f2" },
@@ -73,6 +73,6 @@
   "ts-node-action": { "branch": "master", "commit": "dda34b5b440a4f1137f8e815756a19cf655b516f" },
   "vim-illuminate": { "branch": "master", "commit": "0d1e93684da00ab7c057410fecfc24f434698898" },
   "yanky.nvim": { "branch": "main", "commit": "020c22d0cfa60358569e49d1d7b91630f175aef0" },
-  "yazi.nvim": { "branch": "main", "commit": "7514be498c56f2a57e5a72faf55c517b9576665b" },
+  "yazi.nvim": { "branch": "main", "commit": "4b167eeafcf84cc78a9d9cd4b1f945533e0cc5b9" },
   "zk": { "branch": "main", "commit": "bc3b39374b25fad977cecc936588cb060f15a773" }
 }

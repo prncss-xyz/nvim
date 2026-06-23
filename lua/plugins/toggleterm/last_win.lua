@@ -107,7 +107,7 @@ function M.get_selection(bufnr)
 
 	local res = { string.format("%s:%i:%i", path, start_row + 1, start_col + 1) }
 	vim.list_extend(res, lines)
-	return lines
+	return res
 end
 
 function M.put_selection_to_term(key)

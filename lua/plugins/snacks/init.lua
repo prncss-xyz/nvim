@@ -306,21 +306,21 @@ return {
 			{
 				pick .. "g",
 				function()
-					Snacks.picker.grep()
+					Snacks.picker.grep({ regex = false })
 				end,
 				desc = "Live Grep",
 			},
 			{
 				pick .. reverse("g"),
 				function()
-					Snacks.picker.grep({ cwd = vim.fn.expand("%:p:h") })
+					Snacks.picker.grep({ regex = false, cwd = vim.fn.expand("%:p:h") })
 				end,
 				desc = "Live Grep Local",
 			},
 			{
 				pick .. "g",
 				function()
-					Snacks.picker.grep_word()
+					Snacks.picker.grep_word({ regex = false })
 				end,
 				mode = { "x" },
 				desc = "Live Grep",
