@@ -148,7 +148,7 @@ return {
 				desc = "Toggle Terminal Diff",
 			},
 			{
-				"na",
+				"ma",
 				function()
 					require("plugins.toggleterm.terms").with_tag("agent")
 				end,
@@ -156,7 +156,7 @@ return {
 				mode = "n",
 			},
 			{
-				"na",
+				"ma",
 				function()
 					require("plugins.toggleterm.last_win").put_selection_to_term("agent")
 				end,
@@ -164,7 +164,7 @@ return {
 				mode = "x",
 			},
 			{
-				"ne",
+				"me",
 				function()
 					require("plugins.toggleterm.last_win").put_last_file_name()
 				end,
@@ -172,7 +172,7 @@ return {
 				mode = "n",
 			},
 			{
-				"nd",
+				"md",
 				function()
 					require("plugins.toggleterm.last_win").put_last_file_line()
 				end,
@@ -180,7 +180,7 @@ return {
 				mode = "n",
 			},
 			{
-				"nc",
+				"mc",
 				function()
 					require("plugins.toggleterm.last_win").put_last_file_pos()
 				end,
@@ -188,7 +188,7 @@ return {
 				mode = "n",
 			},
 			{
-				"nz",
+				"mz",
 				function()
 					require("plugins.toggleterm.last_win").put_diagnostic_prompt()
 				end,
@@ -196,7 +196,7 @@ return {
 				mode = "n",
 			},
 			{
-				"npz",
+				"mpz",
 				function()
 					require("plugins.toggleterm.last_win").put_file_diagnostics_prompt()
 				end,
