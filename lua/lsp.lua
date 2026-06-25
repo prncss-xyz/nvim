@@ -56,12 +56,6 @@ vim.lsp.config("graphql", {
 	filetypes = { "graphql", "javascript", "typescript", "javascriptreact", "typescriptreact" },
 })
 
-vim.lsp.config("knip", {
-	cmd = { "knip-language-server", "--stdio" },
-	capabilities = require("plugins.lsp.utils").cmp_capabilities,
-	filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact", "json" },
-	root_markers = { "knip.json", "knip.ts", "knip.js", "package.json", ".git" },
-})
 vim.lsp.config("oxfmt", {
 	capabilities = require("plugins.lsp.utils").cmp_capabilities,
 	filetypes = {
