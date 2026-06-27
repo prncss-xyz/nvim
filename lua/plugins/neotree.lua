@@ -214,24 +214,52 @@ return {
 			{
 				win .. theme.hunk,
 				function()
-					require("my.ui_toggle").activate("neotree", "Neotree git_base HEAD")
+					require("my.ui_toggle").activate("neotree", "Neotree git_status")
 				end,
-				desc = "Neotree git_base HEAD",
+				desc = "Neotree git_status",
+			},
+		},
+	},
+	{
+		"pwntester/octo.nvim",
+		cmd = "Octo",
+		opts = {
+			picker = "snacks",
+			enable_builtin = true,
+		},
+		keys = {
+			{
+				"<leader>oi",
+				"<CMD>Octo issue list<CR>",
+				desc = "List GitHub Issues",
 			},
 			{
-				win .. reverse(theme.hunk),
-				function()
-					require("my.ui_toggle").activate("neotree", "Neotree git_base HEAD~1")
-				end,
-				desc = "Neotree git_base last commit",
+				"<leader>op",
+				"<CMD>Octo pr list<CR>",
+				desc = "List GitHub PullRequests",
 			},
 			{
-				win .. theme.git,
-				function()
-					require("my.ui_toggle").activate("neotree", "Neotree git_base main")
-				end,
-				desc = "Neotree git_base default",
+				"<leader>od",
+				"<CMD>Octo discussion list<CR>",
+				desc = "List GitHub Discussions",
 			},
+			{
+				"<leader>on",
+				"<CMD>Octo notification list<CR>",
+				desc = "List GitHub Notifications",
+			},
+			{
+				"<leader>os",
+				function()
+					require("octo.utils").create_base_search_command({ include_current_repo = true })
+				end,
+				desc = "Search GitHub",
+			},
+		},
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"folke/snacks.nvim",
+			"nvim-tree/nvim-web-devicons",
 		},
 	},
 }
