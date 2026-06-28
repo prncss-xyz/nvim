@@ -1,6 +1,5 @@
 local win = require("my.parameters").domain.win
 local theme = require("my.parameters").theme
-local reverse = require("my.parameters").reverse
 
 return {
 	{
@@ -13,7 +12,7 @@ return {
 				else
 					grug_far.get_instance("explorer"):open()
 				end
-				-- doing it seperately because multiple paths doesn't open work when passed with open
+				-- doing it separately because multiple paths doesn't open work when passed with open
 				-- updating the prefills without clearing the search and other fields
 				vim.schedule(function()
 					require("my.ui_toggle").activate("grugfar", function()
