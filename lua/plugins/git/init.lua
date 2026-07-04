@@ -27,7 +27,7 @@ return {
 		keys = {
 			{ git .. "s", "<cmd>Gitsigns<cr>", desc = "Gitsigns" },
 			{ git .. "h", "<cmd>Gitsigns preview_hunk<cr>", desc = "Gitsigns Preview Hunk" },
-			{ git .. "x", "<cmd>Gitsigns reset_hunk<cr>", desc = "Gitsigns Preview Hunk" },
+			{ git .. "x", "<cmd>Gitsigns reset_hunk<cr>", desc = "Gitsigns Reset Hunk" },
 		},
 		cond = not_vscode,
 	},
@@ -100,6 +100,19 @@ return {
 			{ git .. "l", "<cmd>CodeDiffLast<cr>", desc = "Git CodeDiffLast" },
 		},
 		cond = not_vscode,
+	},
+	{
+		"sindrets/diffview.nvim",
+		-- maintained fork: dlyongemallo/diffview-plus.nvim
+		opts = {},
+		cmd = {
+			"DiffviewOpen",
+			"DiffviewClose",
+			"DiffviewToggleFiles",
+			"DiffviewFocusFiles",
+			"DiffviewRefresh",
+			"DiffviewFileHistory",
+		},
 	},
 	{
 		"akinsho/git-conflict.nvim",

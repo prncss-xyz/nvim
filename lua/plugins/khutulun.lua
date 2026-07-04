@@ -66,6 +66,13 @@ return {
 				desc = "Delete File",
 			},
 			{
+				domain.file .. reverse("y"),
+				function()
+					require("khutulun").yank_absolute_path()
+				end,
+				desc = "Yank Absolute Filepath",
+			},
+			{
 				domain.file .. "y",
 				function()
 					require("khutulun").yank_relative_path()

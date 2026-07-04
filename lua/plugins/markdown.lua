@@ -25,15 +25,6 @@ return {
 		cond = not_vscode,
 	},
 	{
-		"zk-org/zk-nvim",
-		name = "zk",
-		opts = {
-			picker = "snacks_picker",
-		},
-		ft = ft,
-		cond = not_vscode,
-	},
-	{
 		"jmbuhr/otter.nvim",
 		dependencies = {
 			"nvim-treesitter/nvim-treesitter",

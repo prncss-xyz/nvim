@@ -54,4 +54,19 @@ M.cmp_capabilities = blink_get_lsp_capabilities({
 	},
 })
 
+function M.get_cmp_capabilities(o)
+	return vim.tbl_deep_extend(
+		"force",
+		blink_get_lsp_capabilities({
+			textDocument = {
+				foldingRange = {
+					dynamicRegistration = false,
+					lineFoldingOnly = true,
+				},
+			},
+		}),
+		o or {}
+	)
+end
+
 return M

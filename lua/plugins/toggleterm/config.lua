@@ -42,6 +42,10 @@ return {
 	},
 
 	commands = {
+		portless = {
+			cmd = "portless",
+			close_on_exit = false,
+		},
 		tilt = work({
 			cmd = "make tilt",
 			close_on_exit = false,
@@ -60,12 +64,6 @@ return {
 			close_on_exit = false,
 		},
 		repl = require("plugins.toggleterm.repl").get_REPL,
-		gwta = {
-			cmd = "gwta",
-		},
-		gwtr = {
-			cmd = "gwta",
-		},
 		gac = {
 			cmd = "gac",
 		},
@@ -131,8 +129,6 @@ return {
 		pi = "new",
 		opencode = "new",
 		claude = "clear",
-		kilo = "new",
-		gemini = "clear",
 	},
 
 	prompts = {

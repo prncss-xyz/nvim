@@ -11,6 +11,7 @@ local web = domain.web
 local move = domain.move
 local git = domain.git
 local projects = require("plugins.snacks.projects")
+local portless = require("plugins.snacks.portless")
 local auto_confirm = require("plugins.snacks.auto_confirm")
 local dirs = require("my.parameters").dirs
 
@@ -63,7 +64,6 @@ return {
 				notifier = { enabled = true },
 				quickfile = { enabled = true },
 				scope = { enabled = true },
-				scroll = { enabled = true },
 				statuscolumn = { enabled = false },
 				words = { enabled = true },
 			}
@@ -241,6 +241,11 @@ return {
 					Snacks.picker.notifications()
 				end,
 				desc = "Pick Notification",
+			},
+			{
+				pick .. "a",
+				portless.pick,
+				desc = "Pick Portless URL",
 			},
 			{
 				pick .. theme.find,

@@ -37,6 +37,20 @@ vim.lsp.config("tsgo", {
 	},
 })
 
+vim.lsp.config("markdown_oxide", {
+	cmd = { "markdown-oxide" },
+	filetypes = { "markdown" },
+	root_markers = { ".git", ".obsidian", ".moxide.toml" },
+	capabilities = require("plugins.lsp.utils").get_cmp_capabilities({
+		workspace = {
+			didChangeWatchedFiles = {
+				dynamicRegistration = true,
+			},
+		},
+	}),
+})
+vim.lsp.enable("markdown_oxide")
+
 vim.lsp.config("graphql", {
 	capabilities = require("plugins.lsp.utils").cmp_capabilities,
 	filetypes = { "graphql", "javascript", "typescript", "javascriptreact", "typescriptreact" },
