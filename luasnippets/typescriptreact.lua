@@ -5,7 +5,7 @@ local M = {}
 table.insert(
   M,
   s(
-    'component',
+    'cmp',
     fmt(
       [[
         function []({[]}: {[]}) {
