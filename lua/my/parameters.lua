@@ -12,15 +12,14 @@ M.rooter_patterns = { ".git", ".hg", ".svn" }
 
 M.dirs = {
 	projects = projects,
-	notes = projects .. "/notes",
+	notes = projects .. "/notes/main",
 }
-
 
 M.ai_config = {
 	completion = personal("copilot", "none"), -- "cursortab" | "minuet" | "copilot" | "windsurf" | "stride" | "none"
-  duet = "qwen", -- "qwen" | "mercury"
+	duet = "qwen", -- "qwen" | "mercury"
 	chat = personal("toggleterm", "sidekick"), -- 'sidekick' |  'claude' | 'agentic' | 'toggleterm' | 'none'
-  sidekick_chat = "claude",
+	sidekick_chat = "claude",
 }
 
 M.ai_insert = {
