@@ -53,8 +53,13 @@ function M.directory_with_parent(item, picker)
 		-- Split path into directory and basename
 		local dir, base = relative_path:match("^(.*)/(.+)$")
 		if base and dir then
-			ret[#ret + 1] = { dir .. "/", dir_hl, field = "file" }
-			ret[#ret + 1] = { base, base_hl, field = "file" }
+			if item.branch and item.branch == base then
+				-- directory name equals the branch name, the basename is redundant: use the parent instead
+				ret[#ret + 1] = { dir, base_hl, field = "file" }
+			else
+				ret[#ret + 1] = { dir .. "/", dir_hl, field = "file" }
+				ret[#ret + 1] = { base, base_hl, field = "file" }
+			end
 		else
 			ret[#ret + 1] = { relative_path, base_hl, field = "file" }
 		end

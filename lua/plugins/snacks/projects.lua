@@ -173,22 +173,16 @@ function M.pick_current_lang_note()
 end
 
 function M.pick_current_project_note()
-	local path = vim.fn.getcwd()
-	local root = path
-	while true do
-		for _, pattern in pairs(require("my.parameters").rooter_patterns) do
-			if vim.uv.fs_stat(path .. "/" .. pattern) then
-				root = path
-			end
-		end
-		local parent = vim.fn.fnamemodify(path, ":h")
-		if parent == path then
-			break
-		end
-		path = parent
+	-- repo_name is the name of the current directory (the last path step), or the parent directory
+	-- name if the name of the current directory equals the current branch name
+	local cwd = vim.fn.getcwd()
+	local dir_name = vim.fs.basename(cwd)
+	local branch = vim.trim(vim.fn.system("git -C " .. cwd .. " rev-parse --abbrev-ref HEAD"))
+	local repo_name = dir_name
+	if branch ~= "" and branch ~= "HEAD" and dir_name == branch then
+		repo_name = vim.fs.basename(vim.fs.dirname(cwd))
 	end
-	local project_name = vim.fn.fnamemodify(root, ":t")
-	return M.pick_note_with("/dev/projects/" .. project_name)
+	return M.pick_note_with("/dev/projects/" .. repo_name)
 end
 
 function M.pick_note_with(stem)

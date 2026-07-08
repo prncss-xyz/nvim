@@ -142,8 +142,17 @@ vim.keymap.set("n", web .. "f", function()
 end, { desc = "Browse File" })
 
 vim.keymap.set("t", "<esc>", "<C-\\><C-n>", { desc = "Term Normal Mode" })
-vim.keymap.set("t", "<s-esc>", "<esc>", { desc = "Term Normal Mode" })
-vim.keymap.set("t", "<c-s-v>", '<c-\\><c-n>"+pi', { desc = "Paste" })
+vim.keymap.set("n", "<esc>", function()
+	if vim.bo.buftype == "terminal" then
+		local job_id = vim.b.terminal_job_id
+		if job_id then
+			vim.api.nvim_chan_send(job_id, vim.api.nvim_replace_termcodes("<Esc>", true, false, true))
+		end
+		vim.schedule(function()
+			vim.cmd("startinsert")
+		end)
+	end
+end, { desc = "Term Send Esc + Startinsert" })
 
 -- readline
 vim.keymap.set({ "n", "x" }, "<c-b>", "i", { desc = "BOC" })
