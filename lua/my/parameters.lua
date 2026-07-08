@@ -13,6 +13,7 @@ M.rooter_patterns = { ".git", ".hg", ".svn" }
 M.dirs = {
 	projects = projects,
 	notes = projects .. "/notes/main",
+	dotfiles = projects .. "/dotfiles",
 }
 
 M.ai_config = {

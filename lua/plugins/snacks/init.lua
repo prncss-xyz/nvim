@@ -173,7 +173,7 @@ return {
 				function()
 					if personal() then
 						Snacks.picker.files({
-							cwd = dirs.projects .. "/dotfiles",
+							cwd = dirs.dotfiles,
 							matcher = {
 								frecency = true,
 							},
