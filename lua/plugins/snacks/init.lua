@@ -111,6 +111,13 @@ return {
 				desc = "Pick Buffer",
 			},
 			{
+				pick .. reverse(theme.project),
+				function()
+					projects.pick_worktree()
+				end,
+				desc = "Pick Worktree",
+			},
+			{
 				pick .. theme.project,
 				function()
 					projects.pick_project()
