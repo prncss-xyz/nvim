@@ -48,6 +48,8 @@ return {
 		"nvimtools/none-ls.nvim",
 		opts = function(_, opts)
 			local null_ls = require("null-ls")
+			local github_comments = require("plugins.lsp.github_comments")
+
 			opts.sources = {
 				null_ls.builtins.code_actions.ts_node_action,
 				null_ls.builtins.code_actions.gitsigns,
@@ -58,6 +60,7 @@ return {
 				null_ls.builtins.formatting.golines,
 				null_ls.builtins.hover.dictionary,
 			}
+			vim.list_extend(opts.sources, github_comments.sources())
 		end,
 		event = "VeryLazy",
 		cond = not_vscode,
