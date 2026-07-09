@@ -172,17 +172,33 @@ function M.pick_current_lang_note()
 	return M.pick_note_with("/dev/lang/" .. (filetype_to_lang[vim.bo.filetype] or vim.bo.filetype))
 end
 
-function M.pick_current_project_note()
+local function current_project_note_stem()
 	-- repo_name is the name of the current directory (the last path step), or the parent directory
 	-- name if the name of the current directory equals the current branch name
 	local cwd = vim.fn.getcwd()
 	local dir_name = vim.fs.basename(cwd)
-	local branch = vim.trim(vim.fn.system("git -C " .. cwd .. " rev-parse --abbrev-ref HEAD"))
+	local branch = vim.trim(vim.fn.system({ "git", "-C", cwd, "rev-parse", "--abbrev-ref", "HEAD" }))
 	local repo_name = dir_name
 	if branch ~= "" and branch ~= "HEAD" and dir_name == branch then
 		repo_name = vim.fs.basename(vim.fs.dirname(cwd))
 	end
-	return M.pick_note_with("/dev/projects/" .. repo_name)
+	return "/dev/projects/" .. repo_name, branch
+end
+
+local function sanitize_path_part(path_part)
+	return path_part:gsub("[^%w._-]", "-"):gsub("-+", "-"):gsub("^-", ""):gsub("-$", "")
+end
+
+function M.pick_current_project_note()
+	return M.pick_note_with(current_project_note_stem())
+end
+
+function M.pick_current_branch_note()
+	local stem, branch = current_project_note_stem()
+	if branch == "" or branch == "HEAD" then
+		return M.pick_note_with(stem)
+	end
+	return M.pick_note_with(stem .. "/" .. sanitize_path_part(branch))
 end
 
 function M.pick_note_with(stem)

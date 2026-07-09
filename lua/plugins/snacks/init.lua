@@ -159,6 +159,11 @@ return {
 				desc = "Edit Lang Note",
 			},
 			{
+				file .. "b",
+				projects.pick_current_branch_note,
+				desc = "Edit Branch Note",
+			},
+			{
 				file .. "n",
 				projects.pick_current_project_note,
 				desc = "Edit Project Note",
