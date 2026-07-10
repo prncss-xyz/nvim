@@ -142,6 +142,7 @@ vim.keymap.set("n", web .. "f", function()
 end, { desc = "Browse File" })
 
 vim.keymap.set("t", "<esc>", "<C-\\><C-n>", { desc = "Term Normal Mode" })
+vim.keymap.set("t", "<c-s-v>", '<c-\\><c-n>"+pi', { desc = "Paste" })
 vim.keymap.set("n", "<esc>", function()
 	if vim.bo.buftype == "terminal" then
 		local job_id = vim.b.terminal_job_id

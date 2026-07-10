@@ -91,14 +91,13 @@ return {
 			tag = "agent",
 		}),
 		pi = ai_term and personal({
-			cmd = "pi",
+			cmd = "p",
 			tag = "agent",
 		}),
 		claude = ai_term and work({
 			cmd = "claude",
 			tag = "agent",
 		}),
-		opencode = ai_term and personal({ cmd = "opencode --continue", tag = "agent" }),
 		["make daily-login"] = function()
 			if vim.fn.filereadable(vim.fn.getcwd() .. "/Makefile") == 1 then
 				return { cmd = "make daily-login" }

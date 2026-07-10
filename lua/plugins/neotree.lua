@@ -1,5 +1,6 @@
 local win = require("my.parameters").domain.win
 local theme = require("my.parameters").theme
+local personal = require("my.conds").personal
 
 return {
 	{
@@ -74,6 +75,7 @@ return {
 						hide_dotfiles = true,
 					},
 					window = {
+						width = personal(40, 60),
 						mappings = {
 							a = false,
 							s = false,
