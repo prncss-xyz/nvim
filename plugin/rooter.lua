@@ -17,11 +17,3 @@ vim.api.nvim_create_autocmd({ "BufEnter" }, {
 		end
 	end,
 })
-
-vim.api.nvim_create_autocmd({ "User" }, {
-	group = group,
-	pattern = "VeryLazy",
-	callback = function()
-		require("plugins.toggleterm.terms").setup_start()
-	end,
-})

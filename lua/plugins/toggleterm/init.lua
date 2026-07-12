@@ -74,7 +74,7 @@ return {
 			{
 				domain.pick .. theme.run,
 				function()
-					require("plugins.toggleterm.terms").focus({ prompt = "Select Terminal" })
+					require("plugins.toggleterm.terms").focus({ prompt = "Select caca" })
 				end,
 				desc = "Select Terminal",
 			},
@@ -134,7 +134,18 @@ return {
 				function()
 					require("plugins.toggleterm.terms").run()
 				end,
-				desc = "Toggle Terminal Dev",
+				desc = "Select Command",
+			},
+			{
+				"opw",
+				function()
+					require("plugins.toggleterm.terms").focus({
+            status = "idle",
+            dir = "",
+            prompt = "Select Idle"
+          })
+				end,
+				desc = "Select Idle",
 			},
 			{
 				"oo",

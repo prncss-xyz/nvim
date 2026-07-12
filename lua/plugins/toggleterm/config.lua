@@ -33,13 +33,7 @@ return {
 		agent = tags_defaults_agent,
 	},
 
-	-- TODO: make this accept tags
 	default_terminal = ai_term and tags_defaults_agent or "shell",
-
-	auto = {
-		-- TODO: make this accept tags
-		-- tags_defaults_agent,
-	},
 
 	commands = {
 		portless = {

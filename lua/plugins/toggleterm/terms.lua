@@ -145,11 +145,12 @@ local function with_query(o, cb)
 			return vim.ui.select(items, {
 				prompt = o.prompt,
 				format_item = function(item)
-					local padded = pad(item.key, 20)
+					local res = item.status == "idle" and "○ " or "  "
+					res = res .. pad(item.key, 20)
 					if item.display_name == item.key then
-						return padded
+						return res
 					end
-					return padded .. "  \u{2014}  " .. item.display_name
+					return res .. "  \u{2014}  " .. item.display_name
 				end,
 			}, function(item)
 				if item then
@@ -175,7 +176,7 @@ function M.run()
 	end
 	table.sort(keys)
 	vim.ui.select(keys, {
-		prompt = "Select command: ",
+		prompt = "Select Command: ",
 	}, function(key)
 		if not key then
 			return
