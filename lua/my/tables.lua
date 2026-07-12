@@ -1,5 +1,6 @@
 local M = {}
 
+-- useful when t1 has a setter overload
 function M.deep_merge(t1, t2)
 	local offset = #t1
 	for k, v in pairs(t2) do
@@ -12,16 +13,6 @@ function M.deep_merge(t1, t2)
 		end
 	end
 	return t1
-end
-
-function M.cached(create)
-	local cache = {}
-	local mt = {}
-	function mt:__index(key)
-		cache[key] = cache[key] or create(key)
-		return cache[key]
-	end
-	return setmetatable(cache, mt)
 end
 
 return M
