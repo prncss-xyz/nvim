@@ -15,6 +15,9 @@ return {
 			bdelete = function()
 				Snacks.bufdelete.delete()
 			end,
+			create = function(target)
+				require("plugins.khutulun.create").create(target)
+			end,
 		},
 		keys = {
 			{
@@ -34,10 +37,10 @@ return {
 			{
 				domain.file .. "e",
 				function()
-					require("khutulun").create()
+					require("khutulun").create_from_selection()
 				end,
 				mode = { "x" },
-				desc = "New File From Selection",
+				desc = "Extract Selection to New File",
 			},
 			{
 				domain.file .. "r",

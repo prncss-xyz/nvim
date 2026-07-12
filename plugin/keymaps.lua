@@ -208,8 +208,6 @@ vim.keymap.set("n", domain.move .. "a", function()
 			{ "(.+)%.tsx", "%1.test.tsx" },
 			{ "(.+)%.lua$", "%1_spec.lua" },
 			{ "(.+)%.go$", "%1_test.go" },
-			{ "(.+) %- extra%.md$", "%1.md" },
-			{ "(.+)%.md$", "%1 - extra.md" },
 			{ "(.+)(%.[%w%d]+)$", "%1.test%2" },
 			{ "(.+)/__tests__/(.+)", "%1/%2" },
 			{ "(.+)/(.+)", "%1/__tests__/%2" },
