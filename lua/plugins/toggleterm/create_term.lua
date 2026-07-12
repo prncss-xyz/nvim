@@ -61,6 +61,9 @@ function M.create_term(config, send)
 	end
 
 	return {
+		is_in_view = function()
+			require("plugins.toggleterm.is_in_view").is_in_view(term.window)
+		end,
 		toggle = toggle,
 		focus = focus,
 		send_str = function(str, start_insert)

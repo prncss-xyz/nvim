@@ -126,9 +126,10 @@ local function make_item(o, cb)
 		if event.type == "focus" then
 			history.insert(item)
 		elseif event.type == "status" then
+      print(event.value)
 			if item.status ~= "exited" then
 				item.status = event.value
-				if event.value == "idle" and not event.in_view then
+				if event.value == "idle" and not item.term.is_in_view() then
 					config.on_idle(item)
 				end
 			end
@@ -207,10 +208,6 @@ function M.send_str(o, str)
 	with_query(o, function(instance)
 		instance.term.send_str(str)
 	end)
-end
-
-function M.setup_start()
-	-- TODO:
 end
 
 return M
