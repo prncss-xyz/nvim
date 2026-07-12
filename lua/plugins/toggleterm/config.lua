@@ -63,9 +63,11 @@ return {
 		repl = require("plugins.toggleterm.repl").get_REPL,
 		gac = {
 			cmd = "gac",
+			close_on_exit = false,
 		},
 		gacp = {
 			cmd = "gacp",
+			close_on_exit = false,
 		},
 		["commit ongoing work"] = {
 			cmd = 'git add --all; git commit -m "ongoing work" --no-verify',
@@ -124,5 +126,9 @@ return {
 	prompts = {
 		["do this"] = "do this",
 		["explain this"] = "explain this",
+	},
+	autostart = {
+		{ key = "ddgr" },
+		{ tag = "agent" },
 	},
 }

@@ -6,7 +6,7 @@ local last_terminal
 local window = require("plugins.toggleterm.window")
 local is_visible = window.is_visible
 
-function M.create_term(config, send)
+function M.create_term(config, send, prepare)
 	local o = vim.deepcopy(config)
 	o.on_open = function()
 		vim.schedule(function()
@@ -15,10 +15,16 @@ function M.create_term(config, send)
 	end
 
 	function o.on_exit()
-		send({ type = "status", value = "exited" })
+		send({
+			type = "status",
+			value = "exited",
+		})
 	end
 
 	local term = Terminal:new(o)
+	if prepare then
+		term:spawn()
+	end
 	vim.schedule(function()
 		if term and term.bufnr and term.bufnr > 0 then
 			start_idle_detection(term, config.idle_timeout, send)

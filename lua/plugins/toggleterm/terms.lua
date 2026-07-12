@@ -121,6 +121,10 @@ local function key_to_item(key)
 	return item
 end
 
+local function prepare()
+	-- noop, but also a flag
+end
+
 local function make_item(o, cb)
 	local key = query_to_key(o)
 	if not key then
@@ -130,20 +134,22 @@ local function make_item(o, cb)
 	if not item then
 		return
 	end
+	local once_seen = false
 	local term = create_term(item, function(event)
 		if event.type == "focus" then
 			history.insert(item)
 		elseif event.type == "status" then
+			once_seen = once_seen or event.seen
 			if item.status ~= "exited" then
 				item.status = event.value
-				if not event.seen then
+				if once_seen and event.value == "idle" and not event.seen then
 					config.on_idle(item)
 				end
 			end
 		elseif event.type == "detach" then
 			history.purge(item.hash)
 		end
-	end)
+	end, cb == prepare)
 	item.term = term
 	history.insert(item)
 	cb(item)
@@ -215,10 +221,20 @@ function M.toggle(o)
 	end)
 end
 
+function M.prepare(o)
+	with_query(o, prepare)
+end
+
 function M.send_str(o, str)
 	with_query(o, function(instance)
 		instance.term.send_str(str)
 	end)
+end
+
+function M.on_dir()
+	for _, v in ipairs(config.autostart) do
+		M.prepare(v)
+	end
 end
 
 return M

@@ -38,6 +38,7 @@ function M.start_idle_detection(term, idle_timeout, send)
 				send({
 					type = "status",
 					value = "active",
+					seen = seen,
 				})
 			end
 			clear()
