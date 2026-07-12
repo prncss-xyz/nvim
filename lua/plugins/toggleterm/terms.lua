@@ -15,7 +15,10 @@ local function transform_dir(dir)
 		return nil
 	end
 	if dir == nil then
-		return vim.fn.getcwd()
+		return {
+			vim.env.HOME,
+			vim.fn.getcwd(),
+		}
 	end
 	return dir
 end
@@ -30,7 +33,11 @@ local function get_query_fn(o)
 	end
 	return function(item)
 		for k, v in pairs(query) do
-			if item[k] ~= v then
+			if type(v) == "table" and vim.islist(v) then
+				if not vim.tbl_contains(v, item[k]) then
+					return false
+				end
+			elseif item[k] ~= v then
 				return false
 			end
 		end
@@ -142,7 +149,11 @@ local function make_item(o, cb)
 	cb(item)
 end
 
-local status_icons = { idle = "○ ", exited = "✗ " }
+local status_icons = {
+	active = "● ",
+	idle = "○ ",
+	exited = "✗ ",
+}
 
 local function with_query(o, cb)
 	local query_fn = get_query_fn(o)

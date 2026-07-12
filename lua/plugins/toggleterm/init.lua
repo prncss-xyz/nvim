@@ -74,7 +74,7 @@ return {
 			{
 				domain.pick .. theme.run,
 				function()
-					require("plugins.toggleterm.terms").focus({ prompt = "Select caca" })
+					require("plugins.toggleterm.terms").focus({ prompt = "Select Terminal" })
 				end,
 				desc = "Select Terminal",
 			},

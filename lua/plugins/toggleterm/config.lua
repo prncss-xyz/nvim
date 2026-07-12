@@ -38,6 +38,7 @@ return {
 	commands = {
 		ddgr = {
 			cmd = "ddgr",
+			dir = vim.env.HOME,
 		},
 		portless = {
 			cmd = "portless",
