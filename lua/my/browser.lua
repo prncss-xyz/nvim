@@ -83,7 +83,6 @@ local function query_bang(on_confirm)
 	end)
 end
 
--- FIX:
 function M.search()
 	local op = require("flies.operations._with_contents"):new({
 		cb = function(_, contents)

@@ -27,12 +27,6 @@ local function on_focus()
 	end
 end
 
-local function is_win_file(win_id)
-	local buf_id = vim.api.nvim_win_get_buf(win_id)
-	local buf_type = vim.api.nvim_buf_get_option(buf_id, "buftype")
-	return buf_type == ""
-end
-
 function M.close_all_but_current()
 	local current_win_id = vim.api.nvim_get_current_win()
 	local windows = vim.api.nvim_tabpage_list_wins(0)
@@ -48,23 +42,6 @@ function M.is_file_cur_win()
 	local bufnr = vim.api.nvim_win_get_buf(winid)
 	local buf_type = vim.api.nvim_buf_get_option(bufnr, "buftype")
 	return buf_type == ""
-end
-
-function M.get_last_n(n, win_id)
-	local current_tab_id = vim.api.nvim_win_get_tabpage(win_id)
-	local res = {}
-	for i = #history[current_tab_id] - 1, 1, -1 do
-		local h_win_id = history[current_tab_id][i]
-		if is_win_file(h_win_id) then
-			if win_id == h_win_id then
-				table.insert(res, h_win_id)
-				if #res == n then
-					break
-				end
-			end
-		end
-	end
-	return res
 end
 
 local function focus_last_win()
@@ -114,7 +91,7 @@ function M.list()
 			buftype = vim.api.nvim_buf_get_option(buf_id, "buftype"),
 		})
 	end
-	print(vim.inspect(infos))
+	dd(infos)
 end
 
 function M.swap(winid)

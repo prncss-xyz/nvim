@@ -36,6 +36,9 @@ return {
 	default_terminal = ai_term and tags_defaults_agent or "shell",
 
 	commands = {
+		ddgr = {
+			cmd = "ddgr",
+		},
 		portless = {
 			cmd = "portless",
 			close_on_exit = false,

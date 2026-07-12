@@ -4,45 +4,6 @@ local notes = require("my.parameters").dirs.notes
 
 local is_file_cur_win = require("my.windows").is_file_cur_win
 
-function M.is_binary_by_ext(filepath)
-	if not filepath then
-		return false
-	end
-
-	-- Extract the extension (handles cases like .tar.gz by taking the last part)
-	local ext = filepath:match("^.+(%..+)$")
-	if not ext then
-		return false
-	end
-	ext = ext:lower()
-
-	-- Define binary extensions
-	local binary_extensions = {
-		[".bin"] = true,
-		[".exe"] = true,
-		[".dll"] = true,
-		[".so"] = true,
-		[".o"] = true,
-		[".pyc"] = true,
-		[".pyd"] = true,
-		[".node"] = true,
-		[".png"] = true,
-		[".jpg"] = true,
-		[".jpeg"] = true,
-		[".gif"] = true,
-		[".pdf"] = true,
-		[".zip"] = true,
-		[".tar"] = true,
-		[".gz"] = true,
-		[".7z"] = true,
-		[".wasm"] = true,
-		[".sqlite"] = true,
-		[".db"] = true,
-	}
-
-	return binary_extensions[ext] or false
-end
-
 function M.toggle_project()
 	if is_file_cur_win() then
 		M.open_project(vim.env.HOME, { vim.fn.getcwd() }, M.pick_project)

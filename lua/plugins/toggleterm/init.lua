@@ -203,6 +203,14 @@ return {
 				mode = "n",
 			},
 			{
+				"my",
+				function()
+					require("plugins.toggleterm.terms").focus({ key = "ddgr" })
+				end,
+				desc = "ddgr",
+				mode = "n",
+			},
+			{
 				"mz",
 				function()
 					require("plugins.toggleterm.last_win").put_diagnostics("next")
