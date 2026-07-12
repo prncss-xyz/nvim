@@ -30,10 +30,15 @@ function M.start_idle_detection(term, idle_timeout, send)
 	local function clear()
 		if handle then
 			vim.fn.timer_stop(handle)
+			handle = nil
 		end
 	end
 
 	vim.api.nvim_buf_attach(term.bufnr, false, {
+		on_detach = function()
+			clear()
+			send({ type = "detach" })
+		end,
 		on_lines = function()
 			if not active then
 				active = true

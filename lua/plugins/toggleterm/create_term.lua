@@ -12,12 +12,8 @@ function M.create_term(config, send)
 		end)
 	end
 
-	function o.on_close()
-		send({ type = "close" })
-	end
-
 	function o.on_exit()
-		send({ type = "exit" })
+		send({ type = "status", value = "exited" })
 	end
 
 	local term = Terminal:new(o)

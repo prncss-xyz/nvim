@@ -54,9 +54,9 @@ function M.create_history(key)
 		filter = filter,
 		insert = insert,
 		purge = purge,
-    dump = function ()
-      dd(history)
-    end
+		dump = function()
+			dd(history)
+		end,
 	}
 end
 

@@ -126,11 +126,13 @@ local function make_item(o, cb)
 		if event.type == "focus" then
 			history.insert(item)
 		elseif event.type == "status" then
-			item.status = event.value
-			if event.value == "idle" and not event.in_view then
-				config.on_idle(item)
+			if item.status ~= "exited" then
+				item.status = event.value
+				if event.value == "idle" and not event.in_view then
+					config.on_idle(item)
+				end
 			end
-		elseif event.type == "close" then
+		elseif event.type == "detach" then
 			history.purge(item.hash)
 		end
 	end)
@@ -138,6 +140,8 @@ local function make_item(o, cb)
 	history.insert(item)
 	cb(item)
 end
+
+local status_icons = { idle = "○ ", exited = "✗ " }
 
 local function with_query(o, cb)
 	local query_fn = get_query_fn(o)
@@ -147,7 +151,7 @@ local function with_query(o, cb)
 			return vim.ui.select(items, {
 				prompt = o.prompt,
 				format_item = function(item)
-					local res = item.status == "idle" and "○ " or "  "
+					local res = status_icons[item.status] or "  "
 					res = res .. pad(item.key, 20)
 					if item.display_name == item.key then
 						return res
