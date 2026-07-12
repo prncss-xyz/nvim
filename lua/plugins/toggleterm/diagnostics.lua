@@ -29,7 +29,7 @@ local function diagnostic_text(bufnr, diagnostic)
 		text = vim.api.nvim_buf_get_lines(bufnr, start_row, start_row + 1, false)
 	end
 
-	return table.concat(text, "\n")
+	return table.concat(text, "\n") .. "\n"
 end
 
 local function filter_diagnostics(diagnostic, fallback_bufnr)

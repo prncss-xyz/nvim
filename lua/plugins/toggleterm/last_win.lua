@@ -49,7 +49,7 @@ function M.get_ctx()
 		bufnr = bufnr,
 		path = path,
 		row = row,
-		col = col,
+		col = col + 1,
 	}
 end
 
@@ -72,7 +72,7 @@ function M.put_last_file_pos()
 	if ctx then
 		require("plugins.toggleterm.terms").send_str(
 			{ tag = "agent" },
-			string.format("@%s:%i%i ", ctx.path, ctx.row, ctx.col)
+			string.format("@%s:%i:%i ", ctx.path, ctx.row, ctx.col)
 		)
 	end
 end
@@ -108,30 +108,37 @@ function M.get_selection(bufnr)
 
 	local res = { string.format("%s:%i:%i", path, start_row + 1, start_col + 1) }
 	vim.list_extend(res, lines)
-	return res
+	-- concatenate lines adding a line break at the end of each
+	return table.concat(res, "\n") .. "\n"
 end
 
 function M.put_selection_to_term()
-	M.put_with_last(function(ctx)
-		return M.get_selection(ctx.bufnr)
-	end, "agent")
+	local ctx = M.get_ctx()
+	if ctx then
+		require("plugins.toggleterm.terms").send_str({ tag = "agent" }, M.get_selection(ctx.bufnr))
+	end
 end
 
 function M.prompt()
-	local prompts = require("plugins.toggleterm.config").prompts
-	local choices = vim.tbl_keys(prompts)
-	vim.ui.select(choices, {
-		prompt = "Select prompt: ",
-	}, function(choice)
-		if not choice then
-			return
-		end
+	local ctx = M.get_ctx()
+	if ctx then
+		local prompts = require("plugins.toggleterm.config").prompts
+		local choices = vim.tbl_keys(prompts)
+		vim.ui.select(choices, {
+			prompt = "Select prompt: ",
+		}, function(choice)
+			if not choice then
+				return
+			end
 
-		local prompt_fn = prompts[choice]
-		local prompt_data = prompt_fn()
+			local contents = prompts[choice]
 
-		require("plugins.toggleterm.terms").send_str({ tag = "agent" }, prompt_data)
-	end)
+			require("plugins.toggleterm.terms").send_str(
+				{ tag = "agent" },
+				string.format("@%s:%i:%i %s\n", ctx.path, ctx.row, ctx.col, contents)
+			)
+		end)
+	end
 end
 
 return M

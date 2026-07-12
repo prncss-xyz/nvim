@@ -117,35 +117,8 @@ return {
 		end,
 	},
 
-	new = {
-		pi = "new",
-		opencode = "new",
-		claude = "clear",
-	},
-
 	prompts = {
-		todo = function()
-			return {
-				cr = true,
-				"do this",
-				require("plugins.toggleterm.agents").current_line_ref(),
-				require("plugins.toggleterm.agents").current_line(),
-			}
-		end,
-		fixme = function()
-			return {
-				"fix this",
-				require("plugins.toggleterm.agents").current_line_ref(),
-				require("plugins.toggleterm.agents").current_line(),
-			}
-		end,
-		explain = function()
-			return {
-				cr = true,
-				"explain this",
-				require("plugins.toggleterm.agents").current_line_ref(),
-				require("plugins.toggleterm.agents").current_line(),
-			}
-		end,
+		["do this"] = "do this",
+		["explain this"] = "explain this",
 	},
 }

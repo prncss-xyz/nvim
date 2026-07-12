@@ -171,11 +171,11 @@ return {
 				mode = "x",
 			},
 			{
-				"me",
+				"mc",
 				function()
-					require("plugins.toggleterm.last_win").put_last_file_name()
+					require("plugins.toggleterm.last_win").put_last_file_pos()
 				end,
-				desc = "Put Current File Path",
+				desc = "Put Current File Position",
 				mode = "n",
 			},
 			{
@@ -187,11 +187,19 @@ return {
 				mode = "n",
 			},
 			{
-				"mc",
+				"me",
 				function()
-					require("plugins.toggleterm.last_win").put_last_file_pos()
+					require("plugins.toggleterm.last_win").put_last_file_name()
 				end,
-				desc = "Put Current File Position",
+				desc = "Put Current File Path",
+				mode = "n",
+			},
+			{
+				"mm",
+				function()
+					require("plugins.toggleterm.last_win").prompt()
+				end,
+				desc = "Put Current File Path",
 				mode = "n",
 			},
 			{
