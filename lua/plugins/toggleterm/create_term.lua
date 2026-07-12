@@ -41,7 +41,7 @@ function M.create_term(config, send)
 		if hide_last() then
 			return
 		end
-		if not is_visible() then
+		if not is_visible(term.window) then
 			last_terminal = term
 		end
 		term:toggle()
@@ -49,7 +49,7 @@ function M.create_term(config, send)
 
 	local function focus()
 		hide_last()
-		if not is_visible() then
+		if not is_visible(term.window) then
 			term:toggle()
 			last_terminal = term
 		end

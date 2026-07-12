@@ -19,8 +19,7 @@ function M.is_visible(winnr)
 end
 
 function M.is_in_view(winnr)
-	-- return winnr and vim.api.nvim_win_is_valid(winnr) and nvim_has_focus
-	return winnr and vim.api.nvim_win_is_valid(winnr)
+	return winnr and vim.api.nvim_win_is_valid(winnr) and nvim_has_focus
 end
 
 return M

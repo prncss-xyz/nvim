@@ -2,6 +2,18 @@
 
 local M = {}
 
+table.insert(
+	M,
+	s(
+		"frontmatter",
+		fmt("---\n{}: {}\n---", {
+
+			i(1, "key"),
+			i(2, "value"),
+		}, { delimiters = "{}" })
+	)
+)
+
 table.insert(M, s("tsk", fmt("- [ ] ", {}, { delimiters = "{}" })))
 
 table.insert(

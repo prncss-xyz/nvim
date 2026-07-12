@@ -77,16 +77,14 @@ function M.put_last_file_pos()
 	end
 end
 
-function M.put_diagnostic_prompt()
-	M.put_with_last(function(ctx)
-		return require("plugins.toggleterm.diagnostics").get_diagnostic_prompt(ctx.bufnr)
-	end, "agent")
-end
-
-function M.put_file_diagnostics_prompt()
-	M.put_with_last(function(ctx)
-		return require("plugins.toggleterm.diagnostics").get_file_diagnostics_prompt(ctx.bufnr)
-	end, "agent")
+function M.put_diagnostics(scope)
+	local ctx = M.get_ctx()
+	if ctx then
+		require("plugins.toggleterm.terms").send_str(
+			{ tag = "agent" },
+			"fix these diagnostics\n" .. require("plugins.toggleterm.diagnostics").get_diagnostics(ctx.bufnr, scope)
+		)
+	end
 end
 
 function M.get_selection(bufnr)
@@ -113,10 +111,27 @@ function M.get_selection(bufnr)
 	return res
 end
 
-function M.put_selection_to_term(key)
+function M.put_selection_to_term()
 	M.put_with_last(function(ctx)
 		return M.get_selection(ctx.bufnr)
-	end, key)
+	end, "agent")
+end
+
+function M.prompt()
+	local prompts = require("plugins.toggleterm.config").prompts
+	local choices = vim.tbl_keys(prompts)
+	vim.ui.select(choices, {
+		prompt = "Select prompt: ",
+	}, function(choice)
+		if not choice then
+			return
+		end
+
+		local prompt_fn = prompts[choice]
+		local prompt_data = prompt_fn()
+
+		require("plugins.toggleterm.terms").send_str({ tag = "agent" }, prompt_data)
+	end)
 end
 
 return M

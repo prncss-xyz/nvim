@@ -14,7 +14,7 @@ local function get_open_cmd()
 end
 
 -- http://lua-users.org/wiki/StringRecipes
-function M.encode_uri(str)
+local function encode_uri(str)
 	if str then
 		str = str:gsub("\n", "\r\n")
 		str = str:gsub("([^%w %-%_%.%~])", function(c)
@@ -33,7 +33,7 @@ local function get_url(base, query)
 		local first = true
 		for key, value in pairs(query) do
 			local sep = first and "?" or "&"
-			local escaped = M.encode_uri(value)
+			local escaped = encode_uri(value)
 			first = false
 			query_str = query_str .. sep .. key .. "=" .. escaped
 		end
@@ -44,12 +44,7 @@ end
 ---@param base string
 ---@param query {[string]: string}?
 function M.visit(base, query)
-	require("plenary").job
-		:new({
-			command = get_open_cmd(),
-			args = { get_url(base, query) },
-		})
-		:start()
+	vim.system({ get_open_cmd(), get_url(base, query) }, { detach = true }):wait()
 end
 
 function M.link()
@@ -88,6 +83,7 @@ local function query_bang(on_confirm)
 	end)
 end
 
+-- FIX:
 function M.search()
 	local op = require("flies.operations._with_contents"):new({
 		cb = function(_, contents)
@@ -101,52 +97,6 @@ function M.search()
 		end,
 	})
 	op:call({})
-end
-
-local slug_pattern = "%[.+%]"
-
-local file_patterns = {
-	"^src/app/(.+)/page%.tsx$",
-	"^app/(.+)/page%.tsx$",
-}
-
-local default_port = "3000"
-
-local function find_match(path)
-	for _, pattern in ipairs(file_patterns) do
-		local res = path:match(pattern)
-		if res then
-			return res
-		end
-	end
-end
-
-local function get_file_url(path, port)
-	local res = find_match(path) or ""
-	return "http://localhost:" .. port .. "/" .. res
-end
-
-function M.server()
-	local port = vim.env.PORT or default_port
-	return "http://localhost:" .. port .. "/"
-end
-
-function M.file(url)
-	url = url or get_file_url(vim.fn.expand("%:."), vim.env.PORT or default_port)
-	local slug = url:match(slug_pattern)
-	if slug then
-		vim.ui.input({
-			prompt = "input slug " .. slug .. " in " .. url,
-		}, function(result)
-			if not result or result == "" then
-				return
-			end
-			url = string.gsub(url, require("flies.utils").pattern_escape(slug), result)
-			M.file(url)
-		end)
-		return
-	end
-	M.visit(url)
 end
 
 return M

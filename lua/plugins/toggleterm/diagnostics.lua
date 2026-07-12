@@ -2,7 +2,7 @@ local M = {}
 
 local function diagnostic_position(bufnr, diagnostic)
 	local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":.")
-	return string.format("@%s:d:d", path, (diagnostic.lnum or 0) + 1, (diagnostic.col or 0) + 1)
+	return string.format("@%s:%d:%d", path, (diagnostic.lnum or 0) + 1, (diagnostic.col or 0) + 1)
 end
 
 local function get_diagnostic_bufnr(diagnostic, fallback_bufnr)
@@ -32,7 +32,7 @@ local function diagnostic_text(bufnr, diagnostic)
 	return table.concat(text, "\n")
 end
 
-local function diagnostic_in_cwd(diagnostic, fallback_bufnr)
+local function filter_diagnostics(diagnostic, fallback_bufnr)
 	local bufnr = get_diagnostic_bufnr(diagnostic, fallback_bufnr)
 	local name = vim.api.nvim_buf_get_name(bufnr)
 	if name == "" then
@@ -53,13 +53,81 @@ local function diagnostic_lines(diagnostic, fallback_bufnr)
 	}
 end
 
-function M.diagnostics()
-	local bufnr = vim.api.nvim_get_current_buf()
-	local diagnostics = vim.tbl_filter(function(diagnostic)
-		return diagnostic_in_cwd(diagnostic, bufnr)
-	end, vim.diagnostic.get())
+local function get_buf_cursor(bufnr)
+	local current_win = vim.api.nvim_get_current_win()
+	if vim.api.nvim_win_get_buf(current_win) == bufnr then
+		return vim.api.nvim_win_get_cursor(current_win)
+	end
+
+	for _, winid in ipairs(vim.fn.win_findbuf(bufnr)) do
+		if vim.api.nvim_win_is_valid(winid) then
+			return vim.api.nvim_win_get_cursor(winid)
+		end
+	end
+end
+
+-- Returns a list containing the next diagnostic in the window showing bufnr,
+-- starting inclusively from the current cursor position. The list has at most
+-- one diagnostic; it is empty when the cursor is at or past the last diagnostic.
+local function next_window_diagnostics(bufnr)
+	local cursor = get_buf_cursor(bufnr)
+	if not cursor then
+		return {}
+	end
+
+	local row = cursor[1] - 1
+	local col = cursor[2]
+	local diagnostics = vim.diagnostic.get(bufnr)
+	table.sort(diagnostics, function(a, b)
+		local a_lnum = a.lnum or 0
+		local b_lnum = b.lnum or 0
+		if a_lnum ~= b_lnum then
+			return a_lnum < b_lnum
+		end
+
+		local a_col = a.col or 0
+		local b_col = b.col or 0
+		if a_col ~= b_col then
+			return a_col < b_col
+		end
+
+		return (a.severity or math.huge) < (b.severity or math.huge)
+	end)
+
+	for _, diagnostic in ipairs(diagnostics) do
+		local start_row = diagnostic.lnum or 0
+		local start_col = diagnostic.col or 0
+		if start_row > row or (start_row == row and start_col >= col) then
+			return { diagnostic }
+		end
+	end
+
+	return {}
+end
+
+-- Sends a prompt to the agent terminal asking it to fix the selected diagnostics.
+-- scope == nil or "project": all diagnostics whose buffer lives under the cwd (the historical default)
+-- scope == "file": all diagnostics in the current buffer
+-- scope == "next": the next diagnostic in the current window, starting inclusively from the cursor
+function M.get_diagnostics(bufnr, scope)
+	local diagnostics
+	local empty_message
+
+	if scope == "next" then
+		diagnostics = next_window_diagnostics(bufnr)
+		empty_message = "No diagnostic after the cursor in the current window"
+	elseif scope == "file" then
+		diagnostics = vim.diagnostic.get(bufnr)
+		empty_message = "No diagnostics in the current buffer"
+	else
+		diagnostics = vim.tbl_filter(function(diagnostic)
+			return filter_diagnostics(diagnostic, bufnr)
+		end, vim.diagnostic.get())
+		empty_message = "No diagnostics found in current working directory"
+	end
+
 	if #diagnostics == 0 then
-		vim.notify("No diagnostics found in current working directory", vim.log.levels.WARN)
+		vim.notify(empty_message, vim.log.levels.WARN)
 		return
 	end
 
@@ -85,10 +153,7 @@ function M.diagnostics()
 		return (a.severity or math.huge) < (b.severity or math.huge)
 	end)
 
-	local lines = {
-		cr = true,
-		"fix these diagnostics",
-	}
+	local lines = {}
 
 	for index, diagnostic in ipairs(diagnostics) do
 		if index > 1 then
@@ -97,135 +162,9 @@ function M.diagnostics()
 		vim.list_extend(lines, diagnostic_lines(diagnostic, bufnr))
 	end
 
-	require("plugins.toggleterm.v2").send_str({ tag = "agent" }, lines)
-end
+	local payload = table.concat(lines, "\n")
 
-local function get_buf_cursor(bufnr)
-	local current_win = vim.api.nvim_get_current_win()
-	if vim.api.nvim_win_get_buf(current_win) == bufnr then
-		return vim.api.nvim_win_get_cursor(current_win)
-	end
-
-	for _, winid in ipairs(vim.fn.win_findbuf(bufnr)) do
-		if vim.api.nvim_win_is_valid(winid) then
-			return vim.api.nvim_win_get_cursor(winid)
-		end
-	end
-end
-
-local function get_current_diagnostic(bufnr)
-	local cursor = get_buf_cursor(bufnr)
-	local row = cursor and (cursor[1] - 1) or nil
-	local col = cursor and cursor[2] or nil
-	local diagnostics = row and vim.diagnostic.get(bufnr, { lnum = row }) or {}
-
-	if row and col then
-		for _, diagnostic in ipairs(diagnostics) do
-			local start_row = diagnostic.lnum or row
-			local start_col = diagnostic.col or 0
-			local end_row = diagnostic.end_lnum or start_row
-			local end_col = diagnostic.end_col or (start_col + 1)
-
-			local after_start = row > start_row or (row == start_row and col >= start_col)
-			local before_end = row < end_row or (row == end_row and col < end_col)
-			if after_start and before_end then
-				return diagnostic
-			end
-		end
-
-		if #diagnostics > 0 then
-			table.sort(diagnostics, function(a, b)
-				return math.abs((a.col or 0) - col) < math.abs((b.col or 0) - col)
-			end)
-			return diagnostics[1]
-		end
-	end
-
-	local all = vim.diagnostic.get(bufnr)
-	if #all == 0 then
-		return nil
-	end
-
-	if row == nil or col == nil then
-		return all[1]
-	end
-
-	table.sort(all, function(a, b)
-		local a_row = a.lnum or 0
-		local b_row = b.lnum or 0
-		local a_col = a.col or 0
-		local b_col = b.col or 0
-		local a_dist = math.abs(a_row - row) * 10000 + math.abs(a_col - col)
-		local b_dist = math.abs(b_row - row) * 10000 + math.abs(b_col - col)
-		return a_dist < b_dist
-	end)
-
-	return all[1]
-end
-
-function M.get_diagnostic_prompt(bufnr)
-	local diagnostic = get_current_diagnostic(bufnr)
-	if not diagnostic then
-		vim.notify("No diagnostic found", vim.log.levels.WARN)
-		return ""
-	end
-
-	local lines = "fix this diagnostic" .. "\n" .. diagnostic_position(bufnr, diagnostic) .. "\n"
-	if diagnostic.message then
-		lines = lines .. diagnostic.message .. "\n"
-	end
-end
-
-function M.get_file_diagnostics_prompt(bufnr)
-	local diagnostics = vim.diagnostic.get(bufnr)
-	if #diagnostics == 0 then
-		vim.notify("No diagnostics found", vim.log.levels.WARN)
-		return ""
-	end
-
-	table.sort(diagnostics, function(a, b)
-		local a_lnum = a.lnum or 0
-		local b_lnum = b.lnum or 0
-		if a_lnum ~= b_lnum then
-			return a_lnum < b_lnum
-		end
-
-		local a_col = a.col or 0
-		local b_col = b.col or 0
-		if a_col ~= b_col then
-			return a_col < b_col
-		end
-
-		return (a.severity or math.huge) < (b.severity or math.huge)
-	end)
-
-	local lines = "fix these diagnostics\n"
-
-	for _, diagnostic in ipairs(diagnostics) do
-		lines = lines .. diagnostic_position(bufnr, diagnostic) .. "\n"
-		if diagnostic.message then
-			lines = lines .. diagnostic.message .. "\n"
-		end
-	end
-
-	return lines
-end
-
-function M.prompt()
-	local prompts = require("plugins.toggleterm.config").prompts
-	local choices = vim.tbl_keys(prompts)
-	vim.ui.select(choices, {
-		prompt = "Select prompt: ",
-	}, function(choice)
-		if not choice then
-			return
-		end
-
-		local prompt_fn = prompts[choice]
-		local prompt_data = prompt_fn()
-
-		require("plugins.toggleterm.v2").send_str({ tag = "agent" }, prompt_data)
-	end)
+	return payload
 end
 
 return M

@@ -165,7 +165,7 @@ return {
 			{
 				"ma",
 				function()
-					require("plugins.toggleterm.last_win").put_selection_to_term("agent")
+					require("plugins.toggleterm.last_win").put_selection_to_term()
 				end,
 				desc = "Send Selection to Agent",
 				mode = "x",
@@ -197,7 +197,7 @@ return {
 			{
 				"mz",
 				function()
-					require("plugins.toggleterm.last_win").put_diagnostic_prompt()
+					require("plugins.toggleterm.last_win").put_diagnostics("next")
 				end,
 				desc = "Put Diagnostic Prompt",
 				mode = "n",
@@ -205,7 +205,7 @@ return {
 			{
 				"mpz",
 				function()
-					require("plugins.toggleterm.last_win").put_file_diagnostics_prompt()
+					require("plugins.toggleterm.last_win").put_diagnostics("file")
 				end,
 				desc = "Put File Diagnostics Prompt",
 				mode = "n",
