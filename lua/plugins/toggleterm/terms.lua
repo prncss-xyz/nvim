@@ -126,7 +126,6 @@ local function make_item(o, cb)
 		if event.type == "focus" then
 			history.insert(item)
 		elseif event.type == "status" then
-      print(event.value)
 			if item.status ~= "exited" then
 				item.status = event.value
 				if event.value == "idle" and not item.term.is_in_view() then
