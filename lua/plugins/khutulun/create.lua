@@ -14,9 +14,9 @@ function M.create(target)
 	if not snippet then
 		vim.cmd.edit(target)
 	else
-		local luasnip = require("luasnip")
-
 		vim.cmd.edit(target)
+		local luasnip = require("luasnip")
+		vim.cmd.startinsert()
 		luasnip.snip_expand(luasnip.snippet("", snippet()), {})
 	end
 end

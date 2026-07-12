@@ -93,7 +93,7 @@ function M.focus_last_win()
 	if target then
 		vim.api.nvim_set_current_win(target)
 		if vim.bo.buftype == "terminal" then
-			vim.cmd("startinsert")
+			vim.cmd.startinsert()
 		end
 	end
 end

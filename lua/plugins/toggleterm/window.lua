@@ -14,9 +14,13 @@ vim.api.nvim_create_autocmd("FocusLost", {
 	end,
 })
 
+function M.is_visible(winnr)
+	return winnr and vim.api.nvim_win_is_valid(winnr)
+end
+
 function M.is_in_view(winnr)
-	local visible = winnr and vim.api.nvim_win_is_valid(winnr)
-	return visible and nvim_has_focus
+	-- return winnr and vim.api.nvim_win_is_valid(winnr) and nvim_has_focus
+	return winnr and vim.api.nvim_win_is_valid(winnr)
 end
 
 return M

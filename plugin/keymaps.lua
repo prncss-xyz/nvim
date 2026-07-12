@@ -150,7 +150,7 @@ vim.keymap.set("n", "<esc>", function()
 			vim.api.nvim_chan_send(job_id, vim.api.nvim_replace_termcodes("<Esc>", true, false, true))
 		end
 		vim.schedule(function()
-			vim.cmd("startinsert")
+			vim.cmd.startinsert()
 		end)
 	end
 end, { desc = "Term Send Esc + Startinsert" })

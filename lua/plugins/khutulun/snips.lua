@@ -18,6 +18,24 @@ return M]],
 	)
 end
 
+M[".+%.md"] = function()
+	local file = vim.api.nvim_buf_get_name(0)
+	local basename = vim.fs.basename(file):gsub("%.md$", "")
+	local title = basename == "index" and vim.fs.basename(vim.fs.dirname(file)) or basename
+	title = title:gsub("^%l", string.upper)
+	return fmt(
+		[[# []
+
+[]
+]],
+		{
+			i(1, title),
+			i(2, ""),
+		},
+		{ delimiters = "[]" }
+	)
+end
+
 M["LICENSE"] = function()
 	return fmt(
 		[[MIT License
@@ -43,9 +61,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]],
 		{
-      i(1, tostring(os.date("%Y"))),
-      i(1, "Juliette Lamarche"),
-    },
+			i(1, tostring(os.date("%Y"))),
+			i(2, (vim.fn.system("git config --global user.name"):gsub("\n", ""))),
+		},
 		{ delimiters = "[]" }
 	)
 end

@@ -1,4 +1,5 @@
 local M = {}
+
 local create_history = require("plugins.toggleterm.history").create_history
 local create_term = require("plugins.toggleterm.create_term").create_term
 local config = require("plugins.toggleterm.config")
@@ -128,7 +129,7 @@ local function make_item(o, cb)
 		elseif event.type == "status" then
 			if item.status ~= "exited" then
 				item.status = event.value
-				if event.value == "idle" and not item.term.is_in_view() then
+				if not event.seen then
 					config.on_idle(item)
 				end
 			end

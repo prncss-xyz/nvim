@@ -140,10 +140,10 @@ return {
 				"opw",
 				function()
 					require("plugins.toggleterm.terms").focus({
-            status = "idle",
-            dir = "",
-            prompt = "Select Idle"
-          })
+						status = "idle",
+						dir = "",
+						prompt = "Select Idle",
+					})
 				end,
 				desc = "Select Idle",
 			},

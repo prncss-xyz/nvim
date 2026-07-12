@@ -3,12 +3,14 @@ local M = {}
 local Terminal = require("toggleterm.terminal").Terminal
 local start_idle_detection = require("plugins.toggleterm.idle").start_idle_detection
 local last_terminal
+local window = require("plugins.toggleterm.window")
+local is_visible = window.is_visible
 
 function M.create_term(config, send)
 	local o = vim.deepcopy(config)
 	o.on_open = function()
 		vim.schedule(function()
-			vim.cmd("startinsert")
+			vim.cmd.startinsert()
 		end)
 	end
 
@@ -35,18 +37,12 @@ function M.create_term(config, send)
 		return false
 	end
 
-	local function is_visible()
-		local winnr = term.window
-		return winnr and vim.api.nvim_win_is_valid(winnr)
-	end
-
 	local function toggle()
 		if hide_last() then
 			return
 		end
 		if not is_visible() then
 			last_terminal = term
-			send({ type = "focus" })
 		end
 		term:toggle()
 	end
@@ -56,14 +52,10 @@ function M.create_term(config, send)
 		if not is_visible() then
 			term:toggle()
 			last_terminal = term
-			send({ type = "focus" })
 		end
 	end
 
 	return {
-		is_in_view = function()
-			require("plugins.toggleterm.is_in_view").is_in_view(term.window)
-		end,
 		toggle = toggle,
 		focus = focus,
 		send_str = function(str, start_insert)
@@ -72,7 +64,7 @@ function M.create_term(config, send)
 				vim.api.nvim_chan_send(term.job_id, str)
 				if start_insert then
 					vim.schedule(function()
-						vim.cmd("startinsert")
+						vim.cmd.startinsert()
 					end)
 				end
 			end)

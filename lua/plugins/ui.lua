@@ -183,7 +183,7 @@ return {
 					if id then
 						vim.api.nvim_set_current_win(id)
 						if vim.bo.buftype == "terminal" then
-							vim.cmd("startinsert")
+							vim.cmd.startinsert()
 						end
 					end
 				end,
