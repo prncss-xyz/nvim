@@ -74,21 +74,24 @@ return {
 			{
 				domain.pick .. theme.run,
 				function()
-					require("plugins.toggleterm.terms").select_term()
+					require("plugins.toggleterm.terms").focus({ prompt = "Select Terminal" })
 				end,
 				desc = "Select Terminal",
 			},
 			{
 				domain.pick .. reverse(theme.run),
 				function()
-					require("plugins.toggleterm.terms").select_any_term()
+					require("plugins.toggleterm.terms").toggle({
+						prompt = "Select Terminal",
+						dir = "",
+					})
 				end,
 				desc = "Select Any Terminal",
 			},
 			{
 				ai_insert.toggle,
 				function()
-					require("plugins.toggleterm.terms").toggle_last_term()
+					require("plugins.toggleterm.terms").toggle({})
 				end,
 				desc = "Toggle Last Terminal",
 				mode = { "n", "x", "i", "t" },
@@ -98,7 +101,7 @@ return {
 				function()
 					require("plugins.toggleterm.ops").repl_op:call({ domain = "outer" }, {
 						i = function()
-							require("plugins.toggleterm.terms").focus_term("repl")
+							require("plugins.toggleterm.terms").focus({ key = "repl" })
 						end,
 					})
 				end,
@@ -108,49 +111,42 @@ return {
 			{
 				"ou",
 				function()
-					require("plugins.toggleterm.terms").focus_term("test")
+					require("plugins.toggleterm.terms").focus({ key = "test" })
 				end,
 				desc = "Toggle Terminal Test",
 			},
 			{
 				"oe",
 				function()
-					require("plugins.toggleterm.terms").focus_term("shell")
+					require("plugins.toggleterm.terms").focus({ key = "shell" })
 				end,
 				desc = "Toggle Terminal Shell",
 			},
 			{
 				"or",
 				function()
-					require("plugins.toggleterm.terms").focus_term("home shell")
+					require("plugins.toggleterm.terms").focus({ key = "home shell" })
 				end,
 				desc = "Toggle Terminal Home Shell",
 			},
 			{
 				"ow",
 				function()
-					require("plugins.toggleterm.terms").select_command()
-				end,
-				desc = "Toggle Terminal Dev",
-			},
-			{
-				"opw",
-				function()
-					require("plugins.toggleterm.terms").select_command(true)
+					require("plugins.toggleterm.terms").run()
 				end,
 				desc = "Toggle Terminal Dev",
 			},
 			{
 				"oo",
 				function()
-					require("plugins.toggleterm.terms").focus_term("diff")
+					require("plugins.toggleterm.terms").focus({ key = "diff" })
 				end,
 				desc = "Toggle Terminal Diff",
 			},
 			{
 				"ma",
 				function()
-					require("plugins.toggleterm.terms").with_tag("agent")
+					require("plugins.toggleterm.terms").focus({ tag = "agent" })
 				end,
 				desc = "Focus Agent",
 				mode = "n",

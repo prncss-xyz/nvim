@@ -54,11 +54,6 @@ local function diagnostic_lines(diagnostic, fallback_bufnr)
 end
 
 function M.diagnostics()
-	local key = require("plugins.toggleterm.terms").get_last_by_tag("agent")
-	if not key then
-		return
-	end
-
 	local bufnr = vim.api.nvim_get_current_buf()
 	local diagnostics = vim.tbl_filter(function(diagnostic)
 		return diagnostic_in_cwd(diagnostic, bufnr)
@@ -102,7 +97,7 @@ function M.diagnostics()
 		vim.list_extend(lines, diagnostic_lines(diagnostic, bufnr))
 	end
 
-	require("plugins.toggleterm.terms").send_lines(key, lines)
+	require("plugins.toggleterm.v2").send_str({ tag = "agent" }, lines)
 end
 
 local function get_buf_cursor(bufnr)
@@ -172,21 +167,20 @@ function M.get_diagnostic_prompt(bufnr)
 	local diagnostic = get_current_diagnostic(bufnr)
 	if not diagnostic then
 		vim.notify("No diagnostic found", vim.log.levels.WARN)
-		return {}
+		return ""
 	end
 
-	return {
-		"fix this diagnostic",
-		diagnostic_position(bufnr, diagnostic),
-		diagnostic.message or "",
-	}
+	local lines = "fix this diagnostic" .. "\n" .. diagnostic_position(bufnr, diagnostic) .. "\n"
+	if diagnostic.message then
+		lines = lines .. diagnostic.message .. "\n"
+	end
 end
 
 function M.get_file_diagnostics_prompt(bufnr)
 	local diagnostics = vim.diagnostic.get(bufnr)
 	if #diagnostics == 0 then
 		vim.notify("No diagnostics found", vim.log.levels.WARN)
-		return {}
+		return ""
 	end
 
 	table.sort(diagnostics, function(a, b)
@@ -205,21 +199,19 @@ function M.get_file_diagnostics_prompt(bufnr)
 		return (a.severity or math.huge) < (b.severity or math.huge)
 	end)
 
-	local lines = { "fix these diagnostics" }
+	local lines = "fix these diagnostics\n"
 
 	for _, diagnostic in ipairs(diagnostics) do
-		table.insert(lines, diagnostic_position(bufnr, diagnostic))
-		table.insert(lines, diagnostic.message or "")
+		lines = lines .. diagnostic_position(bufnr, diagnostic) .. "\n"
+		if diagnostic.message then
+			lines = lines .. diagnostic.message .. "\n"
+		end
 	end
 
 	return lines
 end
 
 function M.prompt()
-	local key = require("plugins.toggleterm.terms").get_last_by_tag("agent")
-	if not key then
-		return
-	end
 	local prompts = require("plugins.toggleterm.config").prompts
 	local choices = vim.tbl_keys(prompts)
 	vim.ui.select(choices, {
@@ -232,23 +224,8 @@ function M.prompt()
 		local prompt_fn = prompts[choice]
 		local prompt_data = prompt_fn()
 
-		require("plugins.toggleterm.terms").send_lines(key, prompt_data)
+		require("plugins.toggleterm.v2").send_str({ tag = "agent" }, prompt_data)
 	end)
-end
-
-function M.new()
-	local key = require("plugins.toggleterm.terms").get_last_by_tag("agent")
-	if not key then
-		return
-	end
-	local command = require("plugins.toggleterm.config").new[key]
-	if not command then
-		return
-	end
-	require("plugins.toggleterm.terms").send_lines(key, {
-		cr = "true",
-		"/" .. command,
-	})
 end
 
 return M

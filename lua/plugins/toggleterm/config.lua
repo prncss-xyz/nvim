@@ -16,8 +16,8 @@ return {
 		end,
 	},
 
-	on_idle = function(scope, key)
-		local msg = string.format("%s in %s (idle)", key, scope)
+	on_idle = function(item)
+		local msg = string.format("%s in %s (idle)", item.key, item.dir)
 		notify.notify(msg)
 	end,
 
@@ -38,7 +38,7 @@ return {
 
 	auto = {
 		-- TODO: make this accept tags
-		tags_defaults_agent,
+		-- tags_defaults_agent,
 	},
 
 	commands = {
@@ -57,7 +57,6 @@ return {
 		shell = {},
 		["home shell"] = {
 			dir = vim.env.HOME,
-			global = true,
 		},
 		diff = {
 			cmd = require("my.diff").get_cmd(),

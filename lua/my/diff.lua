@@ -27,7 +27,7 @@ end
 
 function M.variant()
 	M.cp(variant, function()
-		require("plugins.toggleterm.terms").focus_term("diff")
+		require("plugins.toggleterm.v2").focus_term({ key = "diff" })
 	end)
 end
 

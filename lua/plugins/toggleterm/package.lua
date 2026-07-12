@@ -1,7 +1,5 @@
 local M = {}
 
--- TODO: package manager is last of kind (must be possible to extend to other langs)
-
 local checks = {
 	{ "pnpm-lock.yaml", "pnpm" },
 	{ "package-lock.json", "npm" },
@@ -53,15 +51,12 @@ local function from_package(opts, prefix, acc)
 		local tag = require("plugins.toggleterm.config").packages
 			and require("plugins.toggleterm.config").packages.tagger
 			and require("plugins.toggleterm.config").packages.tagger(key)
-		table.insert(acc, {
-			key = key,
-			conf = {
-				cmd = cmd,
-				cwd = root .. prefix,
-				tag = tag,
-        close_on_exit = false,
-			},
-		})
+		acc[key] = {
+			cmd = cmd,
+			cwd = root .. prefix,
+			tag = tag,
+			close_on_exit = false,
+		}
 	end
 
 	return npm
@@ -95,18 +90,8 @@ local function walk(opts, prefix, depth, acc)
 	end
 end
 
-function M.add_npm_scripts(acc)
-	walk({ root = vim.fn.getcwd() }, "", 0, acc)
-end
-
-function M.find(key)
-	local acc = {}
-	walk({ root = vim.fn.getcwd() }, "", 0, acc)
-	for _, item in ipairs(acc) do
-		if item.key == key then
-			return item.conf
-		end
-	end
+function M.add_npm_scripts(acc, dir)
+	walk({ root = dir }, "", 0, acc)
 end
 
 return M

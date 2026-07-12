@@ -102,6 +102,7 @@ return {
 		opts = {
 			library = {
 				{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
+				{ path = "${3rd}/busted/library", words = { "describe", "it" } },
 			},
 		},
 		cond = not_vscode,

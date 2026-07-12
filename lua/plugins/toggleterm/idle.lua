@@ -14,17 +14,18 @@ vim.api.nvim_create_autocmd("FocusLost", {
 	end,
 })
 
-local function should_notify(winnr)
+local function is_in_view(winnr)
 	local visible = winnr and vim.api.nvim_win_is_valid(winnr)
-	return not (visible and nvim_has_focus)
+	return visible and nvim_has_focus
 end
 
-function M.start_idle_detection(term, idle_timeout, on_idle)
+function M.start_idle_detection(term, idle_timeout, send)
 	if not term.bufnr or not vim.api.nvim_buf_is_valid(term.bufnr) then
 		return
 	end
 
 	local handle = nil
+	local active = false
 
 	local function clear()
 		if handle then
@@ -34,14 +35,23 @@ function M.start_idle_detection(term, idle_timeout, on_idle)
 
 	vim.api.nvim_buf_attach(term.bufnr, false, {
 		on_lines = function()
-			clear()
-			if should_notify(term.window) then
-				handle = vim.fn.timer_start(idle_timeout, function()
-					if should_notify(term.window) then
-						on_idle()
-					end
-				end)
+			if not active then
+				active = true
+				send({
+					type = "status",
+					value = "active",
+					in_view = is_in_view(term.window),
+				})
 			end
+			clear()
+			handle = vim.fn.timer_start(idle_timeout, function()
+				active = false
+				send({
+					type = "status",
+					value = "idle",
+					in_view = is_in_view(term.window),
+				})
+			end)
 		end,
 	})
 
