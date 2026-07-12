@@ -24,6 +24,9 @@ return {
 						chars = require("plugins.flies.chars"),
 					},
 				},
+				hints = {
+					max = false,
+				},
 				hint_keys = require("my.parameters").selection_chars,
 				mappings = {
 					a = "toggle",
