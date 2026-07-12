@@ -4,8 +4,6 @@ local notify = require("my.notify")
 
 local ai_term = require("my.parameters").ai_config.chat == "toggleterm"
 
-local tags_defaults_agent = personal("pi", "claude")
-
 return {
 	idle_timeout = 30000,
 	packages = {
@@ -29,12 +27,6 @@ return {
 		typescriptreact = "node",
 	},
 
-	tags_defaults = {
-		agent = tags_defaults_agent,
-	},
-
-	default_terminal = ai_term and tags_defaults_agent or "shell",
-
 	commands = {
 		ddgr = {
 			cmd = "ddgr",
@@ -52,7 +44,9 @@ return {
 		current = function()
 			return { dir = vim.fn.expand("%:p:h") }
 		end,
-		shell = {},
+		shell = {
+			priority = 1,
+		},
 		["home shell"] = {
 			dir = vim.env.HOME,
 		},
@@ -90,10 +84,12 @@ return {
 			tag = "agent",
 		}),
 		pi = ai_term and personal({
+			priority = 3,
 			cmd = "p",
 			tag = "agent",
 		}),
 		claude = ai_term and work({
+			priority = 2,
 			cmd = "claude",
 			tag = "agent",
 		}),
@@ -122,7 +118,6 @@ return {
 			end
 		end,
 	},
-
 	prompts = {
 		["do this"] = "do this",
 		["explain this"] = "explain this",

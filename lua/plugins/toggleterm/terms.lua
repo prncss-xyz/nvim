@@ -3,6 +3,7 @@ local M = {}
 local create_history = require("plugins.toggleterm.history").create_history
 local create_term = require("plugins.toggleterm.create_term").create_term
 local config = require("plugins.toggleterm.config")
+local utils = require("plugins.toggleterm.utils")
 
 local history = create_history("hash")
 
@@ -45,21 +46,6 @@ local function get_query_fn(o)
 	end
 end
 
-local function query_to_key(query)
-	if query.key then
-		return query.key
-	end
-	if query.tag then
-		local from_tag = config.tags_defaults[query.tag]
-		if from_tag then
-			return from_tag
-		end
-	end
-	if query.key == nil and query.tag == nil then
-		return config.default_terminal
-	end
-end
-
 local function pad(s, len)
 	if #s >= len then
 		return s
@@ -73,67 +59,45 @@ local function get_commands0(cwd)
 	if not pkg_cache[cwd] then
 		local commands = vim.tbl_extend("force", {}, config.commands)
 		require("plugins.toggleterm.package").add_npm_scripts(commands, cwd)
-		for k, o in pairs(commands) do
-			if type(o) == "function" then
-				o = o()
-			end
-			if type(o) == "string" then
-				o = { cmd = o }
-			end
-			commands[k] = o
-		end
 		pkg_cache[cwd] = commands
 	end
 	return pkg_cache[cwd]
 end
 
-local function get_commands()
+local function get_commands(filter)
 	local commands = vim.tbl_extend("force", {}, get_commands0(vim.fn.getcwd()))
-	for k, o in pairs(commands) do
-		if type(o) == "function" then
-			o = o()
+	local res = {}
+	for k, v in pairs(commands) do
+		if type(v) == "table" then
+			v = vim.tbl_extend("force", {}, v)
+		elseif type(v) == "function" then
+			v = v()
 		end
-		if type(o) == "string" then
-			o = { cmd = o }
+		if type(v) == "string" then
+			v = { cmd = v }
 		end
-		commands[k] = o
+		if v then
+			v.key = k
+			v.display_name = v.display_name or k
+			v.tag = v.tag or k
+			v.idle_timeout = v.idle_timeout or config.idle_timeout
+			v.instance_count = vim.v.count1
+			v.dir = v.dir or vim.fn.getcwd()
+			v.hash = get_hash(v)
+			if filter(v) then
+				res[k] = v
+			end
+		end
 	end
-	return commands
-end
-
-local function key_to_item(key)
-	local commands = get_commands()
-	local o = commands[key]
-	if not o then
-		return
-	end
-	local item = vim.tbl_extend("keep", o, {
-		key = key,
-		display_name = key,
-		tag = key,
-		idle_timeout = config.idle_timeout,
-		instance_count = vim.v.count1,
-		dir = vim.fn.getcwd(),
-		status = "active",
-		-- close_on_exit
-	})
-	item.hash = get_hash(item)
-	return item
+	return res
 end
 
 local function prepare()
 	-- noop, but also a flag
 end
 
-local function make_item(o, cb)
-	local key = query_to_key(o)
-	if not key then
-		return
-	end
-	local item = key_to_item(key)
-	if not item then
-		return
-	end
+local function make_item(item, cb)
+	item.status = "active"
 	local once_seen = false
 	local term = create_term(item, function(event)
 		if event.type == "focus" then
@@ -161,72 +125,93 @@ local status_icons = {
 	exited = "✗ ",
 }
 
-local function with_query(o, cb)
-	local query_fn = get_query_fn(o)
-	if o.prompt then
-		local items = history.filter(query_fn)
+local function format_item(item)
+	local res = status_icons[item.status] or "  "
+	res = res .. pad(item.key, 20)
+	if item.display_name == item.key then
+		return res
+	end
+	return res .. "  \u{2014}  " .. item.display_name
+end
+
+local function with_query(query, cb)
+	local filter = get_query_fn(query)
+	if query.prompt then
+		local items = history.filter(filter)
 		if #items > 0 then
 			return vim.ui.select(items, {
-				prompt = o.prompt,
-				format_item = function(item)
-					local res = status_icons[item.status] or "  "
-					res = res .. pad(item.key, 20)
-					if item.display_name == item.key then
-						return res
-					end
-					return res .. "  \u{2014}  " .. item.display_name
-				end,
+				prompt = query.prompt,
+				format_item = format_item,
 			}, function(item)
 				if item then
 					cb(item)
 				end
 			end)
 		end
-	else
-		local item = history.find(query_fn)
-		if item then
-			return cb(item)
-		end
+		items = utils.all_of(get_commands(filter))
+		return vim.ui.select(items, {
+			prompt = query.prompt,
+			format_item = format_item,
+		}, function(item)
+			if item then
+				make_item(item, cb)
+			end
+		end)
 	end
-	make_item(o, cb)
+	local item = history.find(filter)
+	if item then
+		return cb(item)
+	end
+	item = utils.first_of(get_commands(filter))
+	if item then
+		make_item(item, cb)
+	end
 end
 
-function M.run()
-	local keys = {}
-	for key in pairs(get_commands()) do
-		if key_to_item(key) then
-			table.insert(keys, key)
-		end
+function M.run(query)
+	local filter = get_query_fn(query)
+	local items = get_commands(filter)
+	local choices = {}
+	for _, item in pairs(items) do
+		local res = history.find(function(i)
+			return i.hash == item.hash
+		end)
+		table.insert(choices, res or item)
 	end
-	table.sort(keys)
-	vim.ui.select(keys, {
+	vim.ui.select(choices, {
 		prompt = "Select Command: ",
-	}, function(key)
-		if not key then
+		format_item = format_item,
+	}, function(item)
+		if not item then
 			return
 		end
-		M.focus({ key = key })
+		if item.term then
+			return item.term.focus()
+		end
+		make_item(item, function(instance)
+			instance.term.focus()
+		end)
 	end)
 end
 
-function M.focus(o)
-	with_query(o, function(instance)
+function M.focus(query)
+	with_query(query, function(instance)
 		instance.term.focus()
 	end)
 end
 
-function M.toggle(o)
-	with_query(o, function(instance)
+function M.toggle(query)
+	with_query(query, function(instance)
 		instance.term.toggle()
 	end)
 end
 
-function M.prepare(o)
-	with_query(o, prepare)
+function M.prepare(query)
+	with_query(query, prepare)
 end
 
-function M.send_str(o, str)
-	with_query(o, function(instance)
+function M.send_str(query, str)
+	with_query(query, function(instance)
 		instance.term.send_str(str)
 	end)
 end

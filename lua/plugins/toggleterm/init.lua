@@ -132,7 +132,7 @@ return {
 			{
 				"ow",
 				function()
-					require("plugins.toggleterm.terms").run()
+					require("plugins.toggleterm.terms").run({})
 				end,
 				desc = "Select Command",
 			},
