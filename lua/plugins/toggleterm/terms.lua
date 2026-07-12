@@ -130,6 +130,8 @@ local function make_item(o, cb)
 			if event.value == "idle" and not event.in_view then
 				config.on_idle(item)
 			end
+		elseif event.type == "close" then
+			history.purge(item.hash)
 		end
 	end)
 	item.term = term

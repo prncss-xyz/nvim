@@ -12,6 +12,10 @@ function M.create_term(config, send)
 		end)
 	end
 
+	function o.on_close()
+		send({ type = "close" })
+	end
+
 	function o.on_exit()
 		send({ type = "exit" })
 	end
