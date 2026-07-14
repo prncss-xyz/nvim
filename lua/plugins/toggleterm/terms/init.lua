@@ -18,14 +18,20 @@ local function make_item(item, cb)
 	item.status = "active"
 	item.instance_count = vim.v.count1
 	local once_seen = false
+	local idle_notified = false
 	local term = create_term(item, function(event)
 		if event.type == "focus" then
+			idle_notified = false
 			history.insert(item)
 		elseif event.type == "status" then
 			once_seen = once_seen or event.seen
+			if event.seen then
+				idle_notified = false
+			end
 			if item.status ~= "exited" then
 				item.status = event.value
-				if once_seen and event.value == "idle" and not event.seen then
+				if once_seen and event.value == "idle" and not event.seen and not idle_notified then
+					idle_notified = true
 					config.on_idle(item)
 				end
 			end
