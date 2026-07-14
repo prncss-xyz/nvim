@@ -3,9 +3,6 @@ local M = {}
 function M.max_of(o, gt)
 	local res
 	for _, v in pairs(o) do
-		if true then
-			return v
-		end
 		if res == nil or gt(v, res) then
 			res = v
 		end

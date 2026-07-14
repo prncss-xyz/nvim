@@ -130,9 +130,6 @@ end
 local seen = {}
 
 function M.on_dir()
-	if seen then
-		return
-	end
 	local cwd = vim.fn.getcwd()
 	if seen[cwd] then
 		return
