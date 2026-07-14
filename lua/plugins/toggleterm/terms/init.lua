@@ -1,103 +1,22 @@
 local M = {}
 
-local create_history = require("plugins.toggleterm.history").create_history
-local create_term = require("plugins.toggleterm.create_term").create_term
+local create_history = require("plugins.toggleterm.terms.history").create_history
+local create_term = require("plugins.toggleterm.terms.create_term").create_term
 local config = require("plugins.toggleterm.config")
-local utils = require("plugins.toggleterm.utils")
+local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
+local utils = require("plugins.toggleterm.terms.utils")
+local get_commands = require("plugins.toggleterm.terms.get_commands").get_commands
+local format_item = require("plugins.toggleterm.terms.format_item").format_item
 
 local history = create_history("hash")
 
-local function get_hash(o)
-	return string.format("%s:%s:%i", o.dir, o.key, o.instance_count)
-end
-
-local function transform_dir(dir)
-	if dir == "" then
-		return nil
-	end
-	if dir == nil then
-		return {
-			vim.env.HOME,
-			vim.fn.getcwd(),
-		}
-	end
-	return dir
-end
-
-local function get_query_fn(o)
-	local query = vim.deepcopy(o or {})
-	query.prompt = nil
-	query.dir = transform_dir(query.dir)
-	local count = vim.v.count
-	if count > 0 then
-		query.instance_count = count
-	end
-	return function(item)
-		for k, v in pairs(query) do
-			if type(v) == "table" and vim.islist(v) then
-				if not vim.tbl_contains(v, item[k]) then
-					return false
-				end
-			elseif item[k] ~= v then
-				return false
-			end
-		end
-		return true
-	end
-end
-
-local function pad(s, len)
-	if #s >= len then
-		return s
-	end
-	return s .. string.rep(" ", len - #s)
-end
-
-local pkg_cache = {}
-
-local function get_commands0(cwd)
-	if not pkg_cache[cwd] then
-		local commands = vim.tbl_extend("force", {}, config.commands)
-		require("plugins.toggleterm.package").add_npm_scripts(commands, cwd)
-		pkg_cache[cwd] = commands
-	end
-	return pkg_cache[cwd]
-end
-
-local function get_commands(filter)
-	local commands = vim.tbl_extend("force", {}, get_commands0(vim.fn.getcwd()))
-	local res = {}
-	for k, v in pairs(commands) do
-		if type(v) == "table" then
-			v = vim.tbl_extend("force", {}, v)
-		elseif type(v) == "function" then
-			v = v()
-		end
-		if type(v) == "string" then
-			v = { cmd = v }
-		end
-		if v then
-			v.key = k
-			v.display_name = v.display_name or k
-			v.tag = v.tag or k
-			v.idle_timeout = v.idle_timeout or config.idle_timeout
-			v.instance_count = vim.v.count1
-			v.dir = v.dir or vim.fn.getcwd()
-			v.hash = get_hash(v)
-			if filter(v) then
-				res[k] = v
-			end
-		end
-	end
-	return res
-end
-
 local function prepare()
-	-- noop, but also a flag
+	-- act as noop, but also used as a flag
 end
 
 local function make_item(item, cb)
 	item.status = "active"
+	item.instance_count = vim.v.count1
 	local once_seen = false
 	local term = create_term(item, function(event)
 		if event.type == "focus" then
@@ -119,20 +38,12 @@ local function make_item(item, cb)
 	cb(item)
 end
 
-local status_icons = {
-	active = "● ",
-	idle = "○ ",
-	exited = "✗ ",
-}
-
-local function format_item(item)
-	local res = status_icons[item.status] or "  "
-	res = res .. pad(item.key, 20)
-	if item.display_name == item.key then
-		return res
-	end
-	return res .. "  \u{2014}  " .. item.display_name
-end
+local gt_item = utils.compose_gt(
+	utils.gt_field("priority", 0),
+	utils.lt_field("instance_count"),
+	utils.gt_field("key"),
+	utils.gt_field("dir")
+)
 
 local function with_query(query, cb)
 	local filter = get_query_fn(query)
@@ -162,7 +73,7 @@ local function with_query(query, cb)
 	if item then
 		return cb(item)
 	end
-	item = utils.first_of(get_commands(filter))
+	item = utils.max_of(get_commands(filter), gt_item)
 	if item then
 		make_item(item, cb)
 	end
@@ -216,7 +127,17 @@ function M.send_str(query, str)
 	end)
 end
 
+local seen = {}
+
 function M.on_dir()
+	if seen then
+		return
+	end
+	local cwd = vim.fn.getcwd()
+	if seen[cwd] then
+		return
+	end
+	seen[cwd] = true
 	for _, v in ipairs(config.autostart) do
 		M.prepare(v)
 	end

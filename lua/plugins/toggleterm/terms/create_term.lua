@@ -1,9 +1,9 @@
 local M = {}
 
 local Terminal = require("toggleterm.terminal").Terminal
-local start_idle_detection = require("plugins.toggleterm.idle").start_idle_detection
+local start_idle_detection = require("plugins.toggleterm.terms.idle").start_idle_detection
 local last_terminal
-local window = require("plugins.toggleterm.window")
+local window = require("plugins.toggleterm.terms.window")
 local is_visible = window.is_visible
 
 function M.create_term(config, send, prepare)

@@ -1,6 +1,6 @@
 local M = {}
 
-local window = require("plugins.toggleterm.window")
+local window = require("plugins.toggleterm.terms.window")
 local is_in_view = window.is_in_view
 
 function M.start_idle_detection(term, idle_timeout, send)
