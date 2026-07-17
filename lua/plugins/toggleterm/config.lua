@@ -5,7 +5,7 @@ local notify = require("my.notify")
 local ai_term = require("my.parameters").ai_config.chat == "toggleterm"
 
 return {
-	idle_timeout = 30000,
+	idle_timeout = 10000,
 	packages = {
 		tagger = function(key)
 			if key:find("test") then

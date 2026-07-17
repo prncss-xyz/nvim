@@ -130,6 +130,13 @@ return {
 				desc = "Toggle Terminal Home Shell",
 			},
 			{
+				"oyw",
+				function()
+					require("plugins.toggleterm.terms").browse()
+				end,
+				desc = "Browse Terminal",
+			},
+			{
 				"ow",
 				function()
 					require("plugins.toggleterm.terms").run({})

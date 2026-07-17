@@ -1,5 +1,4 @@
 local M = {}
-
 local create_history = require("plugins.toggleterm.terms.history").create_history
 local create_term = require("plugins.toggleterm.terms.create_term").create_term
 local config = require("plugins.toggleterm.config")
@@ -7,6 +6,7 @@ local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_
 local utils = require("plugins.toggleterm.terms.utils")
 local get_commands = require("plugins.toggleterm.terms.get_commands").get_commands
 local format_item = require("plugins.toggleterm.terms.format_item").format_item
+local visit = require("my.browser").visit
 
 local history = create_history("hash")
 
@@ -18,20 +18,17 @@ local function make_item(item, cb)
 	item.status = "active"
 	item.instance_count = vim.v.count1
 	local once_seen = false
-	local idle_notified = false
-	local term = create_term(item, function(event)
+	local term
+	term = create_term(item, function(event)
 		if event.type == "focus" then
-			idle_notified = false
 			history.insert(item)
+		elseif event.type == "url" then
+			term.url = event.value
 		elseif event.type == "status" then
 			once_seen = once_seen or event.seen
-			if event.seen then
-				idle_notified = false
-			end
 			if item.status ~= "exited" then
 				item.status = event.value
-				if once_seen and event.value == "idle" and not event.seen and not idle_notified then
-					idle_notified = true
+				if once_seen and event.value == "idle" and not event.seen then
 					config.on_idle(item)
 				end
 			end
@@ -130,6 +127,22 @@ end
 function M.send_str(query, str)
 	with_query(query, function(instance)
 		instance.term.send_str(str)
+	end)
+end
+
+function M.browse()
+	local items = history.filter(function(item)
+		return item.term and item.term.url
+	end)
+	vim.ui.select(items, {
+		prompt = "Select Terminal URL",
+		format_item = function(item)
+			return string.format("%s  —  %s", format_item(item), item.term.url)
+		end,
+	}, function(item)
+		if item then
+			visit(item.term.url)
+		end
 	end)
 end
 

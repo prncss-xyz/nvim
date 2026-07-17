@@ -11,6 +11,7 @@ function M.start_idle_detection(term, idle_timeout, send)
 	local handle = nil
 	local active = false
 	local seen = false
+	local url_sent = false
 
 	local function clear()
 		if handle then
@@ -32,7 +33,18 @@ function M.start_idle_detection(term, idle_timeout, send)
 			clear()
 			send({ type = "detach" })
 		end,
-		on_lines = function()
+		on_lines = function(_, bufnr, _, first_line, _, new_last_line)
+			if not url_sent then
+				local lines = vim.api.nvim_buf_get_lines(bufnr, first_line, new_last_line, false)
+				for _, line in ipairs(lines) do
+					local url = line:match("https?://%S+")
+					if url then
+						url_sent = true
+						send({ type = "url", value = url })
+						break
+					end
+				end
+			end
 			if not active then
 				active = true
 				send({

@@ -75,6 +75,24 @@ function M.create_term(config, send, prepare)
 				end
 			end)
 		end,
+		read = function(len, regex, cb)
+			if not term.bufnr or not vim.api.nvim_buf_is_valid(term.bufnr) then
+				return cb({})
+			end
+			local line_count = vim.api.nvim_buf_line_count(term.bufnr)
+			if regex == nil or regex == "" then
+				local start = math.max(0, line_count - len)
+				return cb(vim.api.nvim_buf_get_lines(term.bufnr, start, line_count, false))
+			end
+
+			local matcher = vim.regex(regex)
+			local lines = vim.api.nvim_buf_get_lines(term.bufnr, 0, line_count, false)
+			local matches = vim.tbl_filter(function(line)
+				return matcher:match_str(line) ~= nil
+			end, lines)
+			local start = math.max(1, #matches - len + 1)
+			cb(vim.list_slice(matches, start))
+		end,
 	}
 end
 
