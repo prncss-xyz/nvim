@@ -92,6 +92,9 @@ function M.run(query)
 		end)
 		table.insert(choices, res or item)
 	end
+	table.sort(choices, function(a, b)
+		return format_item(a) < format_item(b)
+	end)
 	vim.ui.select(choices, {
 		prompt = "Select Command: ",
 		format_item = format_item,
