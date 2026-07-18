@@ -7,6 +7,7 @@ local utils = require("plugins.toggleterm.terms.utils")
 local get_commands = require("plugins.toggleterm.terms.get_commands").get_commands
 local format_item = require("plugins.toggleterm.terms.format_item").format_item
 local visit = require("my.browser").visit
+local is_in_view = require("plugins.toggleterm.terms.window").is_in_view
 
 local history = create_history("hash")
 
@@ -15,23 +16,14 @@ local function prepare()
 end
 
 local function make_item(item, cb)
-	item.status = "active"
+	item.status = "alive"
 	item.instance_count = vim.v.count1
-	local once_seen = false
 	local term
 	term = create_term(item, function(event)
 		if event.type == "focus" then
 			history.insert(item)
 		elseif event.type == "url" then
 			term.url = event.value
-		elseif event.type == "status" then
-			once_seen = once_seen or event.seen
-			if item.status ~= "exited" then
-				item.status = event.value
-				if once_seen and event.value == "idle" and not event.seen then
-					config.on_idle(item)
-				end
-			end
 		elseif event.type == "detach" then
 			history.purge(item.hash)
 		end
@@ -131,6 +123,19 @@ function M.send_str(query, str)
 	with_query(query, function(instance)
 		instance.term.send_str(str)
 	end)
+end
+
+function M.set_status(hash, status)
+	local item = history.find(function(candidate)
+		return candidate.hash == hash
+	end)
+	if not item then
+		return
+	end
+	item.status = status
+	if not is_in_view(item.term.window) then
+		config.on_status(item)
+	end
 end
 
 function M.browse()

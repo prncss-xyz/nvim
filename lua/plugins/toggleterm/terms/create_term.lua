@@ -1,13 +1,16 @@
 local M = {}
 
 local Terminal = require("toggleterm.terminal").Terminal
-local start_idle_detection = require("plugins.toggleterm.terms.idle").start_idle_detection
+local attach_term = require("plugins.toggleterm.terms.attach_term").attach_term
 local last_terminal
 local window = require("plugins.toggleterm.terms.window")
 local is_visible = window.is_visible
 
 function M.create_term(config, send, prepare)
 	local o = vim.deepcopy(config)
+	o.env = {
+		VMUX_HASH = o.hash,
+	}
 	o.on_open = function()
 		vim.schedule(function()
 			vim.cmd.startinsert()
@@ -27,7 +30,7 @@ function M.create_term(config, send, prepare)
 	end
 	vim.schedule(function()
 		if term and term.bufnr and term.bufnr > 0 then
-			start_idle_detection(term, config.idle_timeout, send)
+			attach_term(term, send)
 		end
 	end)
 

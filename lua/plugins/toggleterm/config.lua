@@ -14,8 +14,8 @@ return {
 		end,
 	},
 
-	on_idle = function(item)
-		local msg = string.format("%s in %s (idle)", item.key, item.dir)
+	on_status = function(item)
+		local msg = string.format("%s in %s (%s)", item.key, item.dir, item.status)
 		notify.notify(msg)
 	end,
 
