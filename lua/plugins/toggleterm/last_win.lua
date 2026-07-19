@@ -1,90 +1,27 @@
 local M = {}
 
-local function is_text_buf(winnr)
-	local buf = vim.api.nvim_win_get_buf(winnr)
-	local bt = vim.bo[buf].buftype
-	return bt == ""
-end
-
-function M.get_last_file_win()
-	local cur_win = vim.api.nvim_get_current_win()
-	if is_text_buf(cur_win) then
-		return cur_win
-	end
-
-	-- Walk windows in last-accessed order (window doesn't help; use winnr('#') and scan)
-	local target_win
-	-- First, try the alternate (last visited) window
-	local alt_winnr = vim.fn.winnr("#")
-	if alt_winnr ~= 0 and alt_winnr ~= vim.fn.winnr() then
-		local alt_win = vim.fn.win_getid(alt_winnr)
-		if is_text_buf(alt_win) then
-			return alt_win
-		end
-	end
-
-	-- If alternate window isn't a file window, scan all windows for a file buffer (skip current)
-	if not target_win then
-		for _, w in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-			if w ~= cur_win then
-				if is_text_buf(w) then
-					return w
-				end
-			end
-		end
-	end
-end
-
-function M.get_ctx()
-	local last_win = M.get_last_file_win()
-	if not last_win then
-		return
-	end
-	local bufnr = vim.api.nvim_win_get_buf(last_win)
-	local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":.")
-	local pos = vim.api.nvim_win_get_cursor(last_win)
-	local row = pos[1]
-	local col = pos[2]
-	return {
-		bufnr = bufnr,
-		path = path,
-		row = row,
-		col = col + 1,
-	}
-end
-
 function M.put_last_file_name()
-	local ctx = M.get_ctx()
-	if ctx then
-		require("plugins.toggleterm.terms").send_str({ tag = "agent" }, string.format("@%s ", ctx.path))
-	end
+	require("plugins.toggleterm.terms").send_str({ tag = "agent" }, function(ctx)
+		return string.format("@%s ", ctx.path)
+	end)
 end
 
 function M.put_last_file_line()
-	local ctx = M.get_ctx()
-	if ctx then
-		require("plugins.toggleterm.terms").send_str({ tag = "agent" }, string.format("@%s:%i ", ctx.path, ctx.row))
-	end
+	require("plugins.toggleterm.terms").send_str({ tag = "agent" }, function(ctx)
+		return string.format("@%s L%i ", ctx.path, ctx.row)
+	end)
 end
 
 function M.put_last_file_pos()
-	local ctx = M.get_ctx()
-	if ctx then
-		require("plugins.toggleterm.terms").send_str(
-			{ tag = "agent" },
-			string.format("@%s:%i:%i ", ctx.path, ctx.row, ctx.col)
-		)
-	end
+	require("plugins.toggleterm.terms").send_str({ tag = "agent" }, function(ctx)
+		return string.format("@%s L%iC:%i ", ctx.path, ctx.row, ctx.col)
+	end)
 end
 
 function M.put_diagnostics(scope)
-	local ctx = M.get_ctx()
-	if ctx then
-		require("plugins.toggleterm.terms").send_str(
-			{ tag = "agent" },
-			"fix these diagnostics\n" .. require("plugins.toggleterm.diagnostics").get_diagnostics(ctx.bufnr, scope)
-		)
-	end
+	require("plugins.toggleterm.terms").send_str({ tag = "agent" }, function(ctx)
+		return "fix these diagnostics\n" .. require("plugins.toggleterm.diagnostics").get_diagnostics(ctx.bufnr, scope)
+	end)
 end
 
 function M.get_selection(bufnr)
@@ -106,39 +43,33 @@ function M.get_selection(bufnr)
 	local lines = vim.api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col, {})
 	local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":.")
 
-	local res = { string.format("%s:%i:%i", path, start_row + 1, start_col + 1) }
+	local res = { string.format("%s L%iC:%i", path, start_row + 1, start_col + 1) }
 	vim.list_extend(res, lines)
 	-- concatenate lines adding a line break at the end of each
 	return table.concat(res, "\n") .. "\n"
 end
 
 function M.put_selection_to_term()
-	local ctx = M.get_ctx()
-	if ctx then
-		require("plugins.toggleterm.terms").send_str({ tag = "agent" }, M.get_selection(ctx.bufnr))
-	end
+	require("plugins.toggleterm.terms").send_str({ tag = "agent" }, function(ctx)
+		return M.get_selection(ctx.bufnr)
+	end)
 end
 
 function M.prompt()
-	local ctx = M.get_ctx()
-	if ctx then
-		local prompts = require("plugins.toggleterm.config").prompts
-		local choices = vim.tbl_keys(prompts)
-		vim.ui.select(choices, {
-			prompt = "Select prompt: ",
-		}, function(choice)
-			if not choice then
-				return
-			end
+	local prompts = require("plugins.toggleterm.config").prompts
+	local choices = vim.tbl_keys(prompts)
+	vim.ui.select(choices, {
+		prompt = "Select prompt: ",
+	}, function(choice)
+		if not choice then
+			return
+		end
 
-			local contents = prompts[choice]
-
-			require("plugins.toggleterm.terms").send_str(
-				{ tag = "agent" },
-				string.format("@%s:%i:%i %s\n", ctx.path, ctx.row, ctx.col, contents)
-			)
+		local contents = prompts[choice]
+		require("plugins.toggleterm.terms").send_str({ tag = "agent" }, function(ctx)
+			return string.format("@%s L%iC:%i %s\n", ctx.path, ctx.row, ctx.col, contents)
 		end)
-	end
+	end)
 end
 
 return M

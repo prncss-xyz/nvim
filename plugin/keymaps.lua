@@ -115,7 +115,7 @@ vim.keymap.set("n", "bf", function()
 		vim.notify("No file under cursor", vim.log.levels.WARN)
 		return
 	end
-	local target_win = require("plugins.toggleterm.last_win").get_last_file_win()
+	local target_win = require("my.windows").get_last_file_win()
 	if target_win then
 		vim.api.nvim_set_current_win(target_win)
 	end

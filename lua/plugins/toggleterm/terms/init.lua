@@ -22,6 +22,8 @@ local function make_item(item, cb)
 	term = create_term(item, function(event)
 		if event.type == "focus" then
 			history.insert(item)
+      -- TODO: restrict to workspace
+			item.ctx = event.ctx or item.ctx
 		elseif event.type == "url" then
 			term.url = event.value
 		elseif event.type == "detach" then
@@ -121,6 +123,13 @@ end
 
 function M.send_str(query, str)
 	with_query(query, function(instance)
+		if type(str) == "function" then
+			if instance.ctx then
+				str = str(instance.ctx)
+			else
+				return
+			end
+		end
 		instance.term.send_str(str)
 	end)
 end
@@ -136,6 +145,16 @@ function M.set_status(hash, status)
 	if not is_in_view(item.term.window) then
 		config.on_status(item)
 	end
+end
+
+function M.read(hash, opts, cb)
+	local item = history.find(function(candidate)
+		return candidate.hash == hash
+	end)
+	if not item then
+		return
+	end
+	return item.term.read(opts.len, opts.regex, cb)
 end
 
 function M.browse()

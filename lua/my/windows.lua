@@ -44,7 +44,7 @@ function M.is_file_cur_win()
 	return buf_type == ""
 end
 
-local function focus_last_win()
+local function get_last_win()
 	local current_win_id = vim.api.nvim_get_current_win()
 	local current_tab_id = vim.api.nvim_win_get_tabpage(current_win_id)
 	local function cond(win_id)
@@ -66,7 +66,7 @@ local function focus_last_win()
 end
 
 function M.focus_last_win()
-	local target = focus_last_win()
+	local target = get_last_win()
 	if target then
 		vim.api.nvim_set_current_win(target)
 		if vim.bo.buftype == "terminal" then
@@ -110,6 +110,41 @@ function M.swap(winid)
 	end
 	vim.api.nvim_win_set_buf(cur_winid, target_bufnr)
 	vim.api.nvim_win_set_buf(winid, cur_bufnr)
+end
+
+local function is_text_buf(winnr)
+	local buf = vim.api.nvim_win_get_buf(winnr)
+	local bt = vim.bo[buf].buftype
+	return bt == ""
+end
+
+function M.get_last_file_win()
+	local cur_win = vim.api.nvim_get_current_win()
+	if is_text_buf(cur_win) then
+		return cur_win
+	end
+
+	-- Walk windows in last-accessed order (window doesn't help; use winnr('#') and scan)
+	local target_win
+	-- First, try the alternate (last visited) window
+	local alt_winnr = vim.fn.winnr("#")
+	if alt_winnr ~= 0 and alt_winnr ~= vim.fn.winnr() then
+		local alt_win = vim.fn.win_getid(alt_winnr)
+		if is_text_buf(alt_win) then
+			return alt_win
+		end
+	end
+
+	-- If alternate window isn't a file window, scan all windows for a file buffer (skip current)
+	if not target_win then
+		for _, w in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+			if w ~= cur_win then
+				if is_text_buf(w) then
+					return w
+				end
+			end
+		end
+	end
 end
 
 return M

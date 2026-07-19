@@ -2,6 +2,7 @@ local M = {}
 
 local window = require("plugins.toggleterm.terms.window")
 local is_in_view = window.is_in_view
+local last_win_ctx = require("plugins.toggleterm.terms.last_win_ctx")
 
 function M.attach_term(term, send)
 	if not term.bufnr or not vim.api.nvim_buf_is_valid(term.bufnr) then
@@ -23,7 +24,10 @@ function M.attach_term(term, send)
 		buffer = term.bufnr,
 		callback = function()
 			seen = seen or is_in_view(term.window)
-			send({ type = "focus" })
+			send({
+				type = "focus",
+				ctx = last_win_ctx.get_ctx(),
+			})
 		end,
 	})
 
