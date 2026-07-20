@@ -22,7 +22,7 @@ local function make_item(item, cb)
 	term = create_term(item, function(event)
 		if event.type == "focus" then
 			history.insert(item)
-      -- TODO: restrict to workspace
+			-- TODO: restrict to workspace
 			item.ctx = event.ctx or item.ctx
 		elseif event.type == "url" then
 			term.url = event.value
@@ -49,7 +49,7 @@ local function with_query(query, cb)
 		if #items > 0 then
 			return vim.ui.select(items, {
 				prompt = query.prompt,
-				format_item = format_item,
+				format_item = format_item(query.dir == ""),
 			}, function(item)
 				if item then
 					cb(item)
@@ -59,7 +59,7 @@ local function with_query(query, cb)
 		items = utils.all_of(get_commands(filter))
 		return vim.ui.select(items, {
 			prompt = query.prompt,
-			format_item = format_item,
+			format_item = format_item(query.dir == vim.env.HOME),
 		}, function(item)
 			if item then
 				make_item(item, cb)
@@ -76,6 +76,8 @@ local function with_query(query, cb)
 	end
 end
 
+local local_format_item = format_item(false)
+
 function M.run(query)
 	local filter = get_query_fn(query)
 	local items = get_commands(filter)
@@ -87,11 +89,11 @@ function M.run(query)
 		table.insert(choices, res or item)
 	end
 	table.sort(choices, function(a, b)
-		return format_item(a) < format_item(b)
+		return local_format_item(a) < local_format_item(b)
 	end)
 	vim.ui.select(choices, {
 		prompt = "Select Command: ",
-		format_item = format_item,
+		format_item = local_format_item,
 	}, function(item)
 		if not item then
 			return
@@ -164,7 +166,7 @@ function M.browse()
 	vim.ui.select(items, {
 		prompt = "Select Terminal URL",
 		format_item = function(item)
-			return string.format("%s  —  %s", format_item(item), item.term.url)
+			return string.format("%s  —  %s", format_item(true)(item), item.term.url)
 		end,
 	}, function(item)
 		if item then
