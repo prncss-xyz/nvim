@@ -83,7 +83,7 @@ return {
 				function()
 					require("plugins.toggleterm.terms").toggle({
 						prompt = "Select Terminal",
-						dir = "",
+						dir = require("plugins.toggleterm.terms.get_query_fn").any,
 					})
 				end,
 				desc = "Select Any Terminal",
@@ -148,7 +148,7 @@ return {
 				function()
 					require("plugins.toggleterm.terms").focus({
 						status = "idle",
-						dir = "",
+						dir = require("plugins.toggleterm.terms.get_query_fn").any,
 						prompt = "Select Idle",
 					})
 				end,

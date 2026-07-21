@@ -49,7 +49,7 @@ local function with_query(query, cb)
 		if #items > 0 then
 			return vim.ui.select(items, {
 				prompt = query.prompt,
-				format_item = format_item(query.dir == ""),
+				format_item = format_item(query.dir == require("plugins.toggleterm.terms.get_query_fn").any),
 			}, function(item)
 				if item then
 					cb(item)

@@ -20,7 +20,7 @@ return M]],
 		end,
 	},
 	{
-		pattern = "README.md",
+		pattern = "^README.md$",
 		fn = function()
 			local cwd = vim.fn.getcwd()
 			local title = vim.fs.basename(cwd)
@@ -47,7 +47,8 @@ return M]],
 		fn = function()
 			local file = vim.api.nvim_buf_get_name(0)
 			local basename = vim.fs.basename(file):gsub("%.md$", "")
-			local title = basename == "index" and vim.fs.basename(vim.fs.dirname(file)) or basename
+			local title = (basename == "index" or basename == "README") and vim.fs.basename(vim.fs.dirname(file))
+				or basename
 			title = title:gsub("^%l", string.upper)
 			return fmt(
 				[[# []
