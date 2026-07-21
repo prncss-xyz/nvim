@@ -57,7 +57,7 @@ return {
 				desc = "Move File",
 			},
 			{
-				domain.file .. "w",
+				domain.file .. "c",
 				"!wc %",
 				desc = "Word Count",
 			},

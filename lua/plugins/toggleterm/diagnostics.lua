@@ -2,7 +2,7 @@ local M = {}
 
 local function diagnostic_position(bufnr, diagnostic)
 	local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":.")
-	return string.format("@%s:%d:%d", path, (diagnostic.lnum or 0) + 1, (diagnostic.col or 0) + 1)
+	return string.format("@%s :L%d:C%d", path, (diagnostic.lnum or 0) + 1, (diagnostic.col or 0) + 1)
 end
 
 local function get_diagnostic_bufnr(diagnostic, fallback_bufnr)

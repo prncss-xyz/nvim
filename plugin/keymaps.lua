@@ -56,6 +56,13 @@ if false then
 end
 
 vim.keymap.set({ "n" }, file .. "j", "<cmd>edit package.json<cr>", { desc = "Edit package.json" })
+
+vim.keymap.set({ "n" }, file .. "g", function()
+	require("my.git").clone_github()
+end, { desc = "Clone or Create Github Repo" })
+vim.keymap.set({ "n" }, file .. "w", function()
+	require("my.git").create_worktree()
+end, { desc = "Create Worktree" })
 vim.keymap.set({ "n" }, file .. "o", function()
 	local name = vim.fn.expand("<cWORD>")
 	if name == "" then
@@ -77,6 +84,7 @@ vim.keymap.set({ "n" }, file .. "o", function()
 		vim.cmd(line)
 		return
 	end
+	-- TODO: use khutulun
 	vim.cmd.edit(vim.fn.fnameescape(name))
 end, { desc = "Edit File" })
 

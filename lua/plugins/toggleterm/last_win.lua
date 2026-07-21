@@ -8,13 +8,13 @@ end
 
 function M.put_last_file_line()
 	require("plugins.toggleterm.terms").send_str({ tag = "agent" }, function(ctx)
-		return string.format("@%s L%i ", ctx.path, ctx.row)
+		return string.format("@%s :L%i ", ctx.path, ctx.row)
 	end)
 end
 
 function M.put_last_file_pos()
 	require("plugins.toggleterm.terms").send_str({ tag = "agent" }, function(ctx)
-		return string.format("@%s L%iC:%i ", ctx.path, ctx.row, ctx.col)
+		return string.format("@%s :L%iC:%i ", ctx.path, ctx.row, ctx.col)
 	end)
 end
 
