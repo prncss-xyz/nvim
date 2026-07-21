@@ -1,10 +1,11 @@
 local M = {}
 
 local function get_snip(target)
+	local rel = vim.fn.fnamemodify(target, ":.")
 	local snips = require("plugins.khutulun.snips")
-	for k, v in pairs(snips) do
-		if target:match(k) then
-			return v
+	for _, entry in ipairs(snips) do
+		if rel:match(entry.pattern) then
+			return entry.fn
 		end
 	end
 end
