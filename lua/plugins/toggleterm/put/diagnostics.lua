@@ -1,8 +1,11 @@
 local M = {}
 
 local function diagnostic_position(bufnr, diagnostic)
-	local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":.")
-	return string.format("@%s :L%d:C%d", path, (diagnostic.lnum or 0) + 1, (diagnostic.col or 0) + 1)
+	return require("plugins.toggleterm.put.position").position({
+		path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":."),
+		row = (diagnostic.lnum or 0) + 1,
+		col = (diagnostic.col or 0) + 1,
+	})
 end
 
 local function get_diagnostic_bufnr(diagnostic, fallback_bufnr)
@@ -109,19 +112,19 @@ end
 -- scope == nil or "project": all diagnostics whose buffer lives under the cwd (the historical default)
 -- scope == "file": all diagnostics in the current buffer
 -- scope == "next": the next diagnostic in the current window, starting inclusively from the cursor
-function M.get_diagnostics(bufnr, scope)
+function M.get_diagnostics(ctx, scope)
 	local diagnostics
 	local empty_message
 
 	if scope == "next" then
-		diagnostics = next_window_diagnostics(bufnr)
+		diagnostics = next_window_diagnostics(ctx.bufnr)
 		empty_message = "No diagnostic after the cursor in the current window"
 	elseif scope == "file" then
-		diagnostics = vim.diagnostic.get(bufnr)
+		diagnostics = vim.diagnostic.get(ctx.bufnr)
 		empty_message = "No diagnostics in the current buffer"
 	else
 		diagnostics = vim.tbl_filter(function(diagnostic)
-			return filter_diagnostics(diagnostic, bufnr)
+			return filter_diagnostics(diagnostic, ctx.bufnr)
 		end, vim.diagnostic.get())
 		empty_message = "No diagnostics found in current working directory"
 	end
@@ -132,8 +135,8 @@ function M.get_diagnostics(bufnr, scope)
 	end
 
 	table.sort(diagnostics, function(a, b)
-		local a_bufnr = get_diagnostic_bufnr(a, bufnr) or 0
-		local b_bufnr = get_diagnostic_bufnr(b, bufnr) or 0
+		local a_bufnr = get_diagnostic_bufnr(a, ctx.bufnr) or 0
+		local b_bufnr = get_diagnostic_bufnr(b, ctx.bufnr) or 0
 		if a_bufnr ~= b_bufnr then
 			return a_bufnr < b_bufnr
 		end
@@ -159,7 +162,7 @@ function M.get_diagnostics(bufnr, scope)
 		if index > 1 then
 			table.insert(lines, "")
 		end
-		vim.list_extend(lines, diagnostic_lines(diagnostic, bufnr))
+		vim.list_extend(lines, diagnostic_lines(diagnostic, ctx.bufnr))
 	end
 
 	local payload = table.concat(lines, "\n")

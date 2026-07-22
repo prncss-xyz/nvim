@@ -1,4 +1,5 @@
 local M = {}
+
 local create_history = require("plugins.toggleterm.terms.history").create_history
 local create_term = require("plugins.toggleterm.terms.create_term").create_term
 local config = require("plugins.toggleterm.config")
@@ -22,8 +23,6 @@ local function make_item(item, cb)
 	term = create_term(item, function(event)
 		if event.type == "focus" then
 			history.insert(item)
-			-- TODO: restrict to workspace
-			item.ctx = event.ctx or item.ctx
 		elseif event.type == "url" then
 			term.url = event.value
 		elseif event.type == "detach" then
@@ -126,8 +125,9 @@ end
 function M.send_str(query, str)
 	with_query(query, function(instance)
 		if type(str) == "function" then
-			if instance.ctx then
-				str = str(instance.ctx)
+			local ctx = require("plugins.toggleterm.terms.window").get_ctx()
+			if ctx then
+				str = str(ctx)
 			else
 				return
 			end

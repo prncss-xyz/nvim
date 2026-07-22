@@ -99,7 +99,7 @@ return {
 			{
 				"oi",
 				function()
-					require("plugins.toggleterm.ops").repl_op:call({ domain = "outer" }, {
+					require("plugins.toggleterm.repl").op:call({ domain = "outer" }, {
 						i = function()
 							require("plugins.toggleterm.terms").focus({ key = "repl" })
 						end,
@@ -172,7 +172,7 @@ return {
 			{
 				"ma",
 				function()
-					require("plugins.toggleterm.last_win").put_selection_to_term()
+					require("plugins.toggleterm.put.init").put_selection()
 				end,
 				desc = "Send Selection to Agent",
 				mode = "x",
@@ -180,7 +180,7 @@ return {
 			{
 				"mc",
 				function()
-					require("plugins.toggleterm.last_win").put_last_file_pos()
+					require("plugins.toggleterm.put.init").put_file_pos()
 				end,
 				desc = "Put Current File Position",
 				mode = "n",
@@ -188,7 +188,7 @@ return {
 			{
 				"md",
 				function()
-					require("plugins.toggleterm.last_win").put_last_file_line()
+					require("plugins.toggleterm.put.init").put_file_line()
 				end,
 				desc = "Put Current File Line",
 				mode = "n",
@@ -196,7 +196,7 @@ return {
 			{
 				"me",
 				function()
-					require("plugins.toggleterm.last_win").put_last_file_name()
+					require("plugins.toggleterm.put.init").put_file_name()
 				end,
 				desc = "Put Current File Path",
 				mode = "n",
@@ -204,7 +204,7 @@ return {
 			{
 				"mm",
 				function()
-					require("plugins.toggleterm.last_win").prompt()
+					require("plugins.toggleterm.put.init").prompt()
 				end,
 				desc = "Put Current File Path",
 				mode = "n",
@@ -220,7 +220,7 @@ return {
 			{
 				"mz",
 				function()
-					require("plugins.toggleterm.last_win").put_diagnostics("next")
+					require("plugins.toggleterm.put.init").put_diagnostics("next")
 				end,
 				desc = "Put Diagnostic Prompt",
 				mode = "n",
@@ -228,7 +228,7 @@ return {
 			{
 				"mpz",
 				function()
-					require("plugins.toggleterm.last_win").put_diagnostics("file")
+					require("plugins.toggleterm.put.init").put_diagnostics("file")
 				end,
 				desc = "Put File Diagnostics Prompt",
 				mode = "n",
