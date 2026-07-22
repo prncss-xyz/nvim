@@ -42,6 +42,8 @@ local gt_item = utils.compose_gt(
 )
 
 local function with_query(query, cb)
+	query = vim.tbl_extend("keep", query or {}, {})
+	query.instance_count = vim.v.count > 0 and vim.v.count or nil
 	local filter = get_query_fn(query)
 	if query.prompt then
 		local items = history.filter(filter)
