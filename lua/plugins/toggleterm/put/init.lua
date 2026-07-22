@@ -36,7 +36,7 @@ function M.prompt()
 
 		local contents = prompts[choice]
 		require("plugins.toggleterm.terms").send_str({ tag = "agent" }, function(ctx)
-			return string.format("@%s L%iC:%i %s\n", ctx.path, ctx.row, ctx.col, contents)
+			return require("plugins.toggleterm.put.position").position(ctx) .. contents
 		end)
 	end)
 end

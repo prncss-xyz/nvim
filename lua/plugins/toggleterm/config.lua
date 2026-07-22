@@ -121,6 +121,7 @@ return {
 	prompts = {
 		["do this"] = "do this",
 		["explain this"] = "explain this",
+		["curry this"] = "curry this",
 	},
 	autostart = {
 		{ key = "ddgr" },
