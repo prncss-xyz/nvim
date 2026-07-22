@@ -6,11 +6,14 @@ local last_terminal
 local window = require("plugins.toggleterm.terms.window")
 local is_visible = window.is_visible
 
+local ensure_dir = require("plugins.toggleterm.terms.ensure_dir").ensure_dir
+
 function M.create_term(config, send, prepare)
 	local o = vim.deepcopy(config)
 	o.env = {
 		VMUX_HASH = o.hash,
 	}
+	o.dir = o.dir or vim.fn.getcwd()
 	o.on_open = function()
 		vim.schedule(function()
 			vim.cmd.startinsert()
@@ -30,6 +33,7 @@ function M.create_term(config, send, prepare)
 	end
 	vim.schedule(function()
 		if term and term.bufnr and term.bufnr > 0 then
+			ensure_dir(o.dir)
 			attach_term(term, send)
 		end
 	end)
@@ -52,6 +56,7 @@ function M.create_term(config, send, prepare)
 		end
 		if not is_visible(term.window) then
 			last_terminal = term
+			ensure_dir(o.dir)
 		end
 		term:toggle()
 	end
@@ -59,6 +64,7 @@ function M.create_term(config, send, prepare)
 	local function focus()
 		hide_last()
 		if not is_visible(term.window) then
+			ensure_dir(o.dir)
 			term:toggle()
 			last_terminal = term
 		end

@@ -51,6 +51,14 @@ function M.get_ctx()
 	return ctx_by_cwd[vim.fn.getcwd()]
 end
 
+function M.get_path(dir)
+	local ctx = ctx_by_cwd[dir]
+	if ctx then
+		return ctx.path
+	end
+	return nil
+end
+
 function M.is_visible(winnr)
 	return winnr and vim.api.nvim_win_is_valid(winnr)
 end
