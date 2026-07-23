@@ -12,6 +12,10 @@ function M.put_file_pos()
 	require("plugins.toggleterm.terms").send_str({ tag = "agent" }, require("plugins.toggleterm.put.position").position)
 end
 
+function M.put_hunk()
+	require("plugins.toggleterm.terms").send_str({ tag = "agent" }, require("plugins.toggleterm.put.hunk").hunk)
+end
+
 function M.put_diagnostics(scope)
 	require("plugins.toggleterm.terms").send_str({ tag = "agent" }, function(ctx)
 		return "fix these diagnostics\n" .. require("plugins.toggleterm.diagnostics").get_diagnostics(ctx, scope)

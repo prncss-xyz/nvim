@@ -202,6 +202,14 @@ return {
 				mode = "n",
 			},
 			{
+				"mh",
+				function()
+					require("plugins.toggleterm.put.init").put_hunk()
+				end,
+				desc = "Put Current or Next Hunk",
+				mode = "n",
+			},
+			{
 				"mm",
 				function()
 					require("plugins.toggleterm.put.init").prompt()

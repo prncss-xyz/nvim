@@ -4,7 +4,8 @@ local default_icon = "● "
 
 local status_icons = {
 	alive = "○ ",
-	exited = "✗ ",
+	success = "✔ ",
+	failure = "✗ ",
 }
 
 local function pad(s, len)

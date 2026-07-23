@@ -4,16 +4,8 @@ local window = require("plugins.toggleterm.terms.window")
 local is_in_view = window.is_in_view
 
 local function get_local_url(line)
-	return false
-		or line:match("https?://[%w%-%.]*localhost[:/?#][^%s]*")
-		or line:match("https?://[%w%-%.]*localhost%s")
-		or line:match("https?://[%w%-%.]*localhost$")
-		or line:match("https?://localhost[:/?#][^%s]*")
-		or line:match("https?://localhost%s")
-		or line:match("https?://localhost$")
-		or line:match("https?://127%.0%.0%.1[:/?#][^%s]*")
-		or line:match("https?://127%.0%.0%.1%s")
-		or line:match("https?://127%.0%.0%.1$")
+	local url = vim.fn.matchstr(line, [[\vhttps?://%([\w.-]*localhost|127\.0\.0\.1)%([:/?#]\S*)?%(\s|$)@=]])
+	return url ~= "" and url or nil
 end
 
 function M.attach_term(term, send)

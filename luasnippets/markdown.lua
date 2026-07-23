@@ -16,6 +16,21 @@ table.insert(
 
 table.insert(M, s("tsk", fmt("- [ ] ", {}, { delimiters = "{}" })))
 
+table.insert(M, s("tskx", fmt("- [x] ", {}, { delimiters = "{}" })))
+
+table.insert(M, s("footnote", fmt("[^{}] ", { i(1, "1") }, { delimiters = "{}" })))
+
+table.insert(
+	M,
+	s(
+		"footreference",
+		fmt("[^{}]: {}", {
+			i(1, "1"),
+			i(2, "contents"),
+		}, { delimiters = "{}" })
+	)
+)
+
 table.insert(
 	M,
 	s(

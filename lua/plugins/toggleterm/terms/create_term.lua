@@ -20,10 +20,10 @@ function M.create_term(config, send, prepare)
 		end)
 	end
 
-	function o.on_exit()
+	function o.on_exit(_, _, exit_code)
 		send({
 			type = "status",
-			value = "exited",
+			value = exit_code == 0 and "success" or "failure",
 		})
 	end
 

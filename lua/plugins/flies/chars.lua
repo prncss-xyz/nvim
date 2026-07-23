@@ -38,6 +38,11 @@ M.b = {
 
 M.i = {
 	snip = not_vscode({
+		markdown = fmt("*[][][]*", {
+			i(1, ""),
+			contents(),
+			i(2, ""),
+		}, { delimiters = "[]" }),
 		javascript = fmt(
 			[[
 	          if ([]) {
@@ -111,6 +116,16 @@ M.l = {
 	}),
 }
 
+M.o = {
+	snip = not_vscode({
+		markdown = fmt("**[][][]**", {
+			i(1, ""),
+			contents(),
+			i(2, ""),
+		}, { delimiters = "[]" }),
+	}),
+}
+
 M.Q = {
 	left = '"',
 	right = '"',
@@ -128,6 +143,16 @@ M.q = {
 	right = "`",
 	snip = not_vscode({
 		all = fmt("`[][][]`", {
+			i(1, ""),
+			contents(),
+			i(2, ""),
+		}, { delimiters = "[]" }),
+	}),
+}
+
+M.s = {
+	snip = not_vscode({
+		markdown = fmt("~~[][][]~~", {
 			i(1, ""),
 			contents(),
 			i(2, ""),

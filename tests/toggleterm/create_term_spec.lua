@@ -11,32 +11,35 @@ local T = MiniTest.new_set({
 
 T["create_term"] = MiniTest.new_set()
 
-T["create_term"]["spawns prepared terminals without opening a window"] = function()
-	child.lua([[local spawned = false
-		local terminal_options
+T["create_term"]["reports process exit status"] = function()
+	child.lua([[local terminal_options
+		local events = {}
 		package.loaded["toggleterm.terminal"] = {
 			Terminal = {
 				new = function(_, options)
 					terminal_options = options
-					return {
-						options = options,
-						spawn = function()
-							spawned = true
-						end,
-					}
+					return {}
 				end,
 			},
 		}
-		package.loaded["plugins.toggleterm.idle"] = { start_idle_detection = function() end }
-		package.loaded["plugins.toggleterm.window"] = { is_visible = function() return false end }
+		package.loaded["plugins.toggleterm.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["plugins.toggleterm.terms.window"] = { is_visible = function() return false end }
+		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local create_term = require("plugins.toggleterm.create_term").create_term
-		local term = create_term({ key = "ddgr" }, function() end, true)
-		result = { spawned = spawned, hidden = terminal_options.hidden, returned = term ~= nil }
+		local create_term = require("plugins.toggleterm.terms.create_term").create_term
+		create_term({}, function(event)
+			table.insert(events, event)
+		end)
+		terminal_options.on_exit(nil, nil, 0)
+		terminal_options.on_exit(nil, nil, 1)
+		result = events
 	]])
 
-	assert.same({ spawned = true, hidden = true, returned = true }, child.lua_get("result"))
+	assert.same({
+		{ type = "status", value = "success" },
+		{ type = "status", value = "failure" },
+	}, child.lua_get("result"))
 end
 
 return T
