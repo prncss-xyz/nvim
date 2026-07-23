@@ -130,7 +130,7 @@ function M.send_str(query, str)
 		if type(str) == "function" then
 			local ctx = require("plugins.toggleterm.terms.window").get_ctx()
 			if ctx then
-				str = str(ctx)
+				str = str(ctx, instance)
 			else
 				return
 			end

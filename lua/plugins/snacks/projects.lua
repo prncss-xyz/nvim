@@ -1,6 +1,6 @@
 local M = {}
 
-local notes = require("my.parameters").dirs.notes
+local note_dir = require("my.parameters").dirs.notes
 
 local is_file_cur_win = require("my.windows").is_file_cur_win
 
@@ -32,7 +32,6 @@ local function get_test(cwd, exclude)
 	end
 end
 
--- FIXME:
 function M.toggle_cursor()
 	local bufnr = vim.api.nvim_win_get_buf(0)
 	local jumplist, len = unpack(vim.fn.getjumplist())
@@ -163,7 +162,7 @@ function M.pick_current_branch_note()
 end
 
 function M.pick_note_with(stem)
-	local dirname = notes .. stem
+	local dirname = note_dir .. stem
 	vim.fn.mkdir(dirname, "p")
 	Snacks.picker.files({
 		cwd = dirname,

@@ -29,6 +29,19 @@ function M.ensure_dir(dir)
 	end
 
 	local path = window.get_path(dir)
+	if not dir then
+		path = dir .. "/README.md"
+		if vim.fn.filereadable(path) ~= 1 then
+			local ls_output = vim.fn.system({ "git", "-C", dir, "ls-files" })
+			local first = ls_output:match("[^\n]+")
+			if first then
+				path = dir .. "/" .. first
+			else
+				path = dir .. "/README.md"
+			end
+		end
+	end
+
 	if not path or path == "" then
 		return
 	end
@@ -40,7 +53,7 @@ function M.ensure_dir(dir)
 
 	local target_path = get_absolute_path(path, absolute_dir)
 	vim.api.nvim_win_call(target_win, function()
-		vim.cmd.edit(vim.fn.fnameescape(target_path))
+		require("khutulun").create(vim.fn.fnameescape(target_path))
 	end)
 end
 

@@ -2,8 +2,6 @@ local M = {}
 
 local projects = require("my.parameters").dirs.projects
 
--- TODO: use khutulun
-
 function M.clone_github()
 	vim.ui.input({ prompt = "Github repo (user/repo or repo): " }, function(input)
 		if not input or input == "" then
@@ -65,7 +63,7 @@ function M.clone_github()
 				vim.fn.writefile({}, target)
 			end
 		end
-		vim.cmd("edit " .. vim.fn.fnameescape(target))
+		require("khutulun").create(vim.fn.fnameescape(target))
 	end)
 end
 
@@ -128,7 +126,7 @@ function M.create_worktree()
 				end
 			end
 		end
-		vim.cmd("edit " .. vim.fn.fnameescape(new_file))
+		require("khutulun").create(vim.fn.fnameescape(new_file))
 	end)
 end
 

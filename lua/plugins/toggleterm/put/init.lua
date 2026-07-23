@@ -33,11 +33,14 @@ function M.prompt()
 		if not choice then
 			return
 		end
-
 		local contents = prompts[choice]
-		require("plugins.toggleterm.terms").send_str({ tag = "agent" }, function(ctx)
-			return require("plugins.toggleterm.put.position").position(ctx) .. contents
-		end)
+		require("plugins.toggleterm.terms").send_str(
+			{ tag = "agent" },
+			type(contents) == "function" and contents
+				or function(ctx)
+					return require("plugins.toggleterm.put.position").position(ctx) .. contents
+				end
+		)
 	end)
 end
 

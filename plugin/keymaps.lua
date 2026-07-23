@@ -73,20 +73,19 @@ vim.keymap.set({ "n" }, file .. "o", function()
 
 	local path, line, col = name:match("^(.+):(%d+):(%d+)$")
 	if path then
-		vim.cmd.edit(vim.fn.fnameescape(path))
+		require("khutulun").create(vim.fn.fnameescape(path))
 		vim.cmd(line)
 		vim.cmd("normal! " .. col .. "|")
 		return
 	end
 	path, line = name:match("^(.+):(%d+)$")
 	if path then
-		vim.cmd.edit(vim.fn.fnameescape(path))
+		require("khutulun").create(vim.fn.fnameescape(path))
 		vim.cmd(line)
 		return
 	end
-	-- TODO: use khutulun
-	vim.cmd.edit(vim.fn.fnameescape(name))
-end, { desc = "Edit File" })
+	require("khutulun").create(vim.fn.fnameescape(name))
+end, { desc = "Edit File Under Cursor" })
 
 vim.keymap.set({ "n", "x" }, edit .. "t", "=", { desc = "Reindent" })
 vim.keymap.set({ "n", "x", "i" }, "<c-c>", function()
