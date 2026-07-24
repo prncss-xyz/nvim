@@ -28,7 +28,7 @@ local function make_item(item, cb)
 		elseif event.type == "detach" then
 			history.purge(item.hash)
 		end
-	end, cb == prepare)
+	end, cb == prepare, config.min_runtime)
 	item.term = term
 	history.insert(item)
 	cb(item)

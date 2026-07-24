@@ -8,9 +8,13 @@ local is_visible = window.is_visible
 
 local ensure_dir = require("plugins.toggleterm.terms.ensure_dir").ensure_dir
 
-function M.create_term(config, send, prepare)
-	local o = vim.deepcopy(config)
-	o.close_on_exit = o.on_exit ~= "keep"
+function M.create_term(opts, send, prepare, min_runtime)
+	local o = vim.deepcopy(opts)
+	local exit_policy = o.on_exit
+	local started_at
+	local restart_scheduled = false
+	local original_on_create = o.on_create
+	o.close_on_exit = exit_policy ~= "keep" and exit_policy ~= "restart"
 	o.env = {
 		VMUX_HASH = o.hash,
 	}
@@ -20,12 +24,30 @@ function M.create_term(config, send, prepare)
 			vim.cmd.startinsert()
 		end)
 	end
+	o.on_create = function(term)
+		started_at = vim.uv.hrtime()
+		restart_scheduled = false
+		if original_on_create then
+			original_on_create(term)
+		end
+	end
 
-	function o.on_exit(_, _, exit_code)
+	function o.on_exit(term, _, exit_code)
 		send({
 			type = "status",
 			value = exit_code == 0 and "success" or "failure",
 		})
+		local runtime = started_at and (vim.uv.hrtime() - started_at) / 1000000 or 0
+		if exit_policy ~= "restart" or exit_code == 0 or runtime < (min_runtime or 0) or restart_scheduled then
+			return
+		end
+		restart_scheduled = true
+		vim.schedule(function()
+			if term.bufnr and vim.api.nvim_buf_is_valid(term.bufnr) then
+				vim.bo[term.bufnr].modified = false
+			end
+			term:spawn()
+		end)
 	end
 
 	local term = Terminal:new(o)

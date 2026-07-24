@@ -28,6 +28,10 @@ return {
 	},
 
 	commands = {
+		tsterr = {
+			cmd = "tsterr",
+			on_exit = "restart",
+		},
 		ddgr = {
 			cmd = "ddgr",
 			dir = vim.env.HOME,
@@ -92,7 +96,6 @@ return {
 			priority = 2,
 			cmd = "claude",
 			tag = "agent",
-			on_exit = "restart",
 		}),
 		["make daily-login"] = function()
 			if vim.fn.filereadable(vim.fn.getcwd() .. "/Makefile") == 1 then
