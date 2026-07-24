@@ -3,7 +3,9 @@ local M = {}
 local default_icon = "● "
 
 local status_icons = {
-	alive = "○ ",
+	idle = "○ ",
+	working = "● ",
+	blocked = "! ",
 	success = "✔ ",
 	failure = "✗ ",
 }

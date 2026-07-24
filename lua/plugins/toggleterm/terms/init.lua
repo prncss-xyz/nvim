@@ -17,12 +17,17 @@ local function prepare()
 end
 
 local function make_item(item, cb)
-	item.status = "alive"
+	item.status = "working"
 	item.instance_count = vim.v.count1
 	local term
 	term = create_term(item, function(event)
 		if event.type == "focus" then
 			history.insert(item)
+		elseif event.type == "status" and event.value ~= item.status then
+			item.status = event.value
+			if not is_in_view(term.window) then
+				config.on_status(item)
+			end
 		elseif event.type == "url" then
 			term.url = event.value
 		elseif event.type == "detach" then

@@ -57,7 +57,7 @@ function M.create_term(opts, send, prepare, min_runtime)
 	vim.schedule(function()
 		if term and term.bufnr and term.bufnr > 0 then
 			ensure_dir(o.dir)
-			attach_term(term, send)
+			attach_term(term, send, o.screen_manifest)
 		end
 	end)
 
