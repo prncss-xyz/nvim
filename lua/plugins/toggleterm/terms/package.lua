@@ -55,7 +55,7 @@ local function from_package(opts, prefix, acc)
 			cmd = cmd,
 			cwd = root .. prefix,
 			tag = tag,
-			close_on_exit = false,
+			on_exit = "keep",
 		}
 	end
 

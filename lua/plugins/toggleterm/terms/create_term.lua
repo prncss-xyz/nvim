@@ -10,6 +10,7 @@ local ensure_dir = require("plugins.toggleterm.terms.ensure_dir").ensure_dir
 
 function M.create_term(config, send, prepare)
 	local o = vim.deepcopy(config)
+	o.close_on_exit = o.on_exit ~= "keep"
 	o.env = {
 		VMUX_HASH = o.hash,
 	}

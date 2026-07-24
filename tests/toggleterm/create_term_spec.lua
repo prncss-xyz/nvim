@@ -42,4 +42,31 @@ T["create_term"]["reports process exit status"] = function()
 	}, child.lua_get("result"))
 end
 
+T["create_term"]["maps on_exit to toggleterm's close_on_exit option"] = function()
+	child.lua([[local terminal_options = {}
+		package.loaded["toggleterm.terminal"] = {
+			Terminal = {
+				new = function(_, options)
+					table.insert(terminal_options, options)
+					return {}
+				end,
+			},
+		}
+		package.loaded["plugins.toggleterm.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["plugins.toggleterm.terms.window"] = { is_visible = function() return false end }
+		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		local create_term = require("plugins.toggleterm.terms.create_term").create_term
+		create_term({ on_exit = "keep" }, function() end)
+		create_term({ on_exit = "close" }, function() end)
+		create_term({}, function() end)
+		result = vim.tbl_map(function(options)
+			return options.close_on_exit
+		end, terminal_options)
+	]])
+
+	assert.same({ false, true, true }, child.lua_get("result"))
+end
+
 return T

@@ -5,7 +5,7 @@ local notify = require("my.notify")
 local ai_term = require("my.parameters").ai_config.chat == "toggleterm"
 
 return {
-  min_runtime = 10000,
+	min_runtime = 10000,
 	packages = {
 		tagger = function(key)
 			if key:find("test") then
@@ -34,11 +34,11 @@ return {
 		},
 		portless = {
 			cmd = "portless",
-			close_on_exit = false,
+			on_exit = "keep",
 		},
 		tilt = work({
 			cmd = "make tilt",
-			close_on_exit = false,
+			on_exit = "keep",
 			global = true,
 		}),
 		current = function()
@@ -52,32 +52,32 @@ return {
 		},
 		diff = {
 			cmd = require("my.diff").get_cmd(),
-			close_on_exit = false,
+			on_exit = "keep",
 		},
 		repl = require("plugins.toggleterm.repl").get_REPL,
 		gac = {
 			cmd = "gac",
-			close_on_exit = false,
+			on_exit = "keep",
 		},
 		gacp = {
 			cmd = "gacp",
-			close_on_exit = false,
+			on_exit = "keep",
 		},
 		["commit ongoing work"] = {
 			cmd = 'git add --all; git commit -m "ongoing work" --no-verify',
-			close_on_exit = false,
+			on_exit = "keep",
 		},
 		["commit ongoing work and push"] = {
 			cmd = 'git add --all; git commit -m "ongoing work" --no-verify; git push',
-			close_on_exit = false,
+			on_exit = "keep",
 		},
 		["git-sync-all"] = personal({
 			cmd = "git-sync-all",
-			close_on_exit = false,
+			on_exit = "keep",
 		}),
 		["git-sync"] = personal({
 			cmd = "git-sync",
-			close_on_exit = false,
+			on_exit = "keep",
 		}),
 		antigravity = personal({
 			cmd = "agy",
@@ -92,6 +92,7 @@ return {
 			priority = 2,
 			cmd = "claude",
 			tag = "agent",
+			on_exit = "restart",
 		}),
 		["make daily-login"] = function()
 			if vim.fn.filereadable(vim.fn.getcwd() .. "/Makefile") == 1 then
