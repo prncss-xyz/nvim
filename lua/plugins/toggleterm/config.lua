@@ -55,6 +55,9 @@ local screen_manifests = {
 
 return {
 	min_runtime = 10000,
+	panel = {
+		width = 40,
+	},
 	packages = {
 		tagger = function(key)
 			if key:find("test") then

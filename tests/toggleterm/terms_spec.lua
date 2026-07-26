@@ -123,7 +123,12 @@ T["terminal panel integration"]["uses ui_toggle and forwards make_item lifecycle
 				}
 			end,
 		}
-		package.loaded["plugins.toggleterm.config"] = { autostart = {}, min_runtime = 0, on_status = function() end }
+		package.loaded["plugins.toggleterm.config"] = {
+			autostart = {},
+			min_runtime = 0,
+			on_status = function() end,
+			panel = { width = 24 },
+		}
 		package.loaded["plugins.toggleterm.terms.get_commands"] = { get_commands = function() return { item } end }
 		package.loaded["plugins.toggleterm.terms.format_item"] = {
 			format_item = function() return function(value) return value.key end end,
@@ -135,11 +140,11 @@ T["terminal panel integration"]["uses ui_toggle and forwards make_item lifecycle
 			end,
 		}
 		package.loaded["plugins.toggleterm.terms.panel"] = {
-			toggle = function(query, deps)
-				listener = deps.subscribe(function(event)
+			toggle = function(query, history, subscribe)
+				listener = subscribe(function(event)
 					table.insert(events, event.type)
 				end)
-				result_items = deps.items(query)
+				result_items = history.filter(require("plugins.toggleterm.terms.get_query_fn").get_query_fn(query))
 			end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path

@@ -13,9 +13,9 @@ local history = create_history("hash")
 local listeners = {}
 local next_listener_id = 0
 
-local function notify(event, item)
+local function notify(...)
 	for _, listener in pairs(listeners) do
-		pcall(listener, event, item)
+		pcall(listener, ...)
 	end
 end
 
@@ -149,27 +149,15 @@ function M.toggle(query)
 	end)
 end
 
-local last_panel_query = {}
-
-local function panel_dependencies()
-	return {
-		items = function(query)
-			return history.filter(get_query_fn(query))
-		end,
-		subscribe = subscribe,
-		format = format_item(true),
-	}
-end
-
 function M.toggle_panel(query)
-	last_panel_query = normalize_query(query)
+	query = normalize_query(query)
 	require("my.ui_toggle").activate("toggleterm", function()
-		require("plugins.toggleterm.terms.panel").toggle(last_panel_query, panel_dependencies())
+		require("plugins.toggleterm.terms.panel").toggle(query, history, subscribe)
 	end)
 end
 
 function M.raise_panel()
-	require("plugins.toggleterm.terms.panel").open(last_panel_query, panel_dependencies())
+	require("plugins.toggleterm.terms.panel").open(history, subscribe)
 end
 
 function M.prepare(query)

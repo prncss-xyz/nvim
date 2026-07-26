@@ -1,7 +1,12 @@
 local M = {}
 
+local config = require("plugins.toggleterm.config").panel
+local format_item = require("plugins.toggleterm.terms.format_item").format_item(true)
+local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
+
 local states = {}
 local empty_message = "No matching terminals"
+local last_query = {}
 
 local function current_tab()
 	return vim.api.nvim_get_current_tabpage()
@@ -106,9 +111,21 @@ local function focus_selected(state)
 	end
 end
 
-local function open(query, deps)
+local function get_dependencies(history, subscribe)
+	return {
+		items = function(query)
+			return history.filter(get_query_fn(query))
+		end,
+		subscribe = subscribe,
+		format = format_item,
+		width = config.width,
+	}
+end
+
+local function open(query, history, subscribe)
+	local deps = get_dependencies(history, subscribe)
 	local tab = current_tab()
-	vim.cmd("topleft 40vsplit")
+	vim.cmd(string.format("topleft %dvsplit", deps.width))
 	local win = vim.api.nvim_get_current_win()
 	local buf = vim.api.nvim_create_buf(false, true)
 	vim.api.nvim_win_set_buf(win, buf)
@@ -157,7 +174,8 @@ local function open(query, deps)
 	render(state)
 end
 
-function M.toggle(query, deps)
+function M.toggle(query, history, subscribe)
+	last_query = vim.deepcopy(query or {})
 	local tab = current_tab()
 	local state = states[tab]
 	if state and valid_win(state.win) then
@@ -167,10 +185,10 @@ function M.toggle(query, deps)
 	if state then
 		release(state)
 	end
-	open(query, deps)
+	open(last_query, history, subscribe)
 end
 
-function M.open(query, deps)
+function M.open(history, subscribe)
 	local tab = current_tab()
 	local state = states[tab]
 	if state and valid_win(state.win) then
@@ -180,7 +198,7 @@ function M.open(query, deps)
 	if state then
 		release(state)
 	end
-	open(query, deps)
+	open(last_query, history, subscribe)
 end
 
 return M

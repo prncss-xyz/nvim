@@ -99,7 +99,9 @@ return {
 			{
 				"ra",
 				function()
-					require("plugins.toggleterm.terms").toggle_panel({})
+					require("plugins.toggleterm.terms").toggle_panel({
+						dir = require("plugins.toggleterm.terms.get_query_fn").any,
+					})
 				end,
 				desc = "Toggle Tasks Panel",
 				mode = { "n", "x" },
