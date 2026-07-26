@@ -42,6 +42,40 @@ T["create_term"]["reports process exit status"] = function()
 	}, child.lua_get("result"))
 end
 
+T["create_term"]["ignores process exits while Neovim is shutting down"] = function()
+	child.lua([[local terminal_options
+		local events = {}
+		local spawn_count = 0
+		local terminal = { bufnr = 42 }
+		function terminal:spawn()
+			spawn_count = spawn_count + 1
+		end
+		package.loaded["toggleterm.terminal"] = {
+			Terminal = {
+				new = function(_, options)
+					terminal_options = options
+					return terminal
+				end,
+			},
+		}
+		package.loaded["plugins.toggleterm.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["plugins.toggleterm.terms.window"] = { is_visible = function() return false end }
+		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		local create_term = require("plugins.toggleterm.terms.create_term").create_term
+		create_term({ on_exit = "restart" }, function(event)
+			table.insert(events, event)
+		end, true, 0)
+		vim.api.nvim_exec_autocmds("ExitPre", {})
+		terminal_options.on_exit(terminal, nil, 1)
+		vim.wait(10)
+		result = { events = events, spawn_count = spawn_count }
+	]])
+
+	assert.same({ events = {}, spawn_count = 1 }, child.lua_get("result"))
+end
+
 T["create_term"]["maps on_exit to toggleterm's close_on_exit option"] = function()
 	child.lua([[local terminal_options = {}
 		package.loaded["toggleterm.terminal"] = {

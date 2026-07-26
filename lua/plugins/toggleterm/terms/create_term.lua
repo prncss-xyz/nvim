@@ -8,23 +8,31 @@ local is_visible = window.is_visible
 
 local ensure_dir = require("plugins.toggleterm.terms.ensure_dir").ensure_dir
 
+local shutting_down = false
+
+vim.api.nvim_create_autocmd("ExitPre", {
+	callback = function()
+		shutting_down = true
+	end,
+})
+
 function M.create_term(opts, send, prepare, min_runtime)
-	local o = vim.deepcopy(opts)
-	local exit_policy = o.on_exit
+	local opts_ = vim.deepcopy(opts)
+	local exit_policy = opts_.on_exit
 	local started_at
 	local restart_scheduled = false
-	local original_on_create = o.on_create
-	o.close_on_exit = exit_policy ~= "keep" and exit_policy ~= "restart"
-	o.env = {
-		VMUX_HASH = o.hash,
+	local original_on_create = opts_.on_create
+	opts_.close_on_exit = exit_policy ~= "keep" and exit_policy ~= "restart"
+	opts_.env = {
+		VMUX_HASH = opts_.hash,
 	}
-	o.dir = o.dir or vim.fn.getcwd()
-	o.on_open = function()
+	opts_.dir = opts_.dir or vim.fn.getcwd()
+	opts_.on_open = function()
 		vim.schedule(function()
 			vim.cmd.startinsert()
 		end)
 	end
-	o.on_create = function(term)
+	opts_.on_create = function(term)
 		started_at = vim.uv.hrtime()
 		restart_scheduled = false
 		if original_on_create then
@@ -32,7 +40,10 @@ function M.create_term(opts, send, prepare, min_runtime)
 		end
 	end
 
-	function o.on_exit(term, _, exit_code)
+	function opts_.on_exit(term, _, exit_code)
+		if shutting_down then
+			return
+		end
 		send({
 			type = "status",
 			value = exit_code == 0 and "success" or "failure",
@@ -50,14 +61,14 @@ function M.create_term(opts, send, prepare, min_runtime)
 		end)
 	end
 
-	local term = Terminal:new(o)
+	local term = Terminal:new(opts_)
 	if prepare then
 		term:spawn()
 	end
 	vim.schedule(function()
 		if term and term.bufnr and term.bufnr > 0 then
-			ensure_dir(o.dir)
-			attach_term(term, send, o.screen_manifest)
+			ensure_dir(opts_.dir)
+			attach_term(term, send, opts_.screen_manifest)
 		end
 	end)
 
@@ -79,7 +90,7 @@ function M.create_term(opts, send, prepare, min_runtime)
 		end
 		if not is_visible(term.window) then
 			last_terminal = term
-			ensure_dir(o.dir)
+			ensure_dir(opts_.dir)
 		end
 		term:toggle()
 	end
@@ -87,7 +98,7 @@ function M.create_term(opts, send, prepare, min_runtime)
 	local function focus()
 		hide_last()
 		if not is_visible(term.window) then
-			ensure_dir(o.dir)
+			ensure_dir(opts_.dir)
 			term:toggle()
 			last_terminal = term
 		end
@@ -107,22 +118,22 @@ function M.create_term(opts, send, prepare, min_runtime)
 				end
 			end)
 		end,
-		read = function(opts, cb)
+		read = function(read_opts, cb)
 			if not term.bufnr or not vim.api.nvim_buf_is_valid(term.bufnr) then
 				return cb({})
 			end
 			local line_count = vim.api.nvim_buf_line_count(term.bufnr)
-			if opts.regex == nil or opts.regex == "" then
-				local start = math.max(0, line_count - opts.len)
+			if read_opts.regex == nil or read_opts.regex == "" then
+				local start = math.max(0, line_count - read_opts.len)
 				return cb(vim.api.nvim_buf_get_lines(term.bufnr, start, line_count, false))
 			end
 
-			local matcher = vim.regex(opts.regex)
+			local matcher = vim.regex(read_opts.regex)
 			local lines = vim.api.nvim_buf_get_lines(term.bufnr, 0, line_count, false)
 			local matches = vim.tbl_filter(function(line)
 				return matcher:match_str(line) ~= nil
 			end, lines)
-			local start = math.max(1, #matches - opts.len + 1)
+			local start = math.max(1, #matches - read_opts.len + 1)
 			cb(vim.list_slice(matches, start))
 		end,
 	}
