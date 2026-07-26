@@ -1,6 +1,6 @@
 local M = {}
 
-local detect_status = require("plugns.toggleterm.terms.screen_status").detect
+local detect_status = require("plugins.toggleterm.terms.screen_status").detect
 
 local function get_local_url(line)
 	local url = vim.fn.matchstr(line, [[\vhttps?://%([\w.-]*localhost|127\.0\.0\.1)%([:/?#]\S*)?%(\s|$)@=]])
