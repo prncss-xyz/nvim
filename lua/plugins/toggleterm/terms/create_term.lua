@@ -107,6 +107,9 @@ function M.create_term(opts, send, prepare, min_runtime)
 	return {
 		toggle = toggle,
 		focus = focus,
+		is_in_view = function()
+			return window.is_in_view(term.window)
+		end,
 		send_str = function(str, start_insert)
 			focus()
 			vim.schedule(function()

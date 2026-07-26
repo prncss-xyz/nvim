@@ -35,7 +35,10 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 		package.loaded["plugins.toggleterm.terms.create_term"] = {
 			create_term = function(_, callback)
 				send = callback
-				return { window = 1, focus = function() end }
+				return {
+					focus = function() end,
+					is_in_view = function() return visible end,
+				}
 			end,
 		}
 		package.loaded["plugins.toggleterm.config"] = {
@@ -43,9 +46,6 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 			on_status = function(instance)
 				table.insert(notifications, instance.status)
 			end,
-		}
-		package.loaded["plugins.toggleterm.terms.window"] = {
-			is_in_view = function() return visible end,
 		}
 		package.loaded["plugins.toggleterm.terms.get_query_fn"] = {
 			get_query_fn = function() return function() return true end end,
@@ -71,6 +71,9 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 		visible = true
 		send({ type = "status", value = "blocked", seen = false })
 		send({ type = "status", value = "blocked", seen = false })
+		visible = false
+		send({ type = "status", value = "success", seen = false })
+		send({ type = "status", value = "success", seen = false })
 
 		result = {
 			visible_status = visible_status,
@@ -81,8 +84,8 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 
 	assert.same({
 		visible_status = "working",
-		status = "blocked",
-		notifications = { "blocked" },
+		status = "success",
+		notifications = { "success" },
 	}, child.lua_get("result"))
 end
 

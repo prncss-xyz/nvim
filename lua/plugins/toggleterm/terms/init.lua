@@ -8,7 +8,6 @@ local utils = require("plugins.toggleterm.terms.utils")
 local get_commands = require("plugins.toggleterm.terms.get_commands").get_commands
 local format_item = require("plugins.toggleterm.terms.format_item").format_item
 local visit = require("my.browser").visit
-local is_in_view = require("plugins.toggleterm.terms.window").is_in_view
 
 local history = create_history("hash")
 
@@ -25,7 +24,7 @@ local function make_item(item, cb)
 			history.insert(item)
 		elseif event.type == "status" and event.value ~= item.status then
 			item.status = event.value
-			if not is_in_view(item.term.window) then
+			if not item.term.is_in_view() then
 				config.on_status(item)
 			end
 		elseif event.type == "url" then

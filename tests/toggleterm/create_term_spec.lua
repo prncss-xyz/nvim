@@ -48,6 +48,34 @@ T["create_term"]["reports process exit status"] = function()
 	}, child.lua_get("result"))
 end
 
+T["create_term"]["reports whether its terminal is in view"] = function()
+	child.lua([[local visible = true
+		local terminal = { window = 42 }
+		package.loaded["toggleterm.terminal"] = {
+			Terminal = {
+				new = function()
+					return terminal
+				end,
+			},
+		}
+		package.loaded["plugins.toggleterm.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			is_visible = function() return false end,
+			is_in_view = function(winnr) return visible and winnr == terminal.window end,
+		}
+		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		local create_term = require("plugins.toggleterm.terms.create_term").create_term
+		local instance = create_term({}, function() end)
+		local in_view = instance.is_in_view()
+		visible = false
+		result = { in_view, instance.is_in_view() }
+	]])
+
+	assert.same({ true, false }, child.lua_get("result"))
+end
+
 T["create_term"]["ignores process exits while Neovim is shutting down"] = function()
 	child.lua([[local terminal_options
 		local events = {}
