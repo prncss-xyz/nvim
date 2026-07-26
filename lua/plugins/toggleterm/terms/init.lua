@@ -25,7 +25,7 @@ local function make_item(item, cb)
 			history.insert(item)
 		elseif event.type == "status" and event.value ~= item.status then
 			item.status = event.value
-			if not event.seen then
+			if not is_in_view(item.term.window) then
 				config.on_status(item)
 			end
 		elseif event.type == "url" then
@@ -142,19 +142,6 @@ function M.send_str(query, str)
 		end
 		instance.term.send_str(str)
 	end)
-end
-
-function M.set_status(hash, status)
-	local item = history.find(function(candidate)
-		return candidate.hash == hash
-	end)
-	if not item then
-		return
-	end
-	item.status = status
-	if not is_in_view(item.term.window) then
-		config.on_status(item)
-	end
 end
 
 function M.read(hash, opts, cb)
