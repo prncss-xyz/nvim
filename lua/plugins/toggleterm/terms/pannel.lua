@@ -149,8 +149,10 @@ local function open(query, deps)
 		end,
 	})
 
-	state.unsubscribe = deps.subscribe(function()
-		refresh(state)
+	state.unsubscribe = deps.subscribe(function(event)
+		if event.type == "create" or event.type == "focus" or event.type == "status" or event.type == "detach" then
+			refresh(state)
+		end
 	end)
 	render(state)
 end

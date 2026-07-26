@@ -28,6 +28,21 @@ local function subscribe(listener)
 	end
 end
 
+subscribe(function(event, item)
+	if event.type == "create" or event.type == "focus" then
+		history.insert(item)
+	elseif event.type == "status" and event.value ~= item.status then
+		item.status = event.value
+		if not item.term.is_in_view() then
+			config.on_status(item)
+		end
+	elseif event.type == "url" then
+		item.term.url = event.value
+	elseif event.type == "detach" then
+		history.purge(item.hash)
+	end
+end)
+
 local function prepare()
 	-- act as noop, but also used as a flag
 end
@@ -35,30 +50,9 @@ end
 local function make_item(item, cb)
 	item.status = "idle"
 	item.instance_count = vim.v.count1
-	local term
-	term = create_term(item, function(event)
-		local changed = false
-		if event.type == "focus" then
-			history.insert(item)
-			changed = true
-		elseif event.type == "status" and event.value ~= item.status then
-			item.status = event.value
-			changed = true
-			if not item.term.is_in_view() then
-				config.on_status(item)
-			end
-		elseif event.type == "url" then
-			term.url = event.value
-		elseif event.type == "detach" then
-			history.purge(item.hash)
-			changed = true
-		end
-		if changed then
-			notify(event, item)
-		end
+	item.term = create_term(item, function(event)
+		notify(event, item)
 	end, cb == prepare, config.min_runtime)
-	item.term = term
-	history.insert(item)
 	notify({ type = "create" }, item)
 	cb(item)
 end

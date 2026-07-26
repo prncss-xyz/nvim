@@ -99,7 +99,7 @@ T["terminal pannel"]["refreshes from events and preserves selection by hash"] = 
 		vim.api.nvim_win_set_cursor(win, { 2, 0 })
 		items[2].status = "blocked"
 		items = { items[2], items[1] }
-		listener()
+		listener({ type = "status" })
 		vim.wait(100, function()
 			return vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(win), 0, 1, false)[1] == "two:blocked"
 		end)
