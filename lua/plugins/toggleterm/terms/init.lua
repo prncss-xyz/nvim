@@ -25,7 +25,7 @@ local function make_item(item, cb)
 			history.insert(item)
 		elseif event.type == "status" and event.value ~= item.status then
 			item.status = event.value
-			if not is_in_view(term.window) then
+			if not event.seen then
 				config.on_status(item)
 			end
 		elseif event.type == "url" then

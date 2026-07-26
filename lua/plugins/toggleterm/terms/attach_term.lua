@@ -1,8 +1,6 @@
 local M = {}
 
-local window = require("plugins.toggleterm.terms.window")
-local is_in_view = window.is_in_view
-local detect_status = require("plugins.toggleterm.terms.screen_status").detect
+local detect_status = require("plugns.toggleterm.terms.screen_status").detect
 
 local function get_local_url(line)
 	local url = vim.fn.matchstr(line, [[\vhttps?://%([\w.-]*localhost|127\.0\.0\.1)%([:/?#]\S*)?%(\s|$)@=]])
@@ -15,7 +13,6 @@ function M.attach_term(term, send, screen_manifest)
 	end
 
 	local handle = nil
-	local seen = false
 	local url_sent = false
 	local last_status = nil
 
@@ -29,7 +26,6 @@ function M.attach_term(term, send, screen_manifest)
 	vim.api.nvim_create_autocmd("TermEnter", {
 		buffer = term.bufnr,
 		callback = function()
-			seen = seen or is_in_view(term.window)
 			send({ type = "focus" })
 		end,
 	})
@@ -47,7 +43,10 @@ function M.attach_term(term, send, screen_manifest)
 		local status = detect_status(screen_manifest, screen)
 		if status and status ~= last_status then
 			last_status = status
-			send({ type = "status", value = status })
+			send({
+				type = "status",
+				value = status,
+			})
 		end
 	end
 

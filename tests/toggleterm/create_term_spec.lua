@@ -14,16 +14,21 @@ T["create_term"] = MiniTest.new_set()
 T["create_term"]["reports process exit status"] = function()
 	child.lua([[local terminal_options
 		local events = {}
+		local visible = true
+		local terminal = { window = 1 }
 		package.loaded["toggleterm.terminal"] = {
 			Terminal = {
 				new = function(_, options)
 					terminal_options = options
-					return {}
+					return terminal
 				end,
 			},
 		}
 		package.loaded["plugins.toggleterm.terms.attach_term"] = { attach_term = function() end }
-		package.loaded["plugins.toggleterm.terms.window"] = { is_visible = function() return false end }
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			is_visible = function() return false end,
+			is_in_view = function() return visible end,
+		}
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
@@ -31,8 +36,9 @@ T["create_term"]["reports process exit status"] = function()
 		create_term({}, function(event)
 			table.insert(events, event)
 		end)
-		terminal_options.on_exit(nil, nil, 0)
-		terminal_options.on_exit(nil, nil, 1)
+		terminal_options.on_exit(terminal, nil, 0)
+		visible = false
+		terminal_options.on_exit(terminal, nil, 1)
 		result = events
 	]])
 
@@ -59,7 +65,10 @@ T["create_term"]["ignores process exits while Neovim is shutting down"] = functi
 			},
 		}
 		package.loaded["plugins.toggleterm.terms.attach_term"] = { attach_term = function() end }
-		package.loaded["plugins.toggleterm.terms.window"] = { is_visible = function() return false end }
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			is_visible = function() return false end,
+			is_in_view = function() return false end,
+		}
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
@@ -87,7 +96,10 @@ T["create_term"]["maps on_exit to toggleterm's close_on_exit option"] = function
 			},
 		}
 		package.loaded["plugins.toggleterm.terms.attach_term"] = { attach_term = function() end }
-		package.loaded["plugins.toggleterm.terms.window"] = { is_visible = function() return false end }
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			is_visible = function() return false end,
+			is_in_view = function() return false end,
+		}
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
@@ -132,7 +144,10 @@ T["create_term"]["restarts long-running failed processes in the same hidden term
 				calls.attach = calls.attach + 1
 			end,
 		}
-		package.loaded["plugins.toggleterm.terms.window"] = { is_visible = function() return false end }
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			is_visible = function() return false end,
+			is_in_view = function() return false end,
+		}
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = {
 			ensure_dir = function()
 				calls.ensure_dir = calls.ensure_dir + 1
@@ -184,7 +199,10 @@ T["create_term"]["reuses a terminal buffer containing output"] = function()
 			},
 		}
 		package.loaded["plugins.toggleterm.terms.attach_term"] = { attach_term = function() end }
-		package.loaded["plugins.toggleterm.terms.window"] = { is_visible = function() return false end }
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			is_visible = function() return false end,
+			is_in_view = function() return false end,
+		}
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
@@ -218,7 +236,10 @@ T["create_term"]["does not restart successful or short-lived processes"] = funct
 			},
 		}
 		package.loaded["plugins.toggleterm.terms.attach_term"] = { attach_term = function() end }
-		package.loaded["plugins.toggleterm.terms.window"] = { is_visible = function() return false end }
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			is_visible = function() return false end,
+			is_in_view = function() return false end,
+		}
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 

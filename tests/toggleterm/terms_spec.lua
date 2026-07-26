@@ -11,7 +11,7 @@ local T = MiniTest.new_set({
 
 T["screen status events"] = MiniTest.new_set()
 
-T["screen status events"]["update status on transitions regardless of visibility"] = function()
+T["screen status events"]["notify only for unseen status transitions"] = function()
 	child.lua([[local notifications = {}
 		local send
 		local visible = true
@@ -65,12 +65,12 @@ T["screen status events"]["update status on transitions regardless of visibility
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		require("plugins.toggleterm.terms").focus({})
-		send({ type = "status", value = "working" })
+		send({ type = "status", value = "working", seen = true })
 		local visible_status = item.status
-		send({ type = "status", value = "working" })
-		visible = false
-		send({ type = "status", value = "blocked" })
-		send({ type = "status", value = "blocked" })
+		send({ type = "status", value = "working", seen = false })
+		visible = true
+		send({ type = "status", value = "blocked", seen = false })
+		send({ type = "status", value = "blocked", seen = false })
 
 		result = {
 			visible_status = visible_status,

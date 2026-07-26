@@ -1,4 +1,4 @@
-local History = require("plugins.toggleterm.history")
+local History = require("plugins.toggleterm.terms.history")
 
 describe("history", function()
 	it("finds the most recently inserted matching item", function()
