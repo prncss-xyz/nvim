@@ -10,6 +10,23 @@ local format_item = require("plugins.toggleterm.terms.format_item").format_item
 local visit = require("my.browser").visit
 
 local history = create_history("hash")
+local listeners = {}
+local next_listener_id = 0
+
+local function notify(event, item)
+	for _, listener in pairs(listeners) do
+		pcall(listener, event, item)
+	end
+end
+
+local function subscribe(listener)
+	next_listener_id = next_listener_id + 1
+	local id = next_listener_id
+	listeners[id] = listener
+	return function()
+		listeners[id] = nil
+	end
+end
 
 local function prepare()
 	-- act as noop, but also used as a flag
@@ -20,10 +37,13 @@ local function make_item(item, cb)
 	item.instance_count = vim.v.count1
 	local term
 	term = create_term(item, function(event)
+		local changed = false
 		if event.type == "focus" then
 			history.insert(item)
+			changed = true
 		elseif event.type == "status" and event.value ~= item.status then
 			item.status = event.value
+			changed = true
 			if not item.term.is_in_view() then
 				config.on_status(item)
 			end
@@ -31,10 +51,15 @@ local function make_item(item, cb)
 			term.url = event.value
 		elseif event.type == "detach" then
 			history.purge(item.hash)
+			changed = true
+		end
+		if changed then
+			notify(event, item)
 		end
 	end, cb == prepare, config.min_runtime)
 	item.term = term
 	history.insert(item)
+	notify({ type = "create" }, item)
 	cb(item)
 end
 
@@ -45,10 +70,15 @@ local gt_item = utils.compose_gt(
 	utils.gt_field("dir")
 )
 
-local function with_query(query, cb)
+local function normalize_query(query)
 	query = vim.tbl_extend("keep", query or {}, {})
 	query.instance_count = vim.v.count > 0 and vim.v.count or nil
 	query.dir = query.dir or { vim.fn.getcwd(), vim.env.HOME }
+	return query
+end
+
+local function with_query(query, cb)
+	query = normalize_query(query)
 	local filter = get_query_fn(query)
 	if query.prompt then
 		local items = history.filter(filter)
@@ -123,6 +153,29 @@ function M.toggle(query)
 	with_query(query, function(instance)
 		instance.term.toggle()
 	end)
+end
+
+local last_panel_query = {}
+
+local function panel_dependencies()
+	return {
+		items = function(query)
+			return history.filter(get_query_fn(query))
+		end,
+		subscribe = subscribe,
+		format = format_item(true),
+	}
+end
+
+function M.toggle_panel(query)
+	last_panel_query = normalize_query(query)
+	require("my.ui_toggle").activate("toggleterm", function()
+		require("plugins.toggleterm.terms.pannel").toggle(last_panel_query, panel_dependencies())
+	end)
+end
+
+function M.raise_panel()
+	require("plugins.toggleterm.terms.pannel").open(last_panel_query, panel_dependencies())
 end
 
 function M.prepare(query)

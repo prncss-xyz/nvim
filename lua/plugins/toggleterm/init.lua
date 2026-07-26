@@ -97,6 +97,14 @@ return {
 				mode = { "n", "x", "i", "t" },
 			},
 			{
+				"ra",
+				function()
+					require("plugins.toggleterm.terms").toggle_panel({})
+				end,
+				desc = "Toggle Tasks Panel",
+				mode = { "n", "x" },
+			},
+			{
 				"oi",
 				function()
 					require("plugins.toggleterm.repl").op:call({ domain = "outer" }, {

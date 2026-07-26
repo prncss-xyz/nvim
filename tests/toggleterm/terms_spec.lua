@@ -89,4 +89,79 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 	}, child.lua_get("result"))
 end
 
+T["terminal pannel integration"] = MiniTest.new_set()
+
+T["terminal pannel integration"]["uses ui_toggle and forwards make_item lifecycle changes"] = function()
+	child.lua([[local sent
+		local listener
+		local events = {}
+		local activated
+		local item = {
+			key = "agent",
+			display_name = "agent",
+			dir = "/tmp",
+			hash = "agent:/tmp:1",
+		}
+		local stored = {}
+
+		package.loaded["plugins.toggleterm.terms.history"] = {
+			create_history = function()
+				return {
+					insert = function(value) stored = { value } end,
+					find = function(cb) return vim.tbl_filter(cb, stored)[1] end,
+					purge = function() stored = {} end,
+					filter = function(cb) return vim.tbl_filter(cb, stored) end,
+				}
+			end,
+		}
+		package.loaded["plugins.toggleterm.terms.create_term"] = {
+			create_term = function(_, callback)
+				sent = callback
+				return {
+					focus = function() callback({ type = "focus" }) end,
+					is_in_view = function() return false end,
+				}
+			end,
+		}
+		package.loaded["plugins.toggleterm.config"] = { autostart = {}, min_runtime = 0, on_status = function() end }
+		package.loaded["plugins.toggleterm.terms.get_commands"] = { get_commands = function() return { item } end }
+		package.loaded["plugins.toggleterm.terms.format_item"] = {
+			format_item = function() return function(value) return value.key end end,
+		}
+		package.loaded["my.ui_toggle"] = {
+			activate = function(key, action)
+				activated = key
+				action()
+			end,
+		}
+		package.loaded["plugins.toggleterm.terms.pannel"] = {
+			toggle = function(query, deps)
+				listener = deps.subscribe(function(event)
+					table.insert(events, event.type)
+				end)
+				result_items = deps.items(query)
+			end,
+		}
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		local terms = require("plugins.toggleterm.terms")
+		terms.focus({ key = "agent" })
+		terms.toggle_panel({ key = "agent", dir = require("plugins.toggleterm.terms.get_query_fn").any })
+		sent({ type = "status", value = "working" })
+		sent({ type = "detach" })
+
+		result = {
+			activated = activated,
+			item_count = #result_items,
+			events = events,
+		}
+	]])
+
+	assert.same({
+		activated = "toggleterm",
+		item_count = 1,
+		events = { "status", "detach" },
+	}, child.lua_get("result"))
+end
+
 return T

@@ -22,6 +22,12 @@ local config = {
 		trouble = {
 			ft = { "trouble" },
 		},
+		toggleterm = {
+			ft = { "toggleterm-pannel" },
+			raise = function()
+				require("plugins.toggleterm.terms").raise_panel()
+			end,
+		},
 		neotest = {
 			ft = { "neotest-summary", "neotest-output-panel" },
 		},
