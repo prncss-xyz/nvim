@@ -115,7 +115,7 @@ local function open(query, deps)
 
 	vim.bo[buf].bufhidden = "wipe"
 	vim.bo[buf].buftype = "nofile"
-	vim.bo[buf].filetype = "toggleterm-pannel"
+	vim.bo[buf].filetype = "toggleterm-panel"
 	vim.bo[buf].swapfile = false
 	vim.bo[buf].modifiable = false
 	vim.wo[win].cursorline = true

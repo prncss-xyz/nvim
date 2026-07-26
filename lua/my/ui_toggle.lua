@@ -23,7 +23,7 @@ local config = {
 			ft = { "trouble" },
 		},
 		toggleterm = {
-			ft = { "toggleterm-pannel" },
+			ft = { "toggleterm-panel" },
 			raise = function()
 				require("plugins.toggleterm.terms").raise_panel()
 			end,

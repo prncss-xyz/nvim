@@ -10,9 +10,9 @@ local T = MiniTest.new_set({
 	},
 })
 
-T["terminal pannel"] = MiniTest.new_set()
+T["terminal panel"] = MiniTest.new_set()
 
-T["terminal pannel"]["toggles a filtered side pannel and focuses the selected terminal"] = function()
+T["terminal panel"]["toggles a filtered side panel and focuses the selected terminal"] = function()
 	child.lua([[
 		local focused = {}
 		local items = {
@@ -47,8 +47,8 @@ T["terminal pannel"]["toggles a filtered side pannel and focuses the selected te
 			format = function(item) return item.status .. " " .. item.display_name end,
 		}
 
-		local pannel = require("plugins.toggleterm.terms.pannel")
-		pannel.toggle({ key = "agent" }, deps)
+		local panel = require("plugins.toggleterm.terms.panel")
+		panel.toggle({ key = "agent" }, deps)
 		local win = vim.api.nvim_get_current_win()
 		local buf = vim.api.nvim_win_get_buf(win)
 		local opened = {
@@ -57,7 +57,7 @@ T["terminal pannel"]["toggles a filtered side pannel and focuses the selected te
 			winfixwidth = vim.wo[win].winfixwidth,
 		}
 		vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)
-		pannel.toggle({ key = "agent" }, deps)
+		panel.toggle({ key = "agent" }, deps)
 		result = {
 			opened = opened,
 			focused = focused,
@@ -68,7 +68,7 @@ T["terminal pannel"]["toggles a filtered side pannel and focuses the selected te
 
 	assert.same({
 		opened = {
-			filetype = "toggleterm-pannel",
+			filetype = "toggleterm-panel",
 			lines = { "working Agent one" },
 			winfixwidth = true,
 		},
@@ -78,7 +78,7 @@ T["terminal pannel"]["toggles a filtered side pannel and focuses the selected te
 	}, child.lua_get("result"))
 end
 
-T["terminal pannel"]["refreshes from events and preserves selection by hash"] = function()
+T["terminal panel"]["refreshes from events and preserves selection by hash"] = function()
 	child.lua([[
 		local items = {
 			{ hash = "one", key = "agent", instance_count = 1, display_name = "One", status = "idle", term = { focus = function() end } },
@@ -93,8 +93,8 @@ T["terminal pannel"]["refreshes from events and preserves selection by hash"] = 
 			end,
 			format = function(item) return item.hash .. ":" .. item.status end,
 		}
-		local pannel = require("plugins.toggleterm.terms.pannel")
-		pannel.toggle({}, deps)
+		local panel = require("plugins.toggleterm.terms.panel")
+		panel.toggle({}, deps)
 		local win = vim.api.nvim_get_current_win()
 		vim.api.nvim_win_set_cursor(win, { 2, 0 })
 		items[2].status = "blocked"
@@ -115,15 +115,15 @@ T["terminal pannel"]["refreshes from events and preserves selection by hash"] = 
 	}, child.lua_get("result"))
 end
 
-T["terminal pannel"]["renders an empty state and enter is a no-op"] = function()
+T["terminal panel"]["renders an empty state and enter is a no-op"] = function()
 	child.lua([[
 		local deps = {
 			items = function() return {} end,
 			subscribe = function() return function() end end,
 			format = function() error("must not format") end,
 		}
-		local pannel = require("plugins.toggleterm.terms.pannel")
-		pannel.toggle({}, deps)
+		local panel = require("plugins.toggleterm.terms.panel")
+		panel.toggle({}, deps)
 		local buf = vim.api.nvim_get_current_buf()
 		vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)
 		result = vim.api.nvim_buf_get_lines(buf, 0, -1, false)

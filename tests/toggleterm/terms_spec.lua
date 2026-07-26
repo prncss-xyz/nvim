@@ -89,9 +89,9 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 	}, child.lua_get("result"))
 end
 
-T["terminal pannel integration"] = MiniTest.new_set()
+T["terminal panel integration"] = MiniTest.new_set()
 
-T["terminal pannel integration"]["uses ui_toggle and forwards make_item lifecycle changes"] = function()
+T["terminal panel integration"]["uses ui_toggle and forwards make_item lifecycle changes"] = function()
 	child.lua([[local sent
 		local listener
 		local events = {}
@@ -134,7 +134,7 @@ T["terminal pannel integration"]["uses ui_toggle and forwards make_item lifecycl
 				action()
 			end,
 		}
-		package.loaded["plugins.toggleterm.terms.pannel"] = {
+		package.loaded["plugins.toggleterm.terms.panel"] = {
 			toggle = function(query, deps)
 				listener = deps.subscribe(function(event)
 					table.insert(events, event.type)

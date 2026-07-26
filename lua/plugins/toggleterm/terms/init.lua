@@ -164,12 +164,12 @@ end
 function M.toggle_panel(query)
 	last_panel_query = normalize_query(query)
 	require("my.ui_toggle").activate("toggleterm", function()
-		require("plugins.toggleterm.terms.pannel").toggle(last_panel_query, panel_dependencies())
+		require("plugins.toggleterm.terms.panel").toggle(last_panel_query, panel_dependencies())
 	end)
 end
 
 function M.raise_panel()
-	require("plugins.toggleterm.terms.pannel").open(last_panel_query, panel_dependencies())
+	require("plugins.toggleterm.terms.panel").open(last_panel_query, panel_dependencies())
 end
 
 function M.prepare(query)
