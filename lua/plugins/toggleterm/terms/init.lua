@@ -16,7 +16,7 @@ local function prepare()
 end
 
 local function make_item(item, cb)
-	item.status = "working"
+	item.status = "idle"
 	item.instance_count = vim.v.count1
 	local term
 	term = create_term(item, function(event)
