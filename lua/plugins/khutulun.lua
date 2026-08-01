@@ -16,7 +16,7 @@ return {
 				Snacks.bufdelete.delete()
 			end,
 			create = function(target)
-				require("plugins.khutulun.create").create(target)
+				require("my.create").create(target)
 			end,
 		},
 		keys = {

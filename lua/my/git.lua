@@ -2,6 +2,33 @@ local M = {}
 
 local projects = require("my.parameters").dirs.projects
 
+--- Get the best file to open in a git repository.
+--- Priority: preferred relative path → README.md → first git-tracked file → README.md (fallback)
+--- @param repo_dir string  Root directory of the repository
+--- @param preferred_rel string|nil  Optional preferred relative path inside the repo
+--- @return string  Resolved file path (may not exist yet)
+local function get_default_file(repo_dir, preferred_rel)
+	if preferred_rel ~= nil then
+		local target = repo_dir .. "/" .. preferred_rel
+		if vim.fn.filereadable(target) == 1 then
+			return target
+		end
+	end
+
+	local target = repo_dir .. "/README.md"
+	if vim.fn.filereadable(target) == 1 then
+		return target
+	end
+
+	local ls_output = vim.fn.system({ "git", "-C", repo_dir, "ls-files" })
+	local first = ls_output:match("[^\n]+")
+	if first then
+		return repo_dir .. "/" .. first
+	end
+
+	return repo_dir .. "/README.md"
+end
+
 function M.clone_github()
 	vim.ui.input({ prompt = "Github repo (user/repo or repo): " }, function(input)
 		if not input or input == "" then
@@ -52,22 +79,12 @@ function M.clone_github()
 			return
 		end
 
-		-- open a file: README.md, first git-tracked file, or create empty README.md
-		local target = repo_dir .. "/README.md"
-		if vim.fn.filereadable(target) ~= 1 then
-			local ls = vim.fn.system({ "git", "-C", repo_dir, "ls-files" })
-			local first = vim.trim(ls):match("[^\n]+")
-			if first then
-				target = repo_dir .. "/" .. first
-			else
-				vim.fn.writefile({}, target)
-			end
-		end
-		require("khutulun").create(vim.fn.fnameescape(target))
+		local target = get_default_file(repo_dir)
+		require("my.create").create(vim.fn.fnameescape(target))
 	end)
 end
 
-function M.create_worktree()
+function M.create_worktree(branch, on_success)
 	local toplevel = vim.trim(vim.fn.system("git rev-parse --show-toplevel"))
 	if vim.v.shell_error ~= 0 then
 		vim.notify("Not in a git repository", vim.log.levels.ERROR)
@@ -84,49 +101,39 @@ function M.create_worktree()
 
 	local rel_path = current_file:sub(#toplevel + 2)
 
+	local parent = vim.fs.dirname(toplevel)
+	local worktree_path = parent .. "/" .. branch
+
+	-- fetch so we know what exists at origin
+	vim.fn.system({ "git", "fetch", "origin", branch })
+
+	vim.fn.system({ "git", "rev-parse", "--verify", "origin/" .. branch })
+	local use_remote = vim.v.shell_error == 0
+
+	local cmd = { "git", "worktree", "add", worktree_path }
+	if use_remote then
+		cmd[#cmd + 1] = branch
+	else
+		cmd[#cmd + 1] = "-b"
+		cmd[#cmd + 1] = branch
+	end
+
+	local result = vim.fn.system(cmd)
+
+	if vim.v.shell_error ~= 0 then
+		vim.notify("Failed to create worktree: " .. result, vim.log.levels.ERROR)
+		return
+	end
+
+	on_success(get_default_file(worktree_path, rel_path))
+end
+
+function M.create_worktree_from_input(cb)
 	vim.ui.input({ prompt = "Branch name: " }, function(branch)
 		if not branch or branch == "" then
 			return
 		end
-
-		local parent = vim.fs.dirname(toplevel)
-		local worktree_path = parent .. "/" .. branch
-
-		-- fetch so we know what exists at origin
-		vim.fn.system({ "git", "fetch", "origin", branch })
-
-		vim.fn.system({ "git", "rev-parse", "--verify", "origin/" .. branch })
-		local use_remote = vim.v.shell_error == 0
-
-		local cmd = { "git", "worktree", "add", worktree_path }
-		if use_remote then
-			cmd[#cmd + 1] = branch
-		else
-			cmd[#cmd + 1] = "-b"
-			cmd[#cmd + 1] = branch
-		end
-
-		local result = vim.fn.system(cmd)
-
-		if vim.v.shell_error ~= 0 then
-			vim.notify("Failed to create worktree: " .. result, vim.log.levels.ERROR)
-			return
-		end
-
-		local new_file = worktree_path .. "/" .. rel_path
-		if vim.fn.filereadable(new_file) ~= 1 then
-			new_file = worktree_path .. "/README.md"
-			if vim.fn.filereadable(new_file) ~= 1 then
-				local ls_output = vim.fn.system({ "git", "-C", worktree_path, "ls-files" })
-				local first = ls_output:match("[^\n]+")
-				if first then
-					new_file = worktree_path .. "/" .. first
-				else
-					new_file = worktree_path .. "/README.md"
-				end
-			end
-		end
-		require("khutulun").create(vim.fn.fnameescape(new_file))
+		M.create_worktree(branch, cb)
 	end)
 end
 

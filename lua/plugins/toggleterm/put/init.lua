@@ -18,7 +18,7 @@ end
 
 function M.put_diagnostics(scope)
 	require("plugins.toggleterm.terms").send_str({ tag = "agent" }, function(ctx)
-		return "fix these diagnostics\n" .. require("plugins.toggleterm.diagnostics").get_diagnostics(ctx, scope)
+		return require("plugins.toggleterm.put.diagnostics").get_diagnostics(ctx, scope)
 	end)
 end
 

@@ -145,6 +145,17 @@ return {
 			tag = "agent",
 			screen_manifest = screen_manifests.pi,
 		}),
+		implement = personal({
+			priority = -1,
+			cmd = function(cb)
+				local branch = vim.fn.expand("%:t:r")
+				return require("my.git").create_worktree(branch, function()
+					return cb(string.format("p %q", table.concat(vim.fn.getline(1, "$"), "\n")))
+				end)
+			end,
+			tag = "agent",
+			screen_manifest = screen_manifests.pi,
+		}),
 		claude = ai_term and work({
 			priority = 2,
 			cmd = "claude",
@@ -177,7 +188,7 @@ return {
 		end,
 	},
 	prompts = {
-		["do this"] = "do this",
+		["todo"] = "implement the todo comment",
 		["explain this"] = "explain this",
 		["curry this"] = "curry this",
 	},

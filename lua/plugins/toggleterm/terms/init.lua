@@ -47,14 +47,24 @@ local function prepare()
 	-- act as noop, but also used as a flag
 end
 
-local function make_item(item, cb)
-	item.status = "idle"
-	item.instance_count = vim.v.count1
+local function create_and_notify(item, cb)
 	item.term = create_term(item, function(event)
 		notify(event, item)
 	end, cb == prepare, config.min_runtime)
 	notify({ type = "create" }, item)
 	cb(item)
+end
+
+local function make_item(item, cb)
+	item.status = "idle"
+	item.instance_count = vim.v.count1
+	if type(item.cmd) == "function" then
+		return item.cmd(function(cmd)
+			item.cmd = cmd
+			create_and_notify(item, cb)
+		end)
+	end
+	create_and_notify(item, cb)
 end
 
 local gt_item = utils.compose_gt(
@@ -201,6 +211,12 @@ function M.browse()
 		if item then
 			visit(item.term.url)
 		end
+	end)
+end
+
+function M.restart(query)
+	with_query(query, function(instance)
+		instance.term.restart()
 	end)
 end
 

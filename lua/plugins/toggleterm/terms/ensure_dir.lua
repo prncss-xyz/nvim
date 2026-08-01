@@ -53,7 +53,11 @@ function M.ensure_dir(dir)
 
 	local target_path = get_absolute_path(path, absolute_dir)
 	vim.api.nvim_win_call(target_win, function()
-		require("khutulun").create(vim.fn.fnameescape(target_path))
+		if window.create then
+			window.create(vim.fn.fnameescape(target_path))
+		else
+			vim.cmd.edit(vim.fn.fnameescape(target_path))
+		end
 	end)
 end
 

@@ -47,21 +47,15 @@ vim.keymap.set("n", edit .. "<cr>", function()
 	require("my.blank_line").blank_line(true)
 end, { desc = "Blank Line Below" })
 
-if false then
-	vim.keymap.set("n", "ow", function()
-		local bufnr = vim.api.nvim_get_current_buf()
-		dd(require("illuminate.reference").buf_get_references(bufnr))
-	end, { desc = "Surround" })
-	vim.keymap.set("n", "oq", require("my.lsp").stop_client, { desc = "Stop Lsp Client" })
-end
-
 vim.keymap.set({ "n" }, file .. "j", "<cmd>edit package.json<cr>", { desc = "Edit package.json" })
 
 vim.keymap.set({ "n" }, file .. "g", function()
 	require("my.git").clone_github()
 end, { desc = "Clone or Create Github Repo" })
 vim.keymap.set({ "n" }, file .. "w", function()
-	require("my.git").create_worktree()
+	require("my.git").create_worktree_from_input(function(default_file)
+		require("my.create").create(vim.fn.fnameescape(default_file))
+	end)
 end, { desc = "Create Worktree" })
 vim.keymap.set({ "n" }, file .. "o", function()
 	local name = vim.fn.expand("<cWORD>")
@@ -73,18 +67,18 @@ vim.keymap.set({ "n" }, file .. "o", function()
 
 	local path, line, col = name:match("^(.+):(%d+):(%d+)$")
 	if path then
-		require("khutulun").create(vim.fn.fnameescape(path))
+		require("my.create").create(vim.fn.fnameescape(path))
 		vim.cmd(line)
 		vim.cmd("normal! " .. col .. "|")
 		return
 	end
 	path, line = name:match("^(.+):(%d+)$")
 	if path then
-		require("khutulun").create(vim.fn.fnameescape(path))
+		require("my.create").create(vim.fn.fnameescape(path))
 		vim.cmd(line)
 		return
 	end
-	require("khutulun").create(vim.fn.fnameescape(name))
+	require("my.create").create(vim.fn.fnameescape(name))
 end, { desc = "Edit File Under Cursor" })
 
 vim.keymap.set({ "n", "x" }, edit .. "t", "=", { desc = "Reindent" })

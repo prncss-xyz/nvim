@@ -224,8 +224,27 @@ return {
 				function()
 					require("plugins.toggleterm.put.init").prompt()
 				end,
-				desc = "Put Current File Path",
+				desc = "Put Prompt Result",
 				mode = "n",
+			},
+			{
+				"m" .. reverse("m"),
+				function()
+					local branch = vim.fn.expand("%:t:r")
+					require("my.git").create_worktree(branch, function()
+						local cmd = string.format("p %q", table.concat(vim.fn.getline(1, "$"), "\n"))
+					end)
+				end,
+				desc = "Implement",
+				mode = "n",
+			},
+			{
+				"mr",
+				function()
+					require("plugins.toggleterm.terms").restart({})
+				end,
+				desc = "Restart Last Terminal",
+				mode = { "n", "x" },
 			},
 			{
 				"my",
@@ -241,6 +260,14 @@ return {
 					require("plugins.toggleterm.put.init").put_diagnostics("next")
 				end,
 				desc = "Put Diagnostic Prompt",
+				mode = "n",
+			},
+			{
+				"oz",
+				function()
+					print("SIZE", vim.o.columns, vim.o.lines, "SCALE", vim.g.neovide_scale_factor)
+				end,
+				desc = "Put File Diagnostics Prompt",
 				mode = "n",
 			},
 			{

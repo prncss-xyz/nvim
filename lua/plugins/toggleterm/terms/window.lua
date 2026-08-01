@@ -59,6 +59,11 @@ function M.get_path(dir)
 	return nil
 end
 
+---@param path string
+function M.create(path)
+	require("my.create").create(path)
+end
+
 function M.is_visible(winnr)
 	return winnr and vim.api.nvim_win_is_valid(winnr)
 end
