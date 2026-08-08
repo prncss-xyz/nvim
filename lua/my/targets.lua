@@ -1,5 +1,6 @@
 local M = {}
 
+-- Harpoon like
 local dir = vim.fn.stdpath("data") .. "/targets"
 
 local function get_filepath()

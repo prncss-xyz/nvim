@@ -233,7 +233,7 @@ return {
 					require("flies.operations.act").exec({
 						domain = "outer",
 						around = "never",
-					}, nil, "y")
+					}, nil, "<Plug>(YankyYank)")
 				end,
 				desc = "Yank",
 			},

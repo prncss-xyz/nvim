@@ -72,6 +72,10 @@ return {
 		"e-ink-colorscheme/e-ink.nvim",
 		commit = "c90bf52",
 	}),
+	colorscheme("luna", {
+		"WTFox/luna.nvim",
+		commit = "b6f25f10012df3f29ca56e78d40e53a392e7f98f",
+	}),
 	colorscheme("matrix", {
 		"iruzo/matrix-nvim",
 		commit = "5fafe6b",

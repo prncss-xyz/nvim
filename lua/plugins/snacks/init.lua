@@ -417,6 +417,41 @@ return {
 				projects.toggle_file,
 				desc = "Toggle File",
 			},
+			{
+				"bz",
+				function()
+					if require("my.windows").is_file_cur_win then
+						projects.open_project(vim.env.HOME, {
+							vim.fn.getcwd(),
+							require("my.parameters").dirs.notes,
+							require("my.parameters").dirs.dotfiles,
+							vim.fn.stdpath("config"),
+						})
+					end
+				end,
+				desc = "Open Last Project ",
+			},
+			{
+				"bn",
+				function()
+					projects.open_project(require("my.parameters").dirs.notes)
+				end,
+				desc = "Open Notes Dir",
+			},
+			{
+				"b.",
+				function()
+					projects.open_project(require("my.parameters").dirs.dotfiles)
+				end,
+				desc = "Open Notes Dir",
+			},
+			{
+				"b,",
+				function()
+					projects.open_project(vim.fn.stdpath("config"))
+				end,
+				desc = "Open Notes Dir",
+			},
 		},
 		cond = not_vscode,
 	},

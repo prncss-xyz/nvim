@@ -68,6 +68,13 @@ return {
 
 	on_status = function(item)
 		local msg = string.format("%s in %s (%s)", item.key, item.dir, item.status)
+
+		local fd = io.open(vim.env.HOME .. "/neomux.logs", "a")
+		if fd then
+			fd:write(string.format("[%s] %s\n", os.date("%Y-%m-%d %H:%M:%S"), msg))
+			fd:close()
+		end
+
 		notify.notify(msg)
 	end,
 
