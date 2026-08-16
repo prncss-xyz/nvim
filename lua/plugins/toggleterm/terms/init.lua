@@ -33,9 +33,7 @@ subscribe(function(event, item)
 		history.insert(item)
 	elseif event.type == "status" and event.value ~= item.status then
 		item.status = event.value
-		if not item.term.is_in_view() then
-			config.on_status(item)
-		end
+		config.on_status(item)
 	elseif event.type == "url" then
 		item.term.url = event.value
 	elseif event.type == "detach" then
