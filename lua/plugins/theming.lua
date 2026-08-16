@@ -64,10 +64,6 @@ return {
 	colorscheme({ "cyberdream", "cyberdream-light" }, {
 		"scottmckendry/cyberdream.nvim",
 	}),
-	colorscheme({ "lackluster", "lackluster-dark", "lackluster-mint", "lackluster-light", "lackluster-night" }, {
-		"slugbyte/lackluster.nvim",
-		commit = "b247a6f",
-	}),
 	colorscheme("e-ink", {
 		"e-ink-colorscheme/e-ink.nvim",
 		commit = "c90bf52",
