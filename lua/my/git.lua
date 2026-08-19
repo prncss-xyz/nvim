@@ -2,6 +2,96 @@ local M = {}
 
 local projects = require("my.parameters").dirs.projects
 
+local function path_exists(path)
+	local ok, stat = pcall(vim.uv.fs_lstat, path)
+	return ok and stat ~= nil
+end
+
+local function ensure_artifacts_directory(repo_root)
+	local artifacts_path = repo_root .. "/.artifacts"
+	if path_exists(artifacts_path) then
+		return
+	end
+
+	local ok, result = pcall(vim.fn.mkdir, artifacts_path, "p")
+	if not ok or result == 0 then
+		vim.notify("Failed to create artifacts directory: " .. artifacts_path, vim.log.levels.WARN)
+	end
+end
+
+local function get_main_repo_root(toplevel)
+	local common_dir = vim.trim(vim.fn.system({
+		"git",
+		"-C",
+		toplevel,
+		"rev-parse",
+		"--path-format=absolute",
+		"--git-common-dir",
+	}))
+	local shell_error = vim.v.shell_error
+
+	if shell_error ~= 0 then
+		common_dir = vim.trim(vim.fn.system({ "git", "-C", toplevel, "rev-parse", "--git-common-dir" }))
+		shell_error = vim.v.shell_error
+	end
+
+	if shell_error ~= 0 or common_dir == "" then
+		vim.notify("Failed to resolve main repository root", vim.log.levels.WARN)
+		return nil
+	end
+
+	if not common_dir:match("^/") then
+		common_dir = toplevel .. "/" .. common_dir
+	end
+
+	return vim.fs.dirname(vim.fs.normalize(common_dir))
+end
+
+local function relative_path(from, to)
+	local from_parts = vim.split(vim.fs.normalize(from), "/", { plain = true, trimempty = true })
+	local to_parts = vim.split(vim.fs.normalize(to), "/", { plain = true, trimempty = true })
+	local common_count = 0
+
+	while from_parts[common_count + 1] == to_parts[common_count + 1] and from_parts[common_count + 1] ~= nil do
+		common_count = common_count + 1
+	end
+
+	local parts = {}
+	for _ = common_count + 1, #from_parts do
+		parts[#parts + 1] = ".."
+	end
+	for index = common_count + 1, #to_parts do
+		parts[#parts + 1] = to_parts[index]
+	end
+
+	return #parts == 0 and "." or table.concat(parts, "/")
+end
+
+local function link_worktree_artifacts(worktree_path, main_repo_root)
+	if main_repo_root == nil then
+		return
+	end
+
+	local link_path = worktree_path .. "/.artifacts"
+	if path_exists(link_path) then
+		return
+	end
+
+	local ok, target = pcall(relative_path, worktree_path, main_repo_root .. "/.artifacts")
+	if not ok then
+		vim.notify("Failed to calculate artifacts link target: " .. tostring(target), vim.log.levels.WARN)
+		return
+	end
+
+	local ok_link, linked, error_message = pcall(vim.uv.fs_symlink, target, link_path)
+	if not ok_link or not linked then
+		vim.notify(
+			"Failed to create artifacts link: " .. tostring(ok_link and error_message or linked),
+			vim.log.levels.WARN
+		)
+	end
+end
+
 --- Get the best file to open in a git repository.
 --- Priority: preferred relative path → README.md → first git-tracked file → README.md (fallback)
 --- @param repo_dir string  Root directory of the repository
@@ -79,6 +169,8 @@ function M.clone_github()
 			return
 		end
 
+		ensure_artifacts_directory(repo_dir)
+
 		local target = get_default_file(repo_dir)
 		require("my.create").create(vim.fn.fnameescape(target))
 	end)
@@ -125,6 +217,8 @@ function M.create_worktree(branch, on_success)
 		return
 	end
 
+	local main_repo_root = get_main_repo_root(toplevel)
+	link_worktree_artifacts(worktree_path, main_repo_root)
 	on_success(get_default_file(worktree_path, rel_path))
 end
 
