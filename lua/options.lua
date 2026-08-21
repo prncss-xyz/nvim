@@ -16,7 +16,6 @@ deep_merge(vim, {
 		autoread = true,
 		autowriteall = true,
 		backup = false,
-		-- clipboard = 'unnamedplus',
 		completeopt = "menuone,noselect",
 		cursorline = true,
 		expandtab = true,
@@ -81,7 +80,6 @@ deep_merge(vim, {
 		neovide_opacity = 0.85,
 		mapleader = " ",
 		maplocalleader = ",",
-		clipboard = "unnamedplus",
 	},
 })
 

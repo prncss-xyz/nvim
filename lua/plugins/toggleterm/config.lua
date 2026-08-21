@@ -199,8 +199,5 @@ return {
 		["explain this"] = "explain this",
 		["curry this"] = "curry this",
 	},
-	autostart = {
-		{ key = "ddgr" },
-		{ tag = "agent" },
-	},
+	autostart = {}
 }
