@@ -30,7 +30,7 @@ vim.keymap.set("x", "v", "V", { desc = "Visual Line" })
 vim.keymap.set({ "n", "x", "s" }, "V", "<c-v>", {
 	desc = "Visual Bloc",
 })
-vim.keymap.set("n", "<c-q>", "<cmd>quitall!<cr>", { desc = "quitall" })
+vim.keymap.set({ "n", "i" }, "<c-q>", "<cmd>quitall!<cr>", { desc = "quitall" })
 vim.keymap.set({ "n", "x", "o" }, directions.left, "h", { desc = "Left" })
 vim.keymap.set({ "n", "x", "o" }, directions.right, "l", { desc = "Right" })
 vim.keymap.set({ "n", "x", "o" }, directions.up, "gk", { desc = "Up" })

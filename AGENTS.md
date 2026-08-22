@@ -6,4 +6,4 @@ Issues and specs are tracked as local Markdown under `.artifacts/<feature>/`. Se
 
 ### Domain docs
 
-This repository uses a single-context domain documentation layout. See `docs/agents/domain.md`.
+This repository uses a single-context domain documentation layout. See `.artifacts/domain.md`.

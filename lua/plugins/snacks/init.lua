@@ -11,7 +11,6 @@ local web = domain.web
 local move = domain.move
 local git = domain.git
 local projects = require("plugins.snacks.projects")
-local portless = require("plugins.snacks.portless")
 local auto_confirm = require("plugins.snacks.auto_confirm")
 local dirs = require("my.parameters").dirs
 
@@ -256,8 +255,10 @@ return {
 			},
 			{
 				pick .. "a",
-				portless.pick,
-				desc = "Pick Portless URL",
+				function()
+					Snacks.picker.files({ cwd = "./.artifacts" })
+				end,
+				desc = "Pick Artifact File",
 			},
 			{
 				pick .. theme.find,
