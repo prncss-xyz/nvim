@@ -1,6 +1,16 @@
 local not_vscode = require("my.conds").not_vscode
 
+local function cwd_name()
+	local cwd = vim.fn.getcwd()
+	local name = vim.fn.fnamemodify(cwd, ":t")
+	return name ~= "" and name or cwd
+end
+
 local function starship()
+	if vim.fn.executable("starship") ~= 1 then
+		return cwd_name()
+	end
+
 	local ok, result = pcall(function()
 		local handle = io.popen("starship prompt --status=0 --jobs=0 2>/dev/null")
 		if not handle then
@@ -23,7 +33,7 @@ local function starship()
 		end
 		return table.concat(parts, " ")
 	end)
-	return ok and result or ""
+	return ok and result ~= "" and result or cwd_name()
 end
 
 return {
