@@ -13,6 +13,7 @@ M.rooter_patterns = { ".git", ".hg", ".svn" }
 M.dirs = {
 	projects = projects,
 	notes = projects .. "/notes/main",
+	artifacts = projects .. "/notes/main/dev/artifacts",
 	dotfiles = projects .. "/dotfiles",
 }
 
