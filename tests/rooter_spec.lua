@@ -122,7 +122,7 @@ T["ordinary descendants retain VCS root selection"] = function()
 	assert.same(1, result.calls.sync)
 end
 
-T["saved cwd persists across later buffer entries"] = function()
+T["re-entering from a different cwd does not revert to saved symlink cwd"] = function()
 	local result = child.lua_get([[run_rooter_case({
 		cwd = "/repo/view",
 		name = "/repo/view/link/spec.md",
@@ -136,9 +136,26 @@ T["saved cwd persists across later buffer entries"] = function()
 	})]])
 
 	assert.same("/repo/view", result.saved)
+	assert.same({ "/repo/view" }, result.calls.cwd)
+	assert.same(1, #result.calls.roots)
+end
+
+T["saved cwd is reused when re-entering from the original symlink cwd"] = function()
+	local result = child.lua_get([[run_rooter_case({
+		cwd = "/repo/view",
+		name = "/repo/view/link/spec.md",
+		root = "/repo/main",
+		lstat = { ["/repo/view/link"] = "link" },
+		second = {
+			cwd = "/repo/view",
+			root = nil,
+			lstat = {},
+		},
+	})]])
+
+	assert.same("/repo/view", result.saved)
 	assert.same({ "/repo/view", "/repo/view" }, result.calls.cwd)
 	assert.same(0, #result.calls.roots)
-	assert.same(2, result.calls.sync)
 end
 
 T["outside and sibling-prefix paths do not preserve cwd"] = function()

@@ -84,8 +84,12 @@ vim.api.nvim_create_autocmd({ "BufEnter" }, {
 		end
 
 		capture_symlink_cwd()
-		local root = vim.b.my_rooter_symlink_cwd
-		if root == nil then
+		local saved = vim.b.my_rooter_symlink_cwd
+		local cwd = normalize(vim.fn.getcwd())
+		local root
+		if saved ~= nil and cwd == saved then
+			root = saved
+		else
 			root = vim.fs.root(0, require("my.parameters").rooter_patterns)
 		end
 		if root then
