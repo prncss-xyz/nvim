@@ -132,7 +132,7 @@ function M.create_term(opts, send, prepare, min_runtime)
 		send_str = function(str, start_insert)
 			focus()
 			vim.schedule(function()
-				vim.api.nvim_chan_send(term.job_id, str)
+				vim.api.nvim_chan_send(term.job_id, "\27[200~" .. str .. "\27[201~")
 				if start_insert then
 					vim.schedule(function()
 						vim.cmd.startinsert()

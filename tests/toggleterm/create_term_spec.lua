@@ -76,6 +76,36 @@ T["create_term"]["reports whether its terminal is in view"] = function()
 	assert.same({ true, false }, child.lua_get("result"))
 end
 
+T["create_term"]["sends strings as bracketed paste"] = function()
+	child.lua([[local sent
+		local terminal = { window = 42, job_id = 7 }
+		package.loaded["toggleterm.terminal"] = {
+			Terminal = {
+				new = function()
+					return terminal
+				end,
+			},
+		}
+		package.loaded["plugins.toggleterm.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			is_visible = function() return true end,
+			is_in_view = function() return true end,
+		}
+		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+		vim.api.nvim_chan_send = function(job_id, str)
+			sent = { job_id, str }
+		end
+
+		local create_term = require("plugins.toggleterm.terms.create_term").create_term
+		create_term({}, function() end).send_str("@lua/example.lua ")
+		vim.wait(100, function() return sent ~= nil end)
+		result = sent
+	]])
+
+	assert.same({ 7, "\27[200~@lua/example.lua \27[201~" }, child.lua_get("result"))
+end
+
 T["create_term"]["ignores process exits while Neovim is shutting down"] = function()
 	child.lua([[local terminal_options
 		local events = {}

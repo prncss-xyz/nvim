@@ -29,16 +29,13 @@ local function relative_path(from, to)
 	return #parts == 0 and "." or table.concat(parts, "/")
 end
 
-local function get_repo_name(repo_root)
-	local remote = vim.trim(vim.fn.system({ "git", "-C", repo_root, "config", "--get", "remote.origin.url" }))
-	if vim.v.shell_error == 0 and remote ~= "" then
-		local repo = remote:gsub("/$", ""):gsub("%.git$", ""):match("([^/:]+)$")
-		if repo ~= nil then
-			return repo
-		end
+local function get_repo_name(repo_root, branch)
+	local repo = vim.fs.basename(repo_root)
+	if repo == branch then
+		return vim.fs.basename(vim.fs.dirname(repo_root))
 	end
 
-	return vim.fs.basename(repo_root)
+	return repo
 end
 
 local function get_branch_name(repo_root)
@@ -51,12 +48,13 @@ local function get_branch_name(repo_root)
 end
 
 local function link_artifacts(repo_root, repo, branch)
-	local target = artifacts .. "/" .. repo .. "/" .. branch
+	local target = artifacts .. "/" .. repo
+	local branch_dir = target .. "/" .. branch:gsub("/", "-")
 	local link_path = repo_root .. "/.artifacts"
 
-	local ok, result = pcall(vim.fn.mkdir, target, "p")
-	if not ok or (result == 0 and vim.fn.isdirectory(target) == 0) then
-		vim.notify("Failed to create artifacts directory: " .. target, vim.log.levels.WARN)
+	local ok, result = pcall(vim.fn.mkdir, branch_dir, "p")
+	if not ok or (result == 0 and vim.fn.isdirectory(branch_dir) == 0) then
+		vim.notify("Failed to create artifacts directory: " .. branch_dir, vim.log.levels.WARN)
 		return
 	end
 
@@ -151,7 +149,8 @@ function M.clone_github()
 			return
 		end
 
-		link_artifacts(repo_dir, get_repo_name(repo_dir), get_branch_name(repo_dir))
+		local branch = get_branch_name(repo_dir)
+		link_artifacts(repo_dir, get_repo_name(repo_dir, branch), branch)
 
 		local target = get_default_file(repo_dir)
 		require("my.create").create(vim.fn.fnameescape(target))
@@ -199,7 +198,7 @@ function M.create_worktree(branch, on_success)
 		return
 	end
 
-	link_artifacts(worktree_path, get_repo_name(worktree_path), branch)
+	link_artifacts(worktree_path, get_repo_name(worktree_path, branch), branch)
 	on_success(get_default_file(worktree_path, rel_path))
 end
 

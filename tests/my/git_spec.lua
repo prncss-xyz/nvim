@@ -11,7 +11,7 @@ local T = MiniTest.new_set({
 					local calls = { mkdir = {}, notify = {}, rename = {}, system = {}, symlink = {} }
 					vim.v = { shell_error = 0 }
 					package.loaded["my.git"] = nil
-					package.loaded["my.parameters"] = { dirs = { projects = "/projects" } }
+					package.loaded["my.parameters"] = { dirs = { projects = "/projects", artifacts = "/artifacts" } }
 					package.loaded["my.create"] = {
 						create = function(path)
 							calls.created = path
@@ -102,8 +102,9 @@ T["clone creates repository artifacts before opening a file"] = function()
 
 	assert.same({
 		{ "/projects/owner/repo", "p" },
-		{ "/projects/owner/repo/main/.artifacts", "p" },
+		{ "/artifacts/repo/main", "p" },
 	}, result.mkdir)
+	assert.same({ { "../../../../artifacts/repo", "/projects/owner/repo/main/.artifacts" } }, result.symlink)
 	assert.same("/projects/owner/repo/main/lua/init.lua", result.created)
 end
 
@@ -118,7 +119,7 @@ T["new repository creates artifacts at its final path"] = function()
 		},
 	})]])
 
-	assert.same({ "/projects/repo/.artifacts", "p" }, result.mkdir[2])
+	assert.same({ "/artifacts/repo/main", "p" }, result.mkdir[2])
 	assert.same("/projects/repo/README.md", result.created)
 end
 
@@ -133,7 +134,8 @@ T["existing repository artifacts are untouched"] = function()
 		},
 	})]])
 
-	assert.same(1, #result.mkdir)
+	assert.same(2, #result.mkdir)
+	assert.same({}, result.symlink)
 end
 
 T["worktree links artifacts relatively to the main repository"] = function()
@@ -150,7 +152,7 @@ T["worktree links artifacts relatively to the main repository"] = function()
 		},
 	})]])
 
-	assert.same({ { "../main/.artifacts", "/repos/feature/.artifacts" } }, result.symlink)
+	assert.same({ { "../../artifacts/repos", "/repos/feature/.artifacts" } }, result.symlink)
 	assert.same("/repos/feature/lua/init.lua", result.success)
 end
 
@@ -168,7 +170,7 @@ T["linked worktree resolves artifacts from the common git directory"] = function
 		},
 	})]])
 
-	assert.same({ { "../main/.artifacts", "/repos/next/.artifacts" } }, result.symlink)
+	assert.same({ { "../../artifacts/repos", "/repos/next/.artifacts" } }, result.symlink)
 end
 
 T["existing worktree artifact path is untouched"] = function()
@@ -193,7 +195,7 @@ T["artifact setup failures warn without changing success"] = function()
 	local clone = child.lua_get([[run_git_case({
 		operation = "clone",
 		input = "owner/repo",
-		mkdir_failure = "/projects/owner/repo/main/.artifacts",
+		mkdir_failure = "/artifacts/repo/main",
 		system = {
 			["gh repo view owner/repo --json defaultBranchRef -q .defaultBranchRef.name"] = "main\n",
 			["git -C /projects/owner/repo/main ls-files"] = "init.lua\n",
@@ -218,7 +220,7 @@ T["artifact setup failures warn without changing success"] = function()
 	assert.same("/repos/feature/README.md", worktree.success)
 end
 
-T["main root discovery failure warns and preserves worktree success"] = function()
+T["worktree artifact setup does not depend on common git directory discovery"] = function()
 	local result = child.lua_get([[run_git_case({
 		operation = "worktree",
 		branch = "feature",
@@ -232,8 +234,8 @@ T["main root discovery failure warns and preserves worktree success"] = function
 		},
 	})]])
 
-	assert.same({}, result.symlink)
-	assert.same(vim.log.levels.WARN, result.notify[1][2])
+	assert.same({ { "../../artifacts/repos", "/repos/feature/.artifacts" } }, result.symlink)
+	assert.same({}, result.notify)
 	assert.same("/repos/feature/README.md", result.success)
 end
 

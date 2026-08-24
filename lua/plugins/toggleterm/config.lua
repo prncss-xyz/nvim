@@ -169,6 +169,10 @@ return {
 			tag = "agent",
 			screen_manifest = screen_manifests.claude,
 		}),
+		["agent-arfifacts --remove"] = {
+			cmd = "git-sync",
+			on_exit = "keep",
+		},
 		["make daily-login"] = function()
 			if vim.fn.filereadable(vim.fn.getcwd() .. "/Makefile") == 1 then
 				return { cmd = "make daily-login" }
@@ -199,5 +203,5 @@ return {
 		["explain this"] = "explain this",
 		["curry this"] = "curry this",
 	},
-	autostart = {}
+	autostart = {},
 }
