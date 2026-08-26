@@ -17,8 +17,13 @@ vim.lsp.config("marksman", {
 	capabilities = require("plugins.lsp.utils").cmp_capabilities,
 })
 
-vim.lsp.config("tsgo", {
-	cmd = { "tsgo", "--lsp", "--stdio" },
+vim.lsp.config("tsc", {
+	cmd = {
+		vim.fs.joinpath(assert(vim.env.PNPM_HOME, "PNPM_HOME is not set"), "bin", "tsc"),
+		"--lsp",
+		"--stdio",
+	},
+	filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
 	root_markers = { "tsconfig.json", "jsconfig.json", "package.json", ".git" },
 	capabilities = require("plugins.lsp.utils").cmp_capabilities,
 	settings = {
@@ -138,6 +143,6 @@ vim.lsp.enable({
 	"ltex",
 	"oxlint",
 	"oxfmt",
-	"tsgo",
+	"tsc",
 	"typos_lsp",
 })
