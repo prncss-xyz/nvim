@@ -53,7 +53,7 @@ local function from_package(opts, prefix, acc)
 			and require("plugins.toggleterm.config").packages.tagger(key)
 		acc[key] = {
 			cmd = cmd,
-			cwd = root .. prefix,
+			dir = root .. prefix,
 			tag = tag,
 			on_exit = "keep",
 		}
