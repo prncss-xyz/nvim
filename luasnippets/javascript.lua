@@ -34,10 +34,15 @@ table.insert(
 		fmt(
 			[[
         function []([]):[] {
-          throw new Error('not implemented')
+          []
         } 
       ]],
-			{ i(1, "name"), i(2, ""), i(3, "") },
+			{
+        i(1, "name"),
+        i(2, ""),
+        i(3, ""),
+        i(4, "throw new Error('not implemented')"),
+      },
 			{ delimiters = "[]" }
 		)
 	)

@@ -2,8 +2,6 @@ local personal = require("my.conds").personal
 local work = require("my.conds").work
 local notify = require("my.notify")
 
-local ai_term = require("my.parameters").ai_config.chat == "toggleterm"
-
 local screen_manifests = {
 	pi = {
 		default_status = "idle",
@@ -146,24 +144,13 @@ return {
 			cmd = "agy",
 			tag = "agent",
 		}),
-		pi = ai_term and personal({
+		pi = personal({
 			priority = 3,
 			cmd = "p",
 			tag = "agent",
 			screen_manifest = screen_manifests.pi,
 		}),
-		implement = personal({
-			priority = -1,
-			cmd = function(cb)
-				local branch = vim.fn.expand("%:t:r")
-				return require("my.git").create_worktree(branch, function()
-					return cb(string.format("p %q", table.concat(vim.fn.getline(1, "$"), "\n")))
-				end)
-			end,
-			tag = "agent",
-			screen_manifest = screen_manifests.pi,
-		}),
-		claude = ai_term and work({
+		claude = work({
 			priority = 2,
 			cmd = "claude",
 			tag = "agent",

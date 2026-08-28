@@ -199,7 +199,7 @@ function M.create_worktree(branch, on_success)
 	end
 
 	link_artifacts(worktree_path, get_repo_name(worktree_path, branch), branch)
-	on_success(get_default_file(worktree_path, rel_path))
+	on_success(get_default_file(worktree_path, rel_path), worktree_path)
 end
 
 function M.create_worktree_from_input(cb)

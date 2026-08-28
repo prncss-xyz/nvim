@@ -165,6 +165,33 @@ return {
 				desc = "Select Idle",
 			},
 			{
+				"oz",
+				function()
+					local file = vim.fs.normalize(vim.fn.expand("%:p"))
+					if not file:match("%.md$") then
+						vim.notify("Current file is not a Markdown file", vim.log.levels.WARN)
+						return
+					end
+					local cmd = string.format("p %q", "/implement @" .. file)
+					local branch = file:match("/%.artifacts/([^/]+)/spec%.md$")
+					if branch then
+						require("my.git").create_worktree(branch, function(_, worktree_path)
+							require("plugins.toggleterm.terms").focus({
+								key = "pi",
+								dir = worktree_path,
+								cmd = cmd,
+							})
+						end)
+					else
+						require("plugins.toggleterm.terms").focus({
+							key = "pi",
+							cmd = cmd,
+						})
+					end
+				end,
+				desc = "Implement this",
+			},
+			{
 				"oo",
 				function()
 					require("plugins.toggleterm.terms").focus({ key = "diff" })
