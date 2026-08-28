@@ -5,7 +5,9 @@ local create_term = require("plugins.toggleterm.terms.create_term").create_term
 local config = require("plugins.toggleterm.config")
 local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
 local utils = require("plugins.toggleterm.terms.utils")
-local get_commands = require("plugins.toggleterm.terms.get_commands").get_commands
+local commands = require("plugins.toggleterm.terms.get_commands")
+local get_commands = commands.get_commands
+local get_hash = commands.get_hash
 local format_item = require("plugins.toggleterm.terms.format_item").format_item
 local visit = require("my.browser").visit
 
@@ -56,6 +58,14 @@ end
 local function make_item(item, cb)
 	item.status = "idle"
 	item.instance_count = vim.v.count1
+	if not item.hash then
+		assert(
+			type(item.key) == "string" and item.key ~= "",
+			"Cannot spawn an ad-hoc terminal without a key"
+		)
+		item.dir = type(item.dir) == "string" and item.dir or vim.fn.getcwd()
+		item.hash = get_hash(item)
+	end
 	if type(item.cmd) == "function" then
 		return item.cmd(function(cmd)
 			item.cmd = cmd
@@ -111,6 +121,8 @@ local function with_query(query, cb)
 	item = utils.max_of(get_commands(filter), gt_item)
 	if item then
 		make_item(item, cb)
+	else
+		make_item(query, cb)
 	end
 end
 

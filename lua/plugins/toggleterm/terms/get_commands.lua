@@ -13,7 +13,7 @@ local function get_commands0(cwd)
 	return pkg_cache[cwd]
 end
 
-local function get_hash(o)
+function M.get_hash(o)
 	return string.format("%s:%s:%i", o.dir, o.key, o.instance_count)
 end
 
@@ -36,7 +36,7 @@ function M.get_commands(filter)
 			v.idle_timeout = v.idle_timeout or config.idle_timeout
 			v.instance_count = vim.v.count1
 			v.dir = v.dir or vim.fn.getcwd()
-			v.hash = get_hash(v)
+			v.hash = M.get_hash(v)
 			if filter(v) then
 				res[k] = v
 			end
