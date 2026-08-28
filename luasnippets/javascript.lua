@@ -440,27 +440,6 @@ end
 table.insert(
 	M,
 	s(
-		"const useState",
-		fmt(
-			[[
-        const [{}, {}] = useState{}({})
-      ]],
-			{
-				i(1, ""),
-				f(to_set, { 1 }),
-				i(2, ""),
-				i(3, ""),
-			},
-			{
-				delimiters = "{}",
-			}
-		)
-	)
-)
-
-table.insert(
-	M,
-	s(
 		"const useActionState",
 		fmt(
 			[[
@@ -558,6 +537,37 @@ table.insert(
 				i(3, ""),
 				i(4, ""),
 				i(5, ""),
+			},
+			{
+				delimiters = "{}",
+			}
+		)
+	)
+)
+
+table.insert(
+	M,
+	s(
+		"not implemented",
+		fmt([[throw new Error("Not implemented.")]], {}, {
+			delimiters = "{}",
+		})
+	)
+)
+
+table.insert(
+	M,
+	s(
+		"const useState",
+		fmt(
+			[[
+        const [{}, {}] = useState{}({})
+      ]],
+			{
+				i(1, ""),
+				f(to_set, { 1 }),
+				i(2, ""),
+				i(3, ""),
 			},
 			{
 				delimiters = "{}",
