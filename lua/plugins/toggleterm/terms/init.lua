@@ -39,7 +39,12 @@ subscribe(function(event, item)
 	elseif event.type == "url" then
 		item.term.url = event.value
 	elseif event.type == "detach" then
-		history.purge(item.hash)
+		local current = history.find(function(candidate)
+			return candidate.hash == item.hash
+		end)
+		if current == item then
+			history.purge(item.hash)
+		end
 	end
 end)
 
@@ -159,6 +164,26 @@ end
 
 function M.focus(query)
 	with_query(query, function(instance)
+		instance.term.focus()
+	end)
+end
+
+function M.rerun(query)
+	query = normalize_query(query)
+	local filter = get_query_fn(query)
+	local matches = history.filter(filter)
+	local item = utils.max_of(get_commands(filter), gt_item) or matches[1] or query
+
+	if item.term then
+		item = vim.tbl_extend("force", {}, item)
+		item.term = nil
+		item.status = nil
+	end
+	for _, instance in ipairs(matches) do
+		history.purge(instance.hash)
+		instance.term.kill()
+	end
+	make_item(item, function(instance)
 		instance.term.focus()
 	end)
 end

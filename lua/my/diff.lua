@@ -27,12 +27,12 @@ end
 
 function M.variant()
 	M.cp(variant, function()
-		require("plugins.toggleterm.terms").focus_term({ key = "diff" })
+		require("plugins.toggleterm.terms").rerun({ key = "diff" })
 	end)
 end
 
 function M.get_cmd()
-	return "wdiff " .. master .. " " .. variant
+	return string.format("wdiff %q %q|colordiff", master, variant)
 end
 
 return M

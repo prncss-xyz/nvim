@@ -22,6 +22,7 @@ function M.create_term(opts, send, prepare, min_runtime)
 	local started_at
 	local restart_scheduled = false
 	local restart_requested = false
+	local kill_requested = false
 	local reopen_after_restart = false
 	local original_on_create = opts_.on_create
 	opts_.close_on_exit = exit_policy ~= "keep" and exit_policy ~= "restart"
@@ -50,19 +51,23 @@ function M.create_term(opts, send, prepare, min_runtime)
 			type = "status",
 			value = exit_code == 0 and "success" or "failure",
 		})
-		if restart_requested then
+		if restart_requested or kill_requested then
+			local should_restart = restart_requested
 			restart_requested = false
+			kill_requested = false
 			vim.schedule(function()
 				if term.bufnr and vim.api.nvim_buf_is_valid(term.bufnr) then
 					vim.bo[term.bufnr].modified = false
 				end
 				term:shutdown()
-				ensure_dir(opts_.dir)
-				if reopen_after_restart then
-					term:open()
-					last_terminal = term
-				else
-					term:spawn()
+				if should_restart then
+					ensure_dir(opts_.dir)
+					if reopen_after_restart then
+						term:open()
+						last_terminal = term
+					else
+						term:spawn()
+					end
 				end
 			end)
 			return
@@ -159,11 +164,22 @@ function M.create_term(opts, send, prepare, min_runtime)
 			cb(vim.list_slice(matches, start))
 		end,
 		restart = function()
-			if restart_requested then
+			if restart_requested or kill_requested then
 				return
 			end
 			reopen_after_restart = is_visible(term.window)
 			restart_requested = true
+			if term.job_id and vim.fn.jobwait({ term.job_id }, 0)[1] == -1 then
+				vim.fn.jobstop(term.job_id)
+			else
+				opts_.on_exit(term, term.job_id, 0)
+			end
+		end,
+		kill = function()
+			if kill_requested or restart_requested then
+				return
+			end
+			kill_requested = true
 			if term.job_id and vim.fn.jobwait({ term.job_id }, 0)[1] == -1 then
 				vim.fn.jobstop(term.job_id)
 			else
