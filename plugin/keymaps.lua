@@ -230,6 +230,13 @@ end, { desc = "Compare diff, master" })
 vim.keymap.set({ "n", "x" }, "ocb", function()
 	require("my.diff").variant()
 end, { desc = "Compare diff, variant" })
+vim.keymap.set({ "n", "x" }, "ocw", function()
+	require("plugins.toggleterm.terms").rerun({
+		key = "word count",
+		cmd = string.format("wc %q", vim.fn.expand("%")),
+		on_exit = "keep",
+	})
+end, { desc = "Word Count" })
 
 for _, key in pairs({ "j", "k", "l", ";" }) do
 	vim.keymap.set("n", move .. key, function()
