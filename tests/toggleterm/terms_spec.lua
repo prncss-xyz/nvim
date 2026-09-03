@@ -89,6 +89,24 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 	}, child.lua_get("result"))
 end
 
+T["directory queries"] = MiniTest.new_set()
+
+T["directory queries"]["matches HOME exactly"] = function()
+	local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
+	local filter = get_query_fn({ dir = vim.env.HOME })
+
+	assert(filter({ dir = vim.env.HOME }))
+	assert(not filter({ dir = vim.fs.joinpath(vim.env.HOME, "unrelated") }))
+end
+
+T["directory queries"]["matches descendants of other directories"] = function()
+	local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
+	local parent = vim.fs.joinpath(vim.env.HOME, "project")
+	local filter = get_query_fn({ dir = parent })
+
+	assert(filter({ dir = vim.fs.joinpath(parent, "worktree") }))
+end
+
 T["terminal panel integration"] = MiniTest.new_set()
 
 T["terminal panel integration"]["uses ui_toggle and forwards make_item lifecycle changes"] = function()

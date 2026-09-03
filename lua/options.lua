@@ -44,7 +44,7 @@ deep_merge(vim, {
 		termguicolors = true,
 		updatetime = 300,
 		undofile = true,
-		timeoutlen = 2000,
+		timeoutlen = 200,
 		wildignorecase = true,
 		wildoptions = "pum",
 		wrap = true,

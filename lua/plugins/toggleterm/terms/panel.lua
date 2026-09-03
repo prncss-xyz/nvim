@@ -1,7 +1,7 @@
 local M = {}
 
 local config = require("plugins.toggleterm.config").panel
-local format_item = require("plugins.toggleterm.terms.format_item").format_item(true)
+local format_item = require("plugins.toggleterm.terms.format_item").format_item(false)
 local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
 
 local states = {}
@@ -49,6 +49,44 @@ local function close(state)
 	end
 end
 
+local function format_dir(dir)
+	local home = vim.env.HOME
+	if dir == home then
+		return "~"
+	end
+	if dir and home and dir:sub(1, #home + 1) == home .. "/" then
+		return "~/" .. dir:sub(#home + 2)
+	end
+	return dir or ""
+end
+
+local function create_rows(items, format)
+	local groups = {}
+	local dirs = {}
+	for _, item in ipairs(items) do
+		if not groups[item.dir] then
+			groups[item.dir] = {}
+			table.insert(dirs, item.dir)
+		end
+		table.insert(groups[item.dir], item)
+	end
+
+	table.sort(dirs)
+
+	local rows = {}
+	for _, dir in ipairs(dirs) do
+		table.insert(rows, { text = format_dir(dir) })
+		for _, item in ipairs(groups[dir]) do
+			table.insert(rows, {
+				hash = item.hash,
+				item = item,
+				text = "  " .. format(item),
+			})
+		end
+	end
+	return rows
+end
+
 local function render(state)
 	if states[state.tab] ~= state or not valid_buf(state.buf) then
 		return
@@ -56,13 +94,7 @@ local function render(state)
 
 	local hash = selected_hash(state)
 	local items = state.deps.items(state.query)
-	local rows = vim.tbl_map(function(item)
-		return {
-			hash = item.hash,
-			item = item,
-			text = state.deps.format(item),
-		}
-	end, items)
+	local rows = create_rows(items, state.deps.format)
 	local lines = vim.tbl_map(function(row)
 		return row.text
 	end, rows)
