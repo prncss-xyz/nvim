@@ -9,6 +9,7 @@ deep_merge(vim, {
 		tabstop = indent,
 	},
 	o = {
+    -- autoread = true,
 		winblend = 10,
 		pumblend = 10,
 		compatible = false,
