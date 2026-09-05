@@ -13,6 +13,11 @@ local function join_from(xs, index)
 	return table.concat(vim.list_slice(xs, index), "\n")
 end
 
+local function bottom_lines(text, count)
+	local xs = lines(text)
+	return join_from(xs, math.max(1, #xs - count + 1))
+end
+
 local function bottom_non_empty(text, count)
 	local xs = lines(text)
 	local found = 0
@@ -21,6 +26,20 @@ local function bottom_non_empty(text, count)
 			found = found + 1
 			if found == count then
 				return join_from(xs, index)
+			end
+		end
+	end
+	return found > 0 and text or ""
+end
+
+local function top_non_empty(text, count)
+	local xs = lines(text)
+	local found = 0
+	for index, line in ipairs(xs) do
+		if vim.trim(line) ~= "" then
+			found = found + 1
+			if found == count then
+				return table.concat(vim.list_slice(xs, 1, index), "\n")
 			end
 		end
 	end
@@ -37,33 +56,116 @@ local function after_last_horizontal_rule(text)
 	return text
 end
 
-local function prompt_box_body(text)
-	local xs = lines(text)
-	local borders = {}
+local function prompt_box_top(xs)
+	local found = 0
 	for index = #xs, 1, -1 do
 		if is_horizontal_rule(xs[index]) then
-			table.insert(borders, index)
-			if #borders == 2 then
-				return table.concat(vim.list_slice(xs, index + 1, borders[1] - 1), "\n")
+			found = found + 1
+			if found == 2 then
+				return index
 			end
+		end
+	end
+end
+
+local function prompt_box_body(text)
+	local xs = lines(text)
+	local top = prompt_box_top(xs)
+	if not top then
+		return ""
+	end
+	for index = top + 1, #xs do
+		if is_horizontal_rule(xs[index]) then
+			return table.concat(vim.list_slice(xs, top + 1, index - 1), "\n")
+		end
+	end
+	return table.concat(vim.list_slice(xs, top + 1), "\n")
+end
+
+local function above_prompt_box(text)
+	local xs = lines(text)
+	local top = prompt_box_top(xs)
+	return top and table.concat(vim.list_slice(xs, 1, top - 1), "\n") or text
+end
+
+local function last_non_empty(text)
+	local xs = lines(text)
+	for index = #xs, 1, -1 do
+		if vim.trim(xs[index]) ~= "" then
+			return xs[index]
 		end
 	end
 	return ""
 end
 
-local function region(text, spec)
+local function prompt_index(xs, pattern)
+	local ok, regex = pcall(vim.regex, pattern)
+	if not ok then
+		return nil
+	end
+	for index = #xs, 1, -1 do
+		if regex:match_str(xs[index]) ~= nil then
+			return index
+		end
+	end
+end
+
+local function block_marker_index(xs, before)
+	for index = before, 1, -1 do
+		if vim.iter({ "•", "■", "✗", "✓" }):any(function(marker)
+			return vim.startswith(xs[index], marker)
+		end) then
+			return index
+		end
+	end
+end
+
+local function region(text, spec, prompt_marker)
 	if not spec or spec == "whole_recent" then
 		return text
 	end
-	local count = spec:match("^bottom_non_empty_lines%((%d+)%)$")
+	local count = spec:match("^bottom_lines%((%d+)%)$")
+	if count then
+		return bottom_lines(text, tonumber(count))
+	end
+	count = spec:match("^bottom_non_empty_lines%((%d+)%)$")
 	if count then
 		return bottom_non_empty(text, tonumber(count))
+	end
+	count = spec:match("^top_non_empty_lines%((%d+)%)$")
+	if count then
+		return top_non_empty(text, tonumber(count))
 	end
 	if spec == "after_last_horizontal_rule" then
 		return after_last_horizontal_rule(text)
 	end
 	if spec == "prompt_box_body" then
 		return prompt_box_body(text)
+	end
+	if spec == "above_prompt_box" then
+		return above_prompt_box(text)
+	end
+	if spec == "last_non_empty_above_prompt_box" then
+		return last_non_empty(above_prompt_box(text))
+	end
+
+	local xs = lines(text)
+	local prompt = prompt_index(xs, prompt_marker)
+	if spec == "after_last_prompt_marker" then
+		return prompt and table.concat(vim.list_slice(xs, prompt + 1), "\n") or text
+	end
+	if spec == "before_current_prompt_marker" then
+		return prompt and table.concat(vim.list_slice(xs, 1, prompt - 1), "\n") or text
+	end
+	if spec == "whole_recent_without_current_prompt_marker" then
+		return prompt and "" or text
+	end
+	if spec == "current_prompt_block_marker" or spec == "after_current_prompt_block_marker" then
+		local block = prompt and block_marker_index(xs, prompt - 1)
+		if spec == "current_prompt_block_marker" then
+			return block and xs[block] or ""
+		end
+		return block and join_from(xs, block) or ""
 	end
 	return ""
 end
@@ -117,12 +219,20 @@ end
 
 function M.detect(manifest, screen)
 	local match
+	local prompt_marker = manifest.prompt_marker_regex or [[^\s*❯]]
 	for _, rule in ipairs(manifest.rules or {}) do
-		if gate_matches(rule, region(screen, rule.region)) and (not match or (rule.priority or 0) > (match.priority or 0)) then
+		if gate_matches(rule, region(screen, rule.region, prompt_marker)) and (not match or (rule.priority or 0) > (match.priority or 0)) then
 			match = rule
 		end
 	end
-	return match and match.status or manifest.default_status
+	local status = match and match.status or manifest.default_status
+	return {
+		status = status,
+		visible_idle = match ~= nil and match.visible_idle == true and status == "idle",
+		visible_blocker = match ~= nil and match.visible_blocker == true and status == "blocked",
+		visible_working = match ~= nil and match.visible_working == true and status == "working",
+		skip_state_update = match ~= nil and match.skip_state_update == true,
+	}
 end
 
 return M
