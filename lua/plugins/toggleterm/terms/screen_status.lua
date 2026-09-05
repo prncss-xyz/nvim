@@ -185,6 +185,44 @@ local function line_regex_matches(pattern, text)
 	end)
 end
 
+-- True when the byte suffix of `tail` at `suffix_bytes` starts at a token
+-- boundary: either at the start of the line or preceded by a non-word char.
+-- Keeps status-word matching from firing inside longer words (e.g. a tail of
+-- "brunning" must not count as "running").
+local function token_suffix_boundary(tail, suffix_bytes)
+	if #tail <= suffix_bytes then
+		return true
+	end
+	local before = tail:sub(-suffix_bytes - 1, -suffix_bytes - 1)
+	return before:find("%w") == nil
+end
+
+-- Matches when a line ends with `needle`, allowing the line to be cut mid-word:
+-- the tail may equal a leading chunk of the needle (kept at least 3 chars, at
+-- most 3 chars cut off) instead of the whole needle. Trailing whitespace and a
+-- run of truncation markers ("." or "…") at the end of the line are ignored,
+-- so a status bar read as "· runnin..." matches the needle "· running".
+local function line_suffix_matches(needle, text)
+	if needle == "" then
+		return false
+	end
+	local needle_bytes = #needle
+	local needle_chars = vim.fn.strchars(needle)
+	return vim.iter(lines(text)):any(function(line)
+		local tail = line:gsub("%s+$", ""):gsub("[.…]+$", "")
+		if tail:sub(-needle_bytes) == needle and token_suffix_boundary(tail, needle_bytes) then
+			return true
+		end
+		for len = needle_chars - 1, math.max(3, needle_chars - 3), -1 do
+			local prefix = vim.fn.strcharpart(needle, 0, len)
+			if tail:sub(-#prefix) == prefix and token_suffix_boundary(tail, #prefix) then
+				return true
+			end
+		end
+		return false
+	end)
+end
+
 local function gate_matches(gate, text)
 	local lower = text:lower()
 	if not vim.iter(gate.contains or {}):all(function(needle)
@@ -199,6 +237,11 @@ local function gate_matches(gate, text)
 	end
 	if not vim.iter(gate.line_regex or {}):all(function(pattern)
 		return line_regex_matches(pattern, text)
+	end) then
+		return false
+	end
+	if not vim.iter(gate.line_suffix or {}):all(function(needle)
+		return line_suffix_matches(needle, text)
 	end) then
 		return false
 	end

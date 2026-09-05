@@ -1,6 +1,7 @@
 local M = {}
 
 local config = require("plugins.toggleterm.config").panel
+local ensure_dir = require("plugins.toggleterm.terms.ensure_dir").ensure_dir
 local format_item = require("plugins.toggleterm.terms.format_item").format_item(false)
 local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
 
@@ -75,7 +76,7 @@ local function create_rows(items, format)
 
 	local rows = {}
 	for _, dir in ipairs(dirs) do
-		table.insert(rows, { text = format_dir(dir) })
+		table.insert(rows, { dir = dir, text = format_dir(dir) })
 		for _, item in ipairs(groups[dir]) do
 			table.insert(rows, {
 				hash = item.hash,
@@ -137,9 +138,14 @@ end
 local function focus_selected(state)
 	local row = vim.api.nvim_win_get_cursor(state.win)[1]
 	local selected = state.rows[row]
-	if selected then
-		state.selected_hash = selected.hash
+	if not selected then
+		return
+	end
+	state.selected_hash = selected.hash
+	if selected.item then
 		selected.item.term.focus()
+	else
+		ensure_dir(selected.dir)
 	end
 end
 

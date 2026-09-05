@@ -2,55 +2,6 @@ local personal = require("my.conds").personal
 local work = require("my.conds").work
 local notify = require("my.notify")
 
-local screen_manifests = {
-	pi = {
-		default_status = "idle",
-		rules = {
-			{
-				id = "working_literal",
-				status = "working",
-				priority = 100,
-				region = "whole_recent",
-				contains = { "Working..." },
-			},
-		},
-	},
-	claude = {
-		default_status = "idle",
-		rules = {
-			{
-				id = "permission_prompt",
-				status = "blocked",
-				priority = 900,
-				region = "after_last_horizontal_rule",
-				any = {
-					{ contains = { "do you want to proceed?" } },
-					{ contains = { "waiting for permission" } },
-					{ contains = { "tab to amend" } },
-					{ contains = { "esc to cancel", "enter to select" } },
-				},
-			},
-			{
-				id = "working_interrupt_hint",
-				status = "working",
-				priority = 500,
-				region = "bottom_non_empty_lines(5)",
-				any = {
-					{ contains = { "esc to interrupt" } },
-					{ contains = { "ctrl+c to interrupt" } },
-				},
-			},
-			{
-				id = "prompt",
-				status = "idle",
-				priority = 100,
-				region = "prompt_box_body",
-				line_regex = { [[^\s*❯]] },
-			},
-		},
-	},
-}
-
 return {
 	min_runtime = 10000,
 	panel = {
@@ -148,13 +99,11 @@ return {
 			priority = 3,
 			cmd = "p",
 			tag = "agent",
-			screen_manifest = screen_manifests.pi,
 		}),
 		claude = work({
 			priority = 2,
 			cmd = "claude",
 			tag = "agent",
-			screen_manifest = screen_manifests.claude,
 		}),
 		["agent-arfifacts --remove"] = {
 			cmd = "git-sync",

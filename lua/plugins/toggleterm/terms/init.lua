@@ -11,6 +11,63 @@ local get_hash = commands.get_hash
 local format_item = require("plugins.toggleterm.terms.format_item").format_item
 local visit = require("my.browser").visit
 
+local screen_manifests = {
+	pi = {
+		default_status = "idle",
+		rules = {
+			{
+				id = "status_bar_running",
+				status = "working",
+				priority = 200,
+				region = "bottom_non_empty_lines(3)",
+				visible_working = true,
+				line_suffix = { "· running" },
+			},
+			{
+				id = "working_literal",
+				status = "working",
+				priority = 100,
+				region = "whole_recent",
+				contains = { "Working" },
+			},
+		},
+	},
+	claude = {
+		default_status = "idle",
+		rules = {
+			{
+				id = "permission_prompt",
+				status = "blocked",
+				priority = 900,
+				region = "after_last_horizontal_rule",
+				any = {
+					{ contains = { "do you want to proceed?" } },
+					{ contains = { "waiting for permission" } },
+					{ contains = { "tab to amend" } },
+					{ contains = { "esc to cancel", "enter to select" } },
+				},
+			},
+			{
+				id = "working_interrupt_hint",
+				status = "working",
+				priority = 500,
+				region = "bottom_non_empty_lines(5)",
+				any = {
+					{ contains = { "esc to interrupt" } },
+					{ contains = { "ctrl+c to interrupt" } },
+				},
+			},
+			{
+				id = "prompt",
+				status = "idle",
+				priority = 100,
+				region = "prompt_box_body",
+				line_regex = { [[^\s*❯]] },
+			},
+		},
+	},
+}
+
 local history = create_history("hash")
 local listeners = {}
 local next_listener_id = 0
@@ -63,6 +120,7 @@ end
 local function make_item(item, cb)
 	item.status = "idle"
 	item.instance_count = vim.v.count1
+	item.screen_manifest = screen_manifests[item.key]
 	if not item.hash then
 		assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
 		item.dir = type(item.dir) == "string" and item.dir or vim.fn.getcwd()

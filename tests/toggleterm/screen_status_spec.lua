@@ -75,6 +75,27 @@ T["screen status"]["supports bottom line regions"] = function()
 	assert.same("working", child.lua_get("result.status"))
 end
 
+T["screen status"]["matches line_suffix on an exact status-bar tail"] = function()
+	child.lua([[local detect = require("plugins.toggleterm.terms.screen_status").detect
+		result = detect({ rules = { { status = "working", line_suffix = { "· running" } } } },
+			"Codex 7d:51% left (↺2h25m) MCP: 0/8 servers delegating to plannifier · running")]])
+	assert.same("working", child.lua_get("result.status"))
+end
+
+T["screen status"]["matches line_suffix cut mid-word with truncation dots"] = function()
+	child.lua([[local detect = require("plugins.toggleterm.terms.screen_status").detect
+		result = detect({ rules = { { status = "working", line_suffix = { "· running" } } } },
+			"Codex 7d:51% left (↺2h25m) MCP: 0/8 servers delegating to plannifier · runnin...\n· runnin…")]])
+	assert.same("working", child.lua_get("result.status"))
+end
+
+T["screen status"]["rejects line_suffix stubs and mid-word tails"] = function()
+	child.lua([[local detect = require("plugins.toggleterm.terms.screen_status").detect
+		result = detect({ default_status = "idle", rules = { { status = "working", line_suffix = { "running" } } } },
+			table.concat({ "· run", "brunning", "xrunnin" }, "\n"))]])
+	assert.same("idle", child.lua_get("result.status"))
+end
+
 T["screen status"]["supports top non-empty regions"] = function()
 	child.lua([[local detect = require("plugins.toggleterm.terms.screen_status").detect
 		result = detect({ rules = { { status = "working", region = "top_non_empty_lines(1)", contains = { "pinned" }, ["not"] = { { contains = { "later" } } } } } },

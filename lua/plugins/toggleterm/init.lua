@@ -97,7 +97,7 @@ return {
 				mode = { "n", "x", "i", "t" },
 			},
 			{
-				"ra",
+				"ru",
 				function()
 					require("plugins.toggleterm.terms").toggle_panel({
 						dir = require("plugins.toggleterm.terms.get_query_fn").any,
