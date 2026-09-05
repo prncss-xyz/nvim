@@ -251,6 +251,15 @@ return {
 				desc = "Pick Artifact File",
 			},
 			{
+				pick .. reverse("a"),
+				function()
+					local branch = vim.trim(vim.fn.system({ "git", "branch", "--show-current" }))
+					assert(vim.v.shell_error == 0 and branch ~= "", "Failed to determine current Git branch")
+					Snacks.picker.files({ cwd = vim.fs.joinpath("./.artifacts", branch:gsub("/", "-")) })
+				end,
+				desc = "Pick Branch Artifact File",
+			},
+			{
 				pick .. theme.find,
 				function()
 					Snacks.picker.lines()
