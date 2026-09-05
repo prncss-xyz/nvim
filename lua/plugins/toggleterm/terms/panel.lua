@@ -80,7 +80,7 @@ local function create_rows(items, format)
 			table.insert(rows, {
 				hash = item.hash,
 				item = item,
-				text = "  " .. format(item),
+				text = "  " .. format(item) .. " (" .. item.status .. ")",
 			})
 		end
 	end

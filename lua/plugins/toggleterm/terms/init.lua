@@ -64,10 +64,7 @@ local function make_item(item, cb)
 	item.status = "idle"
 	item.instance_count = vim.v.count1
 	if not item.hash then
-		assert(
-			type(item.key) == "string" and item.key ~= "",
-			"Cannot spawn an ad-hoc terminal without a key"
-		)
+		assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
 		item.dir = type(item.dir) == "string" and item.dir or vim.fn.getcwd()
 		item.hash = get_hash(item)
 	end

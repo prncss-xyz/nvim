@@ -40,7 +40,8 @@ function M.attach_term(term, send, screen_manifest)
 			or vim.o.lines
 		local first_line = math.max(0, line_count - screen_lines)
 		local screen = table.concat(vim.api.nvim_buf_get_lines(bufnr, first_line, line_count, false), "\n")
-		local status = detect_status(screen_manifest, screen)
+		local output = detect_status(screen_manifest, screen)
+		local status = output and output.status
 		if status and status ~= last_status then
 			last_status = status
 			send({

@@ -39,7 +39,6 @@ return {
 					"buffers",
 					"git_status",
 					"document_symbols",
-					"git_base",
 				},
 				open_files_do_not_replace_types = {
 					"terminal",
@@ -183,12 +182,6 @@ return {
 							end
 						end,
 					},
-				},
-				git_base = {
-					-- mappings and renderers fall back to git_status defaults.
-					on_base_change = function(base)
-						require("gitsigns").change_base(base, true)
-					end,
 				},
 				event_handlers = {
 					{
