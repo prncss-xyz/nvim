@@ -67,7 +67,7 @@ return {
 				},
 				filesystem = {
 					follow_current_file = {
-						enabled = true,
+						enabled = false,
 					},
 					-- 'open_default', 'disabled'
 					use_libuv_file_watcher = true,
@@ -191,6 +191,17 @@ return {
 					end,
 				},
 				event_handlers = {
+					{
+						event = events.VIM_BUFFER_ENTER,
+						handler = function(args)
+							if vim.b[args.buf].my_rooter_symlink_cwd ~= nil then
+								return
+							end
+							if require("neo-tree.utils").is_real_file(args.afile) then
+								require("neo-tree.sources.filesystem").follow()
+							end
+						end,
+					},
 					{ event = events.FILE_MOVED, handler = on_move },
 					{ event = events.FILE_RENAMED, handler = on_move },
 				},

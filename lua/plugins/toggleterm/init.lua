@@ -173,7 +173,7 @@ return {
 						return
 					end
 					local cmd = string.format("p %q", "/implement @" .. file)
-					local branch = file:match("/%.artifacts/([^/]+)/spec%.md$")
+					local branch = file:match("/([^/]+)/spec%.md$")
 					if branch then
 						require("my.git").create_worktree(branch, function(_, worktree_path)
 							require("plugins.toggleterm.terms").focus({
@@ -182,11 +182,6 @@ return {
 								cmd = cmd,
 							})
 						end)
-					else
-						require("plugins.toggleterm.terms").focus({
-							key = "pi",
-							cmd = cmd,
-						})
 					end
 				end,
 				desc = "Implement this",
