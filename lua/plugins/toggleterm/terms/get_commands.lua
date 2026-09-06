@@ -17,8 +17,9 @@ function M.get_hash(o)
 	return string.format("%s:%s:%i", o.dir, o.key, o.instance_count)
 end
 
-function M.get_commands(filter)
-	local commands = vim.deepcopy(get_commands0(vim.fn.getcwd()))
+function M.get_commands(filter, cwd)
+	cwd = cwd or vim.fn.getcwd()
+	local commands = vim.deepcopy(get_commands0(cwd))
 	local res = {}
 	for k, v in pairs(commands) do
 		if type(v) == "table" then
@@ -35,7 +36,7 @@ function M.get_commands(filter)
 			v.tag = v.tag or k
 			v.idle_timeout = v.idle_timeout or config.idle_timeout
 			v.instance_count = vim.v.count1
-			v.dir = v.dir or vim.fn.getcwd()
+			v.dir = v.dir or cwd
 			v.hash = M.get_hash(v)
 			if filter(v) then
 				res[k] = v

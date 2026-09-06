@@ -89,6 +89,39 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 	}, child.lua_get("result"))
 end
 
+T["artifact cwd"] = MiniTest.new_set()
+
+T["artifact cwd"]["resolves explicit and default branches without git"] = function()
+	child.lua([[root = vim.fn.tempname()
+		local projects = vim.fs.joinpath(root, "projects")
+		local artifacts = vim.fs.joinpath(root, "artifacts")
+		vim.fn.mkdir(vim.fs.joinpath(projects, "alpha", "feature"), "p")
+		vim.fn.mkdir(vim.fs.joinpath(projects, "alpha", "main"), "p")
+		vim.fn.mkdir(vim.fs.joinpath(projects, "beta"), "p")
+		vim.fn.mkdir(vim.fs.joinpath(artifacts, "alpha", "feature"), "p")
+		vim.fn.mkdir(vim.fs.joinpath(artifacts, "beta"), "p")
+
+		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+		local resolve = require("plugins.toggleterm.terms.artifact_cwd").resolve
+		result = {
+			explicit = resolve(vim.fs.joinpath(artifacts, "alpha", "feature", "issue.md")),
+			missing_branch = resolve(vim.fs.joinpath(artifacts, "alpha", "missing", "issue.md")),
+			default_nested = resolve(vim.fs.joinpath(artifacts, "alpha", "issue.md")),
+			default_flat = resolve(vim.fs.joinpath(artifacts, "beta", "issue.md")),
+			outside = resolve(vim.fs.joinpath(root, "issue.md")),
+		}
+	]])
+
+	local root = child.lua_get("root")
+	assert.same({
+		explicit = vim.fs.joinpath(root, "projects", "alpha", "feature"),
+		missing_branch = vim.fs.joinpath(root, "projects", "alpha", "main"),
+		default_nested = vim.fs.joinpath(root, "projects", "alpha", "main"),
+		default_flat = vim.fs.joinpath(root, "projects", "beta"),
+	}, child.lua_get("result"))
+end
+
 T["directory queries"] = MiniTest.new_set()
 
 T["directory queries"]["matches HOME exactly"] = function()

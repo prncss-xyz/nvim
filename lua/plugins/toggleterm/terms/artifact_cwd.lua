@@ -1,0 +1,37 @@
+local M = {}
+
+local dirs = require("my.parameters").dirs
+
+local function is_directory(path)
+	local stat = vim.uv.fs_stat(path)
+	return stat ~= nil and stat.type == "directory"
+end
+
+--- Resolve the project checkout for a file in the shared artifact directory.
+--- Artifact paths are <project>/<branch>/..., with the branch omitted for main.
+--- Prefer an existing branch checkout, then <project>/main, then <project>.
+---@param filename string
+---@return string|nil
+function M.resolve(filename)
+	local relative = vim.fs.relpath(dirs.artifacts, vim.fs.abspath(filename))
+	if relative == nil then
+		return nil
+	end
+
+	local parts = vim.split(relative, "/", { plain = true, trimempty = true })
+	local project = parts[1]
+	if project == nil then
+		return nil
+	end
+
+	local project_dir = vim.fs.joinpath(dirs.projects, project)
+	local branch_dir = parts[2] and vim.fs.joinpath(project_dir, parts[2]) or nil
+	if branch_dir and is_directory(branch_dir) then
+		return branch_dir
+	end
+
+	local main_dir = vim.fs.joinpath(project_dir, "main")
+	return is_directory(main_dir) and main_dir or project_dir
+end
+
+return M

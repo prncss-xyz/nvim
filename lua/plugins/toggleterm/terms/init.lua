@@ -191,7 +191,8 @@ local function with_query(query, cb)
 	if item then
 		return cb(item)
 	end
-	item = utils.max_of(get_commands(filter), gt_item)
+	local command_cwd = type(query.dir) == "string" and query.dir or nil
+	item = utils.max_of(get_commands(filter, command_cwd), gt_item)
 	if item then
 		make_item(item, cb)
 	else
@@ -280,6 +281,8 @@ function M.prepare(query)
 end
 
 function M.send_str(query, str)
+	query = vim.tbl_extend("keep", query or {}, {})
+	query.dir = query.dir or require("plugins.toggleterm.terms.artifact_cwd").resolve(vim.api.nvim_buf_get_name(0))
 	with_query(query, function(instance)
 		if type(str) == "function" then
 			local ctx = require("plugins.toggleterm.terms.window").get_ctx()
