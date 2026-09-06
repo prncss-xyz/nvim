@@ -173,6 +173,19 @@ return {
 				desc = "Pick Note File",
 			},
 			{
+				pick .. reverse("n"),
+				function()
+					Snacks.picker.files({
+						cwd = dirs.artifacts,
+						matcher = {
+							frecency = true,
+						},
+						args = { "-e", "md" },
+					})
+				end,
+				desc = "Pick Any Artifact File",
+			},
+			{
 				file .. "l",
 				projects.pick_current_lang_note,
 				desc = "Edit Lang Note",
