@@ -1,6 +1,7 @@
 local M = {}
 
 local window = require("plugins.toggleterm.terms.window")
+local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
 local find_project_file = require("my.project_file").find
 local get_last_file_win = require("my.windows").get_last_file_win
 
@@ -13,6 +14,16 @@ local function find_buffer(path)
 end
 
 function M.ensure_dir(dir)
+	local target_win = get_last_file_win()
+	if not target_win or not vim.api.nvim_win_is_valid(target_win) then
+		return
+	end
+
+	local target_buf = vim.api.nvim_win_get_buf(target_win)
+	if artifact_cwd.contains(vim.api.nvim_buf_get_name(target_buf)) then
+		return
+	end
+
 	local path = find_project_file(dir)
 	if not path then
 		return
@@ -26,11 +37,6 @@ function M.ensure_dir(dir)
 				return
 			end
 		end
-	end
-
-	local target_win = get_last_file_win()
-	if not target_win or not vim.api.nvim_win_is_valid(target_win) then
-		return
 	end
 
 	if bufnr then

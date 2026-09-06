@@ -7,6 +7,12 @@ local function is_directory(path)
 	return stat ~= nil and stat.type == "directory"
 end
 
+---@param filename string
+---@return boolean
+function M.contains(filename)
+	return vim.fs.relpath(dirs.artifacts, vim.fs.abspath(filename)) ~= nil
+end
+
 --- Resolve the project checkout for a file in the shared artifact directory.
 --- Artifact paths are <project>/<branch>/..., with the branch omitted for main.
 --- Prefer an existing branch checkout, then <project>/main, then <project>.

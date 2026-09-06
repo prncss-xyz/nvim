@@ -155,11 +155,27 @@ local function sort_items(items)
 	return items
 end
 
+local function context_dir()
+	local dir = require("plugins.toggleterm.terms.artifact_cwd").resolve(vim.api.nvim_buf_get_name(0))
+	if dir then
+		return dir
+	end
+	if vim.bo.buftype == "terminal" then
+		local _, term = require("toggleterm.terminal").identify()
+		return term and term.dir or nil
+	end
+end
+
 local function normalize_query(query)
 	query = vim.tbl_extend("keep", query or {}, {})
 	query.instance_count = vim.v.count > 0 and vim.v.count or nil
-	query.dir = query.dir or { vim.fn.getcwd(), vim.env.HOME }
+	query.dir = query.dir or context_dir() or { vim.fn.getcwd(), vim.env.HOME }
 	return query
+end
+
+local function get_query_commands(query, filter)
+	local cwd = type(query.dir) == "string" and query.dir or nil
+	return get_commands(filter, cwd)
 end
 
 local function with_query(query, cb)
@@ -177,7 +193,7 @@ local function with_query(query, cb)
 				end
 			end)
 		end
-		items = sort_items(utils.all_of(get_commands(filter)))
+		items = sort_items(utils.all_of(get_query_commands(query, filter)))
 		return vim.ui.select(items, {
 			prompt = query.prompt,
 			format_item = format_item(query.dir == vim.env.HOME),
@@ -191,8 +207,7 @@ local function with_query(query, cb)
 	if item then
 		return cb(item)
 	end
-	local command_cwd = type(query.dir) == "string" and query.dir or nil
-	item = utils.max_of(get_commands(filter, command_cwd), gt_item)
+	item = utils.max_of(get_query_commands(query, filter), gt_item)
 	if item then
 		make_item(item, cb)
 	else
@@ -203,8 +218,9 @@ end
 local local_format_item = format_item(false)
 
 function M.run(query)
+	query = normalize_query(query)
 	local filter = get_query_fn(query)
-	local items = get_commands(filter)
+	local items = get_query_commands(query, filter)
 	local choices = {}
 	for _, item in pairs(items) do
 		local res = history.find(function(i)
@@ -239,7 +255,7 @@ function M.rerun(query)
 	query = normalize_query(query)
 	local filter = get_query_fn(query)
 	local matches = history.filter(filter)
-	local item = utils.max_of(get_commands(filter), gt_item) or matches[1] or query
+	local item = utils.max_of(get_query_commands(query, filter), gt_item) or matches[1] or query
 
 	if item.term then
 		item = vim.tbl_extend("force", {}, item)
@@ -281,8 +297,6 @@ function M.prepare(query)
 end
 
 function M.send_str(query, str)
-	query = vim.tbl_extend("keep", query or {}, {})
-	query.dir = query.dir or require("plugins.toggleterm.terms.artifact_cwd").resolve(vim.api.nvim_buf_get_name(0))
 	with_query(query, function(instance)
 		if type(str) == "function" then
 			local ctx = require("plugins.toggleterm.terms.window").get_ctx()
