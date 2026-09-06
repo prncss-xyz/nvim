@@ -74,19 +74,19 @@ return {
 			{
 				domain.pick .. theme.run,
 				function()
-					require("plugins.toggleterm.terms").focus({ prompt = "Select Terminal" })
-				end,
-				desc = "Select Terminal",
-			},
-			{
-				domain.pick .. reverse(theme.run),
-				function()
 					require("plugins.toggleterm.terms").toggle({
 						prompt = "Select Terminal",
 						dir = require("plugins.toggleterm.terms.get_query_fn").any,
 					})
 				end,
 				desc = "Select Any Terminal",
+			},
+			{
+				domain.pick .. reverse(theme.run),
+				function()
+					require("plugins.toggleterm.terms").focus({ prompt = "Select Terminal" })
+				end,
+				desc = "Select Terminal",
 			},
 			{
 				ai_insert.toggle,

@@ -155,21 +155,12 @@ local function sort_items(items)
 	return items
 end
 
-local function context_dir()
-	local dir = require("plugins.toggleterm.terms.artifact_cwd").resolve(vim.api.nvim_buf_get_name(0))
-	if dir then
-		return dir
-	end
-	if vim.bo.buftype == "terminal" then
-		local _, term = require("toggleterm.terminal").identify()
-		return term and term.dir or nil
-	end
-end
-
 local function normalize_query(query)
 	query = vim.tbl_extend("keep", query or {}, {})
 	query.instance_count = vim.v.count > 0 and vim.v.count or nil
-	query.dir = query.dir or context_dir() or { vim.fn.getcwd(), vim.env.HOME }
+	query.dir = query.dir
+		or require("plugins.toggleterm.terms.artifact_cwd").context_dir()
+		or { vim.fn.getcwd(), vim.env.HOME }
 	return query
 end
 

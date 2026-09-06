@@ -40,4 +40,16 @@ function M.resolve(filename)
 	return is_directory(main_dir) and main_dir or project_dir
 end
 
+---@return string|nil
+function M.context_dir()
+	local dir = M.resolve(vim.api.nvim_buf_get_name(0))
+	if dir then
+		return dir
+	end
+	if vim.bo.buftype == "terminal" then
+		local _, term = require("toggleterm.terminal").identify()
+		return term and term.dir or nil
+	end
+end
+
 return M

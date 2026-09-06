@@ -13,6 +13,10 @@ local function find_buffer(path)
 	end
 end
 
+local function is_in_dir(filename, dir)
+	return filename ~= "" and vim.fs.relpath(vim.fs.abspath(dir), vim.fs.abspath(filename)) ~= nil
+end
+
 function M.ensure_dir(dir)
 	local target_win = get_last_file_win()
 	if not target_win or not vim.api.nvim_win_is_valid(target_win) then
@@ -20,7 +24,8 @@ function M.ensure_dir(dir)
 	end
 
 	local target_buf = vim.api.nvim_win_get_buf(target_win)
-	if artifact_cwd.contains(vim.api.nvim_buf_get_name(target_buf)) then
+	local target_file = vim.api.nvim_buf_get_name(target_buf)
+	if artifact_cwd.contains(target_file) or is_in_dir(target_file, dir) then
 		return
 	end
 
