@@ -1,6 +1,5 @@
 local M = {}
 
-local logical_path = require("my.logical_path")
 local nvim_has_focus = true
 
 vim.api.nvim_create_autocmd("FocusGained", {
@@ -19,8 +18,7 @@ local ctx_by_cwd = {}
 
 local function get_ctx()
 	local bufnr = vim.api.nvim_win_get_buf(0)
-	local name = vim.api.nvim_buf_get_name(bufnr)
-	local path = vim.fn.fnamemodify(logical_path.resolve(bufnr, name), ":.")
+	local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":.")
 	local pos = vim.api.nvim_win_get_cursor(0)
 	local row = pos[1]
 	local col = pos[2]

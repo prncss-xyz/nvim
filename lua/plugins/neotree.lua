@@ -65,11 +65,8 @@ return {
 					file = "warn",
 				},
 				filesystem = {
-					-- Keep Neo-tree's built-in handler disabled: it prompts to change the
-					-- root when the current buffer is outside the tree. The custom
-					-- VIM_BUFFER_ENTER handler below follows files only within the root.
 					follow_current_file = {
-						enabled = false,
+						enabled = true,
 					},
 					-- 'open_default', 'disabled'
 					use_libuv_file_watcher = true,

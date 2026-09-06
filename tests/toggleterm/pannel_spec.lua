@@ -123,8 +123,33 @@ T["terminal panel"]["refreshes from events and preserves selection by hash"] = f
 	]])
 
 	assert.same({
-		lines = { "󰉋 /tmp", "  one:idle (idle)", "  two:blocked (blocked)" },
+		lines = { "󰉋 /tmp", "  one:idle    (idle)", "  two:blocked (blocked)" },
 		cursor = { 3, 0 },
+	}, child.lua_get("result"))
+end
+
+T["terminal panel"]["aligns statuses across different indentation depths"] = function()
+	child.lua([[
+		local items = {
+			{ hash = "parent", dir = "/tmp/a", label = "long", status = "idle", term = { focus = function() end } },
+			{ hash = "child", dir = "/tmp/a/b", label = "x", status = "working", term = { focus = function() end } },
+		}
+		local history = { filter = function() return items end }
+		local function subscribe() return function() end end
+		package.loaded["plugins.toggleterm.config"] = { panel = { width = 24 } }
+		package.loaded["plugins.toggleterm.terms.format_item"] = {
+			format_item = function() return function(item) return item.label end end,
+		}
+		local panel = require("plugins.toggleterm.terms.panel")
+		panel.toggle({}, history, subscribe)
+		result = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, -1, false)
+	]])
+
+	assert.same({
+		"󰉋 /tmp/a",
+		"  󰉋 b",
+		"    x  (working)",
+		"  long (idle)",
 	}, child.lua_get("result"))
 end
 

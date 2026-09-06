@@ -118,7 +118,8 @@ local function create_rows(items, format)
 			table.insert(rows, {
 				hash = item.hash,
 				item = item,
-				text = string.rep("  ", depth) .. format(item) .. " (" .. item.status .. ")",
+				text = string.rep("  ", depth) .. format(item),
+				status = item.status,
 				highlight = highlight,
 			})
 		end
@@ -159,6 +160,19 @@ local function create_rows(items, format)
 		append_items(common, 1)
 	else
 		append(root, 0)
+	end
+
+	local status_column = 0
+	for _, row in ipairs(rows) do
+		if row.item then
+			status_column = math.max(status_column, vim.fn.strdisplaywidth(row.text))
+		end
+	end
+	for _, row in ipairs(rows) do
+		if row.item then
+			local padding = status_column - vim.fn.strdisplaywidth(row.text) + 1
+			row.text = row.text .. string.rep(" ", padding) .. "(" .. row.status .. ")"
+		end
 	end
 	return rows
 end
