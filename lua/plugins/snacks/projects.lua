@@ -3,6 +3,7 @@ local M = {}
 local note_dir = require("my.parameters").dirs.notes
 
 local is_file_cur_win = require("my.windows").is_file_cur_win
+local find_project_file = require("my.project_file").find
 
 function M.toggle_project()
 	if is_file_cur_win() then
@@ -13,22 +14,6 @@ end
 function M.toggle_file()
 	if is_file_cur_win() then
 		M.open_project(vim.fn.getcwd(), { vim.api.nvim_buf_get_name(0) })
-	end
-end
-
-local function get_test(cwd, exclude)
-	return function(fname)
-		if fname == "" then
-			return false
-		end
-		if exclude then
-			for _, ex in pairs(exclude) do
-				if vim.startswith(fname, ex) then
-					return false
-				end
-			end
-		end
-		return vim.startswith(fname, cwd) and vim.fn.filereadable(fname) == 1
 	end
 end
 
@@ -49,69 +34,11 @@ function M.toggle_cursor()
 end
 
 function M.open_project(cwd, exclude, fallback)
-	if not vim.endswith(cwd, "/") then
-		cwd = cwd .. "/"
-	end
-	local test = get_test(cwd, exclude)
-	local jumplist, len = unpack(vim.fn.getjumplist())
-	local done = {}
-	for i = len, 1, -1 do
-		local bufnr = jumplist[i].bufnr
-		if not done[bufnr] then
-			done[bufnr] = true
-			local fname = vim.api.nvim_buf_get_name(bufnr)
-			if test(fname) then
-				vim.cmd.edit(fname)
-				return
-			end
-		end
-	end
-	for i = #vim.v.oldfiles, 1, -1 do
-		if test(vim.v.oldfiles[i]) then
-			vim.cmd.edit(vim.v.oldfiles[i])
-			return
-		end
-	end
-	local git_dir = cwd .. ".git"
-	if vim.uv.fs_stat(git_dir) then
-		local function try_files(cmd)
-			for _, fname in ipairs(vim.fn.systemlist(cmd)) do
-				if fname ~= "" then
-					local full = cwd .. fname
-					if test(full) then
-						vim.cmd.edit(full)
-						return true
-					end
-				end
-			end
-		end
-		if try_files("git -C " .. cwd .. " diff --name-only")
-			or try_files("git -C " .. cwd .. " diff --cached --name-only")
-			or try_files("git -C " .. cwd .. " ls-files")
-		then
-			return
-		end
-		-- broader fallback: any tracked file not in hidden dir or node_modules
-		for _, fname in ipairs(vim.fn.systemlist("git -C " .. cwd .. " ls-files")) do
-			if fname ~= "" then
-				local visible = true
-				for part in vim.gsplit(fname, "/") do
-					if vim.startswith(part, ".") or part == "node_modules" then
-						visible = false
-						break
-					end
-				end
-				if visible then
-					local full = cwd .. fname
-					if vim.fn.filereadable(full) == 1 then
-						vim.cmd.edit(full)
-						return
-					end
-				end
-			end
-		end
-	end
-	if fallback then
+	cwd = vim.fs.normalize(cwd)
+	local path = find_project_file(cwd, exclude)
+	if path then
+		vim.cmd.edit(vim.fn.fnameescape(path))
+	elseif fallback then
 		fallback(cwd)
 	else
 		Snacks.picker.smart({

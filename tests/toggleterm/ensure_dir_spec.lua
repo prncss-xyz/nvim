@@ -4,6 +4,7 @@ local T = MiniTest.new_set({
 	hooks = {
 		pre_case = function()
 			child.restart({ "-u", "NONE" })
+			child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. package.path]])
 		end,
 		post_once = child.stop,
 	},
@@ -16,8 +17,9 @@ T["focuses the first window with a buffer inside the requested directory"] = fun
 		vim.api.nvim_buf_set_name(inside, cwd .. "/lua/example.lua")
 		vim.cmd.new()
 		vim.api.nvim_buf_set_name(0, "/outside/repo/file.md")
-		package.loaded["plugins.toggleterm.terms.window"] = {
-			get_path = function() error("should not open a file") end,
+		package.loaded["plugins.toggleterm.terms.window"] = {}
+		package.loaded["my.project_file"] = {
+			find = function() return vim.api.nvim_buf_get_name(inside) end,
 		}
 		package.loaded["my.windows"] = {
 			get_last_file_win = function() error("should not select a fallback window") end,
@@ -37,8 +39,9 @@ T["focuses a hidden buffer inside a descendant directory"] = function()
 		vim.api.nvim_buf_set_name(inside, cwd .. "/lua/plugins/example.lua")
 		vim.cmd.new()
 		vim.api.nvim_buf_set_name(0, "/outside/repo/file.md")
-		package.loaded["plugins.toggleterm.terms.window"] = {
-			get_path = function() error("should not open a file") end,
+		package.loaded["plugins.toggleterm.terms.window"] = {}
+		package.loaded["my.project_file"] = {
+			find = function() return vim.api.nvim_buf_get_name(inside) end,
 		}
 		package.loaded["my.windows"] = {
 			get_last_file_win = function() return target_win end,
@@ -82,24 +85,27 @@ T["opens the first oldfile inside the requested directory before using git"] = f
 	assert.same(result.expected, result.actual)
 end
 
-T["opens a file when the requested path has no remembered window"] = function()
+T["opens the selected file in the target window"] = function()
 	child.lua([[
 		local cwd = vim.fn.getcwd()
+		local selected = cwd .. "/lua/example.lua"
 		local created
 		vim.api.nvim_buf_set_name(0, "/outside/repo/file.md")
 		package.loaded["plugins.toggleterm.terms.window"] = {
-			get_path = function() return nil end,
 			create = function(path) created = path end,
+		}
+		package.loaded["my.project_file"] = {
+			find = function() return selected end,
 		}
 		package.loaded["my.windows"] = {
 			get_last_file_win = function() return vim.api.nvim_get_current_win() end,
 		}
 		dofile(cwd .. "/lua/plugins/toggleterm/terms/ensure_dir.lua").ensure_dir(cwd)
-		result = created
+		result = { selected = selected, created = created }
 	]])
 
-	local first = vim.fn.system({ "git", "-C", vim.fn.getcwd(), "ls-files" }):match("[^\n]+")
-	assert.same(vim.fs.joinpath(vim.fn.getcwd(), first), child.lua_get("result"))
+	local result = child.lua_get("result")
+	assert.same(result.selected, result.created)
 end
 
 T["does nothing when the requested path is not a git repository"] = function()
