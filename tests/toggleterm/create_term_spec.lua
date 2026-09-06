@@ -232,6 +232,62 @@ T["create_term"]["restarts long-running failed processes in the same hidden term
 	}, child.lua_get("result"))
 end
 
+T["create_term"]["reattaches status detection when toggleterm replaces the buffer"] = function()
+	child.lua([[local terminal_options
+		local attachments = {}
+		local events = {}
+		local terminal = {}
+		function terminal:spawn()
+			self.bufnr = vim.api.nvim_create_buf(false, true)
+			terminal_options.on_create(self)
+		end
+		package.loaded["toggleterm.terminal"] = {
+			Terminal = {
+				new = function(_, options)
+					terminal_options = options
+					return terminal
+				end,
+			},
+		}
+		package.loaded["plugins.toggleterm.terms.attach_term"] = {
+			attach_term = function(term, send)
+				table.insert(attachments, { bufnr = term.bufnr, send = send })
+			end,
+		}
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			is_visible = function() return false end,
+			is_in_view = function() return false end,
+		}
+		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		local create_term = require("plugins.toggleterm.terms.create_term").create_term
+		create_term({}, function(event)
+			table.insert(events, event)
+		end, true)
+		vim.wait(20, function() return #attachments == 1 end)
+		local first_bufnr = terminal.bufnr
+		terminal:spawn()
+		vim.wait(20, function() return #attachments == 2 end)
+		attachments[1].send({ type = "status", value = "working" })
+		attachments[2].send({ type = "status", value = "idle" })
+		result = {
+			attachment_count = #attachments,
+			buffer_replaced = first_bufnr ~= terminal.bufnr,
+			events = events,
+		}
+	]])
+
+	assert.same({
+		attachment_count = 2,
+		buffer_replaced = true,
+		events = {
+			{ type = "create" },
+			{ type = "status", value = "idle" },
+		},
+	}, child.lua_get("result"))
+end
+
 T["create_term"]["reuses a terminal buffer containing output"] = function()
 	child.lua([[local terminal_options
 		local spawn_count = 0

@@ -58,4 +58,42 @@ T["attach terminal"]["emits status transitions with their visibility"] = functio
 	}, child.lua_get("result"))
 end
 
+T["attach terminal"]["checks status during continuous output"] = function()
+	child.lua([[local events = {}
+		local callbacks
+		local original_attach = vim.api.nvim_buf_attach
+		vim.api.nvim_buf_attach = function(_, _, opts)
+			callbacks = opts
+			return true
+		end
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		local bufnr = vim.api.nvim_create_buf(false, true)
+		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "❯ " })
+		require("plugins.toggleterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
+			table.insert(events, event)
+		end, {
+			debounce_ms = 30,
+			default_status = "idle",
+			rules = {
+				{ status = "working", contains = { "Working..." } },
+			},
+		})
+		vim.wait(50, function() return #events == 1 end)
+
+		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Working..." })
+		for _ = 1, 5 do
+			callbacks.on_lines(nil, bufnr, 0, 0, 1, 1)
+			vim.wait(10)
+		end
+		vim.api.nvim_buf_attach = original_attach
+		result = events
+	]])
+
+	assert.same({
+		{ type = "status", value = "idle" },
+		{ type = "status", value = "working" },
+	}, child.lua_get("result"))
+end
+
 return T

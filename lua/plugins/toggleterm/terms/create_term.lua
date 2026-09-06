@@ -25,6 +25,25 @@ function M.create_term(opts, send, prepare, min_runtime)
 	local kill_requested = false
 	local reopen_after_restart = false
 	local original_on_create = opts_.on_create
+	local attached_bufnr
+	local attachment_generation = 0
+	local function attach_status(term)
+		if not term.bufnr or term.bufnr <= 0 or term.bufnr == attached_bufnr then
+			return
+		end
+		local replacing = attached_bufnr ~= nil
+		attached_bufnr = term.bufnr
+		attachment_generation = attachment_generation + 1
+		local generation = attachment_generation
+		attach_term(term, function(event)
+			if generation == attachment_generation then
+				send(event)
+			end
+		end, opts_.screen_manifest)
+		if replacing then
+			send({ type = "create" })
+		end
+	end
 	opts_.close_on_exit = exit_policy ~= "keep" and exit_policy ~= "restart"
 	opts_.env = {
 		VMUX_HASH = opts_.hash,
@@ -38,6 +57,7 @@ function M.create_term(opts, send, prepare, min_runtime)
 	opts_.on_create = function(term)
 		started_at = vim.uv.hrtime()
 		restart_scheduled = false
+		attach_status(term)
 		if original_on_create then
 			original_on_create(term)
 		end
@@ -92,7 +112,7 @@ function M.create_term(opts, send, prepare, min_runtime)
 	vim.schedule(function()
 		if term and term.bufnr and term.bufnr > 0 then
 			ensure_dir(opts_.dir)
-			attach_term(term, send, opts_.screen_manifest)
+			attach_status(term)
 		end
 	end)
 

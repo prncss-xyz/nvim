@@ -52,10 +52,9 @@ function M.attach_term(term, send, screen_manifest)
 	end
 
 	local function schedule_status_update(bufnr)
-		if not screen_manifest then
+		if not screen_manifest or handle then
 			return
 		end
-		clear()
 		handle = vim.fn.timer_start(screen_manifest.debounce_ms or 100, function()
 			handle = nil
 			update_status(bufnr)

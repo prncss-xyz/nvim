@@ -16,9 +16,35 @@ vim.api.nvim_create_autocmd("FocusLost", {
 
 local ctx_by_cwd = {}
 
+local function path_through_cwd_symlink(bufnr, path)
+	local cwd = vim.b[bufnr].my_rooter_symlink_cwd
+	if cwd == nil or path:sub(1, 1) ~= "/" then
+		return nil
+	end
+
+	local matches = vim.fs.find(function(name, parent)
+		local link = vim.fs.joinpath(parent, name)
+		local metadata = vim.uv.fs_lstat(link)
+		if not metadata or metadata.type ~= "link" then
+			return false
+		end
+
+		local target = vim.uv.fs_realpath(link)
+		return target ~= nil and (path == target or path:sub(1, #target + 1) == target .. "/")
+	end, { path = cwd, limit = 1 })
+	local link = matches[1]
+	if not link then
+		return nil
+	end
+
+	local target = vim.uv.fs_realpath(link)
+	return link .. path:sub(#target + 1)
+end
+
 local function get_ctx()
 	local bufnr = vim.api.nvim_win_get_buf(0)
-	local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":.")
+	local name = vim.api.nvim_buf_get_name(bufnr)
+	local path = vim.fn.fnamemodify(path_through_cwd_symlink(bufnr, name) or name, ":.")
 	local pos = vim.api.nvim_win_get_cursor(0)
 	local row = pos[1]
 	local col = pos[2]
