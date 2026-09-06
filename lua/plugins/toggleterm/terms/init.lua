@@ -88,10 +88,14 @@ local function subscribe(listener)
 end
 
 subscribe(function(event, item)
-	if event.type == "create" or event.type == "focus" then
+	if event.type == "create" then
+		history.insert(item)
+	elseif event.type == "focus" then
+		item.seen = true
 		history.insert(item)
 	elseif event.type == "status" and event.value ~= item.status then
 		item.status = event.value
+		item.seen = event.seen == true or item.term.is_in_view()
 		config.on_status(item)
 	elseif event.type == "url" then
 		item.term.url = event.value
@@ -119,6 +123,7 @@ end
 
 local function make_item(item, cb)
 	item.status = "idle"
+	item.seen = true
 	item.instance_count = vim.v.count1
 	item.screen_manifest = screen_manifests[item.key]
 	if not item.hash then

@@ -1,6 +1,7 @@
 local M = {}
 
 local detect_status = require("plugins.toggleterm.terms.screen_status").detect
+local is_in_view = require("plugins.toggleterm.terms.window").is_in_view
 
 local function get_local_url(line)
 	local url = vim.fn.matchstr(line, [[\vhttps?://%([\w.-]*localhost|127\.0\.0\.1)%([:/?#]\S*)?%(\s|$)@=]])
@@ -47,6 +48,7 @@ function M.attach_term(term, send, screen_manifest)
 			send({
 				type = "status",
 				value = status,
+				seen = is_in_view(term.window) == true,
 			})
 		end
 	end

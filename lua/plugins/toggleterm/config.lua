@@ -24,7 +24,9 @@ return {
 			fd:close()
 		end
 
-		notify.notify(msg)
+		if not item.seen then
+			notify.notify(msg)
+		end
 	end,
 
 	lang_to_REPL = {

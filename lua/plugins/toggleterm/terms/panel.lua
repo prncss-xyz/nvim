@@ -149,6 +149,13 @@ local function focus_selected(state)
 	end
 end
 
+local function restart_selected(state)
+	local selected = state.rows[vim.api.nvim_win_get_cursor(state.win)[1]]
+	if selected and selected.item then
+		selected.item.term.restart()
+	end
+end
+
 local function get_dependencies(history, subscribe)
 	return {
 		items = function(query)
@@ -192,6 +199,9 @@ local function open(query, history, subscribe)
 
 	vim.keymap.set("n", "<CR>", function()
 		focus_selected(state)
+	end, { buffer = buf, silent = true, nowait = true })
+	vim.keymap.set("n", "r", function()
+		restart_selected(state)
 	end, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "q", function()
 		close(state)

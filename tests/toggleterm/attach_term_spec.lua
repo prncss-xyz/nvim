@@ -52,9 +52,9 @@ T["attach terminal"]["emits status transitions with their visibility"] = functio
 	]])
 
 	assert.same({
-		{ type = "status", value = "idle" },
-		{ type = "status", value = "working" },
-		{ type = "status", value = "idle" },
+		{ type = "status", value = "idle", seen = true },
+		{ type = "status", value = "working", seen = false },
+		{ type = "status", value = "idle", seen = true },
 	}, child.lua_get("result"))
 end
 
@@ -91,8 +91,8 @@ T["attach terminal"]["checks status during continuous output"] = function()
 	]])
 
 	assert.same({
-		{ type = "status", value = "idle" },
-		{ type = "status", value = "working" },
+		{ type = "status", value = "idle", seen = false },
+		{ type = "status", value = "working", seen = false },
 	}, child.lua_get("result"))
 end
 

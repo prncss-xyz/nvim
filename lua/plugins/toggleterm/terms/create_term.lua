@@ -50,6 +50,7 @@ function M.create_term(opts, send, prepare, min_runtime)
 	}
 	opts_.dir = opts_.dir or vim.fn.getcwd()
 	opts_.on_open = function()
+		send({ type = "focus" })
 		vim.schedule(function()
 			vim.cmd.startinsert()
 		end)
