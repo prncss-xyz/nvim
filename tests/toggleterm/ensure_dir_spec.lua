@@ -10,8 +10,10 @@ local T = MiniTest.new_set({
 					local cwd = vim.fn.getcwd()
 					local bufnr = vim.api.nvim_get_current_buf()
 					vim.api.nvim_buf_set_name(bufnr, "/shared/artifacts/feature/spec.md")
-					vim.b[bufnr].my_rooter_symlink_cwd = associated_cwd
 
+					package.loaded["my.logical_path"] = {
+						cwd = function() return associated_cwd end,
+					}
 					package.loaded["plugins.toggleterm.terms.window"] = {
 						get_path = function() return "README.md" end,
 						create = function(path) table.insert(calls.create, path) end,
@@ -43,6 +45,7 @@ T["opens a file when the requested path has no remembered window"] = function()
 		local cwd = vim.fn.getcwd()
 		local created
 		vim.api.nvim_buf_set_name(0, "/outside/repo/file.md")
+		package.loaded["my.logical_path"] = { cwd = function() return nil end }
 		package.loaded["plugins.toggleterm.terms.window"] = {
 			get_path = function() return nil end,
 			create = function(path) created = path end,

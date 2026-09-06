@@ -1,6 +1,7 @@
 local M = {}
 
 local window = require("plugins.toggleterm.terms.window")
+local logical_path = require("my.logical_path")
 local get_last_file_win = require("my.windows").get_last_file_win
 
 local function get_absolute_path(path, dir)
@@ -21,7 +22,7 @@ function M.ensure_dir(dir)
 	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
 		local bufnr = vim.api.nvim_win_get_buf(win)
 		if vim.bo[bufnr].buftype == "" then
-			local associated_cwd = vim.b[bufnr].my_rooter_symlink_cwd
+			local associated_cwd = logical_path.cwd(bufnr)
 			if associated_cwd and get_absolute_path(associated_cwd, cwd) == absolute_dir then
 				return
 			end

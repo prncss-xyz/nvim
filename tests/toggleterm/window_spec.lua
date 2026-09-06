@@ -20,7 +20,7 @@ T["uses the cwd symlink path for a resolved buffer"] = function()
 		vim.uv.fs_symlink(target, view .. "/.artifacts", { dir = true })
 		vim.cmd.cd(vim.fn.fnameescape(view))
 		vim.api.nvim_buf_set_name(0, target .. "/feature/spec.md")
-		vim.b.my_rooter_symlink_cwd = view
+		require("my.logical_path").capture(0)
 
 		local path = require("plugins.toggleterm.terms.window").get_ctx().path
 		vim.fn.delete(base, "rf")

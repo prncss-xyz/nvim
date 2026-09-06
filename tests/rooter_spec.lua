@@ -5,6 +5,7 @@ local T = MiniTest.new_set({
 		pre_case = function()
 			child.restart({ "-u", "NONE" })
 			child.lua([[
+				package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 				local rooter_plugin_path = vim.fn.getcwd() .. "/plugin/rooter.lua"
 
 				function run_rooter_case(config)
@@ -60,7 +61,7 @@ local T = MiniTest.new_set({
 						callback()
 					end
 
-					return { calls = calls, saved = vim.b.my_rooter_symlink_cwd }
+					return { calls = calls, saved = require("my.logical_path").cwd(0) }
 				end
 			]])
 		end,

@@ -121,6 +121,15 @@ return {
 				desc = "Pick Buffer",
 			},
 			{
+				pick .. reverse(theme.buffers),
+				function()
+          -- TODO: I would like this to list all working dirictories of opened projects
+          -- and pick would open a buffer (the most recently accessed) of one of them
+					projects.pick_project()
+				end,
+				desc = "Pick Opened Project",
+			},
+			{
 				pick .. reverse(theme.project),
 				function()
 					projects.pick_worktree()
