@@ -150,11 +150,6 @@ local gt_item = utils.compose_gt(
 	utils.gt_field("instance_count", 0)
 )
 
-local function sort_items(items)
-	table.sort(items, lt_item)
-	return items
-end
-
 local function normalize_query(query)
 	query = vim.tbl_extend("keep", query or {}, {})
 	query.instance_count = vim.v.count > 0 and vim.v.count or nil
@@ -173,7 +168,8 @@ local function with_query(query, cb)
 	query = normalize_query(query)
 	local filter = get_query_fn(query)
 	if query.prompt then
-		local items = sort_items(history.filter(filter))
+		local items = history.filter(filter)
+		table.sort(items, lt_item)
 		if #items > 0 then
 			return vim.ui.select(items, {
 				prompt = query.prompt,
@@ -184,7 +180,8 @@ local function with_query(query, cb)
 				end
 			end)
 		end
-		items = sort_items(utils.all_of(get_query_commands(query, filter)))
+		items = utils.all_of(get_query_commands(query, filter))
+		table.sort(items, lt_item)
 		return vim.ui.select(items, {
 			prompt = query.prompt,
 			format_item = format_item(query.dir == vim.env.HOME),
@@ -219,7 +216,7 @@ function M.run(query)
 		end)
 		table.insert(choices, res or item)
 	end
-	sort_items(choices)
+	table.sort(choices, lt_item)
 	vim.ui.select(choices, {
 		prompt = "Select Command: ",
 		format_item = local_format_item,
@@ -312,9 +309,10 @@ function M.read(hash, opts, cb)
 end
 
 function M.browse()
-	local items = sort_items(history.filter(function(item)
+	local items = history.filter(function(item)
 		return item.term and item.term.url
-	end))
+	end)
+	table.sort(items, lt_item)
 	vim.ui.select(items, {
 		prompt = "Select Terminal URL",
 		format_item = function(item)

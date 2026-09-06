@@ -123,8 +123,8 @@ return {
 			{
 				pick .. reverse(theme.buffers),
 				function()
-          -- TODO: I would like this to list all working dirictories of opened projects
-          -- and pick would open a buffer (the most recently accessed) of one of them
+					-- TODO: I would like this to list all working dirictories of opened projects
+					-- and pick would open a buffer (the most recently accessed) of one of them
 					projects.pick_project()
 				end,
 				desc = "Pick Opened Project",
@@ -279,7 +279,7 @@ return {
 			{
 				pick .. "a",
 				function()
-					Snacks.picker.files({ cwd = "./.artifacts" })
+					Snacks.picker.files({ cwd = dirs.artifacts })
 				end,
 				desc = "Pick Artifact File",
 			},

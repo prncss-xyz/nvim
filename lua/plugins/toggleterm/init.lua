@@ -202,6 +202,14 @@ return {
 				mode = "n",
 			},
 			{
+				"m" .. reverse("a"),
+				function()
+					require("plugins.toggleterm.terms").rerun({ tag = "agent" })
+				end,
+				desc = "Rerun Agent",
+				mode = "n",
+			},
+			{
 				"ma",
 				function()
 					require("plugins.toggleterm.put.init").put_selection()
