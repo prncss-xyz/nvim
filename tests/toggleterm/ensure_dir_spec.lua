@@ -38,4 +38,24 @@ T["replaces an artifact buffer associated with another cwd"] = function()
 	assert.same({ vim.fs.joinpath(vim.fn.getcwd(), "README.md") }, calls.create)
 end
 
+T["opens a file when the requested path has no remembered window"] = function()
+	child.lua([[
+		local cwd = vim.fn.getcwd()
+		local created
+		vim.api.nvim_buf_set_name(0, "/outside/repo/file.md")
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			get_path = function() return nil end,
+			create = function(path) created = path end,
+		}
+		package.loaded["my.windows"] = {
+			get_last_file_win = function() return vim.api.nvim_get_current_win() end,
+		}
+		dofile(cwd .. "/lua/plugins/toggleterm/terms/ensure_dir.lua").ensure_dir(cwd)
+		result = created
+	]])
+
+	local first = vim.fn.system({ "git", "-C", vim.fn.getcwd(), "ls-files" }):match("[^\n]+")
+	assert.same(vim.fs.joinpath(vim.fn.getcwd(), first), child.lua_get("result"))
+end
+
 return T

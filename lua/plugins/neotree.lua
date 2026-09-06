@@ -65,6 +65,9 @@ return {
 					file = "warn",
 				},
 				filesystem = {
+					-- Keep Neo-tree's built-in handler disabled: it prompts to change the
+					-- root when the current buffer is outside the tree. The custom
+					-- VIM_BUFFER_ENTER handler below follows files only within the root.
 					follow_current_file = {
 						enabled = false,
 					},
@@ -187,10 +190,8 @@ return {
 					{
 						event = events.VIM_BUFFER_ENTER,
 						handler = function(args)
-							if vim.b[args.buf].my_rooter_symlink_cwd ~= nil then
-								return
-							end
-							if require("neo-tree.utils").is_real_file(args.afile) then
+							local path = vim.api.nvim_buf_get_name(args.buf)
+							if require("neo-tree.utils").is_real_file(path) then
 								require("neo-tree.sources.filesystem").follow()
 							end
 						end,

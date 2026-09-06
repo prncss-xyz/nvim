@@ -12,6 +12,7 @@ local move = domain.move
 local git = domain.git
 local projects = require("plugins.snacks.projects")
 local auto_confirm = require("plugins.snacks.auto_confirm")
+local create_file = require("plugins.snacks.create_file")
 local dirs = require("my.parameters").dirs
 
 return {
@@ -31,6 +32,14 @@ return {
 					config = auto_confirm.config,
 					enabled = true,
 					actions = {
+						create_file = {
+							action = create_file.create,
+							desc = "create file",
+						},
+						use_focused_path = {
+							action = create_file.use_focused_path,
+							desc = "use focused path",
+						},
 						open_project = {
 							action = function(picker)
 								local cwd = vim.fn.getcwd()
@@ -51,6 +60,8 @@ return {
 					win = {
 						input = {
 							keys = {
+								["<c-cr>"] = { "create_file", mode = { "n", "i" } },
+								["<c-g>"] = { "use_focused_path", mode = { "n", "i" } },
 								["<c-u>"] = { "<c-u>", mode = { "i" }, expr = true, desc = "delete line before" },
 								["<c-t>"] = {
 									"trouble_open",

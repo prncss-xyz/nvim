@@ -26,6 +26,7 @@ function M.create_term(opts, send, prepare, min_runtime)
 	local reopen_after_restart = false
 	local original_on_create = opts_.on_create
 	local attached_bufnr
+	local reset_status_detection
 	local attachment_generation = 0
 	local function attach_status(term)
 		if not term.bufnr or term.bufnr <= 0 or term.bufnr == attached_bufnr then
@@ -35,7 +36,7 @@ function M.create_term(opts, send, prepare, min_runtime)
 		attached_bufnr = term.bufnr
 		attachment_generation = attachment_generation + 1
 		local generation = attachment_generation
-		attach_term(term, function(event)
+		reset_status_detection = attach_term(term, function(event)
 			if generation == attachment_generation then
 				send(event)
 			end
@@ -68,10 +69,6 @@ function M.create_term(opts, send, prepare, min_runtime)
 		if shutting_down then
 			return
 		end
-		send({
-			type = "status",
-			value = exit_code == 0 and "success" or "failure",
-		})
 		if restart_requested or kill_requested then
 			local should_restart = restart_requested
 			restart_requested = false
@@ -93,6 +90,10 @@ function M.create_term(opts, send, prepare, min_runtime)
 			end)
 			return
 		end
+		send({
+			type = "status",
+			value = exit_code == 0 and "success" or "failure",
+		})
 		local runtime = started_at and (vim.uv.hrtime() - started_at) / 1000000 or 0
 		if exit_policy ~= "restart" or exit_code == 0 or runtime < (min_runtime or 0) or restart_scheduled then
 			return
@@ -188,6 +189,10 @@ function M.create_term(opts, send, prepare, min_runtime)
 			if restart_requested or kill_requested then
 				return
 			end
+			if reset_status_detection then
+				reset_status_detection()
+			end
+			send({ type = "status", value = "idle" })
 			reopen_after_restart = is_visible(term.window)
 			restart_requested = true
 			if term.job_id and vim.fn.jobwait({ term.job_id }, 0)[1] == -1 then

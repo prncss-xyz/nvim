@@ -6,6 +6,7 @@ local format_item = require("plugins.toggleterm.terms.format_item").format_item(
 local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
 
 local states = {}
+local highlight_namespace = vim.api.nvim_create_namespace("toggleterm-panel")
 local empty_message = "No matching terminals"
 local last_query = {}
 
@@ -50,40 +51,114 @@ local function close(state)
 	end
 end
 
-local function format_dir(dir)
+local function display_path(dir)
 	local home = vim.env.HOME
 	if dir == home then
 		return "~"
 	end
-	if dir and home and dir:sub(1, #home + 1) == home .. "/" then
+	if home and dir:sub(1, #home + 1) == home .. "/" then
 		return "~/" .. dir:sub(#home + 2)
 	end
-	return dir or ""
+	return dir
+end
+
+local function path_steps(dir)
+	local home = vim.env.HOME
+	local root = dir:sub(1, 1) == "/" and "/" or nil
+	local path = root
+	local rest = root and dir:sub(2) or dir
+
+	if home and (dir == home or dir:sub(1, #home + 1) == home .. "/") then
+		root = "~"
+		path = home
+		rest = dir:sub(#home + 2)
+	end
+
+	local steps = {}
+	if root then
+		table.insert(steps, { name = root, path = path })
+	end
+	for name in rest:gmatch("[^/]+") do
+		path = path == "/" and path .. name or (path and path .. "/" .. name or name)
+		table.insert(steps, { name = name, path = path })
+	end
+	return steps
 end
 
 local function create_rows(items, format)
-	local groups = {}
-	local dirs = {}
+	local root = { children = {}, items = {} }
 	for _, item in ipairs(items) do
-		if not groups[item.dir] then
-			groups[item.dir] = {}
-			table.insert(dirs, item.dir)
+		local node = root
+		for _, step in ipairs(path_steps(item.dir)) do
+			if not node.children[step.name] then
+				node.children[step.name] = { children = {}, dir = step.path, name = step.name, items = {} }
+			end
+			node = node.children[step.name]
 		end
-		table.insert(groups[item.dir], item)
+		table.insert(node.items, item)
 	end
 
-	table.sort(dirs)
-
 	local rows = {}
-	for _, dir in ipairs(dirs) do
-		table.insert(rows, { dir = dir, text = format_dir(dir) })
-		for _, item in ipairs(groups[dir]) do
+	local function append_items(node, depth)
+		table.sort(node.items, function(a, b)
+			local a_key = a.key or ""
+			local b_key = b.key or ""
+			if a_key ~= b_key then
+				return a_key < b_key
+			end
+			return (a.instance_count or 0) < (b.instance_count or 0)
+		end)
+		for _, item in ipairs(node.items) do
+			local highlight = "NeoTreeFileName"
+			if item.status == "failure" then
+				highlight = "DiagnosticError"
+			elseif item.seen == false then
+				highlight = "DiagnosticWarn"
+			end
 			table.insert(rows, {
 				hash = item.hash,
 				item = item,
-				text = "  " .. format(item) .. " (" .. item.status .. ")",
+				text = string.rep("  ", depth) .. format(item) .. " (" .. item.status .. ")",
+				highlight = highlight,
 			})
 		end
+	end
+	local function append_directory(node, depth, name)
+		local indent = string.rep("  ", depth)
+		table.insert(rows, {
+			dir = node.dir,
+			text = indent .. "󰉋 " .. name,
+			highlights = {
+				{ group = "NeoTreeDirectoryIcon", start_col = #indent, end_col = #indent + #"󰉋" },
+				{ group = "NeoTreeDirectoryName", start_col = #indent + #"󰉋 ", end_col = -1 },
+			},
+		})
+	end
+	local function append(node, depth)
+		local names = vim.tbl_keys(node.children)
+		table.sort(names)
+		for _, name in ipairs(names) do
+			local child = node.children[name]
+			append_directory(child, depth, child.name)
+			append(child, depth + 1)
+			append_items(child, depth + 1)
+		end
+	end
+
+	local common = root
+	while #common.items == 0 do
+		local names = vim.tbl_keys(common.children)
+		if #names ~= 1 then
+			break
+		end
+		common = common.children[names[1]]
+	end
+	if common ~= root then
+		append_directory(common, 0, display_path(common.dir))
+		append(common, 1)
+		append_items(common, 1)
+	else
+		append(root, 0)
 	end
 	return rows
 end
@@ -106,6 +181,21 @@ local function render(state)
 	vim.bo[state.buf].modifiable = true
 	vim.api.nvim_buf_set_lines(state.buf, 0, -1, false, lines)
 	vim.bo[state.buf].modifiable = false
+	vim.api.nvim_buf_clear_namespace(state.buf, highlight_namespace, 0, -1)
+	for index, row in ipairs(rows) do
+		if row.highlight then
+			vim.api.nvim_buf_set_extmark(state.buf, highlight_namespace, index - 1, 0, {
+				end_col = #row.text,
+				hl_group = row.highlight,
+			})
+		end
+		for _, highlight in ipairs(row.highlights or {}) do
+			vim.api.nvim_buf_set_extmark(state.buf, highlight_namespace, index - 1, highlight.start_col, {
+				end_col = highlight.end_col == -1 and #row.text or highlight.end_col,
+				hl_group = highlight.group,
+			})
+		end
+	end
 	state.rows = rows
 	state.selected_hash = hash
 
@@ -113,12 +203,10 @@ local function render(state)
 		return
 	end
 	local target = 1
-	if hash then
-		for index, row in ipairs(rows) do
-			if row.hash == hash then
-				target = index
-				break
-			end
+	for index, row in ipairs(rows) do
+		if (hash and row.hash == hash) or (not hash and row.item) then
+			target = index
+			break
 		end
 	end
 	vim.api.nvim_win_set_cursor(state.win, { math.min(target, #lines), 0 })
@@ -156,19 +244,38 @@ local function restart_selected(state)
 	end
 end
 
-local function get_dependencies(history, subscribe)
+local function kill_selected(state)
+	local selected = state.rows[vim.api.nvim_win_get_cursor(state.win)[1]]
+	if selected and selected.item then
+		selected.item.term.kill()
+	end
+end
+
+local function create_in_selected_dir(state)
+	local selected = state.rows[vim.api.nvim_win_get_cursor(state.win)[1]]
+	if not selected then
+		return
+	end
+	local dir = selected.item and selected.item.dir or selected.dir
+	if dir and state.deps.create_in_dir then
+		state.deps.create_in_dir(dir)
+	end
+end
+
+local function get_dependencies(history, subscribe, create_in_dir)
 	return {
 		items = function(query)
 			return history.filter(get_query_fn(query))
 		end,
 		subscribe = subscribe,
+		create_in_dir = create_in_dir,
 		format = format_item,
 		width = config.width,
 	}
 end
 
-local function open(query, history, subscribe)
-	local deps = get_dependencies(history, subscribe)
+local function open(query, history, subscribe, create_in_dir)
+	local deps = get_dependencies(history, subscribe, create_in_dir)
 	local tab = current_tab()
 	vim.cmd(string.format("topleft %dvsplit", deps.width))
 	local win = vim.api.nvim_get_current_win()
@@ -203,6 +310,12 @@ local function open(query, history, subscribe)
 	vim.keymap.set("n", "r", function()
 		restart_selected(state)
 	end, { buffer = buf, silent = true, nowait = true })
+	vim.keymap.set("n", "x", function()
+		kill_selected(state)
+	end, { buffer = buf, silent = true, nowait = true })
+	vim.keymap.set("n", "n", function()
+		create_in_selected_dir(state)
+	end, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "q", function()
 		close(state)
 	end, { buffer = buf, silent = true, nowait = true })
@@ -222,7 +335,7 @@ local function open(query, history, subscribe)
 	render(state)
 end
 
-function M.toggle(query, history, subscribe)
+function M.toggle(query, history, subscribe, create_in_dir)
 	last_query = vim.deepcopy(query or {})
 	local tab = current_tab()
 	local state = states[tab]
@@ -233,10 +346,10 @@ function M.toggle(query, history, subscribe)
 	if state then
 		release(state)
 	end
-	open(last_query, history, subscribe)
+	open(last_query, history, subscribe, create_in_dir)
 end
 
-function M.open(history, subscribe)
+function M.open(history, subscribe, create_in_dir)
 	local tab = current_tab()
 	local state = states[tab]
 	if state and valid_win(state.win) then
@@ -246,7 +359,7 @@ function M.open(history, subscribe)
 	if state then
 		release(state)
 	end
-	open(last_query, history, subscribe)
+	open(last_query, history, subscribe, create_in_dir)
 end
 
 return M

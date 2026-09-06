@@ -140,12 +140,20 @@ local function make_item(item, cb)
 	create_and_notify(item, cb)
 end
 
+local lt_item =
+	utils.compose_gt(utils.lt_field("dir", ""), utils.lt_field("key", ""), utils.lt_field("instance_count", 0))
+
 local gt_item = utils.compose_gt(
 	utils.gt_field("priority", 0),
-	utils.lt_field("instance_count"),
-	utils.gt_field("key"),
-	utils.gt_field("dir")
+	utils.gt_field("dir", ""),
+	utils.gt_field("key", ""),
+	utils.gt_field("instance_count", 0)
 )
+
+local function sort_items(items)
+	table.sort(items, lt_item)
+	return items
+end
 
 local function normalize_query(query)
 	query = vim.tbl_extend("keep", query or {}, {})
@@ -158,7 +166,7 @@ local function with_query(query, cb)
 	query = normalize_query(query)
 	local filter = get_query_fn(query)
 	if query.prompt then
-		local items = history.filter(filter)
+		local items = sort_items(history.filter(filter))
 		if #items > 0 then
 			return vim.ui.select(items, {
 				prompt = query.prompt,
@@ -169,7 +177,7 @@ local function with_query(query, cb)
 				end
 			end)
 		end
-		items = utils.all_of(get_commands(filter))
+		items = sort_items(utils.all_of(get_commands(filter)))
 		return vim.ui.select(items, {
 			prompt = query.prompt,
 			format_item = format_item(query.dir == vim.env.HOME),
@@ -203,9 +211,7 @@ function M.run(query)
 		end)
 		table.insert(choices, res or item)
 	end
-	table.sort(choices, function(a, b)
-		return local_format_item(a) < local_format_item(b)
-	end)
+	sort_items(choices)
 	vim.ui.select(choices, {
 		prompt = "Select Command: ",
 		format_item = local_format_item,
@@ -257,12 +263,16 @@ end
 function M.toggle_panel(query)
 	query = normalize_query(query)
 	require("my.ui_toggle").activate("toggleterm", function()
-		require("plugins.toggleterm.terms.panel").toggle(query, history, subscribe)
+		require("plugins.toggleterm.terms.panel").toggle(query, history, subscribe, function(dir)
+			M.focus({ dir = dir, prompt = "Select Command: " })
+		end)
 	end)
 end
 
 function M.raise_panel()
-	require("plugins.toggleterm.terms.panel").open(history, subscribe)
+	require("plugins.toggleterm.terms.panel").open(history, subscribe, function(dir)
+		M.focus({ dir = dir, prompt = "Select Command: " })
+	end)
 end
 
 function M.prepare(query)
@@ -294,9 +304,9 @@ function M.read(hash, opts, cb)
 end
 
 function M.browse()
-	local items = history.filter(function(item)
+	local items = sort_items(history.filter(function(item)
 		return item.term and item.term.url
-	end)
+	end))
 	vim.ui.select(items, {
 		prompt = "Select Terminal URL",
 		format_item = function(item)

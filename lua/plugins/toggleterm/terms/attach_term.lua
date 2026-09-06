@@ -85,6 +85,9 @@ function M.attach_term(term, send, screen_manifest)
 	})
 
 	schedule_status_update(term.bufnr)
+	return function()
+		last_status = nil
+	end
 end
 
 return M

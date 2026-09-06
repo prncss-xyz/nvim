@@ -34,7 +34,7 @@ function M.ensure_dir(dir)
 	end
 
 	local path = window.get_path(dir)
-	if not dir then
+	if not path then
 		path = dir .. "/README.md"
 		if vim.fn.filereadable(path) ~= 1 then
 			local ls_output = vim.fn.system({ "git", "-C", dir, "ls-files" })

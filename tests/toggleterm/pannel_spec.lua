@@ -77,22 +77,22 @@ T["terminal panel"]["toggles a filtered side panel and focuses the selected term
 	assert.same({
 		opened = {
 			filetype = "toggleterm-panel",
-			lines = { "working Agent one" },
+			lines = { "󰉋 /tmp/one", "  working Agent one (working)" },
 			winfixwidth = true,
 			width = 24,
 		},
 		focused = { "agent:one" },
 		closed = true,
 		unsubscribed = true,
-		reopened_lines = { "working Agent one" },
+		reopened_lines = { "󰉋 /tmp/one", "  working Agent one (working)" },
 	}, child.lua_get("result"))
 end
 
 T["terminal panel"]["refreshes from events and preserves selection by hash"] = function()
 	child.lua([[
 		local items = {
-			{ hash = "one", key = "agent", instance_count = 1, display_name = "One", status = "idle", term = { focus = function() end } },
-			{ hash = "two", key = "agent", instance_count = 2, display_name = "Two", status = "working", term = { focus = function() end } },
+			{ hash = "one", key = "agent", instance_count = 1, display_name = "One", dir = "/tmp", status = "idle", term = { focus = function() end } },
+			{ hash = "two", key = "agent", instance_count = 2, display_name = "Two", dir = "/tmp", status = "working", term = { focus = function() end } },
 		}
 		local listener
 		local history = {
@@ -109,12 +109,12 @@ T["terminal panel"]["refreshes from events and preserves selection by hash"] = f
 		local panel = require("plugins.toggleterm.terms.panel")
 		panel.toggle({}, history, subscribe)
 		local win = vim.api.nvim_get_current_win()
-		vim.api.nvim_win_set_cursor(win, { 2, 0 })
+		vim.api.nvim_win_set_cursor(win, { 3, 0 })
 		items[2].status = "blocked"
 		items = { items[2], items[1] }
 		listener({ type = "status" })
 		vim.wait(100, function()
-			return vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(win), 0, 1, false)[1] == "two:blocked"
+			return vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(win), 1, 2, false)[1] == "two:blocked (blocked)"
 		end)
 		result = {
 			lines = vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(win), 0, -1, false),
@@ -123,8 +123,38 @@ T["terminal panel"]["refreshes from events and preserves selection by hash"] = f
 	]])
 
 	assert.same({
-		lines = { "two:blocked", "one:idle" },
-		cursor = { 1, 0 },
+		lines = { "󰉋 /tmp", "  one:idle (idle)", "  two:blocked (blocked)" },
+		cursor = { 3, 0 },
+	}, child.lua_get("result"))
+end
+
+T["terminal panel"]["highlights directories and terminal states"] = function()
+	child.lua([[
+		local items = {
+			{ hash = "default", dir = "/tmp", status = "idle", seen = true, term = { focus = function() end } },
+			{ hash = "unseen", dir = "/tmp", status = "working", seen = false, term = { focus = function() end } },
+			{ hash = "failure", dir = "/tmp", status = "failure", seen = false, term = { focus = function() end } },
+		}
+		local history = { filter = function() return items end }
+		local function subscribe() return function() end end
+		package.loaded["plugins.toggleterm.config"] = { panel = { width = 24 } }
+		package.loaded["plugins.toggleterm.terms.format_item"] = {
+			format_item = function() return function(item) return item.hash end end,
+		}
+		local panel = require("plugins.toggleterm.terms.panel")
+		panel.toggle({}, history, subscribe)
+		local marks = vim.api.nvim_buf_get_extmarks(vim.api.nvim_get_current_buf(), -1, 0, -1, { details = true })
+		result = vim.tbl_map(function(mark)
+			return { row = mark[2] + 1, group = mark[4].hl_group }
+		end, marks)
+	]])
+
+	assert.same({
+		{ row = 1, group = "NeoTreeDirectoryIcon" },
+		{ row = 1, group = "NeoTreeDirectoryName" },
+		{ row = 2, group = "NeoTreeFileName" },
+		{ row = 3, group = "DiagnosticWarn" },
+		{ row = 4, group = "DiagnosticError" },
 	}, child.lua_get("result"))
 end
 
