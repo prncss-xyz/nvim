@@ -94,13 +94,20 @@ T["pseudo terminal"] = MiniTest.new_set()
 
 T["pseudo terminal"]["toggles the artifact index without querying terminals"] = function()
 	child.lua([[local toggled = 0
-		package.loaded["my.create"] = {
-			artifact_index = function() toggled = toggled + 1 end,
+		package.loaded["my.parameters"] = {
+			dirs = {
+				projects = vim.fs.dirname(vim.fs.dirname(vim.fn.getcwd())),
+				artifacts = vim.fn.tempname(),
+			},
 		}
 		package.loaded["plugins.toggleterm.terms.create_term"] = {
 			create_term = function() error("artifact must not create a terminal") end,
 		}
-		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["plugins.toggleterm.config"] = {
+			autostart = {},
+			on_status = function() end,
+			create = function() toggled = toggled + 1 end,
+		}
 		package.loaded["plugins.toggleterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not query terminal commands") end,
 		}

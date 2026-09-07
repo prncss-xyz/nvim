@@ -4,6 +4,7 @@ local notify = require("my.notify")
 
 return {
 	min_runtime = 10000,
+	create = require("my.create").create,
 	panel = {
 		width = 40,
 	},

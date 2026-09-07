@@ -62,6 +62,25 @@ end
 
 local artifact
 
+local function toggle_artifact()
+	local current = vim.fs.normalize(vim.api.nvim_buf_get_name(0))
+	local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
+	local dir = artifact_cwd.resolve(current) or assert(vim.uv.fs_realpath(vim.fn.getcwd()))
+	local dirs = require("my.parameters").dirs
+	local project_path = assert(vim.fs.relpath(dirs.projects, dir))
+	local project_name = assert(vim.split(project_path, "/", { plain = true, trimempty = true })[1])
+	local artifact_dir = vim.fs.joinpath(dirs.artifacts, project_name)
+	local target = vim.fs.joinpath(artifact_dir, "index.md")
+
+	if current == target then
+		require("plugins.toggleterm.terms.ensure_dir").ensure_dir_excluding(dir, { artifact_dir })
+		return
+	end
+
+	vim.fn.mkdir(artifact_dir, "p")
+	require("plugins.toggleterm.config").create(vim.fn.fnameescape(target))
+end
+
 local function send_to_artifact(str)
 	local dir = project_dir()
 	local target = latest_artifact(dir)
@@ -93,9 +112,7 @@ artifact = {
 	key = "artifact",
 	tag = "agent",
 	focus = focus_artifact,
-	toggle = function()
-		require("my.create").artifact_index()
-	end,
+	toggle = toggle_artifact,
 	send_str = send_to_artifact,
 }
 artifact.term = artifact
