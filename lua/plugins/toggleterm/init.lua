@@ -247,7 +247,7 @@ return {
 			{
 				"me",
 				function()
-					require("plugins.toggleterm.put.init").put_file_name()
+					require("plugins.toggleterm.put.init").put_file_name({ key = "artifact" })
 				end,
 				desc = "Put Current File Path",
 				mode = "n",
