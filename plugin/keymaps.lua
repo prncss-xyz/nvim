@@ -189,7 +189,7 @@ end, { desc = "Toggle Conceal Cursor" })
 vim.keymap.set({ "i", "s", "c" }, "<c-v>", "<c-r><c-+>", { desc = "Paste" })
 
 vim.keymap.set("n", domain.move .. "a", function()
-	require("my.create").artifact_index()
+	require("plugins.toggleterm.terms").toggle({ key = "artifact" })
 end, { desc = "Artifact Index" })
 
 vim.keymap.set("n", domain.move .. "v", function()

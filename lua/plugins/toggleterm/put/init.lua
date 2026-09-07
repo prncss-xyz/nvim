@@ -1,7 +1,7 @@
 local M = {}
 
 function M.put_file_name()
-	require("plugins.toggleterm.terms").send_str({ tag = "agent" }, require("plugins.toggleterm.put.position").path)
+	require("plugins.toggleterm.terms").send_str({ key = "artifact" }, require("plugins.toggleterm.put.position").path)
 end
 
 function M.put_file_line()

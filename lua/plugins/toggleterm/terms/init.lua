@@ -8,6 +8,7 @@ local utils = require("plugins.toggleterm.terms.utils")
 local commands = require("plugins.toggleterm.terms.get_commands")
 local get_commands = commands.get_commands
 local format_item = require("plugins.toggleterm.terms.format_item").format_item
+local pseudo_terminal = require("plugins.toggleterm.terms.pseudo_terminal")
 local visit = require("my.browser").visit
 
 local screen_manifests = {
@@ -184,10 +185,6 @@ local gt_item = utils.compose_gt(
 	utils.gt_field("instance_count", 0)
 )
 
-local function is_artifact_query(query)
-	return query and query.key == "artifact"
-end
-
 local function normalize_query(query)
 	query = vim.tbl_extend("keep", query or {}, {})
 	query.instance_count = vim.v.count > 0 and vim.v.count or nil
@@ -203,8 +200,9 @@ local function get_query_commands(query, filter)
 end
 
 local function with_query(query, cb)
-	if is_artifact_query(query) then
-		return
+	local pseudo = pseudo_terminal.from_query(query)
+	if pseudo then
+		return cb(pseudo)
 	end
 	query = normalize_query(query)
 	if query.instance_count then
@@ -253,8 +251,9 @@ end
 local local_format_item = format_item(false)
 
 function M.run(query)
-	if is_artifact_query(query) then
-		return
+	local pseudo = pseudo_terminal.from_query(query)
+	if pseudo then
+		return pseudo.run()
 	end
 	query = normalize_query(query)
 	if query.instance_count then
@@ -296,8 +295,9 @@ function M.focus(query)
 end
 
 function M.rerun(query)
-	if is_artifact_query(query) then
-		return
+	local pseudo = pseudo_terminal.from_query(query)
+	if pseudo then
+		return pseudo.rerun()
 	end
 	query = normalize_query(query)
 	local filter = query.instance_count and get_query_fn({ instance_count = query.instance_count })
@@ -327,8 +327,9 @@ function M.toggle(query)
 end
 
 function M.toggle_unseen_or_latest(query)
-	if is_artifact_query(query) then
-		return
+	local pseudo = pseudo_terminal.from_query(query)
+	if pseudo then
+		return pseudo.toggle_unseen_or_latest()
 	end
 	query = normalize_query(query)
 	if query.instance_count then
@@ -357,8 +358,9 @@ function M.toggle_unseen_or_latest(query)
 end
 
 function M.toggle_panel(query)
-	if is_artifact_query(query) then
-		return
+	local pseudo = pseudo_terminal.from_query(query)
+	if pseudo then
+		return pseudo.toggle_panel()
 	end
 	query = normalize_query(query)
 	require("my.ui_toggle").activate("toggleterm", function()
@@ -378,59 +380,10 @@ function M.prepare(query)
 	with_query(query, prepare)
 end
 
-local function buffer_context(path, cwd)
-	local bufnr = vim.fn.bufnr(path)
-	if bufnr < 0 then
-		return nil
-	end
-	local row, col = unpack(vim.api.nvim_buf_get_mark(bufnr, '"'))
-	for _, win in ipairs(vim.fn.win_findbuf(bufnr)) do
-		row, col = unpack(vim.api.nvim_win_get_cursor(win))
-		break
-	end
-	return {
-		bufnr = bufnr,
-		path = vim.fs.relpath(cwd, path) or path,
-		row = math.max(row, 1),
-		col = col + 1,
-	}
-end
-
-local function send_to_artifact(str)
-	local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
-	local current = vim.api.nvim_buf_get_name(0)
-	local project_dir = artifact_cwd.resolve(current) or vim.fn.getcwd()
-	local artifacts_dir = artifact_cwd.project_artifacts(project_dir)
-	if artifacts_dir == nil then
-		return
-	end
-	local target = require("my.project_file").find(artifacts_dir)
-	if target == nil then
-		return
-	end
-	if type(str) == "function" then
-		local source = artifact_cwd.contains(current) and artifact_cwd.project_file(current) or current
-		local ctx = source and buffer_context(source, project_dir)
-		if ctx == nil then
-			return
-		end
-		str = str(ctx, nil)
-	end
-	if type(str) ~= "string" then
-		return
-	end
-	local bufnr = vim.fn.bufadd(target)
-	vim.fn.bufload(bufnr)
-	local row, col = unpack(vim.api.nvim_buf_get_mark(bufnr, '"'))
-	row = math.max(row, 1)
-	local line = vim.api.nvim_buf_get_lines(bufnr, row - 1, row, false)[1] or ""
-	col = math.min(col, #line)
-	vim.api.nvim_buf_set_text(bufnr, row - 1, col, row - 1, col, vim.split(str, "\n", { plain = true }))
-end
-
 function M.send_str(query, str)
-	if is_artifact_query(query) then
-		return send_to_artifact(str)
+	local pseudo = pseudo_terminal.from_query(query)
+	if pseudo then
+		return pseudo.send_str(str)
 	end
 	with_query(query, function(instance)
 		if type(str) == "function" then
@@ -473,8 +426,9 @@ function M.browse()
 end
 
 function M.start(query)
-	if is_artifact_query(query) then
-		return
+	local pseudo = pseudo_terminal.from_query(query)
+	if pseudo then
+		return pseudo.start()
 	end
 	query = normalize_query(query)
 	if query.instance_count and history.find(get_query_fn({ instance_count = query.instance_count })) then
