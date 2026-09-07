@@ -21,6 +21,8 @@ function M.path(ctx, instance)
 	return value
 end
 
+-- TODO: I want nvim to act as a control plane for agentic coding
+
 function M.row(ctx, instance)
 	if is_agent(instance) then
 		return M.path(ctx, instance) .. string.format(":L%i ", ctx.row)

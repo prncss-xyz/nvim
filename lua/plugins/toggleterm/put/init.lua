@@ -28,24 +28,5 @@ function M.put_selection()
 	end)
 end
 
-function M.prompt()
-	local prompts = require("plugins.toggleterm.config").prompts
-	local choices = vim.tbl_keys(prompts)
-	vim.ui.select(choices, {
-		prompt = "Select prompt: ",
-	}, function(choice)
-		if not choice then
-			return
-		end
-		local contents = prompts[choice]
-		require("plugins.toggleterm.terms").send_str(
-			{ tag = "agent" },
-			type(contents) == "function" and contents
-				or function(ctx)
-					return require("plugins.toggleterm.put.position").position(ctx) .. contents
-				end
-		)
-	end)
-end
 
 return M

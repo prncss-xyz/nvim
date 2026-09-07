@@ -189,7 +189,7 @@ return {
 			{
 				"o" .. reverse("z"),
 				function()
-					require("plugins.toggleterm.harness").prompt_to_artifact("Idea: ", "idea.md")
+					require("plugins.toggleterm.prompts").idea()
 				end,
 				desc = "Create Artifact",
 				mode = { "n", "x" },
@@ -260,10 +260,10 @@ return {
 			{
 				"mm",
 				function()
-					require("plugins.toggleterm.put.init").prompt()
+					require("plugins.toggleterm.prompts").prompt()
 				end,
 				desc = "Put Prompt Result",
-				mode = "n",
+				mode = { "n", "x" },
 			},
 			{
 				"mr",

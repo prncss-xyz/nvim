@@ -88,6 +88,37 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 	}, child.lua_get("result"))
 end
 
+T["send_str"] = MiniTest.new_set()
+
+T["send_str"]["leaves the terminal in insert mode"] = function()
+	child.lua([[local sent
+		local item = { key = "agent", dir = "/tmp" }
+		package.loaded["plugins.toggleterm.terms.create_term"] = {
+			create_term = function()
+				return {
+					send_str = function(str, start_insert)
+						sent = { str, start_insert }
+					end,
+					is_in_view = function() return true end,
+				}
+			end,
+		}
+		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+			get_commands = function() return { item } end,
+		}
+		package.loaded["plugins.toggleterm.terms.get_query_fn"] = {
+			get_query_fn = function() return function() return true end end,
+		}
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		require("plugins.toggleterm.terms").send_str({ key = "agent", dir = "/tmp" }, "hello")
+		result = sent
+	]])
+
+	assert.same({ "hello", true }, child.lua_get("result"))
+end
+
 T["instance numbers"] = MiniTest.new_set()
 
 T["instance numbers"]["are globally unique and reuse the smallest available number"] = function()

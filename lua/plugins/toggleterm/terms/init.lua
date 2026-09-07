@@ -336,7 +336,7 @@ function M.send_str(query, str)
 				return
 			end
 		end
-		instance.term.send_str(str)
+		instance.term.send_str(str, true)
 	end)
 end
 

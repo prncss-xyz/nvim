@@ -17,8 +17,8 @@ local function is_in_dir(filename, dir)
 	return filename ~= "" and vim.fs.relpath(vim.fs.abspath(dir), vim.fs.abspath(filename)) ~= nil
 end
 
-function M.open_dir(dir, target_win, use_visible_window)
-	local path = find_project_file(dir)
+function M.open_dir(dir, target_win, use_visible_window, exclude)
+	local path = find_project_file(dir, exclude)
 	if not path then
 		return
 	end
@@ -48,7 +48,7 @@ function M.open_dir(dir, target_win, use_visible_window)
 	end)
 end
 
-function M.ensure_dir(dir)
+local function ensure_dir(dir, exclude)
 	local target_win = get_last_file_win()
 	if not target_win or not vim.api.nvim_win_is_valid(target_win) then
 		return
@@ -56,11 +56,22 @@ function M.ensure_dir(dir)
 
 	local target_buf = vim.api.nvim_win_get_buf(target_win)
 	local target_file = vim.api.nvim_buf_get_name(target_buf)
-	if artifact_cwd.contains(target_file) or is_in_dir(target_file, dir) then
+	local is_excluded = exclude and vim.iter(exclude):any(function(path)
+		return is_in_dir(target_file, path)
+	end)
+	if (artifact_cwd.contains(target_file) or is_in_dir(target_file, dir)) and not is_excluded then
 		return
 	end
 
-	M.open_dir(dir, target_win, true)
+	M.open_dir(dir, target_win, true, exclude)
+end
+
+function M.ensure_dir(dir)
+	ensure_dir(dir)
+end
+
+function M.ensure_dir_excluding(dir, exclude)
+	ensure_dir(dir, exclude)
 end
 
 return M

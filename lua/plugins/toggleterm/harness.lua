@@ -1,22 +1,5 @@
 local M = {}
 
-local function collect_input(prompt, callback)
-	local mode = vim.fn.mode()
-	if mode:match("[vV\22]") then
-		local input = table.concat(vim.fn.getregion(vim.fn.getpos("v"), vim.fn.getpos("."), { type = mode }), "\n")
-		if input ~= nil and vim.trim(input) ~= "" then
-			callback(input)
-		end
-		return
-	end
-
-	vim.ui.input({ prompt = prompt }, function(input)
-		if input ~= nil and vim.trim(input) ~= "" then
-			callback(input)
-		end
-	end)
-end
-
 local SUMMARY_PROMPT = [==[
 Your task is to describe the goal of the following prompt.
 You must use at most 4 words. Only lowercase except for proper names. No punctuation.
@@ -81,14 +64,14 @@ local function branch_name(input, callback)
 			assert(result.code == 0, result.stderr)
 			local branch = sanitize_branch(result.stdout)
 			assert(branch ~= "", "create-branch-name returned an empty name")
-			existing_branches(function(seen)
+			existing_branches(vim.schedule_wrap(function(seen)
 				callback(find_free_branch(branch, seen), root)
-			end)
+			end))
 		end)
 	end)
 end
 
-local function create_artifact(input, filename)
+function M.create_artifact(input, filename)
 	branch_name(input, function(branch, root)
 		local path = vim.fs.joinpath(root, ".artifacts", branch, filename)
 		vim.fn.mkdir(vim.fs.dirname(path), "p")
@@ -105,18 +88,10 @@ function M.artifact_to_worktree(branch, opts)
 	end)
 end
 
-function M.prompt_to_artifact(prompt, filename)
-	collect_input(prompt, function(input)
-		create_artifact(input, filename)
-	end)
-end
-
-function M.prompt_to_worktree(prompt, opts)
-	collect_input(prompt, function(input)
-		branch_name(input, function(branch)
-			opts.cmd = opts.cmd .. prompt
-			M.artifact_to_worktree(branch, opts)
-		end)
+function M.input_to_worktree(input, prompt, opts)
+	branch_name(input, function(branch)
+		opts.cmd = opts.cmd .. prompt
+		M.artifact_to_worktree(branch, opts)
 	end)
 end
 

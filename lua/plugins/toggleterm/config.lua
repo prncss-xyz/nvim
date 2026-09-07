@@ -136,10 +136,5 @@ return {
 			end
 		end,
 	},
-	prompts = {
-		["todo"] = "implement the todo comment",
-		["explain this"] = "explain this",
-		["curry this"] = "curry this",
-	},
 	autostart = {},
 }
