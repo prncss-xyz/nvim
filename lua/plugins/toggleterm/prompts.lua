@@ -1,7 +1,5 @@
 local M = {}
 
-local create_artifact = require("plugins.toggleterm.harness").create_artifact
-
 local function from_contents(contents)
 	return function()
 		require("plugins.toggleterm.terms").send_str(
@@ -39,19 +37,29 @@ end
 
 local function with_prompt(cb)
 	return function(input, prompt)
-		input(prompt, cb)
+		input(prompt, function(contents)
+			cb(contents, prompt)
+		end)
 	end
 end
 
-local function create_idea(contents)
-	create_artifact(contents, "idea.md")
+local function create_idea(filename)
+	return with_prompt(function(contents)
+		require("plugins.toggleterm.harness").create_artifact(contents, filename)
+	end)
+end
+
+local function sender(prefix)
+	return with_prompt(function(contents, prompt)
+		require("plugins.toggleterm.terms").send_str({ tag = "agent" }, (prefix or prompt) .. " " .. contents)
+	end)
 end
 
 local prompts = {
-	["Do this: "] = with_prompt("do this"),
-	["explain this"] = from_contents("explain this"),
-	["curry this"] = from_contents("curry this"),
-	["Idea: "] = with_prompt(create_idea),
+	["do this: "] = sender(),
+	["explain this: "] = sender(),
+	["curry this: "] = sender("curry this"),
+	["idea: "] = create_idea("idea.md"),
 }
 
 function M.idea()

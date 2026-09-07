@@ -72,6 +72,13 @@ return {
 		},
 		keys = {
 			{
+				domain.move .. "a",
+				function()
+					require("plugins.toggleterm.terms").toggle({ key = "artifact" })
+				end,
+				desc = "Artifact Index",
+			},
+			{
 				domain.pick .. theme.run,
 				function()
 					require("plugins.toggleterm.terms").toggle({
@@ -89,9 +96,17 @@ return {
 				desc = "Select Terminal",
 			},
 			{
+				"mb",
+				function()
+					require("plugins.toggleterm.terms").toggle_unseen_or_latest()
+				end,
+				desc = "Toggle Last Terminal",
+				mode = { "n", "x", "i", "t" },
+			},
+			{
 				ai_insert.toggle,
 				function()
-					require("plugins.toggleterm.terms").toggle({})
+					require("plugins.toggleterm.terms").toggle()
 				end,
 				desc = "Toggle Last Terminal",
 				mode = { "n", "x", "i", "t" },
@@ -163,7 +178,7 @@ return {
 			{
 				"ow",
 				function()
-					require("plugins.toggleterm.terms").run({})
+					require("plugins.toggleterm.terms").run()
 				end,
 				desc = "Select Command",
 			},
