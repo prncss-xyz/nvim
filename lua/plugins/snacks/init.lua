@@ -473,7 +473,13 @@ return {
 			{
 				"bn",
 				function()
-					projects.open_project(require("my.parameters").dirs.notes)
+					local project_dir =
+						require("plugins.toggleterm.terms.artifact_cwd").resolve(vim.api.nvim_buf_get_name(0))
+					if project_dir then
+						require("plugins.toggleterm.terms.ensure_dir").open_dir(project_dir, 0, false)
+					else
+						projects.open_project(require("my.parameters").dirs.notes)
+					end
 				end,
 				desc = "Open Notes Dir",
 			},

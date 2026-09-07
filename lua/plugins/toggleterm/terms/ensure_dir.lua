@@ -17,25 +17,14 @@ local function is_in_dir(filename, dir)
 	return filename ~= "" and vim.fs.relpath(vim.fs.abspath(dir), vim.fs.abspath(filename)) ~= nil
 end
 
-function M.ensure_dir(dir)
-	local target_win = get_last_file_win()
-	if not target_win or not vim.api.nvim_win_is_valid(target_win) then
-		return
-	end
-
-	local target_buf = vim.api.nvim_win_get_buf(target_win)
-	local target_file = vim.api.nvim_buf_get_name(target_buf)
-	if artifact_cwd.contains(target_file) or is_in_dir(target_file, dir) then
-		return
-	end
-
+function M.open_dir(dir, target_win, use_visible_window)
 	local path = find_project_file(dir)
 	if not path then
 		return
 	end
 
 	local bufnr = find_buffer(path)
-	if bufnr then
+	if bufnr and use_visible_window then
 		for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
 			if vim.api.nvim_win_get_buf(win) == bufnr then
 				vim.api.nvim_set_current_win(win)
@@ -51,12 +40,27 @@ function M.ensure_dir(dir)
 	end
 
 	vim.api.nvim_win_call(target_win, function()
-		if window.create then
+		if use_visible_window and window.create then
 			window.create(vim.fn.fnameescape(path))
 		else
 			vim.cmd.edit(vim.fn.fnameescape(path))
 		end
 	end)
+end
+
+function M.ensure_dir(dir)
+	local target_win = get_last_file_win()
+	if not target_win or not vim.api.nvim_win_is_valid(target_win) then
+		return
+	end
+
+	local target_buf = vim.api.nvim_win_get_buf(target_win)
+	local target_file = vim.api.nvim_buf_get_name(target_buf)
+	if artifact_cwd.contains(target_file) or is_in_dir(target_file, dir) then
+		return
+	end
+
+	M.open_dir(dir, target_win, true)
 end
 
 return M
