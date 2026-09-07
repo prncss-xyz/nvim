@@ -13,10 +13,6 @@ local function get_commands0(cwd)
 	return pkg_cache[cwd]
 end
 
-function M.get_hash(o)
-	return string.format("%s:%s:%i", o.dir, o.key, o.instance_count)
-end
-
 function M.get_commands(filter, cwd)
 	cwd = cwd or vim.fn.getcwd()
 	local commands = vim.deepcopy(get_commands0(cwd))
@@ -37,7 +33,6 @@ function M.get_commands(filter, cwd)
 			v.idle_timeout = v.idle_timeout or config.idle_timeout
 			v.instance_count = vim.v.count1
 			v.dir = v.dir or cwd
-			v.hash = M.get_hash(v)
 			if filter(v) then
 				res[k] = v
 			end

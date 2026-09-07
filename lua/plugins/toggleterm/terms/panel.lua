@@ -22,13 +22,13 @@ local function valid_buf(buf)
 	return buf and vim.api.nvim_buf_is_valid(buf)
 end
 
-local function selected_hash(state)
+local function selected_instance(state)
 	if not valid_win(state.win) then
-		return state.selected_hash
+		return state.selected_instance
 	end
 	local row = vim.api.nvim_win_get_cursor(state.win)[1]
 	local selected = state.rows[row]
-	return selected and selected.hash or state.selected_hash
+	return selected and selected.instance_count or state.selected_instance
 end
 
 local function release(state)
@@ -116,7 +116,7 @@ local function create_rows(items, format)
 				highlight = "DiagnosticWarn"
 			end
 			table.insert(rows, {
-				hash = item.hash,
+				instance_count = item.instance_count,
 				item = item,
 				text = string.rep("  ", depth) .. format(item),
 				status = item.status,
@@ -179,7 +179,7 @@ local function render(state)
 		return
 	end
 
-	local hash = selected_hash(state)
+	local instance_count = selected_instance(state)
 	local items = state.deps.items(state.query)
 	local rows = create_rows(items, state.deps.format)
 	local lines = vim.tbl_map(function(row)
@@ -208,14 +208,14 @@ local function render(state)
 		end
 	end
 	state.rows = rows
-	state.selected_hash = hash
+	state.selected_instance = instance_count
 
 	if not valid_win(state.win) then
 		return
 	end
 	local target = 1
 	for index, row in ipairs(rows) do
-		if (hash and row.hash == hash) or (not hash and row.item) then
+		if (instance_count and row.instance_count == instance_count) or (not instance_count and row.item) then
 			target = index
 			break
 		end
@@ -240,7 +240,7 @@ local function focus_selected(state)
 	if not selected then
 		return
 	end
-	state.selected_hash = selected.hash
+	state.selected_instance = selected.instance_count
 	if selected.item then
 		selected.item.term.focus()
 	else
@@ -339,7 +339,13 @@ local function open(query, history, subscribe, create_in_dir)
 	})
 
 	state.unsubscribe = deps.subscribe(function(event)
-		if event.type == "create" or event.type == "focus" or event.type == "status" or event.type == "detach" then
+		if
+			event.type == "create"
+			or event.type == "focus"
+			or event.type == "status"
+			or event.type == "dir"
+			or event.type == "detach"
+		then
 			refresh(state)
 		end
 	end)

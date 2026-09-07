@@ -7,7 +7,6 @@ local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_
 local utils = require("plugins.toggleterm.terms.utils")
 local commands = require("plugins.toggleterm.terms.get_commands")
 local get_commands = commands.get_commands
-local get_hash = commands.get_hash
 local format_item = require("plugins.toggleterm.terms.format_item").format_item
 local visit = require("my.browser").visit
 
@@ -68,7 +67,7 @@ local screen_manifests = {
 	},
 }
 
-local history = create_history("hash")
+local history = create_history("instance_count")
 local instance_owners = {}
 local listeners = {}
 local next_listener_id = 0
@@ -118,16 +117,18 @@ subscribe(function(event, item)
 		config.on_status(item)
 	elseif event.type == "url" then
 		item.term.url = event.value
+	elseif event.type == "dir" then
+		history.insert(item)
 	elseif event.type == "detach" then
 		local current = history.find(function(candidate)
-			return candidate.hash == item.hash
+			return candidate.instance_count == item.instance_count
 		end)
 		if current == item then
-			history.purge(item.hash)
+			history.purge(item.instance_count)
 		end
 		vim.schedule(function()
 			local replacement = history.find(function(candidate)
-				return candidate.hash == item.hash
+				return candidate.instance_count == item.instance_count
 			end)
 			if replacement ~= item then
 				release_instance(item)
@@ -142,6 +143,9 @@ end
 
 local function create_and_notify(item, cb)
 	item.term = create_term(item, function(event)
+		if event.type == "dir" then
+			item.dir = event.value
+		end
 		notify(event, item)
 	end, cb == prepare, config.min_runtime)
 	notify({ type = "create" }, item)
@@ -155,7 +159,6 @@ local function make_item(item, cb, requested_instance)
 	item.screen_manifest = screen_manifests[item.key]
 	assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
 	item.dir = type(item.dir) == "string" and item.dir or vim.fn.getcwd()
-	item.hash = get_hash(item)
 	if type(item.cmd) == "function" then
 		return item.cmd(function(cmd)
 			item.cmd = cmd
@@ -249,7 +252,7 @@ function M.run(query)
 	local choices = {}
 	for _, item in pairs(items) do
 		local res = history.find(function(i)
-			return i.hash == item.hash
+			return i.instance_count == item.instance_count and i.key == item.key
 		end)
 		table.insert(choices, res or item)
 	end
@@ -289,7 +292,7 @@ function M.rerun(query)
 		item.status = nil
 	end
 	for _, instance in ipairs(matches) do
-		history.purge(instance.hash)
+		history.purge(instance.instance_count)
 		release_instance(instance)
 		instance.term.kill()
 	end
@@ -337,9 +340,9 @@ function M.send_str(query, str)
 	end)
 end
 
-function M.read(hash, opts, cb)
+function M.read(instance_count, opts, cb)
 	local item = history.find(function(candidate)
-		return candidate.hash == hash
+		return candidate.instance_count == instance_count
 	end)
 	if not item then
 		return

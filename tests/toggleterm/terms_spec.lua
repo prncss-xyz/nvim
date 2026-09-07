@@ -19,7 +19,6 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 			key = "agent",
 			display_name = "agent",
 			dir = "/tmp",
-			hash = "agent:/tmp:1",
 		}
 
 		package.loaded["plugins.toggleterm.terms.history"] = {
@@ -58,7 +57,6 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 		}
 		package.loaded["plugins.toggleterm.terms.get_commands"] = {
 			get_commands = function() return { item } end,
-			get_hash = function(value) return value.hash end,
 		}
 		package.loaded["plugins.toggleterm.terms.format_item"] = {
 			format_item = function() return function() return "agent" end end,
@@ -103,7 +101,7 @@ T["instance numbers"]["are globally unique and reuse the smallest available numb
 
 		package.loaded["plugins.toggleterm.terms.create_term"] = {
 			create_term = function(item, callback)
-				table.insert(created, { key = item.key, instance_count = item.instance_count, hash = item.hash })
+				table.insert(created, { key = item.key, instance_count = item.instance_count })
 				callbacks[item.key] = callback
 				return {
 					focus = function() table.insert(focused, item.key) end,
@@ -118,9 +116,6 @@ T["instance numbers"]["are globally unique and reuse the smallest available numb
 		}
 		package.loaded["plugins.toggleterm.terms.get_commands"] = {
 			get_commands = function() return {} end,
-			get_hash = function(item)
-				return string.format("%s:%s:%d", item.dir, item.key, item.instance_count)
-			end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
@@ -146,11 +141,11 @@ T["instance numbers"]["are globally unique and reuse the smallest available numb
 
 	assert.same({
 		created = {
-			{ key = "shell", instance_count = 1, hash = "/one:shell:1" },
-			{ key = "agent", instance_count = 2, hash = "/two:agent:2" },
-			{ key = "ignored", instance_count = 5, hash = "/ignored:ignored:5" },
-			{ key = "repl", instance_count = 1, hash = "/three:repl:1" },
-			{ key = "shell", instance_count = 3, hash = "/one:shell:3" },
+			{ key = "shell", instance_count = 1 },
+			{ key = "agent", instance_count = 2 },
+			{ key = "ignored", instance_count = 5 },
+			{ key = "repl", instance_count = 1 },
+			{ key = "shell", instance_count = 3 },
 		},
 		focused = { "shell", "agent", "agent", "ignored", "repl", "shell" },
 		notifications = {
@@ -221,7 +216,6 @@ T["terminal panel integration"]["uses ui_toggle and forwards make_item lifecycle
 			key = "agent",
 			display_name = "agent",
 			dir = "/tmp",
-			hash = "agent:/tmp:1",
 		}
 		local stored = {}
 
@@ -252,7 +246,6 @@ T["terminal panel integration"]["uses ui_toggle and forwards make_item lifecycle
 		}
 		package.loaded["plugins.toggleterm.terms.get_commands"] = {
 			get_commands = function() return { item } end,
-			get_hash = function(value) return value.hash end,
 		}
 		package.loaded["plugins.toggleterm.terms.format_item"] = {
 			format_item = function() return function(value) return value.key end end,
@@ -276,11 +269,13 @@ T["terminal panel integration"]["uses ui_toggle and forwards make_item lifecycle
 		local terms = require("plugins.toggleterm.terms")
 		terms.focus({ key = "agent" })
 		terms.toggle_panel({ key = "agent", dir = require("plugins.toggleterm.terms.get_query_fn").any })
+		sent({ type = "dir", value = "/project" })
 		sent({ type = "status", value = "working" })
 		sent({ type = "detach" })
 
 		result = {
 			activated = activated,
+			dir = item.dir,
 			item_count = #result_items,
 			events = events,
 		}
@@ -288,8 +283,9 @@ T["terminal panel integration"]["uses ui_toggle and forwards make_item lifecycle
 
 	assert.same({
 		activated = "toggleterm",
+		dir = "/project",
 		item_count = 1,
-		events = { "status", "detach" },
+		events = { "dir", "status", "detach" },
 	}, child.lua_get("result"))
 end
 

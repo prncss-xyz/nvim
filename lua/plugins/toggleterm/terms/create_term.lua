@@ -7,6 +7,16 @@ local window = require("plugins.toggleterm.terms.window")
 local is_visible = window.is_visible
 
 local ensure_dir = require("plugins.toggleterm.terms.ensure_dir").ensure_dir
+local project_dir = require("my.rooter").project_dir
+
+local function osc_dir(sequence)
+	local path = sequence:match("^\27%]7;file://[^/]*(/[^\7\27]*)")
+	if not path then
+		return nil
+	end
+	local ok, decoded = pcall(vim.uri_decode, path)
+	return ok and decoded or nil
+end
 
 local shutting_down = false
 
@@ -36,6 +46,24 @@ function M.create_term(opts, send, prepare, min_runtime)
 		attached_bufnr = term.bufnr
 		attachment_generation = attachment_generation + 1
 		local generation = attachment_generation
+		vim.api.nvim_create_autocmd("TermRequest", {
+			buffer = term.bufnr,
+			callback = function(event)
+				local dir = osc_dir(event.data.sequence)
+				if not dir or generation ~= attachment_generation then
+					return
+				end
+				local resolved_dir = project_dir(dir)
+				opts_.dir = resolved_dir
+				send({ type = "dir", value = resolved_dir })
+				-- Leave TermRequest so opening a file can trigger BufRead and FileType autocmds.
+				vim.schedule(function()
+					if generation == attachment_generation and opts_.dir == resolved_dir then
+						ensure_dir(resolved_dir)
+					end
+				end)
+			end,
+		})
 		reset_status_detection = attach_term(term, function(event)
 			if generation == attachment_generation then
 				send(event)
@@ -47,7 +75,7 @@ function M.create_term(opts, send, prepare, min_runtime)
 	end
 	opts_.close_on_exit = exit_policy ~= "keep" and exit_policy ~= "restart"
 	opts_.env = {
-		VMUX_HASH = opts_.hash,
+		VMUX_COUNT = opts_.instance_count,
 	}
 	opts_.dir = opts_.dir or vim.fn.getcwd()
 	opts_.on_open = function()
