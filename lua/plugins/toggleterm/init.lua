@@ -187,6 +187,14 @@ return {
 				desc = "Implement this",
 			},
 			{
+				"o" .. reverse("z"),
+				function()
+					require("plugins.toggleterm.harness").prompt_to_artifact("Idea: ", "idea.md")
+				end,
+				desc = "Create Artifact",
+				mode = { "n", "x" },
+			},
+			{
 				"oo",
 				function()
 					require("plugins.toggleterm.terms").focus({ key = "diff" })

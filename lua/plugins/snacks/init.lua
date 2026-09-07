@@ -386,6 +386,13 @@ return {
 				function()
 					Snacks.picker.keymaps({
 						format = require("plugins.snacks.format").keymap,
+						win = {
+							input = {
+								keys = {
+									["<c-cr>"] = { "jump", mode = { "n", "i" } },
+								},
+							},
+						},
 					})
 				end,
 				desc = "Keymaps",
