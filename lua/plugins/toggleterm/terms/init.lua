@@ -307,6 +307,26 @@ function M.toggle(query)
 	end)
 end
 
+function M.toggle_unseen_or_latest(query)
+	query = normalize_query(query)
+	if query.instance_count then
+		return M.toggle(query)
+	end
+	local unseen = history.find(function(instance)
+		return instance.seen == false
+	end)
+	if unseen then
+		return unseen.term.focus()
+	end
+	local latest = history.find(function()
+		return true
+	end)
+	if latest then
+		return latest.term.toggle()
+	end
+	M.toggle(query)
+end
+
 function M.toggle_panel(query)
 	query = normalize_query(query)
 	require("my.ui_toggle").activate("toggleterm", function()

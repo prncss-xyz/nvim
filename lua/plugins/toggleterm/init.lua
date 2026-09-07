@@ -126,11 +126,25 @@ return {
 				desc = "Toggle Terminal Test",
 			},
 			{
+				"o" .. reverse("e"),
+				function()
+					require("plugins.toggleterm.terms").start({ key = "shell" })
+				end,
+				desc = "New Terminal Shell",
+			},
+			{
 				"oe",
 				function()
 					require("plugins.toggleterm.terms").focus({ key = "shell" })
 				end,
 				desc = "Toggle Terminal Shell",
+			},
+			{
+				"o" .. reverse("r"),
+				function()
+					require("plugins.toggleterm.terms").start({ key = "home shell" })
+				end,
+				desc = "New Terminal Home Shell",
 			},
 			{
 				"or",
@@ -152,17 +166,6 @@ return {
 					require("plugins.toggleterm.terms").run({})
 				end,
 				desc = "Select Command",
-			},
-			{
-				"opw",
-				function()
-					require("plugins.toggleterm.terms").focus({
-						status = "idle",
-						dir = require("plugins.toggleterm.terms.get_query_fn").any,
-						prompt = "Select Idle",
-					})
-				end,
-				desc = "Select Idle",
 			},
 			{
 				"oz",
@@ -212,9 +215,9 @@ return {
 			{
 				"m" .. reverse("a"),
 				function()
-					require("plugins.toggleterm.terms").rerun({ tag = "agent" })
+					require("plugins.toggleterm.terms").start({ tag = "agent" })
 				end,
-				desc = "Rerun Agent",
+				desc = "New Agent",
 				mode = "n",
 			},
 			{
