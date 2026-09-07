@@ -71,6 +71,7 @@ local history = create_history("instance_count")
 local instance_owners = {}
 local listeners = {}
 local next_listener_id = 0
+local next_change_id = 0
 
 local function reserve_instance(item, requested_instance)
 	if requested_instance then
@@ -109,11 +110,16 @@ subscribe(function(event, item)
 	if event.type == "create" then
 		history.insert(item)
 	elseif event.type == "focus" then
-		item.seen = true
+		item.changed = nil
 		history.insert(item)
 	elseif event.type == "status" and event.value ~= item.status then
 		item.status = event.value
-		item.seen = event.seen == true or item.term.is_in_view()
+		if event.visible == true or item.term.is_in_view() then
+			item.changed = nil
+		else
+			next_change_id = next_change_id + 1
+			item.changed = next_change_id
+		end
 		config.on_status(item)
 	elseif event.type == "url" then
 		item.term.url = event.value
@@ -154,7 +160,7 @@ end
 
 local function make_item(item, cb, requested_instance)
 	item.status = "idle"
-	item.seen = true
+	item.changed = nil
 	reserve_instance(item, requested_instance)
 	item.screen_manifest = screen_manifests[item.key]
 	assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
@@ -312,11 +318,18 @@ function M.toggle_unseen_or_latest(query)
 	if query.instance_count then
 		return M.toggle(query)
 	end
-	local unseen = history.find(function(instance)
-		return instance.seen == false
-	end)
-	if unseen then
-		return unseen.term.focus()
+	local oldest_changed
+	for _, instance in
+		ipairs(history.filter(function(candidate)
+			return candidate.changed ~= nil
+		end))
+	do
+		if not oldest_changed or instance.changed < oldest_changed.changed then
+			oldest_changed = instance
+		end
+	end
+	if oldest_changed then
+		return oldest_changed.term.focus()
 	end
 	local latest = history.find(function()
 		return true

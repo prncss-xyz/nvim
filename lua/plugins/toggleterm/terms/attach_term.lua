@@ -48,7 +48,7 @@ function M.attach_term(term, send, screen_manifest)
 			send({
 				type = "status",
 				value = status,
-				seen = is_in_view(term.window) == true,
+				visible = is_in_view(term.window) == true,
 			})
 		end
 	end

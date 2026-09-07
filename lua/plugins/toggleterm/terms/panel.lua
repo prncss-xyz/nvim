@@ -112,7 +112,7 @@ local function create_rows(items, format)
 			local highlight = "Normal"
 			if item.status == "failure" then
 				highlight = "DiagnosticError"
-			elseif item.seen == false then
+			elseif item.changed then
 				highlight = "DiagnosticWarn"
 			end
 			table.insert(rows, {

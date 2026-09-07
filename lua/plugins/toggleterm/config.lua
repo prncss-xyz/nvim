@@ -24,7 +24,7 @@ return {
 			fd:close()
 		end
 
-		if not item.seen then
+		if item.changed then
 			notify.notify(msg)
 		end
 	end,

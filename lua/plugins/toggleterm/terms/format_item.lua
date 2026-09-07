@@ -31,7 +31,7 @@ end
 function M.format_item(global)
 	return function(item)
 		local res = status_icons[item.status] or default_icon
-		local identifier = item.key .. ":" .. item.instance_count .. (item.seen == false and "*" or "")
+		local identifier = item.key .. ":" .. item.instance_count .. (item.changed and "*" or "")
 		res = res .. pad(identifier, 20)
 		if item.display_name ~= item.key then
 			res = res .. "  \u{2014}  " .. item.display_name
