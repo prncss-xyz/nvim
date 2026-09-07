@@ -205,14 +205,6 @@ return {
 				desc = "Implement this",
 			},
 			{
-				"o" .. reverse("z"),
-				function()
-					require("plugins.toggleterm.prompts").idea()
-				end,
-				desc = "Create Artifact",
-				mode = { "n", "x" },
-			},
-			{
 				"oo",
 				function()
 					require("plugins.toggleterm.terms").focus({ key = "diff" })

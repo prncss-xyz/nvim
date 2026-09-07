@@ -1,17 +1,5 @@
 local M = {}
 
-local function from_contents(contents)
-	return function()
-		require("plugins.toggleterm.terms").send_str(
-			{ tag = "agent" },
-			type(contents) == "function" and contents
-				or function(ctx)
-					return require("plugins.toggleterm.put.position").position(ctx) .. contents
-				end
-		)
-	end
-end
-
 local function input_for_current_mode()
 	local mode = vim.fn.mode()
 	local selection
@@ -43,7 +31,7 @@ local function with_prompt(cb)
 	end
 end
 
-local function create_idea(filename)
+local function create_artifact(filename)
 	return with_prompt(function(contents)
 		require("plugins.toggleterm.harness").create_artifact(contents, filename)
 	end)
@@ -58,13 +46,9 @@ end
 local prompts = {
 	["do this: "] = sender(),
 	["explain this: "] = sender(),
-	["curry this: "] = sender("curry this"),
-	["idea: "] = create_idea("idea.md"),
+	["curry this: "] = sender(),
+	["idea: "] = create_artifact("idea.md"),
 }
-
-function M.idea()
-	prompts["Idea: "](input_for_current_mode(), "Idea: ")
-end
 
 function M.prompt()
 	local input = input_for_current_mode()
