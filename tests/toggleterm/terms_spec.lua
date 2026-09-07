@@ -58,6 +58,7 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 		}
 		package.loaded["plugins.toggleterm.terms.get_commands"] = {
 			get_commands = function() return { item } end,
+			get_hash = function(value) return value.hash end,
 		}
 		package.loaded["plugins.toggleterm.terms.format_item"] = {
 			format_item = function() return function() return "agent" end end,
@@ -86,6 +87,75 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 		visible_status = "working",
 		status = "success",
 		notifications = { "success" },
+	}, child.lua_get("result"))
+end
+
+T["instance numbers"] = MiniTest.new_set()
+
+T["instance numbers"]["are globally unique and reuse the smallest available number"] = function()
+	child.lua([[local created = {}
+		local callbacks = {}
+		local focused = {}
+		local notifications = {}
+		vim.notify = function(message, level)
+			table.insert(notifications, { message, level })
+		end
+
+		package.loaded["plugins.toggleterm.terms.create_term"] = {
+			create_term = function(item, callback)
+				table.insert(created, { key = item.key, instance_count = item.instance_count, hash = item.hash })
+				callbacks[item.key] = callback
+				return {
+					focus = function() table.insert(focused, item.key) end,
+					is_in_view = function() return false end,
+					kill = function() end,
+				}
+			end,
+		}
+		package.loaded["plugins.toggleterm.config"] = {
+			autostart = {},
+			on_status = function() end,
+		}
+		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+			get_commands = function() return {} end,
+			get_hash = function(item)
+				return string.format("%s:%s:%d", item.dir, item.key, item.instance_count)
+			end,
+		}
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		local terms = require("plugins.toggleterm.terms")
+		terms.focus({ key = "shell", dir = "/one" })
+		terms.focus({ key = "agent", dir = "/two" })
+		local next_query = { key = "ignored", dir = "/ignored" }
+		vim.keymap.set("n", "<F5>", function()
+			terms.focus(next_query)
+		end)
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("2<F5>5<F5>", true, false, true), "x", false)
+		vim.wait(10)
+		callbacks.shell({ type = "detach" })
+		vim.wait(10)
+		next_query = { key = "repl", dir = "/three" }
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<F5>", true, false, true), "x", false)
+		vim.keymap.set("n", "<F6>", function()
+			terms.start({ key = "shell", dir = "/one" })
+		end)
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("2<F6><F6>", true, false, true), "x", false)
+		result = { created = created, focused = focused, notifications = notifications }
+	]])
+
+	assert.same({
+		created = {
+			{ key = "shell", instance_count = 1, hash = "/one:shell:1" },
+			{ key = "agent", instance_count = 2, hash = "/two:agent:2" },
+			{ key = "ignored", instance_count = 5, hash = "/ignored:ignored:5" },
+			{ key = "repl", instance_count = 1, hash = "/three:repl:1" },
+			{ key = "shell", instance_count = 3, hash = "/one:shell:3" },
+		},
+		focused = { "shell", "agent", "agent", "ignored", "repl", "shell" },
+		notifications = {
+			{ "Terminal instance 2 already exists", vim.log.levels.ERROR },
+		},
 	}, child.lua_get("result"))
 end
 
@@ -180,7 +250,10 @@ T["terminal panel integration"]["uses ui_toggle and forwards make_item lifecycle
 			on_status = function() end,
 			panel = { width = 24 },
 		}
-		package.loaded["plugins.toggleterm.terms.get_commands"] = { get_commands = function() return { item } end }
+		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+			get_commands = function() return { item } end,
+			get_hash = function(value) return value.hash end,
+		}
 		package.loaded["plugins.toggleterm.terms.format_item"] = {
 			format_item = function() return function(value) return value.key end end,
 		}

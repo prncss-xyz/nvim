@@ -69,8 +69,27 @@ local screen_manifests = {
 }
 
 local history = create_history("hash")
+local instance_owners = {}
 local listeners = {}
 local next_listener_id = 0
+
+local function reserve_instance(item, requested_instance)
+	if requested_instance then
+		assert(not instance_owners[requested_instance], "Terminal instance number is already in use")
+	end
+	local instance_count = requested_instance or 1
+	while instance_owners[instance_count] do
+		instance_count = instance_count + 1
+	end
+	instance_owners[instance_count] = item
+	item.instance_count = instance_count
+end
+
+local function release_instance(item)
+	if instance_owners[item.instance_count] == item then
+		instance_owners[item.instance_count] = nil
+	end
+end
 
 local function notify(...)
 	for _, listener in pairs(listeners) do
@@ -106,6 +125,14 @@ subscribe(function(event, item)
 		if current == item then
 			history.purge(item.hash)
 		end
+		vim.schedule(function()
+			local replacement = history.find(function(candidate)
+				return candidate.hash == item.hash
+			end)
+			if replacement ~= item then
+				release_instance(item)
+			end
+		end)
 	end
 end)
 
@@ -121,16 +148,14 @@ local function create_and_notify(item, cb)
 	cb(item)
 end
 
-local function make_item(item, cb)
+local function make_item(item, cb, requested_instance)
 	item.status = "idle"
 	item.seen = true
-	item.instance_count = vim.v.count1
+	reserve_instance(item, requested_instance)
 	item.screen_manifest = screen_manifests[item.key]
-	if not item.hash then
-		assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
-		item.dir = type(item.dir) == "string" and item.dir or vim.fn.getcwd()
-		item.hash = get_hash(item)
-	end
+	assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
+	item.dir = type(item.dir) == "string" and item.dir or vim.fn.getcwd()
+	item.hash = get_hash(item)
 	if type(item.cmd) == "function" then
 		return item.cmd(function(cmd)
 			item.cmd = cmd
@@ -166,6 +191,12 @@ end
 
 local function with_query(query, cb)
 	query = normalize_query(query)
+	if query.instance_count then
+		local instance = history.find(get_query_fn({ instance_count = query.instance_count }))
+		if instance then
+			return cb(instance)
+		end
+	end
 	local filter = get_query_fn(query)
 	if query.prompt then
 		local items = history.filter(filter)
@@ -187,7 +218,7 @@ local function with_query(query, cb)
 			format_item = format_item(query.dir == vim.env.HOME),
 		}, function(item)
 			if item then
-				make_item(item, cb)
+				make_item(item, cb, query.instance_count)
 			end
 		end)
 	end
@@ -197,9 +228,9 @@ local function with_query(query, cb)
 	end
 	item = utils.max_of(get_query_commands(query, filter), gt_item)
 	if item then
-		make_item(item, cb)
+		make_item(item, cb, query.instance_count)
 	else
-		make_item(query, cb)
+		make_item(query, cb, query.instance_count)
 	end
 end
 
@@ -207,6 +238,12 @@ local local_format_item = format_item(false)
 
 function M.run(query)
 	query = normalize_query(query)
+	if query.instance_count then
+		local instance = history.find(get_query_fn({ instance_count = query.instance_count }))
+		if instance then
+			return instance.term.focus()
+		end
+	end
 	local filter = get_query_fn(query)
 	local items = get_query_commands(query, filter)
 	local choices = {}
@@ -229,7 +266,7 @@ function M.run(query)
 		end
 		make_item(item, function(instance)
 			instance.term.focus()
-		end)
+		end, query.instance_count)
 	end)
 end
 
@@ -241,9 +278,10 @@ end
 
 function M.rerun(query)
 	query = normalize_query(query)
-	local filter = get_query_fn(query)
+	local filter = query.instance_count and get_query_fn({ instance_count = query.instance_count })
+		or get_query_fn(query)
 	local matches = history.filter(filter)
-	local item = utils.max_of(get_query_commands(query, filter), gt_item) or matches[1] or query
+	local item = utils.max_of(get_query_commands(query, get_query_fn(query)), gt_item) or matches[1] or query
 
 	if item.term then
 		item = vim.tbl_extend("force", {}, item)
@@ -252,11 +290,12 @@ function M.rerun(query)
 	end
 	for _, instance in ipairs(matches) do
 		history.purge(instance.hash)
+		release_instance(instance)
 		instance.term.kill()
 	end
 	make_item(item, function(instance)
 		instance.term.focus()
-	end)
+	end, query.instance_count)
 end
 
 function M.toggle(query)
@@ -323,6 +362,18 @@ function M.browse()
 			visit(item.term.url)
 		end
 	end)
+end
+
+function M.start(query)
+	query = normalize_query(query)
+	if query.instance_count and history.find(get_query_fn({ instance_count = query.instance_count })) then
+		vim.notify(string.format("Terminal instance %d already exists", query.instance_count), vim.log.levels.ERROR)
+		return
+	end
+	local item = utils.max_of(get_query_commands(query, get_query_fn(query)), gt_item) or query
+	make_item(item, function(instance)
+		instance.term.focus()
+	end, query.instance_count)
 end
 
 function M.restart(query)
