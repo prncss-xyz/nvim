@@ -1,19 +1,40 @@
 local M = {}
 
-function M.path(ctx)
+local function is_agent(instance)
+	return instance == nil or instance.tag == "agent"
+end
+
+local function path(ctx)
 	if ctx.path:find("[^%w%._/%-]") then
-		return string.format("@%q ", ctx.path)
+		return string.format("%q", ctx.path)
 	end
 
-	return string.format("@%s ", ctx.path)
+	return ctx.path
 end
 
-function M.row(ctx)
-	return M.path(ctx) .. string.format(":L%i ", ctx.row)
+function M.path(ctx, instance)
+	local value = path(ctx)
+	if is_agent(instance) then
+		return "@" .. value .. " "
+	end
+
+	return value
 end
 
-function M.position(ctx)
-	return M.path(ctx) .. string.format(":L%iC:%i ", ctx.row, ctx.col)
+function M.row(ctx, instance)
+	if is_agent(instance) then
+		return M.path(ctx, instance) .. string.format(":L%i ", ctx.row)
+	end
+
+	return M.path(ctx, instance) .. string.format(":%i", ctx.row)
+end
+
+function M.position(ctx, instance)
+	if is_agent(instance) then
+		return M.path(ctx, instance) .. string.format(":L%iC:%i ", ctx.row, ctx.col)
+	end
+
+	return M.path(ctx, instance) .. string.format(":%i:%i", ctx.row, ctx.col)
 end
 
 return M
