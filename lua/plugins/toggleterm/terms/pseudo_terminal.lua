@@ -34,14 +34,6 @@ local function latest_artifact(dir)
 	end)
 end
 
-local function focus_artifact()
-	local target = latest_artifact(project_dir())
-	if target == nil or target.bufnr == vim.api.nvim_get_current_buf() then
-		return
-	end
-	vim.cmd.buffer(target.bufnr)
-end
-
 local function source_context(dir)
 	local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
 	local ctx = window.get_ctx()
@@ -60,73 +52,93 @@ local function source_context(dir)
 	}
 end
 
-local artifact
+---@param touch fun()
+function M.create(touch)
+	local artifact = {
+		key = "artifact",
+		display_name = "artifact",
+		tag = "agent",
+		rerun = function() end,
+		run = function() end,
+		start = function() end,
+		toggle_panel = function() end,
+	}
+	local term = {}
 
-local function toggle_artifact()
-	local current = vim.fs.normalize(vim.api.nvim_buf_get_name(0))
-	local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
-	local dir = artifact_cwd.resolve(current) or assert(vim.uv.fs_realpath(vim.fn.getcwd()))
-	local dirs = require("my.parameters").dirs
-	local project_path = assert(vim.fs.relpath(dirs.projects, dir))
-	local project_name = assert(vim.split(project_path, "/", { plain = true, trimempty = true })[1])
-	local artifact_dir = vim.fs.joinpath(dirs.artifacts, project_name)
-	local target = vim.fs.joinpath(artifact_dir, "index.md")
-
-	if current == target then
-		require("plugins.toggleterm.terms.ensure_dir").ensure_dir_excluding(dir, { artifact_dir })
-		return
-	end
-
-	vim.fn.mkdir(artifact_dir, "p")
-	require("plugins.toggleterm.config").create(vim.fn.fnameescape(target))
-end
-
-local function send_to_artifact(str)
-	local dir = project_dir()
-	local target = latest_artifact(dir)
-	if target == nil then
-		return
-	end
-	if type(str) == "function" then
-		local ctx = source_context(dir)
-		if ctx == nil then
+	local function focus_artifact()
+		local target = latest_artifact(project_dir())
+		if target == nil then
 			return
 		end
-		str = str(ctx, artifact)
+		if target.bufnr ~= vim.api.nvim_get_current_buf() then
+			vim.cmd.buffer(target.bufnr)
+		end
+		touch()
 	end
-	if type(str) ~= "string" then
-		return
-	end
-	vim.fn.bufload(target.bufnr)
-	local row, col = unpack(vim.api.nvim_buf_get_mark(target.bufnr, '"'))
-	row = math.max(row, 1)
-	local line = vim.api.nvim_buf_get_lines(target.bufnr, row - 1, row, false)[1] or ""
-	col = math.min(col, #line)
-	vim.api.nvim_buf_set_text(target.bufnr, row - 1, col, row - 1, col, vim.split(str, "\n", { plain = true }))
-	if target.bufnr ~= vim.api.nvim_get_current_buf() then
-		vim.cmd.buffer(target.bufnr)
-	end
-end
 
-artifact = {
-	key = "artifact",
-	tag = "agent",
-	focus = focus_artifact,
-	toggle = toggle_artifact,
-	send_str = send_to_artifact,
-}
-artifact.term = artifact
+	local function toggle_artifact()
+		local current = vim.fs.normalize(vim.api.nvim_buf_get_name(0))
+		local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
+		local dir = artifact_cwd.resolve(current) or assert(vim.uv.fs_realpath(vim.fn.getcwd()))
+		local dirs = require("my.parameters").dirs
+		local project_path = assert(vim.fs.relpath(dirs.projects, dir))
+		local project_name = assert(vim.split(project_path, "/", { plain = true, trimempty = true })[1])
+		local artifact_dir = vim.fs.joinpath(dirs.artifacts, project_name)
+		local target = vim.fs.joinpath(artifact_dir, "index.md")
 
-setmetatable(artifact, {
-	__index = function()
-		return function() end
-	end,
-})
+		if current == target then
+			require("plugins.toggleterm.terms.ensure_dir").ensure_dir_excluding(dir, { artifact_dir })
+			return
+		end
 
-function M.from_query(query)
-	if query and query.key == "artifact" then
-		return artifact
+		vim.fn.mkdir(artifact_dir, "p")
+		require("plugins.toggleterm.config").create(vim.fn.fnameescape(target))
+		touch()
 	end
+
+	local function send_to_artifact(str)
+		local dir = project_dir()
+		local target = latest_artifact(dir)
+		if target == nil then
+			return
+		end
+		if type(str) == "function" then
+			local ctx = source_context(dir)
+			if ctx == nil then
+				return
+			end
+			str = str(ctx, artifact)
+		end
+		if type(str) ~= "string" then
+			return
+		end
+		vim.fn.bufload(target.bufnr)
+		local row, col = unpack(vim.api.nvim_buf_get_mark(target.bufnr, '"'))
+		row = math.max(row, 1)
+		local line = vim.api.nvim_buf_get_lines(target.bufnr, row - 1, row, false)[1] or ""
+		col = math.min(col, #line)
+		vim.api.nvim_buf_set_text(target.bufnr, row - 1, col, row - 1, col, vim.split(str, "\n", { plain = true }))
+		if target.bufnr ~= vim.api.nvim_get_current_buf() then
+			vim.cmd.buffer(target.bufnr)
+		end
+		touch()
+	end
+
+	term.focus = focus_artifact
+	term.toggle = toggle_artifact
+	term.get_ctx = function()
+		return source_context(project_dir())
+	end
+	term.send_str = send_to_artifact
+	artifact.term = term
+
+	setmetatable(term, {
+		__index = function()
+			return function() end
+		end,
+	})
+
+	return artifact
 end
 
 return M

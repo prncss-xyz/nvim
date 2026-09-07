@@ -153,6 +153,79 @@ T["pseudo terminal"]["focuses the latest artifact for the current project"] = fu
 	assert.same(result.expected, result.actual)
 end
 
+T["pseudo terminal"]["participates in history only when explicitly included"] = function()
+	child.lua([[local sent = {}
+		local created = {}
+		local events = {}
+		package.loaded["plugins.toggleterm.terms.pseudo_terminal"] = {
+			create = function(touch)
+				local item = {
+					key = "artifact",
+					tag = "agent",
+					rerun = function() end,
+					start = function() end,
+				}
+				local term = {
+					focus = function()
+						table.insert(sent, "artifact:focus")
+						touch()
+					end,
+					send_str = function(str)
+						table.insert(sent, "artifact:" .. str)
+						touch()
+					end,
+				}
+				item.term = term
+				setmetatable(term, { __index = function() return function() end end })
+				return item
+			end,
+		}
+		package.loaded["plugins.toggleterm.terms.create_term"] = {
+			create_term = function(item, callback)
+				table.insert(created, item.instance_count)
+				return {
+					focus = function() callback({ type = "focus" }) end,
+					send_str = function(str) table.insert(sent, "terminal:" .. str) end,
+					is_in_view = function() return true end,
+				}
+			end,
+		}
+		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+			get_commands = function() return {} end,
+		}
+		package.loaded["my.ui_toggle"] = { activate = function(_, action) action() end }
+		package.loaded["plugins.toggleterm.terms.panel"] = {
+			toggle = function(_, _, subscribe)
+				subscribe(function(event) table.insert(events, event.type) end)
+			end,
+		}
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		local terms = require("plugins.toggleterm.terms")
+		terms.toggle_panel({})
+		terms.focus({ key = "agent", dir = "/tmp" })
+		terms.send_str({ artifact = true, dir = "/tmp" }, "latest-terminal")
+		terms.focus({ key = "artifact" })
+		terms.send_str({ artifact = true, dir = "/tmp" }, "latest-artifact")
+		terms.send_str({ dir = "/tmp" }, "artifact-excluded")
+		terms.focus({ instance_count = 1 })
+		result = { sent = sent, created = created, events = events }
+	]])
+
+	assert.same({
+		created = { 2 },
+		events = { "create", "focus" },
+		sent = {
+			"terminal:latest-terminal",
+			"artifact:focus",
+			"artifact:latest-artifact",
+			"terminal:artifact-excluded",
+			"artifact:focus",
+		},
+	}, child.lua_get("result"))
+end
+
 T["send_str"]["leaves the terminal in insert mode"] = function()
 	child.lua([[local sent
 		local item = { key = "agent", dir = "/tmp" }
@@ -313,13 +386,13 @@ T["instance numbers"]["are globally unique and reuse the smallest available numb
 
 	assert.same({
 		created = {
-			{ key = "shell", instance_count = 1 },
-			{ key = "agent", instance_count = 2 },
+			{ key = "shell", instance_count = 2 },
+			{ key = "agent", instance_count = 3 },
 			{ key = "ignored", instance_count = 5 },
-			{ key = "repl", instance_count = 1 },
-			{ key = "shell", instance_count = 3 },
+			{ key = "repl", instance_count = 2 },
+			{ key = "shell", instance_count = 4 },
 		},
-		focused = { "shell", "agent", "agent", "ignored", "repl", "shell" },
+		focused = { "shell", "agent", "shell", "ignored", "repl", "shell" },
 		notifications = {
 			{ "Terminal instance 2 already exists", vim.log.levels.ERROR },
 		},

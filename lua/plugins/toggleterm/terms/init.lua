@@ -8,7 +8,7 @@ local utils = require("plugins.toggleterm.terms.utils")
 local commands = require("plugins.toggleterm.terms.get_commands")
 local get_commands = commands.get_commands
 local format_item = require("plugins.toggleterm.terms.format_item").format_item
-local pseudo_terminal = require("plugins.toggleterm.terms.pseudo_terminal")
+local create_pseudo_terminal = require("plugins.toggleterm.terms.pseudo_terminal").create
 local visit = require("my.browser").visit
 
 local screen_manifests = {
@@ -107,6 +107,17 @@ local function subscribe(listener)
 	end
 end
 
+local artifact
+artifact = create_pseudo_terminal(function()
+	artifact.changed = nil
+	history.insert(artifact)
+end)
+artifact.artifact = true
+artifact.instance_count = 1
+artifact.status = "idle"
+instance_owners[1] = artifact
+history.insert(artifact)
+
 subscribe(function(event, item)
 	if event.type == "create" then
 		history.insert(item)
@@ -187,11 +198,38 @@ local gt_item = utils.compose_gt(
 
 local function normalize_query(query)
 	query = vim.tbl_extend("keep", query or {}, {})
-	query.instance_count = vim.v.count > 0 and vim.v.count or nil
+	query.instance_count = vim.v.count > 0 and vim.v.count or query.instance_count
 	query.dir = query.dir
 		or require("plugins.toggleterm.terms.artifact_cwd").context_dir()
 		or { vim.fn.getcwd(), vim.env.HOME }
 	return query
+end
+
+local function get_filter(query)
+	local include_artifact = query.artifact == true or query.key == "artifact" or query.instance_count == 1
+	local regular_query = vim.tbl_extend("force", {}, query)
+	regular_query.artifact = nil
+	local regular_filter = get_query_fn(regular_query)
+	if not include_artifact then
+		return function(item)
+			return not item.artifact and regular_filter(item)
+		end
+	end
+	local artifact_query = vim.tbl_extend("force", {}, regular_query)
+	artifact_query.dir = nil
+	local artifact_filter = get_query_fn(artifact_query)
+	return function(item)
+		if item.artifact then
+			return artifact_filter(item)
+		end
+		return regular_filter(item)
+	end
+end
+
+local function without_query_options(query)
+	local item = vim.tbl_extend("force", {}, query)
+	item.artifact = nil
+	return item
 end
 
 local function get_query_commands(query, filter)
@@ -200,18 +238,14 @@ local function get_query_commands(query, filter)
 end
 
 local function with_query(query, cb)
-	local pseudo = pseudo_terminal.from_query(query)
-	if pseudo then
-		return cb(pseudo)
-	end
 	query = normalize_query(query)
 	if query.instance_count then
-		local instance = history.find(get_query_fn({ instance_count = query.instance_count }))
+		local instance = history.find(get_filter({ instance_count = query.instance_count }))
 		if instance then
 			return cb(instance)
 		end
 	end
-	local filter = get_query_fn(query)
+	local filter = get_filter(query)
 	if query.prompt then
 		local items = history.filter(filter)
 		table.sort(items, lt_item)
@@ -244,32 +278,37 @@ local function with_query(query, cb)
 	if item then
 		make_item(item, cb, query.instance_count)
 	else
-		make_item(query, cb, query.instance_count)
+		make_item(without_query_options(query), cb, query.instance_count)
 	end
 end
 
 local local_format_item = format_item(false)
 
 function M.run(query)
-	local pseudo = pseudo_terminal.from_query(query)
-	if pseudo then
-		return pseudo.run()
-	end
 	query = normalize_query(query)
 	if query.instance_count then
-		local instance = history.find(get_query_fn({ instance_count = query.instance_count }))
+		local instance = history.find(get_filter({ instance_count = query.instance_count }))
 		if instance then
+			if instance.run then
+				return instance.run()
+			end
 			return instance.term.focus()
 		end
 	end
-	local filter = get_query_fn(query)
+	local filter = get_filter(query)
+	local selected = history.find(filter)
+	if selected and selected.run then
+		return selected.run()
+	end
 	local items = get_query_commands(query, filter)
-	local choices = {}
+	local choices = history.filter(filter)
 	for _, item in pairs(items) do
 		local res = history.find(function(i)
 			return i.instance_count == item.instance_count and i.key == item.key
 		end)
-		table.insert(choices, res or item)
+		if not res then
+			table.insert(choices, item)
+		end
 	end
 	table.sort(choices, lt_item)
 	vim.ui.select(choices, {
@@ -295,15 +334,15 @@ function M.focus(query)
 end
 
 function M.rerun(query)
-	local pseudo = pseudo_terminal.from_query(query)
-	if pseudo then
-		return pseudo.rerun()
-	end
 	query = normalize_query(query)
-	local filter = query.instance_count and get_query_fn({ instance_count = query.instance_count })
-		or get_query_fn(query)
+	local filter = query.instance_count and get_filter({ instance_count = query.instance_count }) or get_filter(query)
 	local matches = history.filter(filter)
-	local item = utils.max_of(get_query_commands(query, get_query_fn(query)), gt_item) or matches[1] or query
+	local item = utils.max_of(get_query_commands(query, get_filter(query)), gt_item)
+		or matches[1]
+		or without_query_options(query)
+	if item.rerun then
+		return item.rerun()
+	end
 
 	if item.term then
 		item = vim.tbl_extend("force", {}, item)
@@ -327,18 +366,15 @@ function M.toggle(query)
 end
 
 function M.toggle_unseen_or_latest(query)
-	local pseudo = pseudo_terminal.from_query(query)
-	if pseudo then
-		return pseudo.toggle_unseen_or_latest()
-	end
 	query = normalize_query(query)
 	if query.instance_count then
 		return M.toggle(query)
 	end
+	local filter = get_filter(query)
 	local oldest_changed
 	for _, instance in
 		ipairs(history.filter(function(candidate)
-			return candidate.changed ~= nil
+			return filter(candidate) and candidate.changed ~= nil
 		end))
 	do
 		if not oldest_changed or instance.changed < oldest_changed.changed then
@@ -348,30 +384,36 @@ function M.toggle_unseen_or_latest(query)
 	if oldest_changed then
 		return oldest_changed.term.focus()
 	end
-	local latest = history.find(function()
-		return true
-	end)
+	local latest = history.find(filter)
 	if latest then
 		return latest.term.toggle()
 	end
 	M.toggle(query)
 end
 
+local panel_history = {
+	filter = function(filter)
+		return history.filter(function(item)
+			return item.dir ~= nil and filter(item)
+		end)
+	end,
+}
+
 function M.toggle_panel(query)
-	local pseudo = pseudo_terminal.from_query(query)
-	if pseudo then
-		return pseudo.toggle_panel()
-	end
 	query = normalize_query(query)
+	local selected = history.find(get_filter(query))
+	if selected and selected.toggle_panel then
+		return selected.toggle_panel()
+	end
 	require("my.ui_toggle").activate("toggleterm", function()
-		require("plugins.toggleterm.terms.panel").toggle(query, history, subscribe, function(dir)
+		require("plugins.toggleterm.terms.panel").toggle(query, panel_history, subscribe, function(dir)
 			M.focus({ dir = dir, prompt = "Select Command: " })
 		end)
 	end)
 end
 
 function M.raise_panel()
-	require("plugins.toggleterm.terms.panel").open(history, subscribe, function(dir)
+	require("plugins.toggleterm.terms.panel").open(panel_history, subscribe, function(dir)
 		M.focus({ dir = dir, prompt = "Select Command: " })
 	end)
 end
@@ -381,13 +423,10 @@ function M.prepare(query)
 end
 
 function M.send_str(query, str)
-	local pseudo = pseudo_terminal.from_query(query)
-	if pseudo then
-		return pseudo.send_str(str)
-	end
 	with_query(query, function(instance)
 		if type(str) == "function" then
-			local ctx = require("plugins.toggleterm.terms.window").get_ctx()
+			local ctx = instance.term.get_ctx and instance.term.get_ctx()
+				or require("plugins.toggleterm.terms.window").get_ctx()
 			if ctx then
 				str = str(ctx, instance)
 			else
@@ -426,16 +465,16 @@ function M.browse()
 end
 
 function M.start(query)
-	local pseudo = pseudo_terminal.from_query(query)
-	if pseudo then
-		return pseudo.start()
-	end
 	query = normalize_query(query)
-	if query.instance_count and history.find(get_query_fn({ instance_count = query.instance_count })) then
+	local existing = history.find(get_filter(query))
+	if existing and existing.start then
+		return existing.start()
+	end
+	if query.instance_count and history.find(get_filter({ instance_count = query.instance_count })) then
 		vim.notify(string.format("Terminal instance %d already exists", query.instance_count), vim.log.levels.ERROR)
 		return
 	end
-	local item = utils.max_of(get_query_commands(query, get_query_fn(query)), gt_item) or query
+	local item = utils.max_of(get_query_commands(query, get_filter(query)), gt_item) or without_query_options(query)
 	make_item(item, function(instance)
 		instance.term.focus()
 	end, query.instance_count)
