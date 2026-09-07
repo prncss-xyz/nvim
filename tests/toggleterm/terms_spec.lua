@@ -119,6 +119,43 @@ T["send_str"]["leaves the terminal in insert mode"] = function()
 	assert.same({ "hello", true }, child.lua_get("result"))
 end
 
+T["send_str"]["treats artifact as a project-scoped buffer"] = function()
+	child.lua([[root = vim.fn.tempname()
+		local projects = vim.fs.joinpath(root, "projects")
+		local artifacts = vim.fs.joinpath(root, "artifacts")
+		local project = vim.fs.joinpath(projects, "alpha", "main")
+		local artifact = vim.fs.joinpath(artifacts, "alpha", "notes.md")
+		local source = vim.fs.joinpath(project, "src.lua")
+		vim.fn.mkdir(project, "p")
+		vim.fn.mkdir(vim.fs.dirname(artifact), "p")
+		vim.fn.writefile({ "source" }, source)
+		vim.fn.writefile({ "artifact" }, artifact)
+		vim.uv.fs_symlink(artifacts .. "/alpha", project .. "/.artifacts")
+
+		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
+		package.loaded["plugins.toggleterm.terms.create_term"] = { create_term = function() end }
+		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+			get_commands = function() error("artifact must not create a terminal") end,
+		}
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		vim.cmd.edit(vim.fn.fnameescape(artifact))
+		vim.cmd.edit(vim.fn.fnameescape(source))
+		vim.cmd.edit(vim.fn.fnameescape(artifact))
+		local terms = require("plugins.toggleterm.terms")
+		terms.focus({ key = "artifact" })
+		terms.send_str({ key = "artifact" }, function(ctx)
+			return " " .. ctx.path .. ":" .. ctx.row
+		end)
+		result = vim.fn.readfile(artifact)[1]
+		vim.cmd.write()
+		result = vim.fn.readfile(artifact)[1]
+	]])
+
+	assert.same(" src.lua:1artifact", child.lua_get("result"))
+end
+
 T["instance numbers"] = MiniTest.new_set()
 
 T["instance numbers"]["are globally unique and reuse the smallest available number"] = function()

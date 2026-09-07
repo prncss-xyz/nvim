@@ -52,4 +52,28 @@ function M.context_dir()
 	end
 end
 
+---@param project_dir string
+---@return string|nil
+function M.project_artifacts(project_dir)
+	local matches = vim.fs.find(".artifacts", { path = project_dir, upward = true, limit = 1 })
+	local path = matches[1]
+	if path == nil then
+		return nil
+	end
+	path = vim.uv.fs_realpath(path)
+	if path and M.contains(path) then
+		return path
+	end
+end
+
+---@param path string
+---@return string|nil
+function M.project_file(path)
+	local project_dir = M.resolve(path)
+	if project_dir == nil then
+		return nil
+	end
+	return require("my.project_file").find(project_dir, { vim.fs.joinpath(project_dir, ".artifacts") })
+end
+
 return M
