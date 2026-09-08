@@ -44,10 +44,10 @@ local vars = {
 }
 
 function M.template(str)
-	return function(query)
+	return function(query, instance)
 		return (string.gsub(str, "%b{}", function(match)
 			local key = match:sub(2, -2)
-			return assert(vars[key], "unknown template variable: " .. key)(query)
+			return assert(vars[key], "unknown template variable: " .. key)(query, instance)
 		end))
 	end
 end

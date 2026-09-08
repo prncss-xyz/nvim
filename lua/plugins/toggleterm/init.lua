@@ -230,7 +230,7 @@ return {
 			{
 				"mc",
 				function()
-					require("plugins.toggleterm.put.init").put_file_pos()
+					require("plugins.toggleterm.terms").send_str(nil, "{position}")
 				end,
 				desc = "Put Current File Position",
 				mode = "n",
@@ -238,7 +238,7 @@ return {
 			{
 				"md",
 				function()
-					require("plugins.toggleterm.put.init").put_file_line()
+					require("plugins.toggleterm.terms").send_str(nil, "{line}")
 				end,
 				desc = "Put Current File Line",
 				mode = "n",
@@ -246,7 +246,7 @@ return {
 			{
 				"me",
 				function()
-					require("plugins.toggleterm.put.init").put_file_name()
+					require("plugins.toggleterm.terms").send_str(nil, "{path}")
 				end,
 				desc = "Put Current File Path",
 				mode = "n",

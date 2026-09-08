@@ -422,18 +422,20 @@ function M.prepare(query)
 	with_query(query, prepare)
 end
 
-function M.send_str(query, str)
+function M.send_str(query, arg)
+	if type(arg) == "string" then
+		arg = require("plugins.toggleterm.put.core").template(arg)
+	end
+
 	with_query(query, function(instance)
-		if type(str) == "function" then
-			local ctx = instance.term.get_ctx and instance.term.get_ctx()
-				or require("plugins.toggleterm.terms.window").get_ctx()
-			if ctx then
-				str = str(ctx, instance)
-			else
-				return
-			end
+		local ctx = instance.term.get_ctx and instance.term.get_ctx()
+			or require("plugins.toggleterm.terms.window").get_ctx()
+		if ctx then
+			arg = arg(ctx, instance)
+		else
+			return
 		end
-		instance.term.send_str(str, true)
+		instance.term.send_str(arg, true)
 	end)
 end
 

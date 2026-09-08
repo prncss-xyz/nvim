@@ -43,25 +43,10 @@ local function sender(prefix)
 	end)
 end
 
-local function send_with_pos(_, prompt)
-	require("plugins.toggleterm.terms").send_str({ tag = "agent" }, function(ctx)
-		return prompt .. ": " .. require("plugins.toggleterm.put.position").position(ctx)
-	end)
-end
-
-local function send_template(str)
-	return function()
-		require("plugins.toggleterm.terms").send_str(
-			{ tag = "agent" },
-			require("plugins.toggleterm.put.core").template(str)
-		)
-	end
-end
-
 local prompts = {
-	["do this"] = send_template("do this: {position}"),
-	["explain this"] = send_with_pos,
-	["curry this"] = send_with_pos,
+	["do"] = "do this: {position}",
+	["explain"] = "explain this: {position}",
+	["curry"] = "curry this: {position}",
 	["where in the codebase "] = sender(),
 	["idea"] = create_artifact("idea.md"),
 }
@@ -80,6 +65,9 @@ function M.prompt()
 			return
 		end
 		vim.schedule(function()
+			if type(contents) == "string" then
+				return require("plugins.toggleterm.terms").send_str({ tag = "agent" }, contents)
+			end
 			contents(input, choice)
 		end)
 	end)
