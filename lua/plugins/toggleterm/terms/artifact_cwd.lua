@@ -53,6 +53,17 @@ function M.context_dir()
 end
 
 ---@param project_dir string
+---@return string
+function M.branch_artifacts(project_dir)
+	local branch = vim.trim(vim.fn.system({ "git", "-C", project_dir, "branch", "--show-current" }))
+	assert(vim.v.shell_error == 0 and branch ~= "", "Failed to determine current Git branch")
+	if branch == "main" then
+		return dirs.artifacts
+	end
+	return vim.fs.joinpath(dirs.artifacts, branch:gsub("/", "-"))
+end
+
+---@param project_dir string
 ---@return string|nil
 function M.project_artifacts(project_dir)
 	local matches = vim.fs.find(".artifacts", { path = project_dir, upward = true, limit = 1 })

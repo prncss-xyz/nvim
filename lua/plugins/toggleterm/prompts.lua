@@ -48,6 +48,9 @@ local prompts = {
 	["explain this: "] = sender(),
 	["curry this: "] = sender(),
 	["idea: "] = create_artifact("idea.md"),
+	["worktree test"] = function()
+		require("plugins.toggleterm.harness").with_worktree()
+	end,
 }
 
 function M.prompt()

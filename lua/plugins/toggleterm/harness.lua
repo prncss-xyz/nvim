@@ -1,5 +1,7 @@
 local M = {}
 
+local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
+
 local SUMMARY_PROMPT = [==[
 Your task is to describe the goal of the following prompt.
 You must use at most 4 words. Only lowercase except for proper names. No punctuation.
@@ -73,7 +75,8 @@ end
 
 function M.create_artifact(input, filename)
 	branch_name(input, function(branch, root)
-		local path = vim.fs.joinpath(root, ".artifacts", branch, filename)
+		local artifact_root = assert(artifact_cwd.project_artifacts(root), "Project artifacts directory not found")
+		local path = vim.fs.joinpath(artifact_root, branch, filename)
 		vim.fn.mkdir(vim.fs.dirname(path), "p")
 		vim.fn.writefile(vim.split(input, "\n", { plain = true }), path)
 		vim.cmd.edit(vim.fn.fnameescape(path))
@@ -92,6 +95,56 @@ function M.input_to_worktree(input, prompt, opts)
 	branch_name(input, function(branch)
 		opts.cmd = opts.cmd .. prompt
 		M.artifact_to_worktree(branch, opts)
+	end)
+end
+
+local function pi_prompt(command)
+	return function(file, dir)
+		return {
+			key = "pi",
+			dir = dir,
+			cmd = string.format("p /%s @%q", command, file),
+		}
+	end
+end
+
+local prompts = {
+	plan = pi_prompt("implement"),
+}
+
+function M.with_worktree()
+	local path = vim.api.nvim_buf_get_name(0)
+	local project_dir = artifact_cwd.resolve(path)
+	local artifact_root = project_dir and artifact_cwd.project_artifacts(project_dir) or nil
+	local relative_path = artifact_root and vim.fs.relpath(artifact_root, path) or nil
+	if not relative_path then
+		vim.notify("Current buffer is not inside the project's artifacts", vim.log.levels.ERROR)
+		return
+	end
+
+	local branch, task = relative_path:match("^([^/]+)/([^/]+)%.md$")
+	if not branch or not task then
+		vim.notify("Artifact filename must match {artifacts}/{branch}/{task}.md", vim.log.levels.ERROR)
+		return
+	end
+	local prompt = prompts[task]
+	if not prompt then
+		vim.notify("This task is not configured")
+		return
+	end
+
+	local current_branch = vim.trim(vim.fn.system({ "git", "-C", project_dir, "branch", "--show-current" }))
+	assert(vim.v.shell_error == 0 and current_branch ~= "", "Failed to determine current Git branch")
+
+	local terms = require("plugins.toggleterm.terms")
+	if branch == current_branch then
+		terms.focus(prompt(path, project_dir))
+		return
+	end
+
+	vim.notify("Creating worktree " .. branch .. "...", vim.log.levels.INFO)
+	require("my.git").create_worktree(branch, function(_, worktree_path)
+		terms.focus(prompt(path, worktree_path))
 	end)
 end
 

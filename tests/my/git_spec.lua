@@ -156,6 +156,63 @@ T["worktree links artifacts relatively to the main repository"] = function()
 	assert.same("/repos/feature/lua/init.lua", result.success)
 end
 
+T["existing expected worktree is reused"] = function()
+	local result = child.lua_get([[run_git_case({
+		operation = "worktree",
+		branch = "feature",
+		current_file = "/repos/main/lua/init.lua",
+		directories = { ["/repos/feature"] = 1 },
+		existing = { ["/repos/feature/.artifacts"] = "link" },
+		system = {
+			["git rev-parse --show-toplevel"] = "/repos/main\n",
+			["git -C /repos/feature rev-parse --show-toplevel"] = "/repos/feature\n",
+			["git -C /repos/feature branch --show-current"] = "feature\n",
+			["git -C /repos/feature ls-files"] = "lua/init.lua\n",
+		},
+	})]])
+
+	assert.same("/repos/feature/lua/init.lua", result.success)
+	assert.same({}, result.notify)
+	assert.same(4, #result.system)
+end
+
+T["occupied expected path reports an error"] = function()
+	local result = child.lua_get([[run_git_case({
+		operation = "worktree",
+		branch = "feature",
+		current_file = "/repos/main/lua/init.lua",
+		directories = { ["/repos/feature"] = 1 },
+		system = {
+			["git rev-parse --show-toplevel"] = "/repos/main\n",
+			["git -C /repos/feature rev-parse --show-toplevel"] = "/repos/feature\n",
+			["git -C /repos/feature branch --show-current"] = "other\n",
+		},
+	})]])
+
+	assert.same(nil, result.success)
+	assert.same(vim.log.levels.ERROR, result.notify[1][2])
+	assert.same("Expected /repos/feature to be on branch feature, found other", result.notify[1][1])
+end
+
+T["existing local branch is checked out instead of recreated"] = function()
+	local result = child.lua_get([[run_git_case({
+		operation = "worktree",
+		branch = "feature",
+		current_file = "/repos/main/lua/init.lua",
+		system = {
+			["git rev-parse --show-toplevel"] = "/repos/main\n",
+			["git -C /repos/main rev-parse --path-format=absolute --git-common-dir"] = "/repos/main/.git\n",
+			["git rev-parse --verify origin/feature"] = { error = 1 },
+			["git branch --list feature"] = "  feature\n",
+			["git worktree add /repos/feature feature"] = "ok",
+			["git -C /repos/feature ls-files"] = "lua/init.lua\n",
+		},
+	})]])
+
+	assert.same("/repos/feature/lua/init.lua", result.success)
+	assert.same("git worktree add /repos/feature feature", table.concat(result.system[#result.system - 1], " "))
+end
+
 T["linked worktree resolves artifacts from the common git directory"] = function()
 	local result = child.lua_get([[run_git_case({
 		operation = "worktree",

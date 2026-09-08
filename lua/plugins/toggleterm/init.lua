@@ -185,24 +185,9 @@ return {
 			{
 				"oz",
 				function()
-					local file = vim.fs.normalize(vim.fn.expand("%:p"))
-					if not file:match("%.md$") then
-						vim.notify("Current file is not a Markdown file", vim.log.levels.WARN)
-						return
-					end
-					local cmd = string.format("p %q", "/implement @" .. file)
-					local branch = file:match("/([^/]+)/spec%.md$")
-					if branch then
-						require("my.git").create_worktree(branch, function(_, worktree_path)
-							require("plugins.toggleterm.terms").focus({
-								key = "pi",
-								dir = worktree_path,
-								cmd = cmd,
-							})
-						end)
-					end
+					require("plugins.toggleterm.harness").with_worktree()
 				end,
-				desc = "Implement this",
+				desc = "With Worktree",
 			},
 			{
 				"oo",
@@ -254,7 +239,7 @@ return {
 			{
 				"me",
 				function()
-					require("plugins.toggleterm.put.init").put_file_name({ key = "artifact" })
+					require("plugins.toggleterm.put.init").put_file_name()
 				end,
 				desc = "Put Current File Path",
 				mode = "n",

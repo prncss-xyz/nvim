@@ -286,15 +286,9 @@ return {
 			{
 				pick .. reverse("a"),
 				function()
-					local project_dir = require("plugins.toggleterm.terms.artifact_cwd").context_dir()
-						or vim.fn.getcwd()
-					local branch = vim.trim(vim.fn.system({ "git", "-C", project_dir, "branch", "--show-current" }))
-					assert(vim.v.shell_error == 0 and branch ~= "", "Failed to determine current Git branch")
-					local artifacts_dir = vim.fs.joinpath(project_dir, ".artifacts")
-					if branch ~= "main" then
-						artifacts_dir = vim.fs.joinpath(artifacts_dir, (branch:gsub("/", "-")))
-					end
-					Snacks.picker.files({ cwd = artifacts_dir })
+					local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
+					local project_dir = artifact_cwd.context_dir() or vim.fn.getcwd()
+					Snacks.picker.files({ cwd = artifact_cwd.branch_artifacts(project_dir) })
 				end,
 				desc = "Pick Branch Artifact File",
 			},

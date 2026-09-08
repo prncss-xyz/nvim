@@ -177,19 +177,41 @@ function M.create_worktree(branch, on_success)
 	local parent = vim.fs.dirname(toplevel)
 	local worktree_path = parent .. "/" .. branch
 
+	if vim.fn.isdirectory(worktree_path) == 1 then
+		local existing_toplevel = vim.trim(vim.fn.system({ "git", "-C", worktree_path, "rev-parse", "--show-toplevel" }))
+		if vim.v.shell_error ~= 0 or vim.fs.normalize(existing_toplevel) ~= worktree_path then
+			vim.notify("Expected worktree path is occupied: " .. worktree_path, vim.log.levels.ERROR)
+			return
+		end
+
+		local existing_branch = vim.trim(vim.fn.system({ "git", "-C", worktree_path, "branch", "--show-current" }))
+		if vim.v.shell_error ~= 0 or existing_branch ~= branch then
+			vim.notify(
+				string.format("Expected %s to be on branch %s, found %s", worktree_path, branch, existing_branch),
+				vim.log.levels.ERROR
+			)
+			return
+		end
+
+		link_artifacts(worktree_path, get_repo_name(worktree_path, branch), branch)
+		on_success(get_default_file(worktree_path, rel_path), worktree_path)
+		return
+	end
+
 	-- fetch so we know what exists at origin
 	vim.fn.system({ "git", "fetch", "origin", branch })
 
 	vim.fn.system({ "git", "rev-parse", "--verify", "origin/" .. branch })
-	local use_remote = vim.v.shell_error == 0
+	local branch_exists = vim.v.shell_error == 0
+	if not branch_exists then
+		branch_exists = vim.trim(vim.fn.system({ "git", "branch", "--list", branch })) ~= ""
+	end
 
 	local cmd = { "git", "worktree", "add", worktree_path }
-	if use_remote then
-		cmd[#cmd + 1] = branch
-	else
+	if not branch_exists then
 		cmd[#cmd + 1] = "-b"
-		cmd[#cmd + 1] = branch
 	end
+	cmd[#cmd + 1] = branch
 
 	local result = vim.fn.system(cmd)
 
