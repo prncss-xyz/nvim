@@ -43,14 +43,18 @@ local function sender(prefix)
 	end)
 end
 
+local function send_with_pos(_, prompt)
+	require("plugins.toggleterm.terms").send_str({ tag = "agent" }, function(ctx)
+		return prompt .. ": " .. require("plugins.toggleterm.put.position").position(ctx)
+	end)
+end
+
 local prompts = {
-	["do this: "] = sender(),
-	["explain this: "] = sender(),
-	["curry this: "] = sender(),
-	["idea: "] = create_artifact("idea.md"),
-	["worktree test"] = function()
-		require("plugins.toggleterm.harness").with_worktree()
-	end,
+	["do this"] = send_with_pos,
+	["explain this"] = send_with_pos,
+	["curry this"] = send_with_pos(),
+	["where in the codebase "] = sender(),
+	["idea"] = create_artifact("idea.md"),
 }
 
 function M.prompt()
