@@ -190,6 +190,13 @@ return {
 				desc = "With Worktree",
 			},
 			{
+				"o" .. reverse("z"),
+				function()
+					require("plugins.toggleterm.harness").pick_with_worktree()
+				end,
+				desc = "Pick With Worktree",
+			},
+			{
 				"oo",
 				function()
 					require("plugins.toggleterm.terms").focus({ key = "diff" })

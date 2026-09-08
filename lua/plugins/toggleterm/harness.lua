@@ -112,8 +112,7 @@ local prompts = {
 	plan = pi_prompt("implement"),
 }
 
-function M.with_worktree()
-	local path = vim.api.nvim_buf_get_name(0)
+local function with_worktree(path)
 	local project_dir = artifact_cwd.resolve(path)
 	local artifact_root = project_dir and artifact_cwd.project_artifacts(project_dir) or nil
 	local relative_path = artifact_root and vim.fs.relpath(artifact_root, path) or nil
@@ -145,6 +144,40 @@ function M.with_worktree()
 	vim.notify("Creating worktree " .. branch .. "...", vim.log.levels.INFO)
 	require("my.git").create_worktree(branch, function(_, worktree_path)
 		terms.focus(prompt(path, worktree_path))
+	end)
+end
+
+function M.with_worktree()
+	with_worktree(vim.api.nvim_buf_get_name(0))
+end
+
+function M.pick_with_worktree(include_dirty)
+	local dirs = require("my.parameters").dirs
+	local files = vim.fs.find(function(name, path)
+		if not name:match("%.md$") then
+			return false
+		end
+		local relative = vim.fs.relpath(dirs.artifacts, vim.fs.joinpath(path, name))
+		if relative == nil then
+			return false
+		end
+		local project, branch, task = relative:match("^([^/]+)/([^/]+)/([^/]+)%.md$")
+		if task == nil or prompts[task] == nil then
+			return false
+		end
+		return include_dirty or vim.fn.isdirectory(vim.fs.joinpath(dirs.projects, project, branch)) == 0
+	end, { path = dirs.artifacts, type = "file", limit = math.huge })
+	table.sort(files)
+
+	vim.ui.select(files, {
+		prompt = "Artifact Worktree",
+		format_item = function(path)
+			return assert(vim.fs.relpath(dirs.artifacts, path))
+		end,
+	}, function(path)
+		if path then
+			with_worktree(path)
+		end
 	end)
 end
 
