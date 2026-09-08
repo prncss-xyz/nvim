@@ -49,10 +49,19 @@ local function send_with_pos(_, prompt)
 	end)
 end
 
+local function send_template(str)
+	return function()
+		require("plugins.toggleterm.terms").send_str(
+			{ tag = "agent" },
+			require("plugins.toggleterm.put.core").template(str)
+		)
+	end
+end
+
 local prompts = {
-	["do this"] = send_with_pos,
+	["do this"] = send_template("do this: {position}"),
 	["explain this"] = send_with_pos,
-	["curry this"] = send_with_pos(),
+	["curry this"] = send_with_pos,
 	["where in the codebase "] = sender(),
 	["idea"] = create_artifact("idea.md"),
 }
