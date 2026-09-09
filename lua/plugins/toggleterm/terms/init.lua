@@ -423,13 +423,16 @@ function M.prepare(query)
 end
 
 function M.send_str(query, arg)
+	local invocation
 	if type(arg) == "string" then
-		arg = require("plugins.toggleterm.put.core").template(arg)
+		local put = require("plugins.toggleterm.put.core")
+		invocation = put.capture(arg)
+		arg = put.template(arg)
 	end
 
 	with_query(query, function(instance)
-		local ctx = instance.term.get_ctx and instance.term.get_ctx()
-			or require("plugins.toggleterm.terms.window").get_ctx()
+		local ctx = instance.term.get_ctx and instance.term.get_ctx(invocation)
+			or require("plugins.toggleterm.terms.window").get_ctx(invocation)
 		if ctx then
 			arg = arg(ctx, instance)
 		else

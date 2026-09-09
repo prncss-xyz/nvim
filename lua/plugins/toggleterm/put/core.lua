@@ -1,12 +1,9 @@
 local M = {}
 
-function M.selection(query)
-	require("plugins.toggleterm.terms").send_str(query, function(ctx)
-		return require("plugins.toggleterm.put.selection").get_selection(ctx)
-	end)
-end
-
 local vars = {
+	selection = function(ctx)
+		return ctx.selection or require("plugins.toggleterm.put.selection").get_selection(ctx)
+	end,
 	path = require("plugins.toggleterm.put.position").path,
 	line = require("plugins.toggleterm.put.position").row,
 	position = require("plugins.toggleterm.put.position").position,
@@ -15,6 +12,14 @@ local vars = {
 	file_diagnostic = require("plugins.toggleterm.put.diagnostics").get_diagnostics("file"),
 	next_diagnostic = require("plugins.toggleterm.put.diagnostics").get_diagnostics("next"),
 }
+
+function M.capture(str)
+	local invocation = {}
+	if str:find("{selection}", 1, true) then
+		invocation.selection = require("plugins.toggleterm.put.selection").capture()
+	end
+	return invocation
+end
 
 function M.template(str)
 	return function(query, instance)

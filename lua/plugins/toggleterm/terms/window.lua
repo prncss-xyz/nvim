@@ -44,11 +44,17 @@ vim.api.nvim_create_autocmd("BufLeave", {
 	end,
 })
 
-function M.get_ctx()
+function M.get_ctx(invocation)
+	local ctx
 	if is_text_buffer() then
-		return get_ctx()
+		ctx = get_ctx()
+	else
+		ctx = ctx_by_cwd[vim.fn.getcwd()]
 	end
-	return ctx_by_cwd[vim.fn.getcwd()]
+	if ctx == nil or invocation == nil then
+		return ctx
+	end
+	return vim.tbl_extend("error", ctx, invocation)
 end
 
 function M.get_path(dir)

@@ -34,9 +34,9 @@ local function latest_artifact(dir)
 	end)
 end
 
-local function source_context(dir)
+local function source_context(dir, invocation)
 	local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
-	local ctx = window.get_ctx()
+	local ctx = window.get_ctx(invocation)
 	if ctx == nil then
 		return
 	end
@@ -44,12 +44,9 @@ local function source_context(dir)
 	if path == "" or artifact_cwd.contains(path) or vim.fs.relpath(dir, path) == nil then
 		return
 	end
-	return {
-		bufnr = ctx.bufnr,
+	return vim.tbl_extend("force", ctx, {
 		path = vim.fs.relpath(dir, path) or path,
-		row = ctx.row,
-		col = ctx.col,
-	}
+	})
 end
 
 ---@param touch fun()
@@ -126,8 +123,8 @@ function M.create(touch)
 
 	term.focus = focus_artifact
 	term.toggle = toggle_artifact
-	term.get_ctx = function()
-		return source_context(project_dir())
+	term.get_ctx = function(invocation)
+		return source_context(project_dir(), invocation)
 	end
 	term.send_str = send_to_artifact
 	artifact.term = term

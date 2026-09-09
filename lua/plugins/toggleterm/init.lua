@@ -101,7 +101,6 @@ return {
 					require("plugins.toggleterm.terms").toggle_unseen_or_latest()
 				end,
 				desc = "Toggle Last Terminal",
-				mode = { "n", "x", "i", "t" },
 			},
 			{
 				ai_insert.toggle,
@@ -220,9 +219,16 @@ return {
 				mode = "n",
 			},
 			{
+				"mv",
+				function()
+					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{selection}")
+				end,
+				desc = "Send Selection to Agent",
+			},
+			{
 				"ma",
 				function()
-					require("plugins.toggleterm.put.core").selection({ tag = "agent" })
+					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{selection}")
 				end,
 				desc = "Send Selection to Agent",
 				mode = "x",
