@@ -21,22 +21,22 @@ function M.path(ctx, instance)
 	return value
 end
 
--- TODO: I want nvim to act as a control plane for agentic coding
-
 function M.row(ctx, instance)
+	local value = path(ctx)
 	if is_agent(instance) then
-		return M.path(ctx, instance) .. string.format(":L%i ", ctx.row)
+		return string.format("@%s:L%i ", value, ctx.row)
 	end
 
-	return M.path(ctx, instance) .. string.format(":%i", ctx.row)
+	return string.format("%s:%i", value, ctx.row)
 end
 
 function M.position(ctx, instance)
+	local value = path(ctx)
 	if is_agent(instance) then
-		return M.path(ctx, instance) .. string.format(":L%iC:%i ", ctx.row, ctx.col)
+		return string.format("@%s:L%iC:%i ", value, ctx.row, ctx.col)
 	end
 
-	return M.path(ctx, instance) .. string.format(":%i:%i", ctx.row, ctx.col)
+	return string.format("%s:%i:%i", value, ctx.row, ctx.col)
 end
 
 return M

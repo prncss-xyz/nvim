@@ -222,7 +222,7 @@ return {
 			{
 				"ma",
 				function()
-					require("plugins.toggleterm.put.init").put_selection({ tag = "agent" })
+					require("plugins.toggleterm.put.core").selection({ tag = "agent" })
 				end,
 				desc = "Send Selection to Agent",
 				mode = "x",
@@ -286,7 +286,7 @@ return {
 			{
 				"mz",
 				function()
-					require("plugins.toggleterm.put.init").put_diagnostics("next")
+					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{next_diagnostic}")
 				end,
 				desc = "Put Diagnostic Prompt",
 				mode = "n",
@@ -294,7 +294,7 @@ return {
 			{
 				"mpz",
 				function()
-					require("plugins.toggleterm.put.init").put_diagnostics("file")
+					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{file_diagnostic}")
 				end,
 				desc = "Put File Diagnostics Prompt",
 			},
