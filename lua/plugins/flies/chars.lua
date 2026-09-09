@@ -4,6 +4,7 @@ local not_vscode = require("my.conds").not_vscode
 
 local ls = require("luasnip")
 local i = ls.insert_node
+local t = ls.text_node
 local f = ls.function_node
 local function contents()
 	return ls.function_node(function(_, snip)
@@ -40,9 +41,11 @@ M.d = {
 	left = "\n",
 	right = "\n",
 	snip = not_vscode({
-		fmt("\n[]\n", {
-			contents(),
-		}, { delimiters = "[]" }),
+		all = {
+			t({ "", "" }),
+			i(1, ""),
+			t({ "", "" }),
+		},
 	}),
 }
 

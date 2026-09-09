@@ -92,7 +92,7 @@ vim.lsp.config("oxfmt", {
 	},
 })
 vim.lsp.config("lua_ls", {
-	capabilities = require("plugins.lualine").cmp_capabilities,
+	capabilities = require("plugins.lsp.utils").cmp_capabilities,
 	settings = {
 		Lua = {
 			telemetry = {
@@ -102,7 +102,7 @@ vim.lsp.config("lua_ls", {
 	},
 })
 vim.lsp.config("ltex-ls", {
-	capabilities = require("plugins.lualine").cmp_capabilities,
+	capabilities = require("plugins.lsp.utils").cmp_capabilities,
 	load_langs = { "en-US", "fr" },
 	on_attach = function()
 		require("ltex_extra").setup({
