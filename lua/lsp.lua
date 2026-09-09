@@ -19,7 +19,10 @@ vim.lsp.config("marksman", {
 
 vim.lsp.config("tsc", {
 	cmd = {
-		vim.fs.joinpath(assert(vim.env.PNPM_HOME, "PNPM_HOME is not set"), "bin", "tsc"),
+		require("my.conds").personal(
+			vim.fs.joinpath(assert(vim.env.PNPM_HOME, "PNPM_HOME is not set"), "bin", "tsc"),
+			vim.fs.joinpath(assert(vim.env.PNPM_HOME, "PNPM_HOME is not set"), "tsc")
+		),
 		"--lsp",
 		"--stdio",
 	},
@@ -133,16 +136,21 @@ vim.lsp.config("ltex-ls", {
 	},
 })
 
-vim.lsp.enable({
+local enabled_lsps = {
 	"bashls",
 	"gopls",
 	"marksman",
 	"graphql",
 	"knip",
 	"lua_ls",
-	"ltex",
 	"oxlint",
 	"oxfmt",
 	"tsc",
 	"typos_lsp",
-})
+}
+
+if require("my.conds").personal() then
+	table.insert(enabled_lsps, "ltex")
+end
+
+vim.lsp.enable(enabled_lsps)
