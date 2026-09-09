@@ -167,7 +167,7 @@ local function create_and_notify(item, cb)
 			item.dir = event.value
 		end
 		notify(event, item)
-	end, cb == prepare, config.min_runtime)
+	end, cb == prepare, config.min_runtime, config.notify)
 	notify({ type = "create" }, item)
 	cb(item)
 end

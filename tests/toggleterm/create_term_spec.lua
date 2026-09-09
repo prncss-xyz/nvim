@@ -76,6 +76,41 @@ T["create_term"]["reports whether its terminal is in view"] = function()
 	assert.same({ true, false }, child.lua_get("result"))
 end
 
+T["create_term"]["passes OSC notifications to the configured notifier"] = function()
+	child.lua([[local notification
+		local terminal_options
+		local terminal = { bufnr = vim.api.nvim_create_buf(false, true) }
+		package.loaded["toggleterm.terminal"] = {
+			Terminal = {
+				new = function(_, options)
+					terminal_options = options
+					return terminal
+				end,
+			},
+		}
+		package.loaded["plugins.toggleterm.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			is_visible = function() return false end,
+			is_in_view = function() return false end,
+		}
+		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		local create_term = require("plugins.toggleterm.terms.create_term").create_term
+		create_term({}, function() end, false, nil, function(title, message)
+			notification = { title, message }
+		end)
+		vim.wait(10)
+		vim.api.nvim_exec_autocmds("TermRequest", {
+			buffer = terminal.bufnr,
+			data = { sequence = "\27]777;notify;Build;Finished\7" },
+		})
+		result = notification
+	]])
+
+	assert.same({ "Build", "Finished" }, child.lua_get("result"))
+end
+
 T["create_term"]["sends strings as bracketed paste"] = function()
 	child.lua([[local sent
 		local terminal = { window = 42, job_id = 7 }
@@ -178,7 +213,7 @@ T["create_term"]["restarts long-running failed processes in the same hidden term
 	child.lua([[local terminal_options
 		local calls = { attach = 0, ensure_dir = 0, open = 0, spawn = 0, toggle = 0 }
 		local events = {}
-		local terminal = { bufnr = 42 }
+		local terminal = { bufnr = vim.api.nvim_create_buf(false, true) }
 		function terminal:spawn()
 			calls.spawn = calls.spawn + 1
 			terminal_options.on_create(self)
@@ -222,13 +257,12 @@ T["create_term"]["restarts long-running failed processes in the same hidden term
 		vim.wait(10, function()
 			return calls.spawn == 2
 		end)
-		result = { calls = calls, events = events, bufnr = terminal.bufnr }
+		result = { calls = calls, events = events }
 	]])
 
 	assert.same({
 		calls = { attach = 1, ensure_dir = 1, open = 0, spawn = 2, toggle = 0 },
 		events = { { type = "status", value = "failure" } },
-		bufnr = 42,
 	}, child.lua_get("result"))
 end
 
@@ -384,7 +418,7 @@ end
 T["create_term"]["does not restart successful or short-lived processes"] = function()
 	child.lua([[local terminal_options
 		local spawn_count = 0
-		local terminal = { bufnr = 42 }
+		local terminal = { bufnr = vim.api.nvim_create_buf(false, true) }
 		function terminal:spawn()
 			spawn_count = spawn_count + 1
 			terminal_options.on_create(self)

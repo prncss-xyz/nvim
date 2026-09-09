@@ -5,6 +5,22 @@ local notify = require("my.notify")
 return {
 	min_runtime = 10000,
 	create = require("my.create").create,
+	notify = personal(function(title, message)
+		vim.system({ "notify-send", title, message }, { detach = true })
+	end, function(title, message)
+		vim.system({
+			"osascript",
+			"-e",
+			"on run argv",
+			"-e",
+			"display notification (item 2 of argv) with title (item 1 of argv)",
+			"-e",
+			"end run",
+			"--",
+			title,
+			message,
+		}, { detach = true })
+	end),
 	panel = {
 		width = 40,
 	},

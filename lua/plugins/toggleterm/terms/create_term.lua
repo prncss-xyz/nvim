@@ -22,6 +22,15 @@ local function osc_title(sequence)
 	return sequence:match("^\27%][02];([^\7\27]*)")
 end
 
+local function osc_notification(sequence)
+	local payload = sequence:match("^\27%]777;notify;([^\7\27]*)")
+	if not payload then
+		return nil
+	end
+	local title, message = payload:match("^([^;]*);(.*)$")
+	return title or "", message or payload
+end
+
 local shutting_down = false
 
 vim.api.nvim_create_autocmd("ExitPre", {
@@ -30,7 +39,7 @@ vim.api.nvim_create_autocmd("ExitPre", {
 	end,
 })
 
-function M.create_term(opts, send, prepare, min_runtime)
+function M.create_term(opts, send, prepare, min_runtime, notify)
 	local opts_ = vim.deepcopy(opts)
 	local exit_policy = opts_.on_exit
 	local started_at
@@ -57,6 +66,11 @@ function M.create_term(opts, send, prepare, min_runtime)
 					return
 				end
 				local sequence = event.data.sequence
+				local notification_title, notification_message = osc_notification(sequence)
+				if notification_title then
+					notify(notification_title, notification_message)
+					return
+				end
 				local title = osc_title(sequence)
 				if title then
 					send({ type = "title", value = title })
