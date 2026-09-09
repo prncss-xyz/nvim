@@ -16,12 +16,22 @@ function M.attach_term(term, send, screen_manifest)
 	local handle = nil
 	local url_sent = false
 	local last_status = nil
+	local pending_idle = nil
 
-	local function clear()
+	local function clear_timer()
 		if handle then
 			vim.fn.timer_stop(handle)
 			handle = nil
 		end
+	end
+
+	local function clear_pending_idle()
+		pending_idle = nil
+	end
+
+	local function clear()
+		clear_timer()
+		clear_pending_idle()
 	end
 
 	vim.api.nvim_create_autocmd("TermEnter", {
@@ -31,8 +41,30 @@ function M.attach_term(term, send, screen_manifest)
 		end,
 	})
 
-	local function update_status(bufnr)
+	local update_status
+
+	local function schedule_update(bufnr, delay)
+		if handle then
+			return
+		end
+		handle = vim.fn.timer_start(delay, function()
+			handle = nil
+			update_status(bufnr)
+		end)
+	end
+
+	local function publish_status(status)
+		last_status = status
+		send({
+			type = "status",
+			value = status,
+			visible = is_in_view(term.window) == true,
+		})
+	end
+
+	update_status = function(bufnr)
 		if not screen_manifest or not vim.api.nvim_buf_is_valid(bufnr) then
+			clear_pending_idle()
 			return
 		end
 		local line_count = vim.api.nvim_buf_line_count(bufnr)
@@ -42,25 +74,50 @@ function M.attach_term(term, send, screen_manifest)
 		local first_line = math.max(0, line_count - screen_lines)
 		local screen = table.concat(vim.api.nvim_buf_get_lines(bufnr, first_line, line_count, false), "\n")
 		local output = detect_status(screen_manifest, screen)
-		local status = output and output.status
-		if status and status ~= last_status then
-			last_status = status
-			send({
-				type = "status",
-				value = status,
-				visible = is_in_view(term.window) == true,
-			})
+		if not output or output.skip_state_update then
+			clear_pending_idle()
+			return
 		end
+
+		local status = output.status
+		if not status or status == last_status then
+			clear_pending_idle()
+			return
+		end
+
+		local plain_idle = last_status == "working" and status == "idle" and not output.visible_idle
+		if not plain_idle then
+			clear_pending_idle()
+			publish_status(status)
+			return
+		end
+
+		local now = vim.uv.hrtime() / 1000000
+		local confirmation_ms = screen_manifest.idle_confirmation_ms or 150
+		local confirmations = screen_manifest.idle_confirmations or 2
+		local cap_ms = screen_manifest.idle_confirmation_cap_ms or 700
+		if not pending_idle then
+			pending_idle = { started_at = now, confirmations = 0 }
+		elseif now - pending_idle.started_at >= cap_ms then
+			clear_pending_idle()
+			publish_status(status)
+			return
+		else
+			pending_idle.confirmations = pending_idle.confirmations + 1
+			if pending_idle.confirmations >= confirmations then
+				clear_pending_idle()
+				publish_status(status)
+				return
+			end
+		end
+		schedule_update(bufnr, confirmation_ms)
 	end
 
 	local function schedule_status_update(bufnr)
-		if not screen_manifest or handle then
+		if not screen_manifest then
 			return
 		end
-		handle = vim.fn.timer_start(screen_manifest.debounce_ms or 100, function()
-			handle = nil
-			update_status(bufnr)
-		end)
+		schedule_update(bufnr, screen_manifest.debounce_ms or 100)
 	end
 
 	vim.api.nvim_buf_attach(term.bufnr, false, {
@@ -86,6 +143,7 @@ function M.attach_term(term, send, screen_manifest)
 
 	schedule_status_update(term.bufnr)
 	return function()
+		clear()
 		last_status = nil
 	end
 end
