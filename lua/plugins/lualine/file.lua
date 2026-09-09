@@ -1,155 +1,88 @@
 local unknown_icon = ""
--- local skipLock = { 'Outline', 'Trouble', 'LuaTree', 'dbui', 'help' }
 local skip_lock = {}
-
 local user_icons = {}
 
-local function get_file_icon()
-	local icon = ""
-	if vim.fn.exists("*WebDevIconsGetFileTypeSymbol") == 1 then
-		icon = vim.fn.WebDevIconsGetFileTypeSymbol()
-		return icon .. " "
-	end
+local function get_file_icon(buffer, path)
 	local ok, devicons = pcall(require, "nvim-web-devicons")
 	if not ok then
-		print("No icon plugin found. Please install 'nvim-web-devicons'")
 		return ""
 	end
-	local f_name = vim.fn.expand("%:t")
-	local f_extension
-	vim.fn.expand("%:e")
-	icon = devicons.get_icon(f_name, f_extension)
-	if icon == nil then
-		if user_icons[vim.bo.filetype] ~= nil then
-			icon = user_icons[vim.bo.filetype][2]
-		elseif user_icons[f_extension] ~= nil then
-			icon = user_icons[f_extension][2]
-		else
-			icon = unknown_icon
-		end
-	end
+
+	local filename = vim.fs.basename(path)
+	local extension = filename:match("%.([^.]*)$")
+	local icon = devicons.get_icon(filename, extension)
+		or (user_icons[vim.bo[buffer].filetype] and user_icons[vim.bo[buffer].filetype][2])
+		or (user_icons[extension] and user_icons[extension][2])
+		or unknown_icon
 	return icon .. " "
 end
 
--- TODO: find icons for relevant buffer types
-local buf_icon = {
-	help = "  ",
-	Trouble = "  ",
-	Outline = "  ",
-	DiffviewFiles = "  ",
-	["neo-tree"] = "  ",
-}
-
-local function get_buffer_type_icon()
-	return buf_icon[vim.bo.filetype]
-end
-
-local function trouble_mode()
-	local mode = require("trouble.config").options.mode
-	if mode == "workspace_diagnostics" then
-		return "Workspace diagnostics"
-	end
-	if mode == "document_diagnostics" then
-		return "Document diagnostics"
-	end
-	if mode == "references" then
-		return "References"
-	end
-	if mode == "definitions" then
-		return "Definitions"
-	end
-	if mode == "todo" then
-		return "Todo"
-	end
-	return mode
-end
-
-local function get_displayed_name()
-	if vim.bo.filetype == "Trouble" then
-		return trouble_mode()
-	end
-	if vim.bo.buftype == "nofile" then
-		return vim.bo.filetype
-	end
-	local file = vim.fn.expand("%:p")
+local function get_displayed_name(path)
 	local cwd = vim.fn.getcwd()
-	if file:find(cwd, 1, true) then
-		return file:sub(#cwd + 2)
+	local relative = vim.fs.relpath(cwd, path)
+	if relative then
+		return relative
 	end
-	local home = vim.fn.getenv("HOME")
-	if file:find(home, 1, true) then
-		return "~/" .. file:sub(#home + 2)
+
+	local home = vim.env.HOME
+	if home then
+		local home_relative = vim.fs.relpath(home, path)
+		if home_relative then
+			return "~/" .. home_relative
+		end
 	end
-	return file
+	return path
 end
 
-local function get_name_iconified()
-	local res = ""
-	res = res .. (get_buffer_type_icon() or get_file_icon())
-	res = res .. get_displayed_name()
-	return res
-end
-
-local function get_diagnostic()
-	local res = {}
-	for _, diag in ipairs(vim.diagnostic.get(0, nil)) do
-		res[diag.severity] = (res[diag.severity] or 0) + 1
+local function get_diagnostic(buffer)
+	local result = {}
+	for _, diagnostic in ipairs(vim.diagnostic.get(buffer)) do
+		result[diagnostic.severity] = (result[diagnostic.severity] or 0) + 1
 	end
-	return res
+	return result
 end
 
 local function get_global_diagnostic()
-	local res = {}
-	for _, diag in ipairs(vim.diagnostic.get()) do
-		res[diag.severity] = (res[diag.severity] or 0) + 1
+	local result = {}
+	for _, diagnostic in ipairs(vim.diagnostic.get()) do
+		result[diagnostic.severity] = (result[diagnostic.severity] or 0) + 1
 	end
-	return res
+	return result
 end
 
-local function get_status_icons()
-	-- modified
-	local file = vim.fn.expand("%:t")
+local function diagnostic_icon(diagnostics)
+	if diagnostics[vim.diagnostic.severity.ERROR] then
+		return ""
+	end
+	if diagnostics[vim.diagnostic.severity.WARN] then
+		return ""
+	end
+	return " "
+end
+
+local function get_status_icons(buffer, path)
 	local icons = {}
-	if vim.fn.empty(file) ~= 1 and vim.bo.modifiable and vim.bo.modified then
-		table.insert(icons, "")
+	if path ~= "" and vim.bo[buffer].modifiable and vim.bo[buffer].modified then
+		icons[#icons + 1] = ""
 	end
-	-- read only
-	if
-		vim.bo.buftype ~= "nofile"
-		-- and vim.fn.index(skipLock, vim.bo.filetype) ~= -1
-		and vim.tbl_contains(skip_lock, vim.bo.filetype)
-		and vim.bo.readonly == true
-	then
-		table.insert(icons, "")
+	if vim.tbl_contains(skip_lock, vim.bo[buffer].filetype) and vim.bo[buffer].readonly then
+		icons[#icons + 1] = ""
 	end
-
-	-- diagnostics
-	local global_diagnostic = get_global_diagnostic()
-	if global_diagnostic[vim.diagnostic.severity.ERROR] then
-		table.insert(icons, "")
-	elseif global_diagnostic[vim.diagnostic.severity.WARN] then
-		table.insert(icons, "")
-	else
-		table.insert(icons, " ")
-	end
-
-	-- local diagnostics
-	local diagnostic = get_diagnostic()
-	if diagnostic[vim.diagnostic.severity.ERROR] then
-		table.insert(icons, "")
-	elseif diagnostic[vim.diagnostic.severity.WARN] then
-		table.insert(icons, "")
-	else
-		table.insert(icons, " ")
-	end
-
+	icons[#icons + 1] = diagnostic_icon(get_global_diagnostic())
+	icons[#icons + 1] = diagnostic_icon(get_diagnostic(buffer))
 	return "  " .. table.concat(icons, " ")
 end
 
+local last_value = ""
+
 return function()
-	local str = ""
-	str = str .. get_name_iconified() .. " "
-	--[[ str = str .. get_displayed_name() ]]
-	str = str .. get_status_icons() .. "  "
-	return str
+	local buffer = vim.api.nvim_get_current_buf()
+	if vim.bo[buffer].buftype ~= "" or not vim.bo[buffer].buflisted then
+		return last_value
+	end
+
+	local path = vim.api.nvim_buf_get_name(buffer)
+	local name = path == "" and "[No Name]" or get_displayed_name(path)
+	last_value = get_file_icon(buffer, path) .. name .. " " .. get_status_icons(buffer, path) .. "  "
+	return last_value
 end

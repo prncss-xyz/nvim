@@ -36,6 +36,16 @@ M.b = {
 	}),
 }
 
+M.d = {
+	left = "\n",
+	right = "\n",
+	snip = not_vscode({
+		fmt("\n[]\n", {
+			contents(),
+		}, { delimiters = "[]" }),
+	}),
+}
+
 M.i = {
 	snip = not_vscode({
 		markdown = fmt("*[][][]*", {
