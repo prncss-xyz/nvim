@@ -2,7 +2,7 @@ local M = {}
 
 local config = require("plugins.toggleterm.config").panel
 local ensure_dir = require("plugins.toggleterm.terms.ensure_dir").ensure_dir
-local format_item = require("plugins.toggleterm.terms.format_item").format_item(false)
+local format_item = require("plugins.toggleterm.terms.format_item").format_item(false, false)
 local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
 
 local states = {}
@@ -115,13 +115,23 @@ local function create_rows(items, format)
 			elseif item.changed then
 				highlight = "DiagnosticWarn"
 			end
+			local indent = string.rep("  ", depth)
 			table.insert(rows, {
 				instance_count = item.instance_count,
 				item = item,
-				text = string.rep("  ", depth) .. format(item),
+				text = indent .. format(item),
 				status = item.status,
 				highlight = highlight,
 			})
+			if item.title then
+				table.insert(rows, {
+					instance_count = item.instance_count,
+					item = item,
+					text = indent .. "  " .. item.title,
+					highlight = "Comment",
+					title = true,
+				})
+			end
 		end
 	end
 	local function append_directory(node, depth, name)
@@ -161,12 +171,12 @@ local function create_rows(items, format)
 
 	local status_column = 0
 	for _, row in ipairs(rows) do
-		if row.item then
+		if row.status then
 			status_column = math.max(status_column, vim.fn.strdisplaywidth(row.text))
 		end
 	end
 	for _, row in ipairs(rows) do
-		if row.item then
+		if row.status then
 			local padding = status_column - vim.fn.strdisplaywidth(row.text) + 1
 			row.text = row.text .. string.rep(" ", padding) .. "(" .. row.status .. ")"
 		end
@@ -343,6 +353,7 @@ local function open(query, history, subscribe, create_in_dir)
 			event.type == "create"
 			or event.type == "focus"
 			or event.type == "status"
+			or event.type == "title"
 			or event.type == "dir"
 			or event.type == "detach"
 		then

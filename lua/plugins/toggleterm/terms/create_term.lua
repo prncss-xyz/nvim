@@ -18,6 +18,10 @@ local function osc_dir(sequence)
 	return ok and decoded or nil
 end
 
+local function osc_title(sequence)
+	return sequence:match("^\27%][02];([^\7\27]*)")
+end
+
 local shutting_down = false
 
 vim.api.nvim_create_autocmd("ExitPre", {
@@ -49,8 +53,17 @@ function M.create_term(opts, send, prepare, min_runtime)
 		vim.api.nvim_create_autocmd("TermRequest", {
 			buffer = term.bufnr,
 			callback = function(event)
-				local dir = osc_dir(event.data.sequence)
-				if not dir or generation ~= attachment_generation then
+				if generation ~= attachment_generation then
+					return
+				end
+				local sequence = event.data.sequence
+				local title = osc_title(sequence)
+				if title then
+					send({ type = "title", value = title })
+					return
+				end
+				local dir = osc_dir(sequence)
+				if not dir then
 					return
 				end
 				local resolved_dir = project_dir(dir)

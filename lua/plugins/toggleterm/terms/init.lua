@@ -135,6 +135,8 @@ subscribe(function(event, item)
 		config.on_status(item)
 	elseif event.type == "url" then
 		item.term.url = event.value
+	elseif event.type == "title" then
+		item.title = event.value ~= "" and event.value or nil
 	elseif event.type == "dir" then
 		history.insert(item)
 	elseif event.type == "detach" then

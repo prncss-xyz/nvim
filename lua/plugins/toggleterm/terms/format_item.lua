@@ -28,7 +28,10 @@ local function format_dir(dir)
 	return dir or ""
 end
 
-function M.format_item(global)
+function M.format_item(global, include_title)
+	if include_title == nil then
+		include_title = true
+	end
 	return function(item)
 		local res = status_icons[item.status] or default_icon
 		local identifier = item.key .. ":" .. item.instance_count .. (item.changed and "*" or "")
@@ -38,6 +41,9 @@ function M.format_item(global)
 		end
 		if global then
 			res = res .. " (" .. format_dir(item.dir) .. ")"
+		end
+		if include_title and item.title then
+			res = res .. "  \u{2014}  " .. item.title
 		end
 		return res
 	end
