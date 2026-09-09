@@ -6,13 +6,11 @@ function M.get_selection(ctx)
 		vim.cmd([[noautocmd normal! \<Esc>]])
 	end
 
-	local start = vim.api.nvim_buf_get_mark(ctx.bufnr, "<")
-	local end_ = vim.api.nvim_buf_get_mark(ctx.bufnr, ">")
 	local start_row, start_col = start[1] - 1, start[2]
 	local end_row, end_col = end_[1] - 1, end_[2] + 1
 
 	-- for linewise visual mode, extend end_col to line end
-	if vim.fn.visualmode() == "V" then
+	if (is_current_visual and (mode == "V" or mode == "S")) or (not is_current_visual and vim.fn.visualmode() == "V") then
 		end_col = -1
 	end
 

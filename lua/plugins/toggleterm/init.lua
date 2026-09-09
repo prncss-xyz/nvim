@@ -204,14 +204,6 @@ return {
 				desc = "Toggle Terminal Diff",
 			},
 			{
-				"ma",
-				function()
-					require("plugins.toggleterm.terms").focus({ tag = "agent" })
-				end,
-				desc = "Focus Agent",
-				mode = "n",
-			},
-			{
 				"m" .. reverse("a"),
 				function()
 					require("plugins.toggleterm.terms").start({ tag = "agent" })
@@ -222,7 +214,15 @@ return {
 			{
 				"ma",
 				function()
-					require("plugins.toggleterm.put.init").put_selection()
+					require("plugins.toggleterm.terms").focus({ tag = "agent" })
+				end,
+				desc = "Focus Agent",
+				mode = "n",
+			},
+			{
+				"ma",
+				function()
+					require("plugins.toggleterm.put.init").put_selection({ tag = "agent" })
 				end,
 				desc = "Send Selection to Agent",
 				mode = "x",
@@ -230,7 +230,7 @@ return {
 			{
 				"mc",
 				function()
-					require("plugins.toggleterm.terms").send_str(nil, "{position}")
+					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{position}")
 				end,
 				desc = "Put Current File Position",
 				mode = "n",
@@ -238,7 +238,7 @@ return {
 			{
 				"md",
 				function()
-					require("plugins.toggleterm.terms").send_str(nil, "{line}")
+					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{line}")
 				end,
 				desc = "Put Current File Line",
 				mode = "n",
@@ -246,7 +246,7 @@ return {
 			{
 				"me",
 				function()
-					require("plugins.toggleterm.terms").send_str(nil, "{path}")
+					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{path}")
 				end,
 				desc = "Put Current File Path",
 				mode = "n",
@@ -254,7 +254,7 @@ return {
 			{
 				"mh",
 				function()
-					require("plugins.toggleterm.put.init").put_hunk()
+					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{hunk}")
 				end,
 				desc = "Put Current or Next Hunk",
 				mode = "n",
