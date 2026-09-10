@@ -70,14 +70,14 @@ vim.api.nvim_create_autocmd("ExitPre", {
 })
 
 function M.create_term(opts, send, prepare, min_runtime, notify)
-	local opts_ = vim.deepcopy(opts)
-	local exit_policy = opts_.on_exit
+	local exit_policy = opts.on_exit
+	local dir = opts.dir or vim.fn.getcwd()
+	local screen_manifest = opts.screen_manifest
 	local started_at
 	local restart_scheduled = false
 	local restart_requested = false
 	local kill_requested = false
 	local reopen_after_restart = false
-	local original_on_create = opts_.on_create
 	local attached_bufnr
 	local reset_status_detection
 	local schedule_status_detection
@@ -146,11 +146,11 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 					return
 				end
 				local resolved_dir = project_dir(dir)
-				opts_.dir = resolved_dir
+				dir = resolved_dir
 				send({ type = "dir", value = resolved_dir })
 				-- Leave TermRequest so opening a file can trigger BufRead and FileType autocmds.
 				vim.schedule(function()
-					if generation ~= attachment_generation or opts_.dir ~= resolved_dir then
+					if generation ~= attachment_generation or dir ~= resolved_dir then
 						return
 					end
 					ensure_dir_without_focus(resolved_dir)
@@ -161,32 +161,32 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 			if generation == attachment_generation then
 				send(event)
 			end
-		end, opts_.screen_manifest, osc)
+		end, screen_manifest, osc)
 		if replacing then
 			send({ type = "create" })
 		end
 	end
-	opts_.close_on_exit = exit_policy ~= "keep" and exit_policy ~= "restart"
-	opts_.env = {
-		VMUX_COUNT = opts_.instance_count,
+	local terminal_options = {
+		cmd = opts.cmd,
+		dir = dir,
+		close_on_exit = exit_policy ~= "keep" and exit_policy ~= "restart",
+		env = {
+			VMUX_COUNT = opts.instance_count,
+		},
+		on_open = function()
+			send({ type = "focus" })
+			vim.schedule(function()
+				vim.cmd.startinsert()
+			end)
+		end,
+		on_create = function(term)
+			started_at = vim.uv.hrtime()
+			restart_scheduled = false
+			attach_status(term)
+		end,
 	}
-	opts_.dir = opts_.dir or vim.fn.getcwd()
-	opts_.on_open = function()
-		send({ type = "focus" })
-		vim.schedule(function()
-			vim.cmd.startinsert()
-		end)
-	end
-	opts_.on_create = function(term)
-		started_at = vim.uv.hrtime()
-		restart_scheduled = false
-		attach_status(term)
-		if original_on_create then
-			original_on_create(term)
-		end
-	end
 
-	function opts_.on_exit(term, _, exit_code)
+	function terminal_options.on_exit(term, _, exit_code)
 		if shutting_down then
 			return
 		end
@@ -200,7 +200,7 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 				end
 				term:shutdown()
 				if should_restart then
-					ensure_dir(opts_.dir)
+					ensure_dir(dir)
 					if reopen_after_restart then
 						term:open()
 						last_terminal = term
@@ -228,13 +228,13 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 		end)
 	end
 
-	local term = Terminal:new(opts_)
+	local term = Terminal:new(terminal_options)
 	if prepare then
 		term:spawn()
 	end
 	vim.schedule(function()
 		if term and term.bufnr and term.bufnr > 0 then
-			ensure_dir_without_focus(opts_.dir)
+			ensure_dir_without_focus(dir)
 			attach_status(term)
 		end
 	end)
@@ -257,7 +257,7 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 		end
 		if not is_visible(term.window) then
 			last_terminal = term
-			ensure_dir(opts_.dir)
+			ensure_dir(dir)
 		end
 		term:toggle()
 	end
@@ -265,7 +265,7 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 	local function focus()
 		hide_last()
 		if not is_visible(term.window) then
-			ensure_dir(opts_.dir)
+			ensure_dir(dir)
 			term:toggle()
 			last_terminal = term
 		end
@@ -319,7 +319,7 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 			if term.job_id and vim.fn.jobwait({ term.job_id }, 0)[1] == -1 then
 				vim.fn.jobstop(term.job_id)
 			else
-				opts_.on_exit(term, term.job_id, 0)
+				terminal_options.on_exit(term, term.job_id, 0)
 			end
 		end,
 		kill = function()
@@ -330,7 +330,7 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 			if term.job_id and vim.fn.jobwait({ term.job_id }, 0)[1] == -1 then
 				vim.fn.jobstop(term.job_id)
 			else
-				opts_.on_exit(term, term.job_id, 0)
+				terminal_options.on_exit(term, term.job_id, 0)
 			end
 		end,
 	}

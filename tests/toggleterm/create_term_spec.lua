@@ -303,6 +303,63 @@ T["create_term"]["ignores process exits while Neovim is shutting down"] = functi
 	assert.same({ events = {}, spawn_count = 1 }, child.lua_get("result"))
 end
 
+T["create_term"]["passes only explicitly supported options to toggleterm"] = function()
+	child.lua([[local terminal_options
+		package.loaded["toggleterm.terminal"] = {
+			Terminal = {
+				new = function(_, options)
+					terminal_options = options
+					return {}
+				end,
+			},
+		}
+		package.loaded["plugins.toggleterm.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			is_visible = function() return false end,
+			is_in_view = function() return false end,
+		}
+		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		require("plugins.toggleterm.terms.create_term").create_term({
+			cmd = "test-command",
+			dir = "/tmp/test-dir",
+			instance_count = 4,
+			on_exit = "keep",
+			key = "test",
+			display_name = "Test",
+			priority = 2,
+			tag = "test",
+		}, function() end)
+
+		result = {
+			cmd = terminal_options.cmd,
+			dir = terminal_options.dir,
+			close_on_exit = terminal_options.close_on_exit,
+			env = terminal_options.env,
+			has_callbacks = type(terminal_options.on_open) == "function"
+				and type(terminal_options.on_create) == "function"
+				and type(terminal_options.on_exit) == "function",
+			metadata = {
+				key = terminal_options.key,
+				display_name = terminal_options.display_name,
+				instance_count = terminal_options.instance_count,
+				priority = terminal_options.priority,
+				tag = terminal_options.tag,
+			},
+		}
+	]])
+
+	assert.same({
+		cmd = "test-command",
+		dir = "/tmp/test-dir",
+		close_on_exit = false,
+		env = { VMUX_COUNT = 4 },
+		has_callbacks = true,
+		metadata = {},
+	}, child.lua_get("result"))
+end
+
 T["create_term"]["maps on_exit to toggleterm's close_on_exit option"] = function()
 	child.lua([[local terminal_options = {}
 		package.loaded["toggleterm.terminal"] = {
