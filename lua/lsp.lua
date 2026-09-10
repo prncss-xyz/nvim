@@ -18,14 +18,7 @@ vim.lsp.config("marksman", {
 })
 
 vim.lsp.config("tsc", {
-	cmd = {
-		require("my.conds").personal(
-			vim.fs.joinpath(assert(vim.env.PNPM_HOME, "PNPM_HOME is not set"), "bin", "tsc"),
-			vim.fs.joinpath(assert(vim.env.PNPM_HOME, "PNPM_HOME is not set"), "tsc")
-		),
-		"--lsp",
-		"--stdio",
-	},
+	cmd = { "tsc", "--lsp", "--stdio" },
 	filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
 	root_markers = { "tsconfig.json", "jsconfig.json", "package.json", ".git" },
 	capabilities = require("plugins.lsp.utils").cmp_capabilities,
