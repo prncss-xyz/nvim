@@ -39,7 +39,7 @@ end
 
 local function sender(prefix)
 	return with_prompt(function(contents, prompt)
-		require("plugins.toggleterm.terms").send_str({ tag = "agent" }, (prefix or prompt) .. " " .. contents)
+		require("plugins.toggleterm.terms").put({ tag = "agent" }, (prefix or prompt) .. " " .. contents)
 	end)
 end
 
@@ -66,7 +66,7 @@ function M.prompt()
 		end
 		vim.schedule(function()
 			if type(contents) == "string" then
-				return require("plugins.toggleterm.terms").send_str({ tag = "agent" }, contents)
+				return require("plugins.toggleterm.terms").put({ tag = "agent" }, contents)
 			end
 			contents(input, choice)
 		end)

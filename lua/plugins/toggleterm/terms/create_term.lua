@@ -268,7 +268,7 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 		is_in_view = function()
 			return window.is_in_view(term.window)
 		end,
-		send_str = function(str, start_insert)
+		put = function(str, start_insert)
 			focus()
 			vim.schedule(function()
 				vim.api.nvim_chan_send(term.job_id, "\27[200~" .. str .. "\27[201~")

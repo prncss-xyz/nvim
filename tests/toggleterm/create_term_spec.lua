@@ -183,7 +183,7 @@ T["create_term"]["sends strings as bracketed paste"] = function()
 		end
 
 		local create_term = require("plugins.toggleterm.terms.create_term").create_term
-		create_term({}, function() end).send_str("@lua/example.lua ")
+		create_term({}, function() end).put("@lua/example.lua ")
 		vim.wait(100, function() return sent ~= nil end)
 		result = sent
 	]])

@@ -56,7 +56,6 @@ function M.create(touch)
 		display_name = "artifact",
 		tag = "agent",
 		rerun = function() end,
-		run = function() end,
 		start = function() end,
 		toggle_panel = function() end,
 	}
@@ -126,7 +125,7 @@ function M.create(touch)
 	term.get_ctx = function(invocation)
 		return source_context(project_dir(), invocation)
 	end
-	term.send_str = send_to_artifact
+	term.put = send_to_artifact
 	artifact.term = term
 
 	setmetatable(term, {

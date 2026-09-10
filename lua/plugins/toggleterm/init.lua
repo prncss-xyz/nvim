@@ -221,14 +221,14 @@ return {
 			{
 				"mv",
 				function()
-					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{selection}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{selection}")
 				end,
 				desc = "Send Selection to Agent",
 			},
 			{
 				"ma",
 				function()
-					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{selection}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{selection}")
 				end,
 				desc = "Send Selection to Agent",
 				mode = "x",
@@ -236,7 +236,7 @@ return {
 			{
 				"mc",
 				function()
-					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{position}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{position}")
 				end,
 				desc = "Put Current File Position",
 				mode = "n",
@@ -244,7 +244,7 @@ return {
 			{
 				"md",
 				function()
-					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{line}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{line}")
 				end,
 				desc = "Put Current File Line",
 				mode = "n",
@@ -252,7 +252,7 @@ return {
 			{
 				"me",
 				function()
-					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{path}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{path}")
 				end,
 				desc = "Put Current File Path",
 				mode = "n",
@@ -260,7 +260,7 @@ return {
 			{
 				"mh",
 				function()
-					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{hunk}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{hunk}")
 				end,
 				desc = "Put Current or Next Hunk",
 				mode = "n",
@@ -292,7 +292,7 @@ return {
 			{
 				"mz",
 				function()
-					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{next_diagnostic}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{next_diagnostic}")
 				end,
 				desc = "Put Diagnostic Prompt",
 				mode = "n",
@@ -300,7 +300,7 @@ return {
 			{
 				"mpz",
 				function()
-					require("plugins.toggleterm.terms").send_str({ tag = "agent" }, "{file_diagnostic}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{file_diagnostic}")
 				end,
 				desc = "Put File Diagnostics Prompt",
 			},

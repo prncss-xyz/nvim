@@ -88,7 +88,7 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 	}, child.lua_get("result"))
 end
 
-T["send_str"] = MiniTest.new_set()
+T["put"] = MiniTest.new_set()
 
 T["pseudo terminal"] = MiniTest.new_set()
 
@@ -170,7 +170,7 @@ T["pseudo terminal"]["participates in history only when explicitly included"] = 
 						table.insert(sent, "artifact:focus")
 						touch()
 					end,
-					send_str = function(str)
+					put = function(str)
 						table.insert(sent, "artifact:" .. str)
 						touch()
 					end,
@@ -185,7 +185,7 @@ T["pseudo terminal"]["participates in history only when explicitly included"] = 
 				table.insert(created, item.instance_count)
 				return {
 					focus = function() callback({ type = "focus" }) end,
-					send_str = function(str) table.insert(sent, "terminal:" .. str) end,
+					put = function(str) table.insert(sent, "terminal:" .. str) end,
 					is_in_view = function() return true end,
 				}
 			end,
@@ -205,10 +205,10 @@ T["pseudo terminal"]["participates in history only when explicitly included"] = 
 		local terms = require("plugins.toggleterm.terms")
 		terms.toggle_panel({})
 		terms.focus({ key = "agent", dir = "/tmp" })
-		terms.send_str({ artifact = true, dir = "/tmp" }, "latest-terminal")
+		terms.put({ artifact = true, dir = "/tmp" }, "latest-terminal")
 		terms.focus({ key = "artifact" })
-		terms.send_str({ artifact = true, dir = "/tmp" }, "latest-artifact")
-		terms.send_str({ dir = "/tmp" }, "artifact-excluded")
+		terms.put({ artifact = true, dir = "/tmp" }, "latest-artifact")
+		terms.put({ dir = "/tmp" }, "artifact-excluded")
 		terms.focus({ instance_count = 1 })
 		result = { sent = sent, created = created, events = events }
 	]])
@@ -226,13 +226,13 @@ T["pseudo terminal"]["participates in history only when explicitly included"] = 
 	}, child.lua_get("result"))
 end
 
-T["send_str"]["leaves the terminal in insert mode"] = function()
+T["put"]["leaves the terminal in insert mode"] = function()
 	child.lua([[local sent
 		local item = { key = "agent", dir = "/tmp" }
 		package.loaded["plugins.toggleterm.terms.create_term"] = {
 			create_term = function()
 				return {
-					send_str = function(str, start_insert)
+					put = function(str, start_insert)
 						sent = { str, start_insert }
 					end,
 					is_in_view = function() return true end,
@@ -248,14 +248,14 @@ T["send_str"]["leaves the terminal in insert mode"] = function()
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		require("plugins.toggleterm.terms").send_str({ key = "agent", dir = "/tmp" }, "hello")
+		require("plugins.toggleterm.terms").put({ key = "agent", dir = "/tmp" }, "hello")
 		result = sent
 	]])
 
 	assert.same({ "hello", true }, child.lua_get("result"))
 end
 
-T["send_str"]["formats the current project buffer for the latest artifact"] = function()
+T["put"]["formats the current project buffer for the latest artifact"] = function()
 	child.lua([[root = vim.fn.tempname()
 		local projects = vim.fs.joinpath(root, "projects")
 		local artifacts = vim.fs.joinpath(root, "artifacts")
@@ -281,7 +281,7 @@ T["send_str"]["formats the current project buffer for the latest artifact"] = fu
 		vim.cmd.cd(vim.fn.fnameescape(project))
 		vim.cmd.edit(vim.fn.fnameescape(artifact))
 		vim.cmd.edit(vim.fn.fnameescape(source))
-		terms.send_str({ key = "artifact" }, require("plugins.toggleterm.put.position").row)
+		terms.put({ key = "artifact" }, require("plugins.toggleterm.put.position").row)
 		focused = vim.api.nvim_buf_get_name(0)
 		expected = artifact
 		vim.cmd.write()
@@ -292,7 +292,7 @@ T["send_str"]["formats the current project buffer for the latest artifact"] = fu
 	assert.same(child.lua_get("expected"), child.lua_get("focused"))
 end
 
-T["send_str"]["uses the last project buffer from a terminal"] = function()
+T["put"]["uses the last project buffer from a terminal"] = function()
 	child.lua([[root = vim.fn.tempname()
 		local projects = vim.fs.joinpath(root, "projects")
 		local artifacts = vim.fs.joinpath(root, "artifacts")
@@ -322,7 +322,7 @@ T["send_str"]["uses the last project buffer from a terminal"] = function()
 		vim.cmd.edit(vim.fn.fnameescape(artifact))
 		vim.cmd.edit(vim.fn.fnameescape(source))
 		vim.cmd.terminal()
-		terms.send_str({ key = "artifact" }, require("plugins.toggleterm.put.position").row)
+		terms.put({ key = "artifact" }, require("plugins.toggleterm.put.position").row)
 		focused = vim.api.nvim_buf_get_name(0)
 		expected = artifact
 		vim.cmd.write()

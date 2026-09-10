@@ -309,21 +309,18 @@ end
 
 local local_format_item = format_item(false)
 
-function M.run(query)
+function M.run_or_raise(query)
 	query = normalize_query(query)
 	if query.instance_count then
 		local instance = history.find(get_filter({ instance_count = query.instance_count }))
 		if instance then
-			if instance.run then
-				return instance.run()
-			end
 			return instance.term.focus()
 		end
 	end
 	local filter = get_filter(query)
 	local selected = history.find(filter)
-	if selected and selected.run then
-		return selected.run()
+	if selected and selected.artifact then
+		return selected.term.focus()
 	end
 	local items = get_query_commands(query, filter)
 	local choices = history.filter(filter)
@@ -447,7 +444,7 @@ function M.prepare(query)
 	with_query(query, prepare)
 end
 
-function M.send_str(query, arg)
+function M.put(query, arg)
 	local invocation
 	if type(arg) == "string" then
 		local put = require("plugins.toggleterm.put.core")
@@ -463,7 +460,7 @@ function M.send_str(query, arg)
 		else
 			return
 		end
-		instance.term.send_str(arg, true)
+		instance.term.put(arg, true)
 	end)
 end
 
