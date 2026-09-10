@@ -174,6 +174,20 @@ T["screen status"]["matches OSC progress regions"] = function()
 	assert.same("idle", child.lua_get("result.status"))
 end
 
+T["screen status"]["matches OSC shell lifecycle regions"] = function()
+	child.lua([[local detect = require("plugins.toggleterm.terms.screen_status").detect
+		local manifest = {
+			default_status = "idle",
+			rules = {
+				{ status = "working", priority = 10, region = "osc_shell_phase", contains = { "output" } },
+				{ status = "failure", priority = 20, region = "osc_shell_exit_code", regex = { "^[1-9]" } },
+			},
+		}
+		working = detect(manifest, "", { shell_phase = "output" }).status
+		failed = detect(manifest, "", { shell_phase = "finished", shell_exit_code = "17" }).status]])
+	assert.same({ "working", "failure" }, child.lua_get("{ working, failed }"))
+end
+
 T["screen status"]["returns skip-state-update metadata"] = function()
 	child.lua([[local detect = require("plugins.toggleterm.terms.screen_status").detect
 		result = detect({ rules = { { status = "unknown", skip_state_update = true, contains = { "overlay" } } } }, "overlay")]])

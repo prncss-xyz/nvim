@@ -9,8 +9,12 @@ local is_visible = window.is_visible
 local ensure_dir = require("plugins.toggleterm.terms.ensure_dir").ensure_dir
 local project_dir = require("my.rooter").project_dir
 
-local function osc_dir(sequence)
-	local path = sequence:match("^\27%]7;file://[^/]*(/[^\7\27]*)")
+local function parse_osc(sequence)
+	return sequence:match("^\27%](%d+);([^\7\27]*)")
+end
+
+local function osc_dir(payload)
+	local path = payload:match("^file://[^/]*(/.*)$")
 	if not path then
 		return nil
 	end
@@ -18,21 +22,35 @@ local function osc_dir(sequence)
 	return ok and decoded or nil
 end
 
-local function osc_title(sequence)
-	return sequence:match("^\27%][02];([^\7\27]*)")
-end
-
-local function osc_progress(sequence)
-	return sequence:match("^\27%]9;([^\7\27]*)")
-end
-
-local function osc_notification(sequence)
-	local payload = sequence:match("^\27%]777;notify;([^\7\27]*)")
-	if not payload then
+local function osc_notification(payload)
+	local notification = payload:match("^notify;(.*)$")
+	if not notification then
 		return nil
 	end
-	local title, message = payload:match("^([^;]*);(.*)$")
-	return title or "", message or payload
+	local title, message = notification:match("^([^;]*);(.*)$")
+	return title or "", message or notification
+end
+
+local shell_phases = {
+	A = "prompt",
+	B = "input",
+	C = "output",
+	D = "finished",
+}
+
+local function osc_shell(payload)
+	local marker, fields = payload:match("^([ABCD]);?(.*)$")
+	local phase = shell_phases[marker]
+	if not phase then
+		return nil
+	end
+	if marker ~= "D" then
+		return phase
+	end
+	local exit_code = fields:match("^%-?%d+$") and fields
+		or fields:match("^exit=(%-?%d+)")
+		or fields:match(";exit=(%-?%d+)")
+	return phase, exit_code
 end
 
 local shutting_down = false
@@ -55,7 +73,7 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 	local attached_bufnr
 	local reset_status_detection
 	local schedule_status_detection
-	local osc = { title = "", progress = "" }
+	local osc = { title = "", progress = "", shell_phase = "", shell_exit_code = "" }
 	local attachment_generation = 0
 	local function attach_status(term)
 		if not term.bufnr or term.bufnr <= 0 or term.bufnr == attached_bufnr then
@@ -65,6 +83,8 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 		attached_bufnr = term.bufnr
 		osc.title = ""
 		osc.progress = ""
+		osc.shell_phase = ""
+		osc.shell_exit_code = ""
 		attachment_generation = attachment_generation + 1
 		local generation = attachment_generation
 		vim.api.nvim_create_autocmd("TermRequest", {
@@ -73,30 +93,47 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 				if generation ~= attachment_generation then
 					return
 				end
-				local sequence = event.data.sequence
-				local notification_title, notification_message = osc_notification(sequence)
-				if notification_title then
-					notify(notification_title, notification_message)
+				local command, payload = parse_osc(event.data.sequence)
+				if not command then
 					return
 				end
-				local title = osc_title(sequence)
-				if title then
-					osc.title = title
-					send({ type = "title", value = title })
+				if command == "777" then
+					local title, message = osc_notification(payload)
+					if title then
+						notify(title, message)
+					end
+					return
+				end
+				if command == "0" or command == "2" then
+					osc.title = payload
+					send({ type = "title", value = payload })
 					if schedule_status_detection then
 						schedule_status_detection()
 					end
 					return
 				end
-				local progress = osc_progress(sequence)
-				if progress then
-					osc.progress = progress
+				if command == "9" then
+					osc.progress = payload
 					if schedule_status_detection then
 						schedule_status_detection()
 					end
 					return
 				end
-				local dir = osc_dir(sequence)
+				if command == "133" then
+					local phase, exit_code = osc_shell(payload)
+					if phase then
+						osc.shell_phase = phase
+						osc.shell_exit_code = exit_code or ""
+						if schedule_status_detection then
+							schedule_status_detection()
+						end
+					end
+					return
+				end
+				if command ~= "7" then
+					return
+				end
+				local dir = osc_dir(payload)
 				if not dir then
 					return
 				end

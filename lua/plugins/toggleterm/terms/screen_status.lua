@@ -127,6 +127,12 @@ local function region(text, spec, prompt_marker, osc)
 	if spec == "osc_progress" then
 		return osc.progress or ""
 	end
+	if spec == "osc_shell_phase" then
+		return osc.shell_phase or ""
+	end
+	if spec == "osc_shell_exit_code" then
+		return osc.shell_exit_code or ""
+	end
 	if not spec or spec == "whole_recent" then
 		return text
 	end

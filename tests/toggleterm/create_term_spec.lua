@@ -143,12 +143,21 @@ T["create_term"]["retains OSC title and progress for status detection"] = functi
 			buffer = terminal.bufnr,
 			data = { sequence = "\27]9;4;0;0\27\\" },
 		})
+		vim.api.nvim_exec_autocmds("TermRequest", {
+			buffer = terminal.bufnr,
+			data = { sequence = "\27]133;D;exit=17\7" },
+		})
 		result = { osc = osc, scheduled = scheduled }
 	]])
 
 	assert.same({
-		osc = { title = "◐ Working", progress = "4;0;0" },
-		scheduled = 2,
+		osc = {
+			title = "◐ Working",
+			progress = "4;0;0",
+			shell_phase = "finished",
+			shell_exit_code = "17",
+		},
+		scheduled = 3,
 	}, child.lua_get("result"))
 end
 
