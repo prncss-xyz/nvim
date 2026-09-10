@@ -256,7 +256,7 @@ local function focus_selected(state)
 	end
 	state.selected_instance = selected.instance_count
 	if selected.item then
-		selected.item.term.focus()
+		selected.item.term:focus()
 	else
 		ensure_dir(selected.dir)
 	end
@@ -265,14 +265,14 @@ end
 local function restart_selected(state)
 	local selected = state.rows[vim.api.nvim_win_get_cursor(state.win)[1]]
 	if selected and selected.item then
-		selected.item.term.restart()
+		selected.item.term:restart()
 	end
 end
 
 local function kill_selected(state)
 	local selected = state.rows[vim.api.nvim_win_get_cursor(state.win)[1]]
 	if selected and selected.item then
-		selected.item.term.kill()
+		selected.item.term:kill()
 	end
 end
 

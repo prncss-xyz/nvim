@@ -32,8 +32,8 @@ T["create_term"]["reports process exit status"] = function()
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local create_term = require("plugins.toggleterm.terms.create_term").create_term
-		create_term({}, function(event)
+		local Term = require("plugins.toggleterm.terms.create_term")
+		Term:new({}, function(event)
 			table.insert(events, event)
 		end)
 		terminal_options.on_exit(terminal, nil, 0)
@@ -66,11 +66,11 @@ T["create_term"]["reports whether its terminal is in view"] = function()
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local create_term = require("plugins.toggleterm.terms.create_term").create_term
-		local instance = create_term({}, function() end)
-		local in_view = instance.is_in_view()
+		local Term = require("plugins.toggleterm.terms.create_term")
+		local instance = Term:new({}, function() end)
+		local in_view = instance:is_in_view()
 		visible = false
-		result = { in_view, instance.is_in_view() }
+		result = { in_view, instance:is_in_view() }
 	]])
 
 	assert.same({ true, false }, child.lua_get("result"))
@@ -96,8 +96,8 @@ T["create_term"]["passes OSC notifications to the configured notifier"] = functi
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local create_term = require("plugins.toggleterm.terms.create_term").create_term
-		create_term({}, function() end, false, nil, function(title, message)
+		local Term = require("plugins.toggleterm.terms.create_term")
+		Term:new({}, function() end, false, nil, function(title, message)
 			notification = { title, message }
 		end)
 		vim.wait(10)
@@ -138,7 +138,7 @@ T["create_term"]["does not steal focus when attaching a created terminal"] = fun
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		vim.api.nvim_set_current_win(terminal_win)
-		require("plugins.toggleterm.terms.create_term").create_term({}, function() end)
+		require("plugins.toggleterm.terms.create_term"):new({}, function() end)
 		vim.wait(100, function() return ensured end)
 		result = ensured and vim.api.nvim_get_current_win() == terminal_win
 	]])
@@ -172,7 +172,7 @@ T["create_term"]["does not let OSC directory updates steal focus"] = function()
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		require("plugins.toggleterm.terms.create_term").create_term({}, function() end)
+		require("plugins.toggleterm.terms.create_term"):new({}, function() end)
 		vim.wait(10)
 		vim.api.nvim_set_current_win(terminal_win)
 		vim.api.nvim_exec_autocmds("TermRequest", {
@@ -208,7 +208,7 @@ T["create_term"]["retains OSC title and progress for status detection"] = functi
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		require("plugins.toggleterm.terms.create_term").create_term({}, function() end)
+		require("plugins.toggleterm.terms.create_term"):new({}, function() end)
 		vim.wait(10)
 		vim.api.nvim_exec_autocmds("TermRequest", {
 			buffer = terminal.bufnr,
@@ -257,8 +257,8 @@ T["create_term"]["sends strings as bracketed paste"] = function()
 			sent = { job_id, str }
 		end
 
-		local create_term = require("plugins.toggleterm.terms.create_term").create_term
-		create_term({}, function() end).put("@lua/example.lua ")
+		local Term = require("plugins.toggleterm.terms.create_term")
+		Term:new({}, function() end):put("@lua/example.lua ")
 		vim.wait(100, function() return sent ~= nil end)
 		result = sent
 	]])
@@ -290,8 +290,8 @@ T["create_term"]["ignores process exits while Neovim is shutting down"] = functi
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local create_term = require("plugins.toggleterm.terms.create_term").create_term
-		create_term({ on_exit = "restart" }, function(event)
+		local Term = require("plugins.toggleterm.terms.create_term")
+		Term:new({ on_exit = "restart" }, function(event)
 			table.insert(events, event)
 		end, true, 0)
 		vim.api.nvim_exec_autocmds("ExitPre", {})
@@ -321,9 +321,9 @@ T["create_term"]["passes only explicitly supported options to toggleterm"] = fun
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		require("plugins.toggleterm.terms.create_term").create_term({
+		require("plugins.toggleterm.terms.create_term"):new({
 			cmd = "test-command",
-			dir = "/tmp/test-dir",
+			cwd = "/tmp/test-dir",
 			instance_count = 4,
 			on_exit = "keep",
 			key = "test",
@@ -378,11 +378,11 @@ T["create_term"]["maps on_exit to toggleterm's close_on_exit option"] = function
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local create_term = require("plugins.toggleterm.terms.create_term").create_term
-		create_term({ on_exit = "keep" }, function() end)
-		create_term({ on_exit = "restart" }, function() end)
-		create_term({ on_exit = "close" }, function() end)
-		create_term({}, function() end)
+		local Term = require("plugins.toggleterm.terms.create_term")
+		Term:new({ on_exit = "keep" }, function() end)
+		Term:new({ on_exit = "restart" }, function() end)
+		Term:new({ on_exit = "close" }, function() end)
+		Term:new({}, function() end)
 		result = vim.tbl_map(function(options)
 			return options.close_on_exit
 		end, terminal_options)
@@ -430,8 +430,8 @@ T["create_term"]["restarts long-running failed processes in the same hidden term
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local create_term = require("plugins.toggleterm.terms.create_term").create_term
-		create_term({ on_exit = "restart" }, function(event)
+		local Term = require("plugins.toggleterm.terms.create_term")
+		Term:new({ on_exit = "restart" }, function(event)
 			table.insert(events, event)
 		end, true, 0)
 		vim.wait(10)
@@ -477,8 +477,8 @@ T["create_term"]["reattaches status detection when toggleterm replaces the buffe
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local create_term = require("plugins.toggleterm.terms.create_term").create_term
-		create_term({}, function(event)
+		local Term = require("plugins.toggleterm.terms.create_term")
+		Term:new({}, function(event)
 			table.insert(events, event)
 		end, true)
 		vim.wait(20, function() return #attachments == 1 end)
@@ -535,12 +535,12 @@ T["create_term"]["resets status and screen detection when manually restarted"] =
 		vim.fn.jobwait = function() return { -1 } end
 		vim.fn.jobstop = function() end
 
-		local create_term = require("plugins.toggleterm.terms.create_term").create_term
-		local instance = create_term({ screen_manifest = {} }, function(event)
+		local Term = require("plugins.toggleterm.terms.create_term")
+		local instance = Term:new({ screen_manifest = {} }, function(event)
 			table.insert(events, event)
 		end)
 		vim.wait(10)
-		instance.restart()
+		instance:restart()
 		terminal_options.on_exit(terminal, terminal.job_id, 143)
 		vim.wait(10)
 		result = { events = events, reset_count = reset_count }
@@ -584,8 +584,8 @@ T["create_term"]["reuses a terminal buffer containing output"] = function()
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local create_term = require("plugins.toggleterm.terms.create_term").create_term
-		create_term({ on_exit = "restart" }, function() end, true, 0)
+		local Term = require("plugins.toggleterm.terms.create_term")
+		Term:new({ on_exit = "restart" }, function() end, true, 0)
 		vim.fn.jobwait({ terminal.job_id }, 1000)
 		terminal_options.on_exit(terminal, nil, 1)
 		vim.wait(100, function()
@@ -621,8 +621,8 @@ T["create_term"]["does not restart successful or short-lived processes"] = funct
 		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local create_term = require("plugins.toggleterm.terms.create_term").create_term
-		create_term({ on_exit = "restart" }, function() end, true, 100000)
+		local Term = require("plugins.toggleterm.terms.create_term")
+		Term:new({ on_exit = "restart" }, function() end, true, 100000)
 		terminal_options.on_exit(terminal, nil, 0)
 		terminal_options.on_exit(terminal, nil, 1)
 		vim.wait(10)

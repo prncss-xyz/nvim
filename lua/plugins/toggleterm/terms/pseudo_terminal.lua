@@ -122,12 +122,18 @@ function M.create(touch)
 		touch()
 	end
 
-	term.focus = focus_artifact
-	term.toggle = toggle_artifact
-	term.get_ctx = function(invocation)
+	term.focus = function()
+		focus_artifact()
+	end
+	term.toggle = function()
+		toggle_artifact()
+	end
+	term.get_ctx = function(_, invocation)
 		return source_context(project_dir(), invocation)
 	end
-	term.put = send_to_artifact
+	term.put = function(_, str)
+		send_to_artifact(str)
+	end
 	artifact.term = term
 
 	setmetatable(term, {

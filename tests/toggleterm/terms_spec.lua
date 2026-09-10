@@ -32,7 +32,7 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 			end,
 		}
 		package.loaded["plugins.toggleterm.terms.create_term"] = {
-			create_term = function(_, callback)
+			new = function(_, _, callback)
 				send = callback
 				return {
 					focus = function() end,
@@ -101,7 +101,7 @@ T["pseudo terminal"]["toggles the artifact index without querying terminals"] = 
 			},
 		}
 		package.loaded["plugins.toggleterm.terms.create_term"] = {
-			create_term = function() error("artifact must not create a terminal") end,
+			new = function() error("artifact must not create a terminal") end,
 		}
 		package.loaded["plugins.toggleterm.config"] = {
 			autostart = {},
@@ -134,7 +134,7 @@ T["pseudo terminal"]["focuses the latest artifact for the current project"] = fu
 		vim.uv.fs_symlink(artifacts .. "/alpha", project .. "/.artifacts")
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
-		package.loaded["plugins.toggleterm.terms.create_term"] = { create_term = function() end }
+		package.loaded["plugins.toggleterm.terms.create_term"] = { new = function() end }
 		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
 		package.loaded["plugins.toggleterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not query terminal commands") end,
@@ -170,7 +170,7 @@ T["pseudo terminal"]["participates in history only when explicitly included"] = 
 						table.insert(sent, "artifact:focus")
 						touch()
 					end,
-					put = function(str)
+					put = function(_, str)
 						table.insert(sent, "artifact:" .. str)
 						touch()
 					end,
@@ -181,11 +181,11 @@ T["pseudo terminal"]["participates in history only when explicitly included"] = 
 			end,
 		}
 		package.loaded["plugins.toggleterm.terms.create_term"] = {
-			create_term = function(item, callback)
+			new = function(_, item, callback)
 				table.insert(created, item.instance_count)
 				return {
 					focus = function() callback({ type = "focus" }) end,
-					put = function(str) table.insert(sent, "terminal:" .. str) end,
+					put = function(_, str) table.insert(sent, "terminal:" .. str) end,
 					is_in_view = function() return true end,
 				}
 			end,
@@ -230,9 +230,9 @@ T["put"]["leaves the terminal in insert mode"] = function()
 	child.lua([[local sent
 		local item = { key = "agent", dir = "/tmp" }
 		package.loaded["plugins.toggleterm.terms.create_term"] = {
-			create_term = function()
+			new = function()
 				return {
-					put = function(str, start_insert)
+					put = function(_, str, start_insert)
 						sent = { str, start_insert }
 					end,
 					is_in_view = function() return true end,
@@ -269,7 +269,7 @@ T["put"]["formats the current project buffer for the latest artifact"] = functio
 		vim.uv.fs_symlink(artifacts .. "/alpha", project .. "/.artifacts")
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
-		package.loaded["plugins.toggleterm.terms.create_term"] = { create_term = function() end }
+		package.loaded["plugins.toggleterm.terms.create_term"] = { new = function() end }
 		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
 		package.loaded["plugins.toggleterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not create a terminal") end,
@@ -309,7 +309,7 @@ T["put"]["uses the last project buffer from a terminal"] = function()
 		package.loaded["toggleterm.terminal"] = {
 			identify = function() return nil, { dir = project } end,
 		}
-		package.loaded["plugins.toggleterm.terms.create_term"] = { create_term = function() end }
+		package.loaded["plugins.toggleterm.terms.create_term"] = { new = function() end }
 		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
 		package.loaded["plugins.toggleterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not create a terminal") end,
@@ -344,12 +344,19 @@ T["instance numbers"]["are globally unique and reuse the smallest available numb
 			table.insert(notifications, { message, level })
 		end
 
+		local key_by_cwd = {
+			["/one"] = "shell",
+			["/two"] = "agent",
+			["/ignored"] = "ignored",
+			["/three"] = "repl",
+		}
 		package.loaded["plugins.toggleterm.terms.create_term"] = {
-			create_term = function(item, callback)
-				table.insert(created, { key = item.key, instance_count = item.instance_count })
-				callbacks[item.key] = callback
+			new = function(_, opts, callback)
+				local key = key_by_cwd[opts.cwd]
+				table.insert(created, { key = key, instance_count = opts.instance_count })
+				callbacks[key] = callback
 				return {
-					focus = function() table.insert(focused, item.key) end,
+					focus = function() table.insert(focused, key) end,
 					is_in_view = function() return false end,
 					kill = function() end,
 				}
@@ -475,7 +482,7 @@ T["terminal panel integration"]["uses ui_toggle and forwards make_item lifecycle
 			end,
 		}
 		package.loaded["plugins.toggleterm.terms.create_term"] = {
-			create_term = function(_, callback)
+			new = function(_, _, callback)
 				sent = callback
 				return {
 					focus = function() callback({ type = "focus" }) end,

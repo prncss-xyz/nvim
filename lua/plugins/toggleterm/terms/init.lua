@@ -1,7 +1,7 @@
 local M = {}
 
 local create_history = require("plugins.toggleterm.terms.history").create_history
-local create_term = require("plugins.toggleterm.terms.create_term").create_term
+local Term = require("plugins.toggleterm.terms.create_term")
 local config = require("plugins.toggleterm.config")
 local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
 local utils = require("plugins.toggleterm.terms.utils")
@@ -149,7 +149,7 @@ subscribe(function(event, item)
 		history.insert(item)
 	elseif event.type == "status" and event.value ~= item.status then
 		item.status = event.value
-		if event.visible == true or item.term.is_in_view() then
+		if event.visible == true or item.term:is_in_view() then
 			item.changed = nil
 		else
 			next_change_id = next_change_id + 1
@@ -185,7 +185,13 @@ local function prepare()
 end
 
 local function create_and_notify(item, cb)
-	item.term = create_term(item, function(event)
+	item.term = Term:new({
+		cmd = item.cmd,
+		cwd = item.dir,
+		instance_count = item.instance_count,
+		on_exit = item.on_exit,
+		screen_manifest = item.screen_manifest,
+	}, function(event)
 		if event.type == "dir" then
 			item.dir = event.value
 		end
@@ -319,13 +325,13 @@ function M.run_or_raise(query)
 	if query.instance_count then
 		local instance = history.find(get_filter({ instance_count = query.instance_count }))
 		if instance then
-			return instance.term.focus()
+			return instance.term:focus()
 		end
 	end
 	local filter = get_filter(query)
 	local selected = history.find(filter)
 	if selected and selected.artifact then
-		return selected.term.focus()
+		return selected.term:focus()
 	end
 	local items = get_query_commands(query, filter)
 	local choices = history.filter(filter)
@@ -346,23 +352,23 @@ function M.run_or_raise(query)
 			return
 		end
 		if item.term then
-			return item.term.focus()
+			return item.term:focus()
 		end
 		make_item(item, function(instance)
-			instance.term.focus()
+			instance.term:focus()
 		end, query.instance_count)
 	end)
 end
 
 function M.focus(query)
 	with_query(query, function(instance)
-		instance.term.focus()
+		instance.term:focus()
 	end)
 end
 
 function M.toggle(query)
 	with_query(query, function(instance)
-		instance.term.toggle()
+		instance.term:toggle()
 	end)
 end
 
@@ -383,11 +389,11 @@ function M.toggle_unseen_or_latest(query)
 		end
 	end
 	if oldest_changed then
-		return oldest_changed.term.focus()
+		return oldest_changed.term:focus()
 	end
 	local latest = history.find(filter)
 	if latest then
-		return latest.term.toggle()
+		return latest.term:toggle()
 	end
 	M.toggle(query)
 end
@@ -439,7 +445,7 @@ function M.put(query, arg)
 		else
 			return
 		end
-		instance.term.put(arg, true)
+		instance.term:put(arg, true)
 	end)
 end
 
@@ -450,7 +456,7 @@ function M.read(instance_count, opts, cb)
 	if not item then
 		return
 	end
-	return item.term.read(opts.len, opts.regex, cb)
+	return item.term:read(opts, cb)
 end
 
 function M.browse()
@@ -482,14 +488,14 @@ function M.start(query)
 	end
 	local item = utils.max_of(get_query_commands(query, get_filter(query)), gt_item) or without_query_options(query)
 	make_item(item, function(instance)
-		instance.term.focus()
+		instance.term:focus()
 	end, query.instance_count)
 end
 
 function M.restart(query)
 	with_query(query, function(instance, created)
 		if not created then
-			instance.term.restart()
+			instance.term:restart()
 		end
 	end)
 end

@@ -1,4 +1,5 @@
-local M = {}
+local Term = {}
+Term.__index = Term
 
 local Terminal = require("toggleterm.terminal").Terminal
 local attach_term = require("plugins.toggleterm.terms.attach_term").attach_term
@@ -69,271 +70,292 @@ vim.api.nvim_create_autocmd("ExitPre", {
 	end,
 })
 
-function M.create_term(opts, send, prepare, min_runtime, notify)
-	local exit_policy = opts.on_exit
-	local dir = opts.dir or vim.fn.getcwd()
-	local screen_manifest = opts.screen_manifest
-	local started_at
-	local restart_scheduled = false
-	local restart_requested = false
-	local kill_requested = false
-	local reopen_after_restart = false
-	local attached_bufnr
-	local reset_status_detection
-	local schedule_status_detection
-	local osc = { title = "", progress = "", shell_phase = "", shell_exit_code = "" }
-	local attachment_generation = 0
-	local function attach_status(term)
-		if not term.bufnr or term.bufnr <= 0 or term.bufnr == attached_bufnr then
-			return
-		end
-		local replacing = attached_bufnr ~= nil
-		attached_bufnr = term.bufnr
-		osc.title = ""
-		osc.progress = ""
-		osc.shell_phase = ""
-		osc.shell_exit_code = ""
-		attachment_generation = attachment_generation + 1
-		local generation = attachment_generation
-		vim.api.nvim_create_autocmd("TermRequest", {
-			buffer = term.bufnr,
-			callback = function(event)
-				if generation ~= attachment_generation then
-					return
-				end
-				local command, payload = parse_osc(event.data.sequence)
-				if not command then
-					return
-				end
-				if command == "777" then
-					local title, message = osc_notification(payload)
-					if title then
-						notify(title, message)
-					end
-					return
-				end
-				if command == "0" or command == "2" then
-					osc.title = payload
-					send({ type = "title", value = payload })
-					if schedule_status_detection then
-						schedule_status_detection()
-					end
-					return
-				end
-				if command == "9" then
-					osc.progress = payload
-					if schedule_status_detection then
-						schedule_status_detection()
-					end
-					return
-				end
-				if command == "133" then
-					local phase, exit_code = osc_shell(payload)
-					if phase then
-						osc.shell_phase = phase
-						osc.shell_exit_code = exit_code or ""
-						if schedule_status_detection then
-							schedule_status_detection()
-						end
-					end
-					return
-				end
-				if command ~= "7" then
-					return
-				end
-				local dir = osc_dir(payload)
-				if not dir then
-					return
-				end
-				local resolved_dir = project_dir(dir)
-				dir = resolved_dir
-				send({ type = "dir", value = resolved_dir })
-				-- Leave TermRequest so opening a file can trigger BufRead and FileType autocmds.
-				vim.schedule(function()
-					if generation ~= attachment_generation or dir ~= resolved_dir then
-						return
-					end
-					ensure_dir_without_focus(resolved_dir)
-				end)
-			end,
-		})
-		reset_status_detection, schedule_status_detection = attach_term(term, function(event)
-			if generation == attachment_generation then
-				send(event)
-			end
-		end, screen_manifest, osc)
-		if replacing then
-			send({ type = "create" })
-		end
-	end
-	local terminal_options = {
+function Term:new(opts, send, prepare, min_runtime, notify)
+	local instance = setmetatable({
+		send = send,
+		notify = notify,
+		exit_policy = opts.on_exit,
+		cwd = opts.cwd or vim.fn.getcwd(),
+		screen_manifest = opts.screen_manifest,
+		min_runtime = min_runtime or 0,
+		restart_scheduled = false,
+		restart_requested = false,
+		kill_requested = false,
+		reopen_after_restart = false,
+		osc = { title = "", progress = "", shell_phase = "", shell_exit_code = "" },
+		attachment_generation = 0,
+	}, self)
+
+	instance.terminal = Terminal:new({
 		cmd = opts.cmd,
-		dir = dir,
-		close_on_exit = exit_policy ~= "keep" and exit_policy ~= "restart",
+		dir = instance.cwd,
+		close_on_exit = instance.exit_policy ~= "keep" and instance.exit_policy ~= "restart",
 		env = {
 			VMUX_COUNT = opts.instance_count,
 		},
 		on_open = function()
-			send({ type = "focus" })
-			vim.schedule(function()
-				vim.cmd.startinsert()
-			end)
+			instance:on_open()
 		end,
-		on_create = function(term)
-			started_at = vim.uv.hrtime()
-			restart_scheduled = false
-			attach_status(term)
+		on_create = function(terminal)
+			instance:on_create(terminal)
 		end,
-	}
+		on_exit = function(terminal, job_id, exit_code)
+			instance:on_exit(terminal, job_id, exit_code)
+		end,
+	})
 
-	function terminal_options.on_exit(term, _, exit_code)
-		if shutting_down then
-			return
-		end
-		if restart_requested or kill_requested then
-			local should_restart = restart_requested
-			restart_requested = false
-			kill_requested = false
-			vim.schedule(function()
-				if term.bufnr and vim.api.nvim_buf_is_valid(term.bufnr) then
-					vim.bo[term.bufnr].modified = false
-				end
-				term:shutdown()
-				if should_restart then
-					ensure_dir(dir)
-					if reopen_after_restart then
-						term:open()
-						last_terminal = term
-					else
-						term:spawn()
-					end
-				end
-			end)
-			return
-		end
-		send({
-			type = "status",
-			value = exit_code == 0 and "success" or "failure",
-		})
-		local runtime = started_at and (vim.uv.hrtime() - started_at) / 1000000 or 0
-		if exit_policy ~= "restart" or exit_code == 0 or runtime < (min_runtime or 0) or restart_scheduled then
-			return
-		end
-		restart_scheduled = true
-		vim.schedule(function()
-			if term.bufnr and vim.api.nvim_buf_is_valid(term.bufnr) then
-				vim.bo[term.bufnr].modified = false
-			end
-			term:spawn()
-		end)
-	end
-
-	local term = Terminal:new(terminal_options)
 	if prepare then
-		term:spawn()
+		instance.terminal:spawn()
 	end
 	vim.schedule(function()
-		if term and term.bufnr and term.bufnr > 0 then
-			ensure_dir_without_focus(dir)
-			attach_status(term)
+		local terminal = instance.terminal
+		if terminal and terminal.bufnr and terminal.bufnr > 0 then
+			ensure_dir_without_focus(instance.cwd)
+			instance:attach_status(terminal)
 		end
 	end)
 
-	local function hide_last()
-		if last_terminal ~= nil and last_terminal ~= term then
-			local winnr = last_terminal.window
-			if winnr and vim.api.nvim_win_is_valid(winnr) then
-				last_terminal:toggle()
-				return true
-			end
-		end
-		last_terminal = nil
-		return false
-	end
-
-	local function toggle()
-		if hide_last() then
-			return
-		end
-		if not is_visible(term.window) then
-			last_terminal = term
-			ensure_dir(dir)
-		end
-		term:toggle()
-	end
-
-	local function focus()
-		hide_last()
-		if not is_visible(term.window) then
-			ensure_dir(dir)
-			term:toggle()
-			last_terminal = term
-		end
-	end
-
-	return {
-		toggle = toggle,
-		focus = focus,
-		is_in_view = function()
-			return window.is_in_view(term.window)
-		end,
-		put = function(str, start_insert)
-			focus()
-			vim.schedule(function()
-				vim.api.nvim_chan_send(term.job_id, "\27[200~" .. str .. "\27[201~")
-				if start_insert then
-					vim.schedule(function()
-						vim.cmd.startinsert()
-					end)
-				end
-			end)
-		end,
-		read = function(read_opts, cb)
-			if not term.bufnr or not vim.api.nvim_buf_is_valid(term.bufnr) then
-				return cb({})
-			end
-			local line_count = vim.api.nvim_buf_line_count(term.bufnr)
-			if read_opts.regex == nil or read_opts.regex == "" then
-				local start = math.max(0, line_count - read_opts.len)
-				return cb(vim.api.nvim_buf_get_lines(term.bufnr, start, line_count, false))
-			end
-
-			local matcher = vim.regex(read_opts.regex)
-			local lines = vim.api.nvim_buf_get_lines(term.bufnr, 0, line_count, false)
-			local matches = vim.tbl_filter(function(line)
-				return matcher:match_str(line) ~= nil
-			end, lines)
-			local start = math.max(1, #matches - read_opts.len + 1)
-			cb(vim.list_slice(matches, start))
-		end,
-		restart = function()
-			if restart_requested or kill_requested then
-				return
-			end
-			if reset_status_detection then
-				reset_status_detection()
-			end
-			send({ type = "status", value = "idle" })
-			reopen_after_restart = is_visible(term.window)
-			restart_requested = true
-			if term.job_id and vim.fn.jobwait({ term.job_id }, 0)[1] == -1 then
-				vim.fn.jobstop(term.job_id)
-			else
-				terminal_options.on_exit(term, term.job_id, 0)
-			end
-		end,
-		kill = function()
-			if kill_requested or restart_requested then
-				return
-			end
-			kill_requested = true
-			if term.job_id and vim.fn.jobwait({ term.job_id }, 0)[1] == -1 then
-				vim.fn.jobstop(term.job_id)
-			else
-				terminal_options.on_exit(term, term.job_id, 0)
-			end
-		end,
-	}
+	return instance
 end
 
-return M
+function Term:on_open()
+	self.send({ type = "focus" })
+	vim.schedule(function()
+		vim.cmd.startinsert()
+	end)
+end
+
+function Term:on_create(terminal)
+	self.started_at = vim.uv.hrtime()
+	self.restart_scheduled = false
+	self:attach_status(terminal)
+end
+
+function Term:handle_osc(generation, sequence)
+	if generation ~= self.attachment_generation then
+		return
+	end
+	local command, payload = parse_osc(sequence)
+	if not command then
+		return
+	end
+	if command == "777" then
+		local title, message = osc_notification(payload)
+		if title then
+			self.notify(title, message)
+		end
+		return
+	end
+	if command == "0" or command == "2" then
+		self.osc.title = payload
+		self.send({ type = "title", value = payload })
+		if self.schedule_status_detection then
+			self.schedule_status_detection()
+		end
+		return
+	end
+	if command == "9" then
+		self.osc.progress = payload
+		if self.schedule_status_detection then
+			self.schedule_status_detection()
+		end
+		return
+	end
+	if command == "133" then
+		local phase, exit_code = osc_shell(payload)
+		if phase then
+			self.osc.shell_phase = phase
+			self.osc.shell_exit_code = exit_code or ""
+			if self.schedule_status_detection then
+				self.schedule_status_detection()
+			end
+		end
+		return
+	end
+	if command ~= "7" then
+		return
+	end
+	local dir = osc_dir(payload)
+	if not dir then
+		return
+	end
+	local resolved_dir = project_dir(dir)
+	self.cwd = resolved_dir
+	self.send({ type = "dir", value = resolved_dir })
+	-- Leave TermRequest so opening a file can trigger BufRead and FileType autocmds.
+	vim.schedule(function()
+		if generation ~= self.attachment_generation or self.cwd ~= resolved_dir then
+			return
+		end
+		ensure_dir_without_focus(resolved_dir)
+	end)
+end
+
+function Term:attach_status(terminal)
+	if not terminal.bufnr or terminal.bufnr <= 0 or terminal.bufnr == self.attached_bufnr then
+		return
+	end
+	local replacing = self.attached_bufnr ~= nil
+	self.attached_bufnr = terminal.bufnr
+	self.osc.title = ""
+	self.osc.progress = ""
+	self.osc.shell_phase = ""
+	self.osc.shell_exit_code = ""
+	self.attachment_generation = self.attachment_generation + 1
+	local generation = self.attachment_generation
+	vim.api.nvim_create_autocmd("TermRequest", {
+		buffer = terminal.bufnr,
+		callback = function(event)
+			self:handle_osc(generation, event.data.sequence)
+		end,
+	})
+	self.reset_status_detection, self.schedule_status_detection = attach_term(terminal, function(event)
+		if generation == self.attachment_generation then
+			self.send(event)
+		end
+	end, self.screen_manifest, self.osc)
+	if replacing then
+		self.send({ type = "create" })
+	end
+end
+
+function Term:on_exit(terminal, _, exit_code)
+	if shutting_down then
+		return
+	end
+	if self.restart_requested or self.kill_requested then
+		local should_restart = self.restart_requested
+		self.restart_requested = false
+		self.kill_requested = false
+		vim.schedule(function()
+			if terminal.bufnr and vim.api.nvim_buf_is_valid(terminal.bufnr) then
+				vim.bo[terminal.bufnr].modified = false
+			end
+			terminal:shutdown()
+			if should_restart then
+				ensure_dir(self.cwd)
+				if self.reopen_after_restart then
+					terminal:open()
+					last_terminal = terminal
+				else
+					terminal:spawn()
+				end
+			end
+		end)
+		return
+	end
+	self.send({
+		type = "status",
+		value = exit_code == 0 and "success" or "failure",
+	})
+	local runtime = self.started_at and (vim.uv.hrtime() - self.started_at) / 1000000 or 0
+	if self.exit_policy ~= "restart" or exit_code == 0 or runtime < self.min_runtime or self.restart_scheduled then
+		return
+	end
+	self.restart_scheduled = true
+	vim.schedule(function()
+		if terminal.bufnr and vim.api.nvim_buf_is_valid(terminal.bufnr) then
+			vim.bo[terminal.bufnr].modified = false
+		end
+		terminal:spawn()
+	end)
+end
+
+function Term:hide_last()
+	if last_terminal ~= nil and last_terminal ~= self.terminal then
+		local winnr = last_terminal.window
+		if winnr and vim.api.nvim_win_is_valid(winnr) then
+			last_terminal:toggle()
+			return true
+		end
+	end
+	last_terminal = nil
+	return false
+end
+
+function Term:toggle()
+	if self:hide_last() then
+		return
+	end
+	if not is_visible(self.terminal.window) then
+		last_terminal = self.terminal
+		ensure_dir(self.cwd)
+	end
+	self.terminal:toggle()
+end
+
+function Term:focus()
+	self:hide_last()
+	if not is_visible(self.terminal.window) then
+		ensure_dir(self.cwd)
+		self.terminal:toggle()
+		last_terminal = self.terminal
+	end
+end
+
+function Term:is_in_view()
+	return window.is_in_view(self.terminal.window)
+end
+
+function Term:put(str, start_insert)
+	self:focus()
+	vim.schedule(function()
+		vim.api.nvim_chan_send(self.terminal.job_id, "\27[200~" .. str .. "\27[201~")
+		if start_insert then
+			vim.schedule(function()
+				vim.cmd.startinsert()
+			end)
+		end
+	end)
+end
+
+function Term:read(read_opts, cb)
+	local terminal = self.terminal
+	if not terminal.bufnr or not vim.api.nvim_buf_is_valid(terminal.bufnr) then
+		return cb({})
+	end
+	local line_count = vim.api.nvim_buf_line_count(terminal.bufnr)
+	if read_opts.regex == nil or read_opts.regex == "" then
+		local start = math.max(0, line_count - read_opts.len)
+		return cb(vim.api.nvim_buf_get_lines(terminal.bufnr, start, line_count, false))
+	end
+
+	local matcher = vim.regex(read_opts.regex)
+	local lines = vim.api.nvim_buf_get_lines(terminal.bufnr, 0, line_count, false)
+	local matches = vim.tbl_filter(function(line)
+		return matcher:match_str(line) ~= nil
+	end, lines)
+	local start = math.max(1, #matches - read_opts.len + 1)
+	cb(vim.list_slice(matches, start))
+end
+
+function Term:restart()
+	if self.restart_requested or self.kill_requested then
+		return
+	end
+	if self.reset_status_detection then
+		self.reset_status_detection()
+	end
+	self.send({ type = "status", value = "idle" })
+	self.reopen_after_restart = is_visible(self.terminal.window)
+	self.restart_requested = true
+	if self.terminal.job_id and vim.fn.jobwait({ self.terminal.job_id }, 0)[1] == -1 then
+		vim.fn.jobstop(self.terminal.job_id)
+	else
+		self:on_exit(self.terminal, self.terminal.job_id, 0)
+	end
+end
+
+function Term:kill()
+	if self.kill_requested or self.restart_requested then
+		return
+	end
+	self.kill_requested = true
+	if self.terminal.job_id and vim.fn.jobwait({ self.terminal.job_id }, 0)[1] == -1 then
+		vim.fn.jobstop(self.terminal.job_id)
+	else
+		self:on_exit(self.terminal, self.terminal.job_id, 0)
+	end
+end
+
+return Term
