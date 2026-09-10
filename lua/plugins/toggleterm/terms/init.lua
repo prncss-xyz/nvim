@@ -36,6 +36,14 @@ local screen_manifests = {
 		default_status = "idle",
 		rules = {
 			{
+				id = "osc_title_working",
+				status = "working",
+				priority = 1100,
+				region = "osc_title",
+				visible_working = true,
+				regex = { "^[⠀-⣿◐-◓] " },
+			},
+			{
 				id = "permission_prompt",
 				status = "blocked",
 				priority = 900,
@@ -56,6 +64,21 @@ local screen_manifests = {
 					{ contains = { "esc to interrupt" } },
 					{ contains = { "ctrl+c to interrupt" } },
 				},
+			},
+			{
+				id = "osc_title_idle",
+				status = "idle",
+				priority = 250,
+				region = "osc_title",
+				visible_idle = true,
+				regex = { "^✳ " },
+			},
+			{
+				id = "osc_progress_idle",
+				status = "idle",
+				priority = 250,
+				region = "osc_progress",
+				regex = { "^4;0" },
 			},
 			{
 				id = "prompt",

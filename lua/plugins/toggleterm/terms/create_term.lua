@@ -22,6 +22,10 @@ local function osc_title(sequence)
 	return sequence:match("^\27%][02];([^\7\27]*)")
 end
 
+local function osc_progress(sequence)
+	return sequence:match("^\27%]9;([^\7\27]*)")
+end
+
 local function osc_notification(sequence)
 	local payload = sequence:match("^\27%]777;notify;([^\7\27]*)")
 	if not payload then
@@ -50,6 +54,8 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 	local original_on_create = opts_.on_create
 	local attached_bufnr
 	local reset_status_detection
+	local schedule_status_detection
+	local osc = { title = "", progress = "" }
 	local attachment_generation = 0
 	local function attach_status(term)
 		if not term.bufnr or term.bufnr <= 0 or term.bufnr == attached_bufnr then
@@ -57,6 +63,8 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 		end
 		local replacing = attached_bufnr ~= nil
 		attached_bufnr = term.bufnr
+		osc.title = ""
+		osc.progress = ""
 		attachment_generation = attachment_generation + 1
 		local generation = attachment_generation
 		vim.api.nvim_create_autocmd("TermRequest", {
@@ -73,7 +81,19 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 				end
 				local title = osc_title(sequence)
 				if title then
+					osc.title = title
 					send({ type = "title", value = title })
+					if schedule_status_detection then
+						schedule_status_detection()
+					end
+					return
+				end
+				local progress = osc_progress(sequence)
+				if progress then
+					osc.progress = progress
+					if schedule_status_detection then
+						schedule_status_detection()
+					end
 					return
 				end
 				local dir = osc_dir(sequence)
@@ -91,11 +111,11 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 				end)
 			end,
 		})
-		reset_status_detection = attach_term(term, function(event)
+		reset_status_detection, schedule_status_detection = attach_term(term, function(event)
 			if generation == attachment_generation then
 				send(event)
 			end
-		end, opts_.screen_manifest)
+		end, opts_.screen_manifest, osc)
 		if replacing then
 			send({ type = "create" })
 		end

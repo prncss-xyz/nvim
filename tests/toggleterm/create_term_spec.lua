@@ -111,6 +111,47 @@ T["create_term"]["passes OSC notifications to the configured notifier"] = functi
 	assert.same({ "Build", "Finished" }, child.lua_get("result"))
 end
 
+T["create_term"]["retains OSC title and progress for status detection"] = function()
+	child.lua([[local osc
+		local scheduled = 0
+		local terminal = { bufnr = vim.api.nvim_create_buf(false, true) }
+		package.loaded["toggleterm.terminal"] = {
+			Terminal = { new = function() return terminal end },
+		}
+		package.loaded["plugins.toggleterm.terms.attach_term"] = {
+			attach_term = function(_, _, _, evidence)
+				osc = evidence
+				return function() end, function()
+					scheduled = scheduled + 1
+				end
+			end,
+		}
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			is_visible = function() return false end,
+			is_in_view = function() return false end,
+		}
+		package.loaded["plugins.toggleterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		require("plugins.toggleterm.terms.create_term").create_term({}, function() end)
+		vim.wait(10)
+		vim.api.nvim_exec_autocmds("TermRequest", {
+			buffer = terminal.bufnr,
+			data = { sequence = "\27]2;◐ Working\7" },
+		})
+		vim.api.nvim_exec_autocmds("TermRequest", {
+			buffer = terminal.bufnr,
+			data = { sequence = "\27]9;4;0;0\27\\" },
+		})
+		result = { osc = osc, scheduled = scheduled }
+	]])
+
+	assert.same({
+		osc = { title = "◐ Working", progress = "4;0;0" },
+		scheduled = 2,
+	}, child.lua_get("result"))
+end
+
 T["create_term"]["sends strings as bracketed paste"] = function()
 	child.lua([[local sent
 		local terminal = { window = 42, job_id = 7 }

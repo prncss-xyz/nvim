@@ -152,6 +152,28 @@ T["screen status"]["supports last-non-empty-above-prompt-box regions"] = functio
 	assert.same("working", child.lua_get("result.status"))
 end
 
+T["screen status"]["matches OSC title regions"] = function()
+	child.lua([[local detect = require("plugins.toggleterm.terms.screen_status").detect
+		result = detect({
+			default_status = "idle",
+			rules = {
+				{ status = "working", region = "osc_title", regex = { "^[⠀-⣿◐-◓] " } },
+			},
+		}, "idle prompt", { title = "◐ Working" })]])
+	assert.same("working", child.lua_get("result.status"))
+end
+
+T["screen status"]["matches OSC progress regions"] = function()
+	child.lua([[local detect = require("plugins.toggleterm.terms.screen_status").detect
+		result = detect({
+			default_status = "working",
+			rules = {
+				{ status = "idle", region = "osc_progress", regex = { "^4;0" } },
+			},
+		}, "working screen", { progress = "4;0;0" })]])
+	assert.same("idle", child.lua_get("result.status"))
+end
+
 T["screen status"]["returns skip-state-update metadata"] = function()
 	child.lua([[local detect = require("plugins.toggleterm.terms.screen_status").detect
 		result = detect({ rules = { { status = "unknown", skip_state_update = true, contains = { "overlay" } } } }, "overlay")]])

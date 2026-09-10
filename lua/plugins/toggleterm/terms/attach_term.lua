@@ -8,7 +8,7 @@ local function get_local_url(line)
 	return url ~= "" and url or nil
 end
 
-function M.attach_term(term, send, screen_manifest)
+function M.attach_term(term, send, screen_manifest, osc)
 	if not term.bufnr or not vim.api.nvim_buf_is_valid(term.bufnr) then
 		return
 	end
@@ -73,7 +73,7 @@ function M.attach_term(term, send, screen_manifest)
 			or vim.o.lines
 		local first_line = math.max(0, line_count - screen_lines)
 		local screen = table.concat(vim.api.nvim_buf_get_lines(bufnr, first_line, line_count, false), "\n")
-		local output = detect_status(screen_manifest, screen)
+		local output = detect_status(screen_manifest, screen, osc)
 		if not output or output.skip_state_update then
 			clear_pending_idle()
 			return
@@ -145,6 +145,8 @@ function M.attach_term(term, send, screen_manifest)
 	return function()
 		clear()
 		last_status = nil
+	end, function()
+		schedule_status_update(term.bufnr)
 	end
 end
 

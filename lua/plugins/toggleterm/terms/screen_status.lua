@@ -120,7 +120,13 @@ local function block_marker_index(xs, before)
 	end
 end
 
-local function region(text, spec, prompt_marker)
+local function region(text, spec, prompt_marker, osc)
+	if spec == "osc_title" then
+		return osc.title or ""
+	end
+	if spec == "osc_progress" then
+		return osc.progress or ""
+	end
 	if not spec or spec == "whole_recent" then
 		return text
 	end
@@ -260,11 +266,12 @@ local function gate_matches(gate, text)
 	end)
 end
 
-function M.detect(manifest, screen)
+function M.detect(manifest, screen, osc)
 	local match
+	osc = osc or {}
 	local prompt_marker = manifest.prompt_marker_regex or [[^\s*❯]]
 	for _, rule in ipairs(manifest.rules or {}) do
-		if gate_matches(rule, region(screen, rule.region, prompt_marker)) and (not match or (rule.priority or 0) > (match.priority or 0)) then
+		if gate_matches(rule, region(screen, rule.region, prompt_marker, osc)) and (not match or (rule.priority or 0) > (match.priority or 0)) then
 			match = rule
 		end
 	end
