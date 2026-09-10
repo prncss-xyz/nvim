@@ -111,6 +111,81 @@ T["create_term"]["passes OSC notifications to the configured notifier"] = functi
 	assert.same({ "Build", "Finished" }, child.lua_get("result"))
 end
 
+T["create_term"]["does not steal focus when attaching a created terminal"] = function()
+	child.lua([[local ensured = false
+		local terminal_buf = vim.api.nvim_create_buf(false, true)
+		local file_buf = vim.api.nvim_create_buf(false, true)
+		vim.api.nvim_win_set_buf(0, file_buf)
+		vim.cmd.vsplit()
+		local terminal_win = vim.api.nvim_get_current_win()
+		vim.api.nvim_win_set_buf(terminal_win, terminal_buf)
+		local file_win = vim.fn.win_getid(vim.fn.winnr("h"))
+		local terminal = { bufnr = terminal_buf, window = terminal_win }
+		package.loaded["toggleterm.terminal"] = {
+			Terminal = { new = function() return terminal end },
+		}
+		package.loaded["plugins.toggleterm.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			is_visible = function() return true end,
+			is_in_view = function() return true end,
+		}
+		package.loaded["plugins.toggleterm.terms.ensure_dir"] = {
+			ensure_dir = function()
+				vim.api.nvim_set_current_win(file_win)
+				ensured = true
+			end,
+		}
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		vim.api.nvim_set_current_win(terminal_win)
+		require("plugins.toggleterm.terms.create_term").create_term({}, function() end)
+		vim.wait(100, function() return ensured end)
+		result = ensured and vim.api.nvim_get_current_win() == terminal_win
+	]])
+
+	assert.same(true, child.lua_get("result"))
+end
+
+T["create_term"]["does not let OSC directory updates steal focus"] = function()
+	child.lua([[local ensured = false
+		local terminal_buf = vim.api.nvim_create_buf(false, true)
+		local file_buf = vim.api.nvim_create_buf(false, true)
+		vim.api.nvim_win_set_buf(0, file_buf)
+		vim.cmd.vsplit()
+		local terminal_win = vim.api.nvim_get_current_win()
+		vim.api.nvim_win_set_buf(terminal_win, terminal_buf)
+		local file_win = vim.fn.win_getid(vim.fn.winnr("h"))
+		local terminal = { bufnr = terminal_buf, window = terminal_win }
+		package.loaded["toggleterm.terminal"] = {
+			Terminal = { new = function() return terminal end },
+		}
+		package.loaded["plugins.toggleterm.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["plugins.toggleterm.terms.window"] = {
+			is_visible = function() return true end,
+			is_in_view = function() return true end,
+		}
+		package.loaded["plugins.toggleterm.terms.ensure_dir"] = {
+			ensure_dir = function()
+				vim.api.nvim_set_current_win(file_win)
+				ensured = true
+			end,
+		}
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		require("plugins.toggleterm.terms.create_term").create_term({}, function() end)
+		vim.wait(10)
+		vim.api.nvim_set_current_win(terminal_win)
+		vim.api.nvim_exec_autocmds("TermRequest", {
+			buffer = terminal.bufnr,
+			data = { sequence = "\27]7;file://localhost/tmp\7" },
+		})
+		vim.wait(100, function() return ensured end)
+		result = ensured and vim.api.nvim_get_current_win() == terminal_win
+	]])
+
+	assert.same(true, child.lua_get("result"))
+end
+
 T["create_term"]["retains OSC title and progress for status detection"] = function()
 	child.lua([[local osc
 		local scheduled = 0

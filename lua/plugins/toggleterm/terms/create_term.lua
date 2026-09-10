@@ -9,6 +9,14 @@ local is_visible = window.is_visible
 local ensure_dir = require("plugins.toggleterm.terms.ensure_dir").ensure_dir
 local project_dir = require("my.rooter").project_dir
 
+local function ensure_dir_without_focus(dir)
+	local current_win = vim.api.nvim_get_current_win()
+	ensure_dir(dir)
+	if vim.api.nvim_win_is_valid(current_win) then
+		vim.api.nvim_set_current_win(current_win)
+	end
+end
+
 local function parse_osc(sequence)
 	return sequence:match("^\27%](%d+);([^\7\27]*)")
 end
@@ -142,9 +150,10 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 				send({ type = "dir", value = resolved_dir })
 				-- Leave TermRequest so opening a file can trigger BufRead and FileType autocmds.
 				vim.schedule(function()
-					if generation == attachment_generation and opts_.dir == resolved_dir then
-						ensure_dir(resolved_dir)
+					if generation ~= attachment_generation or opts_.dir ~= resolved_dir then
+						return
 					end
+					ensure_dir_without_focus(resolved_dir)
 				end)
 			end,
 		})
@@ -225,7 +234,7 @@ function M.create_term(opts, send, prepare, min_runtime, notify)
 	end
 	vim.schedule(function()
 		if term and term.bufnr and term.bufnr > 0 then
-			ensure_dir(opts_.dir)
+			ensure_dir_without_focus(opts_.dir)
 			attach_status(term)
 		end
 	end)
