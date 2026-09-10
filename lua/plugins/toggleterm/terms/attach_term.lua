@@ -3,9 +3,21 @@ local M = {}
 local detect_status = require("plugins.toggleterm.terms.screen_status").detect
 local is_in_view = require("plugins.toggleterm.terms.window").is_in_view
 
-local function get_local_url(line)
-	local url = vim.fn.matchstr(line, [[\vhttps?://%([\w.-]*localhost|127\.0\.0\.1)%([:/?#]\S*)?%(\s|$)@=]])
-	return url ~= "" and url or nil
+local local_url_pattern = [[\vhttps?://%([\w.-]*localhost|127\.0\.0\.1)%([:/?#]\S*)?%(\s|$)@=]]
+
+local function get_local_urls(line)
+	local urls = {}
+	local offset = 0
+	while offset < #line do
+		local match = vim.fn.matchstrpos(line, local_url_pattern, offset)
+		local url, start_col, end_col = match[1], match[2], match[3]
+		if url == "" then
+			break
+		end
+		table.insert(urls, url)
+		offset = math.max(end_col, start_col + 1)
+	end
+	return urls
 end
 
 function M.attach_term(term, send, screen_manifest, osc)
@@ -14,7 +26,6 @@ function M.attach_term(term, send, screen_manifest, osc)
 	end
 
 	local handle = nil
-	local url_sent = false
 	local last_status = nil
 	local pending_idle = nil
 
@@ -126,15 +137,10 @@ function M.attach_term(term, send, screen_manifest, osc)
 			send({ type = "detach" })
 		end,
 		on_lines = function(_, bufnr, _, first_line, _, new_last_line)
-			if not url_sent then
-				local changed_lines = vim.api.nvim_buf_get_lines(bufnr, first_line, new_last_line, false)
-				for _, line in ipairs(changed_lines) do
-					local url = get_local_url(line)
-					if url then
-						url_sent = true
-						send({ type = "url", value = url })
-						break
-					end
+			local changed_lines = vim.api.nvim_buf_get_lines(bufnr, first_line, new_last_line, false)
+			for _, line in ipairs(changed_lines) do
+				for _, url in ipairs(get_local_urls(line)) do
+					send({ type = "url", value = url })
 				end
 			end
 			schedule_status_update(bufnr)

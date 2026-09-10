@@ -221,4 +221,34 @@ T["attach terminal"]["visible idle bypasses confirmation"] = function()
 	}, child.lua_get("result"))
 end
 
+T["attach terminal"]["emits every local URL match"] = function()
+	child.lua([[local events = {}
+		local callbacks
+		local original_attach = vim.api.nvim_buf_attach
+		vim.api.nvim_buf_attach = function(_, _, opts)
+			callbacks = opts
+			return true
+		end
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		local bufnr = vim.api.nvim_create_buf(false, true)
+		require("plugins.toggleterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
+			table.insert(events, event)
+		end)
+		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {
+			"Local: http://localhost:3000 Network: http://127.0.0.1:3001/docs",
+			"Again: http://localhost:3000",
+		})
+		callbacks.on_lines(nil, bufnr, 0, 0, 0, 2)
+		vim.api.nvim_buf_attach = original_attach
+		result = events
+	]])
+
+	assert.same({
+		{ type = "url", value = "http://localhost:3000" },
+		{ type = "url", value = "http://127.0.0.1:3001/docs" },
+		{ type = "url", value = "http://localhost:3000" },
+	}, child.lua_get("result"))
+end
+
 return T

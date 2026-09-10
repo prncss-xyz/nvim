@@ -4,7 +4,9 @@ local T = MiniTest.new_set({
 	hooks = {
 		pre_case = function()
 			child.restart({ "-u", "NONE" })
-			child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path]])
+			child.lua(
+				[[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path]]
+			)
 		end,
 		post_once = child.stop,
 	},
@@ -15,6 +17,7 @@ T["terminal panel"] = MiniTest.new_set()
 T["terminal panel"]["toggles a filtered side panel and focuses the selected terminal"] = function()
 	child.lua([[
 		local focused = {}
+		local visited = {}
 		local items = {
 			{
 				hash = "agent:one",
@@ -23,7 +26,11 @@ T["terminal panel"]["toggles a filtered side panel and focuses the selected term
 				display_name = "Agent one",
 				dir = "/tmp/one",
 				status = "working",
-				term = { focus = function() table.insert(focused, "agent:one") end },
+				title = "Development server",
+				term = {
+					focus = function() table.insert(focused, "agent:one") end,
+					url = { "http://localhost:3000", "http://127.0.0.1:3001/docs" },
+				},
 			},
 			{
 				hash = "shell:one",
@@ -46,6 +53,7 @@ T["terminal panel"]["toggles a filtered side panel and focuses the selected term
 			return function() listener = nil end
 		end
 		package.loaded["plugins.toggleterm.config"] = { panel = { width = 24 } }
+		package.loaded["my.browser"] = { visit = function(url) table.insert(visited, url) end }
 		package.loaded["plugins.toggleterm.terms.format_item"] = {
 			format_item = function() return function(item) return item.status .. " " .. item.display_name end end,
 		}
@@ -65,9 +73,12 @@ T["terminal panel"]["toggles a filtered side panel and focuses the selected term
 		local closed = not vim.api.nvim_win_is_valid(win)
 		local unsubscribed = listener == nil
 		panel.open(history, subscribe)
+		vim.api.nvim_win_set_cursor(0, { 4, 0 })
+		vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)
 		result = {
 			opened = opened,
 			focused = focused,
+			visited = visited,
 			closed = closed,
 			unsubscribed = unsubscribed,
 			reopened_lines = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, -1, false),
@@ -77,14 +88,27 @@ T["terminal panel"]["toggles a filtered side panel and focuses the selected term
 	assert.same({
 		opened = {
 			filetype = "toggleterm-panel",
-			lines = { "󰉋 /tmp/one", "  working Agent one (working)" },
+			lines = {
+				"󰉋 /tmp/one",
+				"  working Agent one (working)",
+				"  Development server",
+				"  http://localhost:3000",
+				"  http://127.0.0.1:3001/docs",
+			},
 			winfixwidth = true,
 			width = 24,
 		},
 		focused = { "agent:one" },
+		visited = { "http://localhost:3000" },
 		closed = true,
 		unsubscribed = true,
-		reopened_lines = { "󰉋 /tmp/one", "  working Agent one (working)" },
+		reopened_lines = {
+			"󰉋 /tmp/one",
+			"  working Agent one (working)",
+			"  Development server",
+			"  http://localhost:3000",
+			"  http://127.0.0.1:3001/docs",
+		},
 	}, child.lua_get("result"))
 end
 

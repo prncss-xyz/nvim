@@ -84,6 +84,7 @@ function Term:new(opts, send, prepare, min_runtime, notify)
 		reopen_after_restart = false,
 		osc = { title = "", progress = "", shell_phase = "", shell_exit_code = "" },
 		attachment_generation = 0,
+		url = {},
 	}, self)
 
 	instance.terminal = Terminal:new({

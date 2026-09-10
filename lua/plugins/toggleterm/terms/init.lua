@@ -157,7 +157,7 @@ subscribe(function(event, item)
 			config.on_status(item)
 		end
 	elseif event.type == "url" then
-		item.term.url = event.value
+		table.insert(item.term.url, event.value)
 	elseif event.type == "title" then
 		item.title = event.value ~= "" and event.value or nil
 	elseif event.type == "dir" then
@@ -460,18 +460,27 @@ function M.read(instance_count, opts, cb)
 end
 
 function M.browse()
-	local items = history.filter(function(item)
-		return item.term and item.term.url
+	local choices = {}
+	for _, item in
+		ipairs(history.filter(function(candidate)
+			return candidate.term and candidate.term.url and #candidate.term.url > 0
+		end))
+	do
+		for _, url in ipairs(item.term.url) do
+			table.insert(choices, { item = item, url = url })
+		end
+	end
+	table.sort(choices, function(a, b)
+		return lt_item(a.item, b.item)
 	end)
-	table.sort(items, lt_item)
-	vim.ui.select(items, {
+	vim.ui.select(choices, {
 		prompt = "Select Terminal URL",
-		format_item = function(item)
-			return string.format("%s  —  %s", format_item(true)(item), item.term.url)
+		format_item = function(choice)
+			return string.format("%s  —  %s", format_item(true)(choice.item), choice.url)
 		end,
-	}, function(item)
-		if item then
-			visit(item.term.url)
+	}, function(choice)
+		if choice then
+			visit(choice.url)
 		end
 	end)
 end

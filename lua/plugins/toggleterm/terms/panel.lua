@@ -4,6 +4,7 @@ local config = require("plugins.toggleterm.config").panel
 local ensure_dir = require("plugins.toggleterm.terms.ensure_dir").ensure_dir
 local format_item = require("plugins.toggleterm.terms.format_item").format_item(false, false)
 local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
+local visit = require("my.browser").visit
 
 local states = {}
 local highlight_namespace = vim.api.nvim_create_namespace("toggleterm-panel")
@@ -127,9 +128,18 @@ local function create_rows(items, format)
 				table.insert(rows, {
 					instance_count = item.instance_count,
 					item = item,
-					text = indent .. "  " .. item.title,
+					text = "  " .. item.title,
 					highlight = "Comment",
 					title = true,
+				})
+			end
+			for _, url in ipairs(item.term.url or {}) do
+				table.insert(rows, {
+					instance_count = item.instance_count,
+					item = item,
+					text = "  " .. url,
+					highlight = "Comment",
+					url = url,
 				})
 			end
 		end
@@ -255,7 +265,9 @@ local function focus_selected(state)
 		return
 	end
 	state.selected_instance = selected.instance_count
-	if selected.item then
+	if selected.url then
+		visit(selected.url)
+	elseif selected.item then
 		selected.item.term:focus()
 	else
 		ensure_dir(selected.dir)
@@ -358,6 +370,7 @@ local function open(query, history, subscribe, create_in_dir)
 			or event.type == "focus"
 			or event.type == "status"
 			or event.type == "title"
+			or event.type == "url"
 			or event.type == "dir"
 			or event.type == "detach"
 		then
