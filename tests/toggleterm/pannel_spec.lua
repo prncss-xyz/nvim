@@ -156,9 +156,9 @@ end
 T["terminal panel"]["highlights directories and terminal states"] = function()
 	child.lua([[
 		local items = {
-			{ hash = "default", dir = "/tmp", status = "idle", seen = true, term = { focus = function() end } },
-			{ hash = "unseen", dir = "/tmp", status = "working", seen = false, term = { focus = function() end } },
-			{ hash = "failure", dir = "/tmp", status = "failure", seen = false, term = { focus = function() end } },
+			{ hash = "default", dir = "/tmp", status = "idle", term = { focus = function() end } },
+			{ hash = "unseen", dir = "/tmp", status = "working", changed = 1, term = { focus = function() end } },
+			{ hash = "failure", dir = "/tmp", status = "failure", changed = 2, term = { focus = function() end } },
 		}
 		local history = { filter = function() return items end }
 		local function subscribe() return function() end end

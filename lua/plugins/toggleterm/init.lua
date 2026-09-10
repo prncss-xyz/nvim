@@ -7,6 +7,7 @@ local ai_insert = require("my.parameters").ai_insert
 return {
 	{
 		"akinsho/toggleterm.nvim",
+		dependencies = { "https://github.com/gvvaughan/lyaml" },
 		opts = {
 			direction = "float",
 			persist_size = false,
@@ -177,7 +178,7 @@ return {
 			{
 				"ow",
 				function()
-					require("plugins.toggleterm.terms").run()
+					require("plugins.toggleterm.terms").run_or_raise()
 				end,
 				desc = "Select Command",
 			},
@@ -240,6 +241,18 @@ return {
 				end,
 				desc = "Put Current File Position",
 				mode = "n",
+			},
+			{
+				"ms",
+				function()
+					local yaml = require("plugins.toggleterm.yaml")
+					local frontmatter = yaml.read(0)
+					frontmatter.status = frontmatter.status == "approved" and "pending" or "approved"
+					yaml.write(0, frontmatter)
+				end,
+				desc = "Toggle Approval",
+				mode = "n",
+				ft = "markdown",
 			},
 			{
 				"md",

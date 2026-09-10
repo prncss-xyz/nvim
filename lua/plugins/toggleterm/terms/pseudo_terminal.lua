@@ -1,6 +1,8 @@
 local M = {}
 local window = require("plugins.toggleterm.terms.window")
 
+local function noop() end
+
 local function project_dir()
 	local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
 	local current = vim.api.nvim_buf_get_name(0)
@@ -55,9 +57,9 @@ function M.create(touch)
 		key = "artifact",
 		display_name = "artifact",
 		tag = "agent",
-		rerun = function() end,
-		start = function() end,
-		toggle_panel = function() end,
+		restart = noop,
+		start = noop,
+		toggle_panel = noop,
 	}
 	local term = {}
 

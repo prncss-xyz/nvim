@@ -33,7 +33,7 @@ T["selected prompts run outside the selector callback"] = function()
 		end
 
 		require("plugins.toggleterm.prompts").prompt()
-		selector_callback("Idea: ")
+		selector_callback("idea")
 		assert(not input_callback, "prompt ran directly in the selector callback")
 		assert(#scheduled == 1, "prompt was not scheduled")
 		scheduled[1]()

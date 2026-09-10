@@ -5,6 +5,15 @@ local notify = require("my.notify")
 return {
 	min_runtime = 10000,
 	create = require("my.create").create,
+	yaml = {
+		decode = function(text)
+			return require("lyaml").load(text)
+		end,
+		encode = function(value)
+			local document = require("lyaml").dump({ value })
+			return assert(document:match("^%-%-%-\n(.-)%.%.%.\n?$"))
+		end,
+	},
 	notify = personal(function(title, message)
 		vim.system({ "notify-send", title, message }, { detach = true })
 	end, function(title, message)

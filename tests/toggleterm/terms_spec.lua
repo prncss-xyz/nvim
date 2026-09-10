@@ -64,15 +64,15 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		require("plugins.toggleterm.terms").focus({})
-		send({ type = "status", value = "working", seen = true })
+		send({ type = "status", value = "working", visible = true })
 		local visible_status = item.status
-		send({ type = "status", value = "working", seen = false })
+		send({ type = "status", value = "working", visible = false })
 		visible = true
-		send({ type = "status", value = "blocked", seen = false })
-		send({ type = "status", value = "blocked", seen = false })
+		send({ type = "status", value = "blocked", visible = false })
+		send({ type = "status", value = "blocked", visible = false })
 		visible = false
-		send({ type = "status", value = "success", seen = false })
-		send({ type = "status", value = "success", seen = false })
+		send({ type = "status", value = "success", visible = false })
+		send({ type = "status", value = "success", visible = false })
 
 		result = {
 			visible_status = visible_status,
@@ -162,7 +162,7 @@ T["pseudo terminal"]["participates in history only when explicitly included"] = 
 				local item = {
 					key = "artifact",
 					tag = "agent",
-					rerun = function() end,
+					restart = function() end,
 					start = function() end,
 				}
 				local term = {
@@ -288,7 +288,7 @@ T["put"]["formats the current project buffer for the latest artifact"] = functio
 		result = vim.fn.readfile(artifact)[1]
 	]])
 
-	assert.same("@src.lua :L1 artifact", child.lua_get("result"))
+	assert.same("@src.lua:L1 artifact", child.lua_get("result"))
 	assert.same(child.lua_get("expected"), child.lua_get("focused"))
 end
 
@@ -329,7 +329,7 @@ T["put"]["uses the last project buffer from a terminal"] = function()
 		result = vim.fn.readfile(artifact)[1]
 	]])
 
-	assert.same("@src.lua :L1 artifact", child.lua_get("result"))
+	assert.same("@src.lua:L1 artifact", child.lua_get("result"))
 	assert.same(child.lua_get("expected"), child.lua_get("focused"))
 end
 

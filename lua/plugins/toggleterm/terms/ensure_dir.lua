@@ -49,6 +49,17 @@ function M.open_dir(dir, target_win, use_visible_window, exclude)
 end
 
 local function ensure_dir(dir, exclude)
+	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+		local path = vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(win))
+		local is_excluded = exclude and vim.iter(exclude):any(function(excluded)
+			return is_in_dir(path, excluded)
+		end)
+		if is_in_dir(path, dir) and not is_excluded then
+			vim.api.nvim_set_current_win(win)
+			return
+		end
+	end
+
 	local target_win = get_last_file_win()
 	if not target_win or not vim.api.nvim_win_is_valid(target_win) then
 		return

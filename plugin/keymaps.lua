@@ -231,7 +231,7 @@ vim.keymap.set({ "n", "x" }, "ocb", function()
 	require("my.diff").variant()
 end, { desc = "Compare diff, variant" })
 vim.keymap.set({ "n", "x" }, "ocw", function()
-	require("plugins.toggleterm.terms").rerun({
+	require("plugins.toggleterm.terms").restart({
 		key = "word count",
 		cmd = string.format("wc %q", vim.fn.expand("%")),
 		on_exit = "keep",

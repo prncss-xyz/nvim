@@ -9,11 +9,11 @@ T["terminal item formatting"]["marks unseen terminals after the identifier"] = f
 		instance_count = 1,
 		status = "working",
 		display_name = "agent",
-		seen = false,
+		changed = 1,
 	}
 
 	assert(format_item(item):find("agent:1*", 1, true))
-	item.seen = true
+	item.changed = nil
 	assert(not format_item(item):find("agent:1*", 1, true))
 end
 

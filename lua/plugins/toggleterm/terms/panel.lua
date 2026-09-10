@@ -109,7 +109,7 @@ local function create_rows(items, format)
 			return (a.instance_count or 0) < (b.instance_count or 0)
 		end)
 		for _, item in ipairs(node.items) do
-			local highlight = "Normal"
+			local highlight = "NeoTreeFileName"
 			if item.status == "failure" then
 				highlight = "DiagnosticError"
 			elseif item.changed then
@@ -136,10 +136,14 @@ local function create_rows(items, format)
 	end
 	local function append_directory(node, depth, name)
 		local indent = string.rep("  ", depth)
+		local icon = "󰉋 "
 		table.insert(rows, {
 			dir = node.dir,
-			text = indent .. "󰉋 " .. name,
-			highlight = "Directory",
+			text = indent .. icon .. name,
+			highlights = {
+				{ start_col = #indent, end_col = #indent + #icon, group = "NeoTreeDirectoryIcon" },
+				{ start_col = #indent + #icon, end_col = -1, group = "NeoTreeDirectoryName" },
+			},
 		})
 	end
 	local function append(node, depth)

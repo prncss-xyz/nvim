@@ -154,8 +154,8 @@ subscribe(function(event, item)
 		else
 			next_change_id = next_change_id + 1
 			item.changed = next_change_id
+			config.on_status(item)
 		end
-		config.on_status(item)
 	elseif event.type == "url" then
 		item.term.url = event.value
 	elseif event.type == "title" then
@@ -291,7 +291,9 @@ local function with_query(query, cb)
 			format_item = format_item(query.dir == vim.env.HOME),
 		}, function(item)
 			if item then
-				make_item(item, cb, query.instance_count)
+				make_item(item, function(instance)
+					cb(instance, true)
+				end, query.instance_count)
 			end
 		end)
 	end
@@ -300,10 +302,13 @@ local function with_query(query, cb)
 		return cb(item)
 	end
 	item = utils.max_of(get_query_commands(query, filter), gt_item)
+	local function created(instance)
+		cb(instance, true)
+	end
 	if item then
-		make_item(item, cb, query.instance_count)
+		make_item(item, created, query.instance_count)
 	else
-		make_item(without_query_options(query), cb, query.instance_count)
+		make_item(without_query_options(query), created, query.instance_count)
 	end
 end
 
@@ -353,32 +358,6 @@ function M.focus(query)
 	with_query(query, function(instance)
 		instance.term.focus()
 	end)
-end
-
-function M.rerun(query)
-	query = normalize_query(query)
-	local filter = query.instance_count and get_filter({ instance_count = query.instance_count }) or get_filter(query)
-	local matches = history.filter(filter)
-	local item = utils.max_of(get_query_commands(query, get_filter(query)), gt_item)
-		or matches[1]
-		or without_query_options(query)
-	if item.rerun then
-		return item.rerun()
-	end
-
-	if item.term then
-		item = vim.tbl_extend("force", {}, item)
-		item.term = nil
-		item.status = nil
-	end
-	for _, instance in ipairs(matches) do
-		history.purge(instance.instance_count)
-		release_instance(instance)
-		instance.term.kill()
-	end
-	make_item(item, function(instance)
-		instance.term.focus()
-	end, query.instance_count)
 end
 
 function M.toggle(query)
@@ -508,8 +487,10 @@ function M.start(query)
 end
 
 function M.restart(query)
-	with_query(query, function(instance)
-		instance.term.restart()
+	with_query(query, function(instance, created)
+		if not created then
+			instance.term.restart()
+		end
 	end)
 end
 
