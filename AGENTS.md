@@ -1,5 +1,7 @@
 ## Agent skills
 
+You can implement on main for this repo.
+
 ### Issue tracker
 
 Issues and specs are tracked as local Markdown under `.artifacts/<feature>/`. See `docs/agents/issue-tracker.md`.

@@ -3,7 +3,8 @@ local M = {}
 local detect_status = require("plugins.toggleterm.terms.screen_status").detect
 local is_in_view = require("plugins.toggleterm.terms.window").is_in_view
 
-local local_url_pattern = [[\vhttps?://%([\w.-]*localhost|127\.0\.0\.1)%([:/?#]\S*)?%(\s|$)@=]]
+local local_url_pattern =
+	[[\vhttps?://%([\w.-]*localhost|127\.0\.0\.1)%(:\d+)?%([/?#][[:alnum:]_.~:/?#@!$&*+,;=%-]*)?]]
 
 local function get_local_urls(line)
 	local urls = {}

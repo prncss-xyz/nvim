@@ -238,8 +238,11 @@ T["attach terminal"]["emits every local URL match"] = function()
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {
 			"Local: http://localhost:3000 Network: http://127.0.0.1:3001/docs",
 			"Again: http://localhost:3000",
+			"Punctuation: (http://localhost:4000/docs).",
+			"Quoted: \"http://127.0.0.1:5000/a?x=1&y=2#result\"",
+			"Multiple: http://localhost:6000, http://localhost:7000/path",
 		})
-		callbacks.on_lines(nil, bufnr, 0, 0, 0, 2)
+		callbacks.on_lines(nil, bufnr, 0, 0, 0, 5)
 		vim.api.nvim_buf_attach = original_attach
 		result = events
 	]])
@@ -248,6 +251,10 @@ T["attach terminal"]["emits every local URL match"] = function()
 		{ type = "url", value = "http://localhost:3000" },
 		{ type = "url", value = "http://127.0.0.1:3001/docs" },
 		{ type = "url", value = "http://localhost:3000" },
+		{ type = "url", value = "http://localhost:4000/docs" },
+		{ type = "url", value = "http://127.0.0.1:5000/a?x=1&y=2#result" },
+		{ type = "url", value = "http://localhost:6000" },
+		{ type = "url", value = "http://localhost:7000/path" },
 	}, child.lua_get("result"))
 end
 
