@@ -84,15 +84,15 @@ return {
 			{
 				git .. "m",
 				function()
-					local branch = vim.fn
-						.system("git rev-parse --abbrev-ref origin/HEAD 2>/dev/null")
-						:gsub("origin/", "")
-						:gsub("\n", "")
-					if vim.v.shell_error ~= 0 or branch == "" then
-						branch = vim.fn
-							.system("git branch --list main master --format='%(refname:short)' 2>/dev/null")
-							:match("[^\n]+") or "main"
+					local branch
+					for _, candidate in ipairs(require("my.parameters").default_branches) do
+						vim.fn.system({ "git", "rev-parse", "--verify", candidate })
+						if vim.v.shell_error == 0 then
+							branch = candidate
+							break
+						end
 					end
+					assert(branch, "Could not find a main or master branch")
 					vim.cmd("CodeDiff " .. branch)
 				end,
 				desc = "Git CodeDiff default branch",

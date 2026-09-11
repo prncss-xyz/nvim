@@ -1,6 +1,7 @@
 local M = {}
 
-local dirs = require("my.parameters").dirs
+local parameters = require("my.parameters")
+local dirs = parameters.dirs
 local projects = dirs.projects
 
 local function run(command, callback)
@@ -53,8 +54,16 @@ function M.ensure_worktree(dir, callback)
 		return callback(true)
 	end
 
-	local repo_root = vim.fs.joinpath(projects, parts[1], "main")
-	if not vim.uv.fs_stat(repo_root) then
+	local repo_dir = vim.fs.joinpath(projects, parts[1])
+	local repo_root
+	for _, branch in ipairs(parameters.default_branches) do
+		local candidate = vim.fs.joinpath(repo_dir, branch)
+		if vim.uv.fs_stat(candidate) then
+			repo_root = candidate
+			break
+		end
+	end
+	if not repo_root then
 		return callback(true)
 	end
 
@@ -97,7 +106,6 @@ function M.clone_github()
 		local repo_dir = projects .. "/" .. input
 		vim.fn.mkdir(repo_dir, "p")
 
-		-- check if upstream exists on github
 		local gh_out = vim.trim(
 			vim.fn.system({ "gh", "repo", "view", input, "--json", "defaultBranchRef", "-q", ".defaultBranchRef.name" })
 		)

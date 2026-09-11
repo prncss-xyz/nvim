@@ -7,13 +7,15 @@ function M.reverse(key)
 end
 
 local projects = vim.env.HOME .. "/projects"
+local notes = projects .. "/notes/main"
 
 M.rooter_patterns = { ".git", ".hg", ".svn" }
+M.default_branches = { "main", "master" }
 
 M.dirs = {
 	projects = projects,
-	notes = projects .. "/notes/main",
-	artifacts = projects .. "/notes/main/dev/artifacts",
+	notes = notes,
+	artifacts = notes .. "/dev/artifacts",
 	dotfiles = projects .. "/dotfiles",
 }
 

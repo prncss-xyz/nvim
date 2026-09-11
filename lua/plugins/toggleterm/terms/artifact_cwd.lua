@@ -1,6 +1,7 @@
 local M = {}
 
-local dirs = require("my.parameters").dirs
+local parameters = require("my.parameters")
+local dirs = parameters.dirs
 
 local function is_directory(path)
 	local stat = vim.uv.fs_stat(path)
@@ -14,8 +15,8 @@ function M.contains(filename)
 end
 
 --- Resolve the project checkout for a file in the shared artifact directory.
---- Artifact paths are <project>/<branch>/..., with the branch omitted for main.
---- Prefer an existing branch checkout, then <project>/main, then <project>.
+--- Artifact paths are <project>/<branch>/..., with the branch omitted for the default branch.
+--- Prefer an existing branch checkout, then main, then master, then <project>.
 ---@param filename string
 ---@return string|nil
 function M.resolve(filename)
@@ -36,8 +37,13 @@ function M.resolve(filename)
 		return branch_dir
 	end
 
-	local main_dir = vim.fs.joinpath(project_dir, "main")
-	return is_directory(main_dir) and main_dir or project_dir
+	for _, branch in ipairs(parameters.default_branches) do
+		local default_dir = vim.fs.joinpath(project_dir, branch)
+		if is_directory(default_dir) then
+			return default_dir
+		end
+	end
+	return project_dir
 end
 
 ---@return string|nil
@@ -57,7 +63,7 @@ end
 function M.branch_artifacts(project_dir)
 	local branch = vim.trim(vim.fn.system({ "git", "-C", project_dir, "branch", "--show-current" }))
 	assert(vim.v.shell_error == 0 and branch ~= "", "Failed to determine current Git branch")
-	if branch == "main" then
+	if vim.tbl_contains(parameters.default_branches, branch) then
 		return dirs.artifacts
 	end
 	return vim.fs.joinpath(dirs.artifacts, branch:gsub("/", "-"))

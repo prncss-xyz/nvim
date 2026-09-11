@@ -1,4 +1,5 @@
 local M = {}
+local config = require("plugins.toggleterm.config")
 
 local function input_for_current_mode()
 	local mode = vim.fn.mode()
@@ -23,44 +24,16 @@ local function input_for_current_mode()
 	end
 end
 
-local function with_prompt(cb)
-	return function(input, prompt)
-		input(prompt, function(contents)
-			cb(contents, prompt)
-		end)
-	end
-end
-
-local function create_artifact(filename)
-	return with_prompt(function(contents)
-		require("plugins.toggleterm.harness").create_artifact(contents, filename)
-	end)
-end
-
-local function sender(prefix)
-	return with_prompt(function(contents, prompt)
-		require("plugins.toggleterm.terms").put({ tag = "agent" }, (prefix or prompt) .. " " .. contents)
-	end)
-end
-
-local prompts = {
-	["do"] = "do this: {position}",
-	["explain"] = "explain this: {position}",
-	["curry"] = "curry this: {position}",
-	["where in the codebase "] = sender(),
-	["idea"] = create_artifact("idea.md"),
-}
-
 function M.prompt()
 	local input = input_for_current_mode()
-	local choices = vim.tbl_keys(prompts)
+	local choices = vim.tbl_keys(config.prompts)
 	vim.ui.select(choices, {
 		prompt = "Select prompt: ",
 	}, function(choice)
 		if not choice then
 			return
 		end
-		local contents = prompts[choice]
+		local contents = config.prompts[choice]
 		if not contents then
 			return
 		end

@@ -1,9 +1,14 @@
 local personal = require("my.conds").personal
 local work = require("my.conds").work
 local notify = require("my.notify")
+local prompt_utils = require("plugins.toggleterm.prompt_utils")
 
 return {
 	min_runtime = 10000,
+	ai_query = personal(
+		"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
+		"claude -p --model haiku --bare --disable-slash-commands --tools="
+	),
 	create = require("my.create").create,
 	notify = personal(function(title, message)
 		vim.system({ "notify-send", title, message }, { detach = true })
@@ -25,13 +30,24 @@ return {
 		width = 40,
 	},
 	tasks = {
-		{ source = "plan", cmd = "pi -p /implement @%q" },
+		{
+			source = "plan",
+			cmd = "pi -p /implement @%q",
+			fork = true,
+		},
 	},
 	templates = {
 		"plugins.toggleterm.templates.artifacts",
 		"plugins.toggleterm.templates.make",
 		"plugins.toggleterm.templates.mise",
 		"plugins.toggleterm.templates.npm",
+	},
+	prompts = {
+		["do"] = "do this: {position}",
+		["explain"] = "explain this: {position}",
+		["curry"] = "curry this: {position}",
+		["where in the codebase "] = prompt_utils.sender(),
+		["task"] = prompt_utils.create_artifact("task.md"),
 	},
 
 	on_status = function(item)
