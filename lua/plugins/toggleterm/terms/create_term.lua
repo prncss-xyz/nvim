@@ -94,9 +94,6 @@ function Term:new(opts, send, prepare, min_runtime, notify)
 		cmd = opts.cmd,
 		dir = instance.cwd,
 		close_on_exit = instance.exit_policy ~= "keep" and instance.exit_policy ~= "restart",
-		env = {
-			VMUX_COUNT = opts.instance_count,
-		},
 		on_open = function()
 			instance:on_open()
 		end,

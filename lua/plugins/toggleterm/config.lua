@@ -24,15 +24,8 @@ return {
 	panel = {
 		width = 40,
 	},
-	packages = {
-		tagger = function(key)
-			if key:find("test") then
-				return "test"
-			end
-		end,
-	},
 	tasks = {
-		plan = "pi -p /implement @%q",
+		{ source = "plan", cmd = "pi -p /implement @%q" },
 	},
 	templates = {
 		"plugins.toggleterm.templates.artifacts",

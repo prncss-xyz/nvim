@@ -9,7 +9,6 @@ function M.get_commands(filter, cwd)
 	templates.add_commands(commands, config.templates or {}, {
 		dir = cwd,
 		filetype = vim.bo.filetype,
-		tagger = config.packages and config.packages.tagger,
 		tasks = config.tasks,
 	})
 	local res = {}

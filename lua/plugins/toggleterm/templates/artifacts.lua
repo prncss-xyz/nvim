@@ -5,7 +5,7 @@ local function add_definition(definitions, opts)
 		name = opts.name,
 		builder = function()
 			return {
-				cmd = string.format(opts.command, opts.path),
+				cmd = string.format(opts.cmd, opts.path),
 				cwd = opts.cwd,
 			}
 		end,
@@ -15,6 +15,14 @@ end
 return {
 	generator = function(opts)
 		local definitions = {}
+		local tasks_by_source = {}
+		for _, task in ipairs(opts.tasks or {}) do
+			assert(type(task.source) == "string", "Task source must be a string")
+			assert(type(task.cmd) == "string", string.format("Task %s cmd must be a string", task.source))
+			tasks_by_source[task.source] = tasks_by_source[task.source] or {}
+			table.insert(tasks_by_source[task.source], task)
+		end
+
 		local files = vim.fs.find(function(name)
 			return name:match("%.md$") ~= nil
 		end, { path = dirs.artifacts, type = "file", limit = math.huge })
@@ -26,24 +34,18 @@ return {
 			if relative then
 				repo, branch, task = relative:match("^([^/]+)/([^/]+)/([^/]+)%.md$")
 			end
-			local command = task and opts.tasks and opts.tasks[task]
-			if command then
+			local matching_tasks = task and tasks_by_source[task]
+			if matching_tasks then
 				local absolute_path = vim.fs.abspath(path)
 				local cwd = vim.fs.joinpath(dirs.projects, repo, branch)
 				local name = string.format("%s (%s/%s)", task, repo, branch)
-				if type(command) == "string" then
-					add_definition(definitions, { name = name, command = command, path = absolute_path, cwd = cwd })
-				else
-					assert(vim.islist(command), string.format("Task %s must be a string or list", task))
-					for index, item in ipairs(command) do
-						assert(type(item) == "string", string.format("Task %s commands must be strings", task))
-						add_definition(definitions, {
-							name = string.format("%s [%d]", name, index),
-							command = item,
-							path = absolute_path,
-							cwd = cwd,
-						})
-					end
+				for index, matching_task in ipairs(matching_tasks) do
+					add_definition(definitions, {
+						name = #matching_tasks == 1 and name or string.format("%s [%d]", name, index),
+						cmd = matching_task.cmd,
+						path = absolute_path,
+						cwd = cwd,
+					})
 				end
 			end
 		end
