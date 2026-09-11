@@ -32,6 +32,8 @@ return {
 		end,
 	},
 	templates = {
+		"plugins.toggleterm.templates.make",
+		"plugins.toggleterm.templates.mise",
 		"plugins.toggleterm.templates.npm",
 	},
 
