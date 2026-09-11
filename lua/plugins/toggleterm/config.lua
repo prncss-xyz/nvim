@@ -31,6 +31,9 @@ return {
 			end
 		end,
 	},
+	templates = {
+		"plugins.toggleterm.templates.npm",
+	},
 
 	on_status = function(item)
 		local msg = string.format("%s in %s (%s)", item.key, item.dir, item.status)

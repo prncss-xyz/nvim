@@ -1,21 +1,16 @@
 local M = {}
 
 local config = require("plugins.toggleterm.config")
-
-local pkg_cache = {}
-
-local function get_commands0(cwd)
-	if not pkg_cache[cwd] then
-		local commands = vim.tbl_extend("force", {}, config.commands)
-		require("plugins.toggleterm.terms.package").add_npm_scripts(commands, cwd)
-		pkg_cache[cwd] = commands
-	end
-	return pkg_cache[cwd]
-end
+local templates = require("plugins.toggleterm.templates")
 
 function M.get_commands(filter, cwd)
 	cwd = cwd or vim.fn.getcwd()
-	local commands = vim.deepcopy(get_commands0(cwd))
+	local commands = vim.deepcopy(config.commands)
+	templates.add_commands(commands, config.templates or {}, {
+		dir = cwd,
+		filetype = vim.bo.filetype,
+		tagger = config.packages and config.packages.tagger,
+	})
 	local res = {}
 	for k, v in pairs(commands) do
 		if type(v) == "table" then
