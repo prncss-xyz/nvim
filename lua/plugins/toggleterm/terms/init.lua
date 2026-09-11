@@ -208,13 +208,22 @@ local function make_item(item, cb, requested_instance)
 	item.screen_manifest = screen_manifests[item.key]
 	assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
 	item.dir = type(item.dir) == "string" and item.dir or vim.fn.getcwd()
-	if type(item.cmd) == "function" then
-		return item.cmd(function(cmd)
-			item.cmd = cmd
-			create_and_notify(item, cb)
-		end)
+	local function create()
+		if type(item.cmd) == "function" then
+			return item.cmd(function(cmd)
+				item.cmd = cmd
+				create_and_notify(item, cb)
+			end)
+		end
+		create_and_notify(item, cb)
 	end
-	create_and_notify(item, cb)
+	require("plugins.toggleterm.terms.git").ensure_worktree(item.dir, function(ok)
+		if ok then
+			create()
+		else
+			release_instance(item)
+		end
+	end)
 end
 
 local lt_item =

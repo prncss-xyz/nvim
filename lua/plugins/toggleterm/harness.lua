@@ -85,7 +85,7 @@ end
 
 function M.artifact_to_worktree(branch, opts)
 	vim.notify("Creating worktree " .. branch .. "...", vim.log.levels.INFO)
-	require("my.git").create_worktree(branch, function(_, worktree_path)
+	require("plugins.toggleterm.terms.git").create_worktree(branch, function(_, worktree_path)
 		opts.dir = worktree_path
 		require("plugins.toggleterm.terms").focus(opts)
 	end)
@@ -142,7 +142,7 @@ local function with_worktree(path)
 	end
 
 	vim.notify("Creating worktree " .. branch .. "...", vim.log.levels.INFO)
-	require("my.git").create_worktree(branch, function(_, worktree_path)
+	require("plugins.toggleterm.terms.git").create_worktree(branch, function(_, worktree_path)
 		terms.focus(prompt(path, worktree_path))
 	end)
 end

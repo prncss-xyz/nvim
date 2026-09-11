@@ -2,74 +2,63 @@ local M = {}
 
 local dirs = require("my.parameters").dirs
 local projects = dirs.projects
-local artifacts = dirs.artifacts
 
-local function path_exists(path)
-	local ok, stat = pcall(vim.uv.fs_lstat, path)
-	return ok and stat ~= nil
+local function run(command, callback)
+	vim.system(
+		command,
+		{ text = true },
+		vim.schedule_wrap(function(result)
+			callback(result.code == 0, result.stdout or result.stderr or "")
+		end)
+	)
 end
 
-local function relative_path(from, to)
-	local from_parts = vim.split(vim.fs.normalize(from), "/", { plain = true, trimempty = true })
-	local to_parts = vim.split(vim.fs.normalize(to), "/", { plain = true, trimempty = true })
-	local common_count = 0
+local function add_worktree(repo_root, worktree_path, branch, callback)
+	run({ "git", "-C", repo_root, "fetch", "origin", branch }, function()
+		run({ "git", "-C", repo_root, "rev-parse", "--verify", "origin/" .. branch }, function(remote_exists)
+			local function add(branch_exists)
+				local command = { "git", "-C", repo_root, "worktree", "add", worktree_path }
+				if not branch_exists then
+					command[#command + 1] = "-b"
+				end
+				command[#command + 1] = branch
+				run(command, function(ok, output)
+					if not ok then
+						vim.notify("Failed to create worktree: " .. output, vim.log.levels.ERROR)
+					end
+					callback(ok)
+				end)
+			end
 
-	while from_parts[common_count + 1] ~= nil and from_parts[common_count + 1] == to_parts[common_count + 1] do
-		common_count = common_count + 1
-	end
-
-	local parts = {}
-	for _ = common_count + 1, #from_parts do
-		parts[#parts + 1] = ".."
-	end
-	for index = common_count + 1, #to_parts do
-		parts[#parts + 1] = to_parts[index]
-	end
-
-	return #parts == 0 and "." or table.concat(parts, "/")
+			if remote_exists then
+				return add(true)
+			end
+			run({ "git", "-C", repo_root, "rev-parse", "--verify", branch }, function(local_exists)
+				add(local_exists)
+			end)
+		end)
+	end)
 end
 
-local function get_repo_name(repo_root, branch)
-	local repo = vim.fs.basename(repo_root)
-	if repo == branch then
-		return vim.fs.basename(vim.fs.dirname(repo_root))
+--- Create a missing <projects>/<repo>/<branch> worktree before using it.
+--- Other paths are left alone.
+function M.ensure_worktree(dir, callback)
+	if vim.uv.fs_stat(dir) then
+		return callback(true)
 	end
 
-	return repo
-end
-
-local function get_branch_name(repo_root)
-	local branch = vim.trim(vim.fn.system({ "git", "-C", repo_root, "branch", "--show-current" }))
-	if vim.v.shell_error == 0 and branch ~= "" then
-		return branch
+	local relative = vim.fs.relpath(projects, vim.fs.abspath(dir))
+	local parts = relative and vim.split(relative, "/", { plain = true, trimempty = true }) or {}
+	if #parts ~= 2 then
+		return callback(true)
 	end
 
-	return "main"
-end
-
-local function link_artifacts(repo_root, repo, branch)
-	local target = artifacts .. "/" .. repo
-	local branch_dir = target .. "/" .. branch:gsub("/", "-")
-	local link_path = repo_root .. "/.artifacts"
-
-	local ok, result = pcall(vim.fn.mkdir, branch_dir, "p")
-	if not ok or (result == 0 and vim.fn.isdirectory(branch_dir) == 0) then
-		vim.notify("Failed to create artifacts directory: " .. branch_dir, vim.log.levels.WARN)
-		return
+	local repo_root = vim.fs.joinpath(projects, parts[1], "main")
+	if not vim.uv.fs_stat(repo_root) then
+		return callback(true)
 	end
 
-	if path_exists(link_path) then
-		return
-	end
-
-	local link_target = relative_path(repo_root, target)
-	local ok_link, linked, error_message = pcall(vim.uv.fs_symlink, link_target, link_path)
-	if not ok_link or not linked then
-		vim.notify(
-			"Failed to create artifacts link: " .. tostring(ok_link and error_message or linked),
-			vim.log.levels.WARN
-		)
-	end
+	add_worktree(repo_root, dir, parts[2], callback)
 end
 
 --- Get the best file to open in a git repository.
@@ -149,9 +138,6 @@ function M.clone_github()
 			return
 		end
 
-		local branch = get_branch_name(repo_dir)
-		link_artifacts(repo_dir, get_repo_name(repo_dir, branch), branch)
-
 		local target = get_default_file(repo_dir)
 		require("my.create").create(vim.fn.fnameescape(target))
 	end)
@@ -178,7 +164,8 @@ function M.create_worktree(branch, on_success)
 	local worktree_path = parent .. "/" .. branch
 
 	if vim.fn.isdirectory(worktree_path) == 1 then
-		local existing_toplevel = vim.trim(vim.fn.system({ "git", "-C", worktree_path, "rev-parse", "--show-toplevel" }))
+		local existing_toplevel =
+			vim.trim(vim.fn.system({ "git", "-C", worktree_path, "rev-parse", "--show-toplevel" }))
 		if vim.v.shell_error ~= 0 or vim.fs.normalize(existing_toplevel) ~= worktree_path then
 			vim.notify("Expected worktree path is occupied: " .. worktree_path, vim.log.levels.ERROR)
 			return
@@ -193,35 +180,15 @@ function M.create_worktree(branch, on_success)
 			return
 		end
 
-		link_artifacts(worktree_path, get_repo_name(worktree_path, branch), branch)
 		on_success(get_default_file(worktree_path, rel_path), worktree_path)
 		return
 	end
 
-	-- fetch so we know what exists at origin
-	vim.fn.system({ "git", "fetch", "origin", branch })
-
-	vim.fn.system({ "git", "rev-parse", "--verify", "origin/" .. branch })
-	local branch_exists = vim.v.shell_error == 0
-	if not branch_exists then
-		branch_exists = vim.trim(vim.fn.system({ "git", "branch", "--list", branch })) ~= ""
-	end
-
-	local cmd = { "git", "worktree", "add", worktree_path }
-	if not branch_exists then
-		cmd[#cmd + 1] = "-b"
-	end
-	cmd[#cmd + 1] = branch
-
-	local result = vim.fn.system(cmd)
-
-	if vim.v.shell_error ~= 0 then
-		vim.notify("Failed to create worktree: " .. result, vim.log.levels.ERROR)
-		return
-	end
-
-	link_artifacts(worktree_path, get_repo_name(worktree_path, branch), branch)
-	on_success(get_default_file(worktree_path, rel_path), worktree_path)
+	add_worktree(toplevel, worktree_path, branch, function(ok)
+		if ok then
+			on_success(get_default_file(worktree_path, rel_path), worktree_path)
+		end
+	end)
 end
 
 function M.create_worktree_from_input(cb)

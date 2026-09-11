@@ -10,7 +10,7 @@ local T = MiniTest.new_set({
 				function run_git_case(config)
 					local calls = { mkdir = {}, notify = {}, rename = {}, system = {}, symlink = {} }
 					vim.v = { shell_error = 0 }
-					package.loaded["my.git"] = nil
+					package.loaded["plugins.toggleterm.terms.git"] = nil
 					package.loaded["my.parameters"] = { dirs = { projects = "/projects", artifacts = "/artifacts" } }
 					package.loaded["my.create"] = {
 						create = function(path)
@@ -74,7 +74,7 @@ local T = MiniTest.new_set({
 						return response or ""
 					end
 
-					local git = require("my.git")
+					local git = require("plugins.toggleterm.terms.git")
 					if config.operation == "clone" then
 						git.clone_github()
 					else

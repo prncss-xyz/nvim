@@ -11,6 +11,9 @@ local ensure_dir = require("plugins.toggleterm.terms.ensure_dir").ensure_dir
 local project_dir = require("my.rooter").project_dir
 
 local function ensure_dir_without_focus(dir)
+	if not vim.uv.fs_stat(dir) then
+		return
+	end
 	local current_win = vim.api.nvim_get_current_win()
 	ensure_dir(dir)
 	if vim.api.nvim_win_is_valid(current_win) then
@@ -280,7 +283,9 @@ function Term:toggle()
 	end
 	if not is_visible(self.terminal.window) then
 		last_terminal = self.terminal
-		ensure_dir(self.cwd)
+		if vim.uv.fs_stat(self.cwd) then
+			ensure_dir(self.cwd)
+		end
 	end
 	self.terminal:toggle()
 end
@@ -288,7 +293,9 @@ end
 function Term:focus()
 	self:hide_last()
 	if not is_visible(self.terminal.window) then
-		ensure_dir(self.cwd)
+		if vim.uv.fs_stat(self.cwd) then
+			ensure_dir(self.cwd)
+		end
 		self.terminal:toggle()
 		last_terminal = self.terminal
 	end
