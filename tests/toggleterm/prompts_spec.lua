@@ -16,9 +16,12 @@ T["selected prompts run outside the selector callback"] = function()
 		local artifact
 
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+		package.loaded["plugins.toggleterm.config"] = {
+			prompts = { idea = require("plugins.toggleterm.prompt_utils").create_artifact("idea.md") },
+		}
 		package.loaded["plugins.toggleterm.harness"] = {
-			create_artifact = function(input, filename)
-				artifact = { input, filename }
+			create_artifact = function(input, filename, root)
+				artifact = { input, filename, root }
 			end,
 		}
 		vim.ui.select = function(_, _, callback)
@@ -39,7 +42,7 @@ T["selected prompts run outside the selector callback"] = function()
 		scheduled[1]()
 		assert(input_callback, "scheduled prompt did not run")
 		input_callback("captured idea")
-		assert(vim.deep_equal(artifact, { "captured idea", "idea.md" }), "prompt input was not used")
+		assert(vim.deep_equal(artifact, { "captured idea", "idea.md", vim.fn.getcwd() }), "prompt context was not used")
 	]])
 end
 

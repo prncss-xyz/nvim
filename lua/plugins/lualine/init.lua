@@ -25,7 +25,7 @@ return {
 				lualine_c = {},
 				lualine_x = { "coordinates" },
 				lualine_y = {},
-				lualine_z = {},
+				lualine_z = { { "terminal_changed", color = "DiagnosticWarn" } },
 			},
 		},
 		cond = not_vscode,

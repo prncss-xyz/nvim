@@ -12,6 +12,51 @@ local T = MiniTest.new_set({
 	},
 })
 
+T["buffer metadata templates expand context values"] = function()
+	child.lua([[
+		vim.fn.mkdir("src/example", "p")
+		vim.cmd.edit("src/example/module.test.lua")
+		vim.bo.filetype = "lua"
+		vim.api.nvim_win_set_cursor(0, { 1, 0 })
+
+		local ctx = require("plugins.toggleterm.terms.window").get_ctx()
+		local template = table.concat({
+			"{filename}",
+			"{directory}",
+			"{row}",
+			"{column}",
+			"{extension}",
+			"{filetype}",
+		}, "|")
+		local result = require("plugins.toggleterm.put.core").template(template)(ctx, {})
+		assert(result == "module.test.lua|src/example|1|1|lua|lua", result)
+	]])
+end
+
+T["filetype templates use the source buffer filetype"] = function()
+	child.lua([[
+		vim.api.nvim_buf_set_name(0, "example.lua")
+		vim.bo.filetype = "lua"
+
+		local ctx = require("plugins.toggleterm.terms.window").get_ctx()
+		local result = require("plugins.toggleterm.put.core").template("language: {filetype}")(ctx, {})
+		assert(result == "language: lua", result)
+	]])
+end
+
+T["filetype templates preserve the source filetype after focusing a terminal"] = function()
+	child.lua([[
+		local window = require("plugins.toggleterm.terms.window")
+		vim.api.nvim_buf_set_name(0, "example.lua")
+		vim.bo.filetype = "lua"
+		vim.cmd.terminal()
+
+		local ctx = window.get_ctx()
+		local result = require("plugins.toggleterm.put.core").template("language: {filetype}")(ctx, {})
+		assert(result == "language: lua", result)
+	]])
+end
+
 T["selection templates capture the active selection before expansion"] = function()
 	child.lua([[
 		vim.api.nvim_buf_set_name(0, "selection.lua")

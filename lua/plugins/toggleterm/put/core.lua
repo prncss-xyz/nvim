@@ -1,6 +1,24 @@
 local M = {}
 
 local vars = {
+	column = function(ctx)
+		return ctx.col
+	end,
+	directory = function(ctx)
+		return vim.fn.fnamemodify(ctx.path, ":h")
+	end,
+	extension = function(ctx)
+		return vim.fn.fnamemodify(ctx.path, ":e")
+	end,
+	filename = function(ctx)
+		return vim.fn.fnamemodify(ctx.path, ":t")
+	end,
+	filetype = function(ctx)
+		return vim.bo[ctx.bufnr].filetype
+	end,
+	row = function(ctx)
+		return ctx.row
+	end,
 	selection = function(ctx)
 		return ctx.selection or require("plugins.toggleterm.put.selection").get_selection(ctx)
 	end,
@@ -24,8 +42,7 @@ end
 function M.template(str)
 	return function(query, instance)
 		return (
-			string.gsub(str, "%b{}", function(match)
-				local key = match:sub(2, -2)
+			string.gsub(str, "{(.-)}", function(key)
 				return assert(vars[key], "unknown template variable: " .. key)(query, instance)
 			end)
 		)

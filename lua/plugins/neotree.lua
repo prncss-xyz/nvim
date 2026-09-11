@@ -184,15 +184,6 @@ return {
 					},
 				},
 				event_handlers = {
-					{
-						event = events.VIM_BUFFER_ENTER,
-						handler = function(args)
-							local path = vim.api.nvim_buf_get_name(args.buf)
-							if require("neo-tree.utils").is_real_file(path) then
-								require("neo-tree.sources.filesystem").follow()
-							end
-						end,
-					},
 					{ event = events.FILE_MOVED, handler = on_move },
 					{ event = events.FILE_RENAMED, handler = on_move },
 				},

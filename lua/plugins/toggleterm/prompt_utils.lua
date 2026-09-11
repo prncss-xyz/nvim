@@ -9,9 +9,12 @@ function M.with_prompt(cb)
 end
 
 function M.create_artifact(filename)
-	return M.with_prompt(function(contents)
-		require("plugins.toggleterm.harness").create_artifact(contents, filename)
-	end)
+	return function(input, prompt)
+		local root = vim.fs.root(0, ".git") or vim.uv.cwd()
+		input(prompt, function(contents)
+			require("plugins.toggleterm.harness").create_artifact(contents, filename, root)
+		end)
+	end
 end
 
 function M.sender(prefix)

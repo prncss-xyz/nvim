@@ -3,12 +3,11 @@ local domain = require("my.parameters").domain
 local reverse = require("my.parameters").reverse
 local theme = require("my.parameters").theme
 local ai_insert = require("my.parameters").ai_insert
-local personal = require("my.conds").personal
 
 return {
 	{
 		"akinsho/toggleterm.nvim",
-		dependencies = personal({ "https://github.com/gvvaughan/lyaml" }, {}),
+		dependencies = vim.uv.os_gethostname() == "crotte" and { "https://github.com/gvvaughan/lyaml" } or {},
 		opts = {
 			direction = "float",
 			persist_size = false,

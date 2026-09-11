@@ -52,8 +52,8 @@ local function find_free_branch(branch, seen)
 	return branch
 end
 
-local function branch_name(input, callback)
-	local root = vim.fs.root(0, ".git") or vim.uv.cwd()
+local function branch_name(input, callback, root)
+	root = root or vim.fs.root(0, ".git") or vim.uv.cwd()
 	vim.notify("Naming branch...", vim.log.levels.INFO)
 	local command = vim.split(config.ai_query, "%s+", { trimempty = true })
 	vim.system(command, { cwd = root, text = true, stdin = summary_prompt(input) }, function(result)
@@ -68,14 +68,14 @@ local function branch_name(input, callback)
 	end)
 end
 
-function M.create_artifact(input, filename)
-	branch_name(input, function(branch, root)
-		local artifact_root = assert(artifact_cwd.project_artifacts(root), "Project artifacts directory not found")
+function M.create_artifact(input, filename, root)
+	branch_name(input, function(branch, project_root)
+		local artifact_root = assert(artifact_cwd.project_artifacts(project_root), "Project artifacts directory not found")
 		local path = vim.fs.joinpath(artifact_root, branch, filename)
 		vim.fn.mkdir(vim.fs.dirname(path), "p")
 		vim.fn.writefile(vim.split(input, "\n", { plain = true }), path)
 		vim.cmd.edit(vim.fn.fnameescape(path))
-	end)
+	end, root)
 end
 
 function M.artifact_to_worktree(branch, opts)

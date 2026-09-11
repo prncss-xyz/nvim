@@ -381,6 +381,18 @@ function M.toggle(query)
 	end)
 end
 
+function M.has_changed()
+	return history.find(function(item)
+		return item.changed ~= nil
+	end) ~= nil
+end
+
+function M.has_working()
+	return history.find(function(item)
+		return item.status == "working"
+	end) ~= nil
+end
+
 function M.toggle_unseen_or_latest(query)
 	query = normalize_query(query)
 	if query.instance_count then
