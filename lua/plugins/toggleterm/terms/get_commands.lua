@@ -10,6 +10,7 @@ function M.get_commands(filter, cwd)
 		dir = cwd,
 		filetype = vim.bo.filetype,
 		tagger = config.packages and config.packages.tagger,
+		tasks = config.tasks,
 	})
 	local res = {}
 	for k, v in pairs(commands) do

@@ -31,7 +31,11 @@ return {
 			end
 		end,
 	},
+	tasks = {
+		plan = "pi -p /implement @%q",
+	},
 	templates = {
+		"plugins.toggleterm.templates.artifacts",
 		"plugins.toggleterm.templates.make",
 		"plugins.toggleterm.templates.mise",
 		"plugins.toggleterm.templates.npm",
