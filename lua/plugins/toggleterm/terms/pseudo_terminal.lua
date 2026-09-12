@@ -4,17 +4,7 @@ local window = require("plugins.toggleterm.terms.window")
 local function noop() end
 
 local function project_dir()
-	local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
-	local current = vim.api.nvim_buf_get_name(0)
-	local dir = artifact_cwd.resolve(current)
-	if dir then
-		return dir
-	end
-	if vim.bo.buftype == "terminal" then
-		local _, term = require("toggleterm.terminal").identify()
-		return term and term.dir or vim.fn.getcwd()
-	end
-	return vim.fn.getcwd()
+	return require("plugins.toggleterm.terms.artifact_cwd").context_dir() or vim.fn.getcwd()
 end
 
 local function latest_buffer(test)
@@ -29,11 +19,14 @@ local function latest_buffer(test)
 	return latest
 end
 
-local function latest_artifact(dir)
-	local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
+local function latest_file_in(dir)
 	return latest_buffer(function(_, name)
-		return artifact_cwd.resolve(name) == dir
+		return name ~= "" and vim.fs.relpath(dir, vim.fs.abspath(name)) ~= nil
 	end)
+end
+
+local function latest_artifact(dir)
+	return latest_file_in(require("plugins.toggleterm.terms.artifact_cwd").for_checkout(dir))
 end
 
 local function source_context(dir, invocation)
@@ -77,20 +70,27 @@ function M.create(touch)
 	local function toggle_artifact()
 		local current = vim.fs.normalize(vim.api.nvim_buf_get_name(0))
 		local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
+		local from_artifact = artifact_cwd.contains(current)
 		local dir = artifact_cwd.resolve(current) or assert(vim.uv.fs_realpath(vim.fn.getcwd()))
-		local dirs = require("my.parameters").dirs
-		local project_path = assert(vim.fs.relpath(dirs.projects, dir))
-		local project_name = assert(vim.split(project_path, "/", { plain = true, trimempty = true })[1])
-		local artifact_dir = vim.fs.joinpath(dirs.artifacts, project_name)
-		local target = vim.fs.joinpath(artifact_dir, "index.md")
 
-		if current == target then
-			require("plugins.toggleterm.terms.ensure_dir").ensure_dir_excluding(dir, { artifact_dir })
+		if from_artifact then
+			local target = require("my.project_file").find(dir, { require("my.parameters").dirs.artifacts })
+			if target == nil then
+				target = vim.fs.joinpath(dir, "README.md")
+			end
+			require("plugins.toggleterm.config").create(vim.fn.fnameescape(target))
+			touch()
 			return
 		end
 
-		vim.fn.mkdir(artifact_dir, "p")
-		require("plugins.toggleterm.config").create(vim.fn.fnameescape(target))
+		local target_dir = artifact_cwd.for_checkout(dir)
+		local target = latest_file_in(target_dir)
+		if target then
+			vim.cmd.buffer(target.bufnr)
+		else
+			vim.fn.mkdir(target_dir, "p")
+			require("plugins.toggleterm.config").create(vim.fn.fnameescape(vim.fs.joinpath(target_dir, "index.md")))
+		end
 		touch()
 	end
 

@@ -288,7 +288,7 @@ return {
 				function()
 					local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
 					local project_dir = artifact_cwd.context_dir() or vim.fn.getcwd()
-					Snacks.picker.files({ cwd = artifact_cwd.branch_artifacts(project_dir) })
+					Snacks.picker.files({ cwd = artifact_cwd.for_checkout(project_dir) })
 				end,
 				desc = "Pick Branch Artifact File",
 			},

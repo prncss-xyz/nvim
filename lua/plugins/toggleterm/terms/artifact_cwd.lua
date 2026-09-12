@@ -8,6 +8,21 @@ local function is_directory(path)
 	return stat ~= nil and stat.type == "directory"
 end
 
+local function project_name(project_dir)
+	local project_path = assert(
+		vim.fs.relpath(dirs.projects, vim.fs.abspath(project_dir)),
+		"Project is outside projects directory"
+	)
+	return assert(vim.split(project_path, "/", { plain = true, trimempty = true })[1], "Project name not found")
+end
+
+local function branch_name(project_dir)
+	local branch = vim.trim(vim.fn.system({ "git", "-C", project_dir, "branch", "--show-current" }))
+	if vim.v.shell_error == 0 and branch ~= "" then
+		return branch
+	end
+end
+
 ---@param filename string
 ---@return boolean
 function M.contains(filename)
@@ -60,15 +75,18 @@ function M.context_dir()
 	end
 end
 
+--- Resolve the shared artifact directory for a project checkout.
+--- Default branches and checkouts without an identifiable branch use the
+--- project-level directory; other branches use a branch-specific directory.
 ---@param project_dir string
 ---@return string
-function M.branch_artifacts(project_dir)
-	local project_path = assert(vim.fs.relpath(dirs.projects, vim.fs.abspath(project_dir)), "Project is outside projects directory")
-	local project = assert(vim.split(project_path, "/", { plain = true, trimempty = true })[1], "Project name not found")
-	local branch = vim.trim(vim.fn.system({ "git", "-C", project_dir, "branch", "--show-current" }))
-	assert(vim.v.shell_error == 0 and branch ~= "", "Failed to determine current Git branch")
-	local artifact_branch = branch:gsub("/", "-")
-	return vim.fs.joinpath(dirs.artifacts, project, artifact_branch)
+function M.for_checkout(project_dir)
+	local project = project_name(project_dir)
+	local branch = branch_name(project_dir)
+	if branch and not vim.tbl_contains(parameters.default_branches or { "main", "master" }, branch) then
+		return vim.fs.joinpath(dirs.artifacts, project, (branch:gsub("/", "-")))
+	end
+	return vim.fs.joinpath(dirs.artifacts, project)
 end
 
 ---@param project_dir string

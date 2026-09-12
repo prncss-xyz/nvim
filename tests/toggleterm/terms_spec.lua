@@ -440,7 +440,7 @@ T["artifact cwd"]["resolves explicit and default branches without git"] = functi
 	}, child.lua_get("result"))
 end
 
-T["artifact cwd"]["builds project-scoped branch artifact paths"] = function()
+T["artifact cwd"]["maps feature checkouts to branch artifact paths"] = function()
 	child.lua([[root = vim.fn.tempname()
 		local projects = vim.fs.joinpath(root, "projects")
 		local artifacts = vim.fs.joinpath(root, "artifacts")
@@ -454,11 +454,41 @@ T["artifact cwd"]["builds project-scoped branch artifact paths"] = function()
 			default_branches = { "main", "master" },
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		result = require("plugins.toggleterm.terms.artifact_cwd").branch_artifacts(checkout)
+		result = require("plugins.toggleterm.terms.artifact_cwd").for_checkout(checkout)
 	]])
 
 	local root = child.lua_get("root")
 	assert.same(vim.fs.joinpath(root, "artifacts", "alpha", "feature-topic"), child.lua_get("result"))
+end
+
+T["artifact cwd"]["maps default and unidentified branches to project artifacts"] = function()
+	child.lua([[root = vim.fn.tempname()
+		local projects = vim.fs.joinpath(root, "projects")
+		local artifacts = vim.fs.joinpath(root, "artifacts")
+		local default_checkout = vim.fs.joinpath(projects, "alpha", "main")
+		local plain_checkout = vim.fs.joinpath(projects, "beta")
+		vim.fn.mkdir(default_checkout, "p")
+		vim.fn.mkdir(plain_checkout, "p")
+		vim.fn.system({ "git", "-C", default_checkout, "init", "-b", "main" })
+		assert(vim.v.shell_error == 0)
+
+		package.loaded["my.parameters"] = {
+			dirs = { projects = projects, artifacts = artifacts },
+			default_branches = { "main", "master" },
+		}
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+		local for_checkout = require("plugins.toggleterm.terms.artifact_cwd").for_checkout
+		result = {
+			default_branch = for_checkout(default_checkout),
+			without_git = for_checkout(plain_checkout),
+		}
+	]])
+
+	local root = child.lua_get("root")
+	assert.same({
+		default_branch = vim.fs.joinpath(root, "artifacts", "alpha"),
+		without_git = vim.fs.joinpath(root, "artifacts", "beta"),
+	}, child.lua_get("result"))
 end
 
 T["directory queries"] = MiniTest.new_set()
