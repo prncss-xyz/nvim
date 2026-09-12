@@ -43,7 +43,7 @@ function M.latest_in(dir)
 	local paths = {}
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
 		local path = vim.api.nvim_buf_get_name(bufnr)
-		if path ~= "" and vim.fs.relpath(dir, vim.fs.abspath(path)) ~= nil then
+		if path ~= "" and vim.fn.filereadable(path) == 1 and vim.fs.relpath(dir, vim.fs.abspath(path)) ~= nil then
 			paths[path] = true
 		end
 	end

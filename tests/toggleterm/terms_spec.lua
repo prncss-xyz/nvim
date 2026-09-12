@@ -120,6 +120,38 @@ T["pseudo terminal"]["toggles the artifact index without querying terminals"] = 
 	assert.same(1, child.lua_get("result"))
 end
 
+T["pseudo terminal"]["ignores stale artifact buffers whose files no longer exist"] = function()
+	child.lua([[root = vim.fn.tempname()
+		local projects = vim.fs.joinpath(root, "projects")
+		local artifacts = vim.fs.joinpath(root, "artifacts")
+		local project = vim.fs.joinpath(projects, "alpha", "main")
+		local stale = vim.fs.joinpath(artifacts, "alpha", "old-branch", "index.md")
+		vim.fn.mkdir(project, "p")
+		vim.fn.mkdir(vim.fs.dirname(stale), "p")
+
+		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
+		package.loaded["plugins.toggleterm.terms.create_term"] = { new = function() end }
+		package.loaded["plugins.toggleterm.config"] = {
+			autostart = {},
+			on_status = function() end,
+			create = function(path) created = path end,
+		}
+		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+			get_commands = function() error("artifact must not query terminal commands") end,
+		}
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		vim.o.hidden = true
+		vim.cmd.cd(vim.fn.fnameescape(project))
+		vim.cmd.edit(vim.fn.fnameescape(stale))
+		vim.cmd.enew()
+		require("plugins.toggleterm.terms").toggle({ key = "artifact" })
+		result = created
+	]])
+
+	assert.same(vim.fs.joinpath(child.lua_get("root"), "artifacts", "alpha", "index.md"), child.lua_get("result"))
+end
+
 T["pseudo terminal"]["focuses the latest artifact for the current project"] = function()
 	child.lua([[root = vim.fn.tempname()
 		local projects = vim.fs.joinpath(root, "projects")
