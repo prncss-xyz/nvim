@@ -20,7 +20,7 @@ local function normalize_task(definition)
 		dir = task.cwd or task.dir,
 		priority = task.priority,
 		tag = definition.tags and definition.tags[1],
-		on_exit = "keep",
+		on_exit = task.on_exit or "close",
 	}
 end
 

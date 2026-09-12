@@ -26,4 +26,17 @@ T["agents template adds installed agents ranked by list order"] = function()
 	]])
 end
 
+T["templates close on exit by default"] = function()
+	child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+		vim.fn.executable = function()
+			return 1
+		end
+		local commands = {}
+		require("plugins.toggleterm.templates").add_commands(commands, { "agents" }, {
+			agents = { "p" },
+		})
+		assert(commands.p.on_exit == "close", "expected template command to close on exit by default")
+	]])
+end
+
 return T
