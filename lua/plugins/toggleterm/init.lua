@@ -238,11 +238,26 @@ return {
 				desc = "Send Selection to Agent",
 			},
 			{
+				"m" .. reverse("v"),
+				function()
+					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{selection}")
+				end,
+				desc = "Send Selection to New Agent",
+			},
+			{
 				"ma",
 				function()
 					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{selection}")
 				end,
 				desc = "Send Selection to Agent",
+				mode = "x",
+			},
+			{
+				"m" .. reverse("a"),
+				function()
+					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{selection}")
+				end,
+				desc = "Send Selection to New Agent",
 				mode = "x",
 			},
 			{
@@ -254,14 +269,36 @@ return {
 				mode = "n",
 			},
 			{
+				"m" .. reverse("c"),
+				function()
+					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{position}")
+				end,
+				desc = "Put Current File Position in New Agent",
+				mode = "n",
+			},
+			{
 				"ms",
 				function()
 					local yaml = require("plugins.toggleterm.yaml")
-					local frontmatter = yaml.read(0)
-					frontmatter.status = frontmatter.status == "approved" and "pending" or "approved"
-					yaml.write(0, frontmatter)
+					local remove = "REMOVE"
+					local statuses = vim.tbl_map(function(status)
+						return status.name
+					end, require("plugins.toggleterm.config").status)
+					table.insert(statuses, remove)
+					vim.ui.select(statuses, { prompt = "Select status" }, function(choice)
+						if choice == nil then
+							return
+						end
+						local frontmatter = yaml.read(0)
+						if choice == remove then
+							frontmatter.status = nil
+						else
+							frontmatter.status = choice
+						end
+						yaml.write(0, frontmatter)
+					end)
 				end,
-				desc = "Toggle Approval",
+				desc = "Update Status",
 				mode = "n",
 				ft = "markdown",
 			},
@@ -274,11 +311,27 @@ return {
 				mode = "n",
 			},
 			{
+				"m" .. reverse("d"),
+				function()
+					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{line}")
+				end,
+				desc = "Put Current File Line in New Agent",
+				mode = "n",
+			},
+			{
 				"me",
 				function()
 					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{path}")
 				end,
 				desc = "Put Current File Path",
+				mode = "n",
+			},
+			{
+				"m" .. reverse("e"),
+				function()
+					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{path}")
+				end,
+				desc = "Put Current File Path in New Agent",
 				mode = "n",
 			},
 			{
@@ -290,11 +343,27 @@ return {
 				mode = "n",
 			},
 			{
+				"m" .. reverse("h"),
+				function()
+					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{hunk}")
+				end,
+				desc = "Put Current or Next Hunk in New Agent",
+				mode = "n",
+			},
+			{
 				"mm",
 				function()
 					require("plugins.toggleterm.prompts").prompt()
 				end,
 				desc = "Put Prompt Result",
+				mode = { "n", "x" },
+			},
+			{
+				"m" .. reverse("m"),
+				function()
+					require("plugins.toggleterm.prompts").prompt(true)
+				end,
+				desc = "Put Prompt Result in New Agent",
 				mode = { "n", "x" },
 			},
 			{
@@ -322,11 +391,26 @@ return {
 				mode = "n",
 			},
 			{
-				"mpz",
+				"m" .. reverse("z"),
+				function()
+					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{next_diagnostic}")
+				end,
+				desc = "Put Diagnostic Prompt in New Agent",
+				mode = "n",
+			},
+			{
+				"mf",
 				function()
 					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{file_diagnostic}")
 				end,
 				desc = "Put File Diagnostics Prompt",
+			},
+			{
+				"m" .. reverse("f"),
+				function()
+					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{file_diagnostic}")
+				end,
+				desc = "Put File Diagnostics Prompt in New Agent",
 			},
 		},
 		cond = not_vscode,

@@ -46,6 +46,18 @@ T["inserts frontmatter before an existing document"] = function()
 		}))]])
 end
 
+T["deletes existing frontmatter when the mapping becomes empty"] = function()
+	child.lua([[vim.api.nvim_buf_set_lines(0, 0, -1, false, { "---", "title: Old", "---", "", "# Heading" })
+		require("plugins.toggleterm.yaml").write(0, {})
+		assert(vim.deep_equal(vim.api.nvim_buf_get_lines(0, 0, -1, false), { "# Heading" }))]])
+end
+
+T["does nothing when writing an empty mapping without frontmatter"] = function()
+	child.lua([[vim.api.nvim_buf_set_lines(0, 0, -1, false, { "# Heading" })
+		require("plugins.toggleterm.yaml").write(0, {})
+		assert(vim.deep_equal(vim.api.nvim_buf_get_lines(0, 0, -1, false), { "# Heading" }))]])
+end
+
 T["refuses to write frontmatter that is not a YAML mapping"] = function()
 	child.lua([[local ok, err = pcall(require("plugins.toggleterm.yaml").write, 0, "title")
 		assert(not ok)

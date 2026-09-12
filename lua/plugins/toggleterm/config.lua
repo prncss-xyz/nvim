@@ -10,6 +10,9 @@ return {
 		"claude -p --model haiku --bare --disable-slash-commands --tools="
 	),
 	create = require("my.create").create,
+	bdelete = function(bufnr)
+		Snacks.bufdelete.delete(bufnr)
+	end,
 	notify = personal(function(title, message)
 		vim.system({ "notify-send", title, message }, { detach = true })
 	end, function(title, message)

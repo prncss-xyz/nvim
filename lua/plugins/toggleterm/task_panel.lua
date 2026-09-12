@@ -109,6 +109,21 @@ local function open_selected()
 	end
 end
 
+local function delete_task_buffers(task)
+	local config = require("plugins.toggleterm.config")
+	local task_dir = vim.fs.normalize(task.dir) .. "/"
+	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+		local path = vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr))
+		if path ~= "" and vim.startswith(path .. "/", task_dir) then
+			if config.bdelete then
+				config.bdelete(bufnr)
+			else
+				vim.api.nvim_buf_delete(bufnr, { force = true })
+			end
+		end
+	end
+end
+
 local function delete_selected()
 	local selected = state.rows[vim.api.nvim_win_get_cursor(state.win)[1]]
 	if not selected then
@@ -124,6 +139,7 @@ local function delete_selected()
 		if choice ~= "Delete" then
 			return
 		end
+		delete_task_buffers(task)
 		assert(vim.fn.delete(task.dir, "rf") == 0, "Failed to delete artifact task: " .. task.dir)
 		render()
 	end)

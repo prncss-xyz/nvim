@@ -79,6 +79,16 @@ function M.write(bufnr, value)
 	assert(type(value) == "table", "Markdown frontmatter must be a YAML mapping")
 	bufnr = bufnr or 0
 	local current = frontmatter(bufnr)
+	if vim.tbl_isempty(value) then
+		if current then
+			local last_line = current.last_line
+			if vim.api.nvim_buf_get_lines(bufnr, last_line, last_line + 1, false)[1] == "" then
+				last_line = last_line + 1
+			end
+			vim.api.nvim_buf_set_lines(bufnr, 0, last_line, false, {})
+		end
+		return
+	end
 	local replacement = { "---" }
 	vim.list_extend(replacement, vim.split(encode(value), "\n", { plain = true, trimempty = true }))
 	table.insert(replacement, "---")

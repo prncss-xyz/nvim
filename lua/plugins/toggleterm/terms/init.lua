@@ -440,24 +440,43 @@ function M.prepare(query)
 	with_query(query, prepare)
 end
 
-function M.put(query, arg)
+local function prepare_put(arg)
 	local invocation
 	if type(arg) == "string" then
 		local put = require("plugins.toggleterm.put.core")
 		invocation = put.capture(arg)
 		arg = put.template(arg)
 	end
+	return invocation, arg
+end
 
+local function put(instance, invocation, arg)
+	local ctx = instance.term.get_ctx and instance.term.get_ctx(invocation)
+		or require("plugins.toggleterm.terms.window").get_ctx(invocation)
+	if ctx then
+		arg = arg(ctx, instance)
+	else
+		return
+	end
+	instance.term:put(arg, true)
+end
+
+function M.put(query, arg)
+	local invocation
+	invocation, arg = prepare_put(arg)
 	with_query(query, function(instance)
-		local ctx = instance.term.get_ctx and instance.term.get_ctx(invocation)
-			or require("plugins.toggleterm.terms.window").get_ctx(invocation)
-		if ctx then
-			arg = arg(ctx, instance)
-		else
-			return
-		end
-		instance.term:put(arg, true)
+		put(instance, invocation, arg)
 	end)
+end
+
+function M.put_new(query, arg)
+	local invocation
+	invocation, arg = prepare_put(arg)
+	query = normalize_query(query)
+	local item = utils.max_of(get_query_commands(query, get_filter(query)), gt_item) or without_query_options(query)
+	make_item(item, function(instance)
+		put(instance, invocation, arg)
+	end, query.instance_count)
 end
 
 function M.read(instance_count, opts, cb)

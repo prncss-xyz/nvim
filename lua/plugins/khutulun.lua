@@ -12,8 +12,8 @@ return {
 					to = target,
 				})
 			end,
-			bdelete = function()
-				Snacks.bufdelete.delete()
+			bdelete = function(bufnr)
+				Snacks.bufdelete.delete(bufnr)
 			end,
 			create = function(target)
 				require("my.create").create(target)

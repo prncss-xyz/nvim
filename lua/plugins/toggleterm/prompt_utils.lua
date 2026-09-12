@@ -41,9 +41,12 @@ function M.create_task(remove)
 end
 
 function M.sender(prefix)
-	return M.with_prompt(function(contents, prompt)
-		require("plugins.toggleterm.terms").put({ tag = "agent" }, (prefix or prompt) .. " " .. contents)
-	end)
+	return function(input, prompt, new_agent)
+		input(prompt, function(contents)
+			local method = new_agent and "put_new" or "put"
+			require("plugins.toggleterm.terms")[method]({ tag = "agent" }, (prefix or prompt) .. " " .. contents)
+		end)
+	end
 end
 
 return M

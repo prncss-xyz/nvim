@@ -150,16 +150,29 @@ T["creates index.md for an empty task directory"] = function()
 	}, child.lua_get("result"))
 end
 
-T["prompts before deleting a task"] = function()
+T["prompts before deleting a task and deletes its buffers through config"] = function()
 	child.lua([[
 		local root = vim.fn.tempname()
 		local task = vim.fs.joinpath(root, "nvim", "remove-me")
 		vim.fn.mkdir(task, "p")
-		vim.fn.writefile({ "task" }, vim.fs.joinpath(task, "index.md"))
+		local index = vim.fs.joinpath(task, "index.md")
+		local design = vim.fs.joinpath(task, "design.md")
+		vim.fn.writefile({ "task" }, index)
+		vim.fn.writefile({ "design" }, design)
+		vim.cmd.edit(vim.fn.fnameescape(index))
+		local index_buf = vim.api.nvim_get_current_buf()
+		vim.cmd.edit(vim.fn.fnameescape(design))
+		local design_buf = vim.api.nvim_get_current_buf()
+		vim.cmd.enew()
+		local deleted_buffers = {}
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
 		package.loaded["plugins.toggleterm.config"] = {
 			panel = { width = 24 },
 			status = { { name = "draft" } },
+			bdelete = function(bufnr)
+				table.insert(deleted_buffers, vim.api.nvim_buf_get_name(bufnr))
+				vim.api.nvim_buf_delete(bufnr, { force = true })
+			end,
 		}
 		local prompt
 		vim.ui.select = function(items, opts, callback)
@@ -169,16 +182,23 @@ T["prompts before deleting a task"] = function()
 		require("plugins.toggleterm.task_panel").toggle()
 		vim.api.nvim_win_set_cursor(0, { 3, 0 })
 		vim.api.nvim_feedkeys("x", "x", false)
+		table.sort(deleted_buffers)
 		result = {
 			prompt = prompt,
 			deleted = vim.fn.isdirectory(task) == 0,
+			deleted_buffers = deleted_buffers,
+			buffers_valid = vim.api.nvim_buf_is_valid(index_buf) or vim.api.nvim_buf_is_valid(design_buf),
 			lines = vim.api.nvim_buf_get_lines(0, 0, -1, false),
 		}
+		expected_buffers = { design, index }
+		table.sort(expected_buffers)
 	]])
 
 	assert.same({
 		prompt = "Delete task nvim/remove-me?",
 		deleted = true,
+		deleted_buffers = child.lua_get("expected_buffers"),
+		buffers_valid = false,
 		lines = { "No artifact tasks" },
 	}, child.lua_get("result"))
 end
