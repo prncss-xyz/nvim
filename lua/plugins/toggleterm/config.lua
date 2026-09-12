@@ -48,7 +48,9 @@ return {
 		["curry"] = "curry this: {position}",
 		["where in the codebase "] = prompt_utils.sender(),
 		["task"] = prompt_utils.create_artifact("task.md"),
-		["anchor"] = [[We are developping the contents of an artifact file. When I ask you a question or give you an enquiry, update this file instead of answering me in the conversation. Add the bare minimum amount of text to answer the question while quoting your sources. The file is {path}.]],
+		["anchor"] = [[We are developping the contents of an artifact file. When I ask you a question or give you an enquiry, update this file instead of answering me in the conversation. Add the bare minimum amount of text to answer the question while quoting your sources. The file is {path}.
+
+]],
 	},
 
 	on_status = function(item)
