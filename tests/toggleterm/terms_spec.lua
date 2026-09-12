@@ -426,6 +426,7 @@ T["artifact cwd"]["resolves explicit and default branches without git"] = functi
 			missing_branch = resolve(vim.fs.joinpath(artifacts, "alpha", "missing", "issue.md")),
 			default_nested = resolve(vim.fs.joinpath(artifacts, "alpha", "issue.md")),
 			default_flat = resolve(vim.fs.joinpath(artifacts, "beta", "issue.md")),
+			missing_project = resolve(vim.fs.joinpath(artifacts, "missing", "issue.md")),
 			outside = resolve(vim.fs.joinpath(root, "issue.md")),
 		}
 	]])
@@ -437,6 +438,27 @@ T["artifact cwd"]["resolves explicit and default branches without git"] = functi
 		default_nested = vim.fs.joinpath(root, "projects", "alpha", "main"),
 		default_flat = vim.fs.joinpath(root, "projects", "beta"),
 	}, child.lua_get("result"))
+end
+
+T["artifact cwd"]["builds project-scoped branch artifact paths"] = function()
+	child.lua([[root = vim.fn.tempname()
+		local projects = vim.fs.joinpath(root, "projects")
+		local artifacts = vim.fs.joinpath(root, "artifacts")
+		local checkout = vim.fs.joinpath(projects, "alpha", "feature")
+		vim.fn.mkdir(checkout, "p")
+		vim.fn.system({ "git", "-C", checkout, "init", "-b", "feature/topic" })
+		assert(vim.v.shell_error == 0)
+
+		package.loaded["my.parameters"] = {
+			dirs = { projects = projects, artifacts = artifacts },
+			default_branches = { "main", "master" },
+		}
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+		result = require("plugins.toggleterm.terms.artifact_cwd").branch_artifacts(checkout)
+	]])
+
+	local root = child.lua_get("root")
+	assert.same(vim.fs.joinpath(root, "artifacts", "alpha", "feature-topic"), child.lua_get("result"))
 end
 
 T["directory queries"] = MiniTest.new_set()
