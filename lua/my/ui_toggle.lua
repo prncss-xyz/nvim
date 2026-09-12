@@ -28,6 +28,12 @@ local config = {
 				require("plugins.toggleterm.terms").raise_panel()
 			end,
 		},
+		toggleterm_tasks = {
+			ft = { "toggleterm-task-panel" },
+			raise = function()
+				require("plugins.toggleterm.task_panel").toggle()
+			end,
+		},
 		neotest = {
 			ft = { "neotest-summary", "neotest-output-panel" },
 		},

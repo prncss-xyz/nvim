@@ -23,6 +23,33 @@ local function branch_name(project_dir)
 	end
 end
 
+---@param paths table<string, boolean>
+---@return table|nil
+function M.latest_file(paths)
+	local latest
+	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+		local path = vim.api.nvim_buf_get_name(bufnr)
+		local info = vim.fn.getbufinfo(bufnr)[1]
+		if paths[path] and (latest == nil or (info.lastused or 0) > latest.lastused) then
+			latest = { bufnr = bufnr, path = path, lastused = info.lastused or 0 }
+		end
+	end
+	return latest
+end
+
+---@param dir string
+---@return table|nil
+function M.latest_in(dir)
+	local paths = {}
+	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+		local path = vim.api.nvim_buf_get_name(bufnr)
+		if path ~= "" and vim.fs.relpath(dir, vim.fs.abspath(path)) ~= nil then
+			paths[path] = true
+		end
+	end
+	return M.latest_file(paths)
+end
+
 ---@param filename string
 ---@return boolean
 function M.contains(filename)

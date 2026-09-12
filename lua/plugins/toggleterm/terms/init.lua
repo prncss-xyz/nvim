@@ -433,10 +433,8 @@ function M.toggle_panel(query)
 	if selected and selected.toggle_panel then
 		return selected.toggle_panel()
 	end
-	require("my.ui_toggle").activate("toggleterm", function()
-		require("plugins.toggleterm.terms.panel").toggle(query, panel_history, subscribe, function(dir)
-			M.focus({ dir = dir, prompt = "Select Command: " })
-		end)
+	require("plugins.toggleterm.terms.panel").toggle(query, panel_history, subscribe, function(dir)
+		M.focus({ dir = dir, prompt = "Select Command: " })
 	end)
 end
 

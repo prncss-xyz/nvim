@@ -511,11 +511,10 @@ end
 
 T["terminal panel integration"] = MiniTest.new_set()
 
-T["terminal panel integration"]["uses ui_toggle and forwards make_item lifecycle changes"] = function()
+T["terminal panel integration"]["forwards make_item lifecycle changes"] = function()
 	child.lua([[local sent
 		local listener
 		local events = {}
-		local activated
 		local item = {
 			key = "agent",
 			display_name = "agent",
@@ -554,12 +553,6 @@ T["terminal panel integration"]["uses ui_toggle and forwards make_item lifecycle
 		package.loaded["plugins.toggleterm.terms.format_item"] = {
 			format_item = function() return function(value) return value.key end end,
 		}
-		package.loaded["my.ui_toggle"] = {
-			activate = function(key, action)
-				activated = key
-				action()
-			end,
-		}
 		package.loaded["plugins.toggleterm.terms.panel"] = {
 			toggle = function(query, history, subscribe)
 				listener = subscribe(function(event)
@@ -578,7 +571,6 @@ T["terminal panel integration"]["uses ui_toggle and forwards make_item lifecycle
 		sent({ type = "detach" })
 
 		result = {
-			activated = activated,
 			dir = item.dir,
 			item_count = #result_items,
 			events = events,
@@ -586,7 +578,6 @@ T["terminal panel integration"]["uses ui_toggle and forwards make_item lifecycle
 	]])
 
 	assert.same({
-		activated = "toggleterm",
 		dir = "/project",
 		item_count = 1,
 		events = { "dir", "status", "detach" },

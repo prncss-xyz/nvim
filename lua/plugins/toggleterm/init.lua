@@ -114,12 +114,23 @@ return {
 			{
 				"ru",
 				function()
-					require("plugins.toggleterm.terms").toggle_panel({
-						dir = require("plugins.toggleterm.terms.get_query_fn").any,
-					})
+					require("my.ui_toggle").activate("toggleterm", function()
+						require("plugins.toggleterm.terms").toggle_panel({
+							dir = require("plugins.toggleterm.terms.get_query_fn").any,
+						})
+					end)
+				end,
+				desc = "Toggle Terminal Panel",
+				mode = { "n", "x" },
+			},
+			{
+				"r" .. reverse("u"),
+				function()
+					require("my.ui_toggle").activate("toggleterm_tasks", function()
+						require("plugins.toggleterm.task_panel").toggle()
+					end)
 				end,
 				desc = "Toggle Tasks Panel",
-				mode = { "n", "x" },
 			},
 			{
 				"oi",

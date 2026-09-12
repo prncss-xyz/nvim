@@ -7,26 +7,9 @@ local function project_dir()
 	return require("plugins.toggleterm.terms.artifact_cwd").context_dir() or vim.fn.getcwd()
 end
 
-local function latest_buffer(test)
-	local latest
-	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-		local name = vim.api.nvim_buf_get_name(bufnr)
-		local buffer = vim.fn.getbufinfo(bufnr)[1]
-		if test(bufnr, name) and (latest == nil or (buffer.lastused or 0) > (latest.lastused or 0)) then
-			latest = { bufnr = bufnr, name = name, lastused = buffer.lastused }
-		end
-	end
-	return latest
-end
-
-local function latest_file_in(dir)
-	return latest_buffer(function(_, name)
-		return name ~= "" and vim.fs.relpath(dir, vim.fs.abspath(name)) ~= nil
-	end)
-end
-
 local function latest_artifact(dir)
-	return latest_file_in(require("plugins.toggleterm.terms.artifact_cwd").for_checkout(dir))
+	local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
+	return artifact_cwd.latest_in(artifact_cwd.for_checkout(dir))
 end
 
 local function source_context(dir, invocation)
@@ -84,7 +67,7 @@ function M.create(touch)
 		end
 
 		local target_dir = artifact_cwd.for_checkout(dir)
-		local target = latest_file_in(target_dir)
+		local target = artifact_cwd.latest_in(target_dir)
 		if target then
 			vim.cmd.buffer(target.bufnr)
 		else

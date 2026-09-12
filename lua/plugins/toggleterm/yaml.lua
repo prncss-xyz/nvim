@@ -37,8 +37,7 @@ local function encode(value)
 	return vim.trim(run_yq(args, vim.json.encode(value)))
 end
 
-local function frontmatter(bufnr)
-	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+local function frontmatter_lines(lines)
 	if lines[1] ~= "---" then
 		return nil
 	end
@@ -55,12 +54,24 @@ local function frontmatter(bufnr)
 	error("unterminated YAML frontmatter")
 end
 
+local function frontmatter(bufnr)
+	return frontmatter_lines(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+end
+
 function M.read(bufnr)
 	local result = frontmatter(bufnr or 0)
 	if not result then
 		return {}
 	end
 
+	return decode(result.text)
+end
+
+function M.read_file(path)
+	local result = frontmatter_lines(vim.fn.readfile(path))
+	if not result then
+		return {}
+	end
 	return decode(result.text)
 end
 
