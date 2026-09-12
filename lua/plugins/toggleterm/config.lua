@@ -1,5 +1,4 @@
 local personal = require("my.conds").personal
-local work = require("my.conds").work
 local notify = require("my.notify")
 local prompt_utils = require("plugins.toggleterm.prompt_utils")
 
@@ -37,6 +36,24 @@ return {
 			fork = true,
 		},
 	},
+	status = {
+		{
+			name = "draft",
+		},
+		{
+			name = "ready",
+			files = { "design.md" },
+		},
+		{
+			name = "blocked",
+		},
+		{
+			name = "done",
+		},
+		{
+			name = "aborted",
+		},
+	},
 	templates = {
 		"agents",
 		"artifacts",
@@ -58,16 +75,8 @@ return {
 	},
 
 	on_status = function(item)
-		local msg = string.format("%s in %s (%s)", item.key, item.dir, item.status)
-
-		local fd = io.open(vim.env.HOME .. "/neomux.logs", "a")
-		if fd then
-			fd:write(string.format("[%s] %s\n", os.date("%Y-%m-%d %H:%M:%S"), msg))
-			fd:close()
-		end
-
 		if item.changed then
-			notify.notify(msg)
+			notify.notify(string.format("%s in %s (%s)", item.key, item.dir, item.status))
 		end
 	end,
 
