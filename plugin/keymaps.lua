@@ -49,6 +49,57 @@ end, { desc = "Blank Line Below" })
 
 vim.keymap.set({ "n" }, file .. "j", "<cmd>edit package.json<cr>", { desc = "Edit package.json" })
 
+local function toggle_index_file()
+	local source = vim.api.nvim_buf_get_name(0)
+	if source == "" then
+		vim.notify("Current buffer has no file", vim.log.levels.WARN)
+		return
+	end
+
+	local directory = vim.fs.dirname(source)
+	local filename = vim.fs.basename(source)
+	local name, extension = filename:match("^(.*)(%.[^.]+)$")
+	if not name then
+		vim.notify("Current file has no extension", vim.log.levels.WARN)
+		return
+	end
+
+	local target
+	local remove_directory = false
+	if name == "index" then
+		for entry in vim.fs.dir(directory) do
+			if entry ~= filename then
+				vim.notify("Directory contains other files: " .. directory, vim.log.levels.WARN)
+				return
+			end
+		end
+		target = vim.fs.joinpath(vim.fs.dirname(directory), vim.fs.basename(directory) .. extension)
+		remove_directory = true
+	else
+		target = vim.fs.joinpath(directory, name, "index" .. extension)
+	end
+
+	if vim.uv.fs_stat(target) then
+		vim.notify("Target already exists: " .. target, vim.log.levels.WARN)
+		return
+	end
+
+	Snacks.rename.rename_file({
+		from = source,
+		to = target,
+		on_rename = function(_, _, ok)
+			if remove_directory and ok then
+				local removed, error = vim.uv.fs_rmdir(directory)
+				if not removed then
+					vim.notify("Failed to remove directory: " .. error, vim.log.levels.ERROR)
+				end
+			end
+		end,
+	})
+end
+
+vim.keymap.set("n", "hf", toggle_index_file, { desc = "Toggle Index File" })
+
 vim.keymap.set({ "n" }, file .. "g", function()
 	require("plugins.toggleterm.terms.git").clone_github()
 end, { desc = "Clone or Create Github Repo" })

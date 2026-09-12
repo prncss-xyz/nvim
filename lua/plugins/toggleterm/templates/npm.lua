@@ -1,4 +1,4 @@
-local files = require("plugins.toggleterm.templates.files")
+local files = require("plugins.toggleterm.terms.files")
 
 local manager_lockfiles = {
 	npm = { "package-lock.json" },

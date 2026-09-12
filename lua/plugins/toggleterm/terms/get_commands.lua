@@ -7,6 +7,7 @@ function M.get_commands(filter, cwd)
 	cwd = cwd or vim.fn.getcwd()
 	local commands = vim.deepcopy(config.commands)
 	templates.add_commands(commands, config.templates or {}, {
+		agents = config.agents,
 		dir = cwd,
 		filetype = vim.bo.filetype,
 		tasks = config.tasks,

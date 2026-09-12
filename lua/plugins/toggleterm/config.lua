@@ -4,6 +4,7 @@ local notify = require("my.notify")
 local prompt_utils = require("plugins.toggleterm.prompt_utils")
 
 return {
+	agents = { "p", "claude", "agy" },
 	min_runtime = 10000,
 	ai_query = personal(
 		"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
@@ -37,18 +38,21 @@ return {
 		},
 	},
 	templates = {
-		"plugins.toggleterm.templates.artifacts",
-		"plugins.toggleterm.templates.make",
-		"plugins.toggleterm.templates.mise",
-		"plugins.toggleterm.templates.npm",
+		"agents",
+		"artifacts",
+		"chezmoi",
+		"git_sync",
+		"make",
+		"mise",
+		"npm",
 	},
 	prompts = {
 		["do"] = "do this: {position}",
 		["explain"] = "explain this: {position}",
 		["curry"] = "curry this: {position}",
 		["where in the codebase "] = prompt_utils.sender(),
-		["task"] = prompt_utils.create_artifact("task.md"),
-		["anchor"] = [[We are developping the contents of an artifact file. When I ask you a question or give you an enquiry, update this file instead of answering me in the conversation. Add the bare minimum amount of text to answer the question while quoting your sources. The file is {path}.
+		["task"] = prompt_utils.create_artifact("index.md"),
+		["anchor"] = [[We are developing the contents of an artifact file. When I ask you a question or give you an enquiry, update this file instead of answering me in the conversation. Add the bare minimum amount of text to answer the question while quoting your sources. The file is {path}.
 
 ]],
 	},
@@ -76,10 +80,6 @@ return {
 	},
 
 	commands = {
-		tsterr = {
-			cmd = "tsterr",
-			on_exit = "restart",
-		},
 		ddgr = {
 			cmd = "ddgr",
 			dir = vim.env.HOME,
@@ -88,11 +88,6 @@ return {
 			cmd = "portless",
 			on_exit = "keep",
 		},
-		tilt = work({
-			cmd = "make tilt",
-			on_exit = "keep",
-			global = true,
-		}),
 		current = function()
 			return { dir = vim.fn.expand("%:p:h") }
 		end,
@@ -116,59 +111,27 @@ return {
 			on_exit = "keep",
 		},
 		["commit ongoing work"] = {
-			cmd = 'git add --all; git commit -m "ongoing work" --no-verify',
+			cmd = 'git add --all; git commit -m "changes from $(uname -n) on $(date)" --no-verify',
 			on_exit = "keep",
 		},
 		["commit ongoing work and push"] = {
-			cmd = 'git add --all; git commit -m "ongoing work" --no-verify; git push',
+			cmd = 'git add --all; git commit -m "changes from $(uname -n) on $(date)" --no-verify; git push',
 			on_exit = "keep",
 		},
 		["git-sync-all"] = personal({
 			cmd = "git-sync-all",
 			on_exit = "keep",
 		}),
-		["git-sync"] = personal({
-			cmd = "git-sync",
-			on_exit = "keep",
-		}),
-		antigravity = personal({
-			cmd = "agy",
-			tag = "agent",
-		}),
-		pi = personal({
-			priority = 3,
-			cmd = "p",
-			tag = "agent",
-		}),
-		claude = work({
-			priority = 2,
-			cmd = "claude",
-			tag = "agent",
-		}),
-		["agent-arfifacts --remove"] = {
-			cmd = "git-sync",
-			on_exit = "keep",
-		},
-		["make daily-login"] = function()
+		[":make daily-login"] = function()
 			if vim.fn.filereadable(vim.fn.getcwd() .. "/Makefile") == 1 then
 				return { cmd = "make daily-login" }
 			else
 				return nil
 			end
 		end,
-		["make tilt"] = function()
+		[":make tilt"] = function()
 			if vim.fn.filereadable(vim.fn.getcwd() .. "/Makefile") == 1 then
 				return { cmd = "make tilt" }
-			else
-				return nil
-			end
-		end,
-		["chezmoi apply"] = function()
-			if
-				vim.fn.executable("chezmoi") == 1
-				and vim.fn.getcwd() == vim.trim(vim.fn.system("chezmoi source-path"))
-			then
-				return { cmd = "chezmoi apply" }
 			else
 				return nil
 			end
