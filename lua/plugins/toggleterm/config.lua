@@ -62,25 +62,15 @@ Output ONLY the branch name, nothing else.
 	block_as = "blocked",
 	unblock_with = { "done" },
 	status = {
-		{
-			name = "draft",
-		},
+		{ name = "draft" },
 		{
 			name = "ready",
 			files = { "design.md" },
 		},
-		{
-			name = "blocked",
-		},
-		{
-			name = "verify",
-		},
-		{
-			name = "done",
-		},
-		{
-			name = "aborted",
-		},
+		{ name = "blocked" },
+		{ name = "verify" },
+		{ name = "done" },
+		{ name = "aborted" },
 	},
 	templates = {
 		"agents",
