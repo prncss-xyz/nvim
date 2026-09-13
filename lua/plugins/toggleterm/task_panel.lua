@@ -15,31 +15,38 @@ end
 local function create_rows(tasks, statuses)
 	local result = {}
 	for _, status in ipairs(statuses) do
-		local projects = {}
+		local root = { children = {} }
 		for _, task in ipairs(tasks) do
 			if task.status == status.name then
-				projects[task.project] = projects[task.project] or {}
-				table.insert(projects[task.project], task)
+				local node = root
+				for _, name in ipairs(task.parts) do
+					node.children[name] = node.children[name] or { name = name, children = {} }
+					node = node.children[name]
+				end
+				node.task = task
 			end
 		end
-		if not vim.tbl_isempty(projects) then
-			table.insert(result, { text = "● " .. status.name, status = status.name })
-			local names = vim.tbl_keys(projects)
-			table.sort(names)
-			for _, project in ipairs(names) do
-				table.insert(result, { text = "  󰉋 " .. project, status = status.name, project = project })
-				table.sort(projects[project], function(a, b)
-					return a.branch < b.branch
-				end)
-				for _, task in ipairs(projects[project]) do
+
+		if not vim.tbl_isempty(root.children) then
+			table.insert(result, { text = "● " .. status.name, status = status.name, parts = {} })
+			local function append(node, depth, parts)
+				local names = vim.tbl_keys(node.children)
+				table.sort(names)
+				for _, name in ipairs(names) do
+					local child = node.children[name]
+					local child_parts = vim.deepcopy(parts)
+					table.insert(child_parts, name)
 					table.insert(result, {
-						text = "    " .. task.branch,
+						text = string.rep("  ", depth + 1) .. "󰉋 " .. name,
 						status = status.name,
-						project = project,
-						branch = task.branch,
+						parts = child_parts,
+						dir = child.task and child.task.dir or nil,
+						task = child.task,
 					})
+					append(child, depth + 1, child_parts)
 				end
 			end
+			append(root, 0, {})
 		end
 	end
 	return result
@@ -63,18 +70,13 @@ local function render()
 	for index, row in ipairs(state.rows) do
 		vim.api.nvim_buf_set_extmark(state.buf, namespace, index - 1, 0, {
 			end_col = #row.text,
-			hl_group = row.branch and "NeoTreeFileName" or "NeoTreeDirectoryName",
+			hl_group = row.task and "DiagnosticInfo" or "NeoTreeDirectoryName",
 		})
 	end
 end
 
 local function selected_task(selected)
-	if not selected.branch then
-		return
-	end
-	return vim.iter(state.tasks):find(function(task)
-		return task.status == selected.status and task.project == selected.project and task.branch == selected.branch
-	end)
+	return selected.task
 end
 
 local function open_selected()
@@ -83,9 +85,15 @@ local function open_selected()
 		return
 	end
 	local latest = require("plugins.toggleterm.artifact_tasks").latest(state.tasks, function(task)
-		return task.status == selected.status
-			and (selected.project == nil or task.project == selected.project)
-			and (selected.branch == nil or task.branch == selected.branch)
+		if task.status ~= selected.status then
+			return false
+		end
+		for index, part in ipairs(selected.parts) do
+			if task.parts[index] ~= part then
+				return false
+			end
+		end
+		return true
 	end)
 	local target_win = get_last_file_win()
 	if not target_win or not vim.api.nvim_win_is_valid(target_win) then
@@ -100,7 +108,7 @@ local function open_selected()
 			end)
 		end
 		vim.api.nvim_set_current_win(target_win)
-	elseif selected.branch then
+	elseif selected.task then
 		local task = assert(selected_task(selected), "Selected artifact task not found")
 		vim.api.nvim_win_call(target_win, function()
 			require("plugins.toggleterm.config").create(vim.fn.fnameescape(vim.fs.joinpath(task.dir, "index.md")))
@@ -134,7 +142,7 @@ local function delete_selected()
 		return
 	end
 	vim.ui.select({ "Delete", "Cancel" }, {
-		prompt = string.format("Delete task %s/%s?", task.project, task.branch),
+		prompt = string.format("Delete task %s?", table.concat(task.parts, "/")),
 	}, function(choice)
 		if choice ~= "Delete" then
 			return

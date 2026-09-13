@@ -40,10 +40,9 @@ return {
 		},
 	},
 	default_status = "draft",
-  block_as = "blocked",
-	unblock_with = { "done", "epic" },
+	block_as = "blocked",
+	unblock_with = { "done" },
 	status = {
-		{ name = "epic" },
 		{
 			name = "draft",
 		},

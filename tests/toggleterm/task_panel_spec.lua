@@ -17,8 +17,8 @@ T["derives task status in precedence order"] = function()
 		local root = vim.fn.tempname()
 		local task = vim.fs.joinpath(root, "nvim", "feature")
 		vim.fn.mkdir(task, "p")
+		vim.fn.writefile({ "---", "status: done", "---" }, vim.fs.joinpath(task, "task.md"))
 		vim.fn.writefile({ "ready" }, vim.fs.joinpath(task, "design.md"))
-		vim.fn.writefile({ "---", "status: done", "---" }, vim.fs.joinpath(task, "index.md"))
 		local statuses = {
 			{ name = "draft" },
 			{ name = "ready", files = { "design.md" } },
@@ -43,6 +43,8 @@ T["renders status project branch and opens the latest matching artifact"] = func
 		vim.fn.mkdir(two, "p")
 		local first = vim.fs.joinpath(one, "index.md")
 		local latest = vim.fs.joinpath(two, "index.md")
+		vim.fn.writefile({ "task" }, vim.fs.joinpath(one, "task.md"))
+		vim.fn.writefile({ "task" }, vim.fs.joinpath(two, "task.md"))
 		vim.fn.writefile({ "one" }, first)
 		vim.fn.writefile({ "two" }, latest)
 		vim.cmd.edit(vim.fn.fnameescape(first))
@@ -72,11 +74,48 @@ T["renders status project branch and opens the latest matching artifact"] = func
 	]])
 
 	assert.same({
-		lines = { "● draft", "  󰉋 nvim", "    one", "    two" },
+		lines = { "● draft", "  󰉋 nvim", "    󰉋 one", "    󰉋 two" },
 		opened = child.lua_get("expected"),
 		focused_file_win = true,
 		panel_unchanged = true,
 		filetype = "toggleterm-task-panel",
+	}, child.lua_get("result"))
+end
+
+T["highlights only directories that immediately contain task.md"] = function()
+	child.lua([[
+		local root = vim.fn.tempname()
+		local parent = vim.fs.joinpath(root, "project", "parent")
+		local child_task = vim.fs.joinpath(parent, "group", "child")
+		vim.fn.mkdir(child_task, "p")
+		vim.fn.writefile({ "task" }, vim.fs.joinpath(parent, "task.md"))
+		vim.fn.writefile({ "task" }, vim.fs.joinpath(child_task, "task.md"))
+		vim.fn.mkdir(vim.fs.joinpath(root, ".hidden"), "p")
+		vim.fn.writefile({ "task" }, vim.fs.joinpath(root, ".hidden", "task.md"))
+		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
+		package.loaded["plugins.toggleterm.config"] = {
+			panel = { width = 24 },
+			status = { { name = "draft" } },
+		}
+		require("plugins.toggleterm.task_panel").toggle()
+		local marks = vim.api.nvim_buf_get_extmarks(vim.api.nvim_get_current_buf(), -1, 0, -1, { details = true })
+		result = {
+			lines = vim.api.nvim_buf_get_lines(0, 0, -1, false),
+			highlights = vim.tbl_map(function(mark)
+				return mark[4].hl_group
+			end, marks),
+		}
+	]])
+
+	assert.same({
+		lines = { "● draft", "  󰉋 project", "    󰉋 parent", "      󰉋 group", "        󰉋 child" },
+		highlights = {
+			"NeoTreeDirectoryName",
+			"NeoTreeDirectoryName",
+			"DiagnosticInfo",
+			"NeoTreeDirectoryName",
+			"DiagnosticInfo",
+		},
 	}, child.lua_get("result"))
 end
 
@@ -86,6 +125,7 @@ T["opens an unloaded artifact instead of creating index.md"] = function()
 		local task = vim.fs.joinpath(root, "nvim", "has-artifact")
 		vim.fn.mkdir(task, "p")
 		local artifact = vim.fs.joinpath(task, "design.md")
+		vim.fn.writefile({ "task" }, vim.fs.joinpath(task, "task.md"))
 		vim.fn.writefile({ "design" }, artifact)
 		vim.cmd.enew()
 		local file_win = vim.api.nvim_get_current_win()
@@ -115,11 +155,13 @@ T["opens an unloaded artifact instead of creating index.md"] = function()
 	}, child.lua_get("result"))
 end
 
-T["creates index.md for an empty task directory"] = function()
+T["opens task.md for a task with no other artifacts"] = function()
 	child.lua([[
 		local root = vim.fn.tempname()
 		local task = vim.fs.joinpath(root, "nvim", "empty")
 		vim.fn.mkdir(task, "p")
+		local marker = vim.fs.joinpath(task, "task.md")
+		vim.fn.writefile({ "task" }, marker)
 		vim.cmd.enew()
 		local file_win = vim.api.nvim_get_current_win()
 		local created
@@ -140,7 +182,7 @@ T["creates index.md for an empty task directory"] = function()
 			opened = vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(file_win)),
 			focused_file_win = vim.api.nvim_get_current_win() == file_win,
 		}
-		expected = vim.fs.joinpath(task, "index.md")
+		expected = marker
 	]])
 
 	assert.same({
@@ -157,6 +199,7 @@ T["prompts before deleting a task and deletes its buffers through config"] = fun
 		vim.fn.mkdir(task, "p")
 		local index = vim.fs.joinpath(task, "index.md")
 		local design = vim.fs.joinpath(task, "design.md")
+		vim.fn.writefile({ "task" }, vim.fs.joinpath(task, "task.md"))
 		vim.fn.writefile({ "task" }, index)
 		vim.fn.writefile({ "design" }, design)
 		vim.cmd.edit(vim.fn.fnameescape(index))

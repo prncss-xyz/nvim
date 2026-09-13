@@ -3,7 +3,7 @@ local M = {}
 local function files_in(dir)
 	local files = {}
 	for name, kind in vim.fs.dir(dir) do
-		if kind == "file" then
+		if not vim.startswith(name, ".") and kind == "file" then
 			files[vim.fs.joinpath(dir, name)] = true
 		end
 	end
@@ -17,40 +17,53 @@ function M.scan(root, statuses)
 		status_names[status.name] = index
 	end
 
-	for project, project_kind in vim.fs.dir(root) do
-		if project_kind == "directory" then
-			local project_dir = vim.fs.joinpath(root, project)
-			for branch, branch_kind in vim.fs.dir(project_dir) do
-				if branch_kind == "directory" then
-					local dir = vim.fs.joinpath(project_dir, branch)
-					local files = files_in(dir)
-					local status = statuses[1].name
-					for _, candidate in ipairs(statuses) do
-						for _, filename in ipairs(candidate.files or {}) do
-							if files[vim.fs.joinpath(dir, filename)] then
-								status = candidate.name
-							end
-						end
+	local function visit(dir, parts)
+		local entries = {}
+		for name, kind in vim.fs.dir(dir) do
+			if not vim.startswith(name, ".") then
+				table.insert(entries, { name = name, kind = kind })
+			end
+		end
+		table.sort(entries, function(a, b)
+			return a.name < b.name
+		end)
+
+		local files = files_in(dir)
+		local task_file = vim.fs.joinpath(dir, "task.md")
+		if files[task_file] then
+			local status = statuses[1].name
+			for _, candidate in ipairs(statuses) do
+				for _, filename in ipairs(candidate.files or {}) do
+					if files[vim.fs.joinpath(dir, filename)] then
+						status = candidate.name
 					end
-					local index = vim.fs.joinpath(dir, "index.md")
-					if files[index] then
-						local explicit = require("plugins.toggleterm.yaml").read_file(index).status
-						if explicit ~= nil then
-							assert(status_names[explicit], "Unknown artifact task status: " .. tostring(explicit))
-							status = explicit
-						end
-					end
-					table.insert(tasks, {
-						status = status,
-						project = project,
-						branch = branch,
-						dir = dir,
-						files = files,
-					})
 				end
+			end
+			local explicit = require("plugins.toggleterm.yaml").read_file(task_file).status
+			if explicit ~= nil then
+				assert(status_names[explicit], "Unknown artifact task status: " .. tostring(explicit))
+				status = explicit
+			end
+			table.insert(tasks, {
+				status = status,
+				project = parts[1],
+				branch = parts[#parts],
+				parts = vim.deepcopy(parts),
+				dir = dir,
+				files = files,
+			})
+		end
+
+		for _, entry in ipairs(entries) do
+			if entry.kind == "directory" then
+				local child_parts = vim.deepcopy(parts)
+				table.insert(child_parts, entry.name)
+				visit(vim.fs.joinpath(dir, entry.name), child_parts)
 			end
 		end
 	end
+
+	visit(root, {})
 	return tasks
 end
 
