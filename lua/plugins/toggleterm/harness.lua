@@ -3,18 +3,6 @@ local M = {}
 local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
 local config = require("plugins.toggleterm.config")
 
-local function summary_prompt(input)
-	return [==[
-Your task is to describe the goal of the following prompt.
-You must use at most 4 words. Only lowercase except for proper names. No punctuation.
-Do not describe completion critaira.
-Do not describe methodology or intermediate results.
-Only describe the goal.
-
-<task>
-]==] .. input .. "</task>"
-end
-
 local function sanitize_branch(summary)
 	local branch = summary:lower():gsub("[^%w._-]", "-")
 	return branch:gsub("^-+", ""):gsub("-+$", "")
@@ -56,7 +44,10 @@ local function branch_name(input, callback, root)
 	root = root or vim.fs.root(0, ".git") or vim.uv.cwd()
 	vim.notify("Naming branch...", vim.log.levels.INFO)
 	local command = vim.split(config.ai_query, "%s+", { trimempty = true })
-	vim.system(command, { cwd = root, text = true, stdin = summary_prompt(input) }, function(result)
+	local prompt = config.create_task_name:gsub("{input}", function()
+		return input
+	end)
+	vim.system(command, { cwd = root, text = true, stdin = prompt }, function(result)
 		vim.schedule(function()
 			assert(result.code == 0, result.stderr)
 			local branch = sanitize_branch(result.stdout)

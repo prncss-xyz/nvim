@@ -9,6 +9,25 @@ return {
 		"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
 		"claude -p --model haiku --bare --disable-slash-commands --tools="
 	),
+	create_task_name = [==[
+Generate a concise git branch name based on the task description.
+
+Rules:
+- Use kebab-case (lowercase with hyphens)
+- Keep it short: 1-3 words, max 4 if necessary
+- Focus on the core task/feature, not implementation details
+
+Examples of good branch names:
+- "Add dark mode toggle" → feat-dark-mode
+- "Fix the search results not showing" → fix-search
+- "Refactor the authentication module" → refactor-auth
+- "Add CSV export to reports" → feat-export-csv
+- "Shell completion is broken" → feat-shell-completion
+
+Output ONLY the branch name, nothing else.
+
+<task>{input}</task>
+]==],
 	create = require("my.create").create,
 	bdelete = function(bufnr)
 		Snacks.bufdelete.delete(bufnr)

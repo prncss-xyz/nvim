@@ -85,6 +85,7 @@ for _, lang in ipairs({
 	"tsx",
 	"json",
 	"svg",
+  "md",
 	"mermaid",
 	"fish",
 }) do

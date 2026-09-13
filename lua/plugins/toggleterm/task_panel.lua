@@ -62,7 +62,7 @@ local function create_rows(tasks, statuses, root_parts)
 		end
 
 		if not vim.tbl_isempty(root.children) then
-			table.insert(result, { text = "● " .. status.name, status = status.name, parts = {} })
+			table.insert(result, { text = status.name .. ":", status = status.name, parts = {} })
 			local function append(node, depth, parts)
 				local names = vim.tbl_keys(node.children)
 				table.sort(names)
