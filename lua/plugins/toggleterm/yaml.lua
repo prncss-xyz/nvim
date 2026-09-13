@@ -90,7 +90,7 @@ function M.read(bufnr)
 		return {}
 	end
 
-	return decode(result.text)
+	return decode(result.text) or {}
 end
 
 function M.read_file(path)
@@ -98,7 +98,7 @@ function M.read_file(path)
 	if not result then
 		return {}
 	end
-	return decode(result.text)
+	return decode(result.text) or {}
 end
 
 function M.write(bufnr, value)

@@ -39,7 +39,11 @@ return {
 			fork = true,
 		},
 	},
+	default_status = "draft",
+  block_as = "blocked",
+	unblock_with = { "done", "epic" },
 	status = {
+		{ name = "epic" },
 		{
 			name = "draft",
 		},
@@ -70,7 +74,7 @@ return {
 		"npm",
 	},
 	prompts = {
-    ["nvim message"] = "{nvim_messages}",
+		["nvim message"] = "{nvim_messages}",
 		["do"] = "do this: {position}",
 		["explain"] = "explain this: {position}",
 		["curry"] = "curry this: {position}",

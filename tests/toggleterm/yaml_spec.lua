@@ -8,7 +8,12 @@ local T = MiniTest.new_set({
 				[[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 				package.preload["lyaml"] = function()
 					return {
-						load = function(text) return { source = text } end,
+						load = function(text)
+						if text == "" then
+							return nil
+						end
+						return { source = text }
+					end,
 						dump = function(documents)
 						local value = documents[1]
 						if value.dependency then
@@ -33,6 +38,11 @@ end
 
 T["returns an empty mapping when frontmatter is absent"] = function()
 	child.lua([[vim.api.nvim_buf_set_lines(0, 0, -1, false, { "# Heading", "---" })
+		assert(vim.deep_equal(require("plugins.toggleterm.yaml").read(0), {}))]])
+end
+
+T["returns an empty mapping when frontmatter is empty"] = function()
+	child.lua([[vim.api.nvim_buf_set_lines(0, 0, -1, false, { "---", "---", "Body" })
 		assert(vim.deep_equal(require("plugins.toggleterm.yaml").read(0), {}))]])
 end
 

@@ -92,7 +92,8 @@ function M.create_task(input, artifact)
 		local frontmatter = yaml.read_file(path)
 		frontmatter.dependencies = { vim.fs.joinpath("..", dependencies) }
 		yaml.write_file(path, frontmatter, lines)
-		vim.notify("Created " .. path, vim.log.levels.INFO)
+		local relative_path = assert(vim.fs.relpath(artifact_root, path))
+		vim.notify("Created " .. relative_path, vim.log.levels.INFO)
 	end, root)
 end
 
