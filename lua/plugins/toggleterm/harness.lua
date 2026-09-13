@@ -78,25 +78,6 @@ function M.create_artifact(input, filename, root)
 	end, root)
 end
 
-function M.create_task(input, artifact)
-	local root = assert(artifact_cwd.resolve(artifact), "Current buffer is not inside an artifact")
-	branch_name(input, function(name, project_root)
-		local artifact_root = artifact_cwd.for_project(project_root)
-		local path = vim.fs.joinpath(artifact_root, name, "index.md")
-		local dependencies =
-			assert(vim.fs.relpath(artifact_root, artifact), "Task buffer is outside the project artifacts")
-		local lines = vim.split(input, "\n", { plain = true })
-		local yaml = require("plugins.toggleterm.yaml")
-		vim.fn.mkdir(vim.fs.dirname(path), "p")
-		vim.fn.writefile(lines, path)
-		local frontmatter = yaml.read_file(path)
-		frontmatter.dependencies = { vim.fs.joinpath("..", dependencies) }
-		yaml.write_file(path, frontmatter, lines)
-		local relative_path = assert(vim.fs.relpath(artifact_root, path))
-		vim.notify("Created " .. relative_path, vim.log.levels.INFO)
-	end, root)
-end
-
 function M.artifact_to_worktree(branch, opts)
 	vim.notify("Creating worktree " .. branch .. "...", vim.log.levels.INFO)
 	require("plugins.toggleterm.terms.git").create_worktree(branch, function(_, worktree_path)

@@ -17,12 +17,7 @@ function M.create_task(remove)
 			if remove and using_selection then
 				vim.cmd.normal({ 'gv"_d', bang = true })
 			end
-			local harness = require("plugins.toggleterm.harness")
-			if artifact_cwd.contains(current) then
-				harness.create_task(contents, current)
-			else
-				harness.create_artifact(contents, "index.md", root)
-			end
+			require("plugins.toggleterm.harness").create_artifact(contents, "task.md", root)
 		end)
 	end
 end

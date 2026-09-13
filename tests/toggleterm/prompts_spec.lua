@@ -77,8 +77,8 @@ T["task prompts create a task inside the current artifact"] = function()
 			resolve = function() return "/projects/neomux/main" end,
 		}
 		package.loaded["plugins.toggleterm.harness"] = {
-			create_task = function(input, artifact)
-				created = { input, artifact }
+			create_artifact = function(input, filename, root)
+				created = { input, filename, root }
 			end,
 		}
 		vim.api.nvim_buf_set_name(0, "/artifacts/neomux/topic/index.md")
@@ -88,7 +88,7 @@ T["task prompts create a task inside the current artifact"] = function()
 		result = created
 	]])
 
-	assert.same({ "new task", "/artifacts/neomux/topic/index.md" }, child.lua_get("result"))
+	assert.same({ "new task", "task.md", "/projects/neomux/main" }, child.lua_get("result"))
 end
 
 T["task prompts create a new artifact outside artifacts"] = function()
@@ -112,7 +112,7 @@ T["task prompts create a new artifact outside artifacts"] = function()
 
 	local result = child.lua_get("result")
 	assert.same("new artifact", result[1])
-	assert.same("index.md", result[2])
+	assert.same("task.md", result[2])
 end
 
 return T

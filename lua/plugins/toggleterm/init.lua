@@ -277,6 +277,40 @@ return {
 				mode = "n",
 			},
 			{
+				"mps",
+				function()
+					local artifacts = require("my.parameters").dirs.artifacts
+					local files = vim.fs.find("task.md", { path = artifacts, type = "file", limit = math.huge })
+					local function dependency_name(path)
+						return assert(vim.fs.relpath(artifacts, path)):gsub("/task%.md$", "")
+					end
+					table.sort(files)
+					vim.ui.select(files, {
+						prompt = "Select dependency",
+						format_item = dependency_name,
+					}, function(path)
+						if path == nil then
+							return
+						end
+
+						local dependency = dependency_name(path)
+						local yaml = require("plugins.toggleterm.yaml")
+						local frontmatter = yaml.read(0)
+						local dependencies = frontmatter.dependencies
+						if type(dependencies) == "string" then
+							dependencies = { dependencies }
+						elseif type(dependencies) ~= "table" or not vim.islist(dependencies) then
+							dependencies = {}
+						end
+						table.insert(dependencies, dependency)
+						frontmatter.dependencies = dependencies
+						yaml.write(0, frontmatter)
+					end)
+				end,
+				desc = "Add Dependency",
+				ft = "markdown",
+			},
+			{
 				"ms",
 				function()
 					local yaml = require("plugins.toggleterm.yaml")
@@ -361,7 +395,7 @@ return {
 			{
 				"mn",
 				function()
-          -- TODO: make this more convenient
+					-- TODO: make this more convenient
 					require("plugins.toggleterm.prompts").run(
 						require("plugins.toggleterm.prompt_utils").create_task(true)
 					)
