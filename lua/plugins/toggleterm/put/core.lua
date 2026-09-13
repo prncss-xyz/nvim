@@ -19,7 +19,7 @@ local vars = {
 	row = function(ctx)
 		return ctx.row
 	end,
-	message = function()
+	nvim_messages = function()
 		local messages = vim.split(vim.api.nvim_exec2("messages", { output = true }).output, "\n", { plain = true })
 		while messages[#messages] == "" do
 			table.remove(messages)

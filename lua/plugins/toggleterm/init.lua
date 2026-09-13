@@ -359,6 +359,14 @@ return {
 				mode = { "n", "x" },
 			},
 			{
+				"mn",
+				function()
+					require("plugins.toggleterm.prompt_utils").create_task(true)
+				end,
+				desc = "New Task",
+				mode = { "n", "x" },
+			},
+			{
 				"m" .. reverse("m"),
 				function()
 					require("plugins.toggleterm.prompts").prompt(true)

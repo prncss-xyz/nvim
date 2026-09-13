@@ -70,12 +70,11 @@ return {
 		"npm",
 	},
 	prompts = {
-    ["nvim message"] = "{message}",
+    ["nvim message"] = "{nvim_messages}",
 		["do"] = "do this: {position}",
 		["explain"] = "explain this: {position}",
 		["curry"] = "curry this: {position}",
 		["where in the codebase "] = prompt_utils.sender(),
-		["task"] = prompt_utils.create_task(true),
 		["anchor"] = [[We are developing the contents of an artifact file. When I ask you a question or give you an enquiry, update this file instead of answering me in the conversation. Add the bare minimum amount of text to answer the question while quoting your sources. The file is {path}.
 
 ]],

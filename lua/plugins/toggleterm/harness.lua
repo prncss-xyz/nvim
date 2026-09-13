@@ -74,7 +74,7 @@ function M.create_artifact(input, filename, root)
 		local path = vim.fs.joinpath(artifact_root, branch, filename)
 		vim.fn.mkdir(vim.fs.dirname(path), "p")
 		vim.fn.writefile(vim.split(input, "\n", { plain = true }), path)
-		vim.cmd.edit(vim.fn.fnameescape(path))
+		vim.notify("Created " .. path, vim.log.levels.INFO)
 	end, root)
 end
 
@@ -92,7 +92,7 @@ function M.create_task(input, artifact)
 		local frontmatter = yaml.read_file(path)
 		frontmatter.dependencies = { vim.fs.joinpath("..", dependencies) }
 		yaml.write_file(path, frontmatter, lines)
-		require("my.create").create(vim.fn.fnameescape(path))
+		vim.notify("Created " .. path, vim.log.levels.INFO)
 	end, root)
 end
 
