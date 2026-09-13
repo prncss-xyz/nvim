@@ -51,6 +51,9 @@ return {
 			name = "blocked",
 		},
 		{
+			name = "verify",
+		},
+		{
 			name = "done",
 		},
 		{
@@ -67,6 +70,7 @@ return {
 		"npm",
 	},
 	prompts = {
+    ["nvim message"] = "{message}",
 		["do"] = "do this: {position}",
 		["explain"] = "explain this: {position}",
 		["curry"] = "curry this: {position}",

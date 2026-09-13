@@ -57,6 +57,17 @@ T["filetype templates preserve the source filetype after focusing a terminal"] =
 	]])
 end
 
+T["message templates expand the last Neovim message"] = function()
+	child.lua([[
+		vim.api.nvim_echo({ { "first message" } }, true, {})
+		vim.api.nvim_echo({ { "last message" } }, true, {})
+
+		local ctx = require("plugins.toggleterm.terms.window").get_ctx()
+		local result = require("plugins.toggleterm.put.core").template("message: {message}")(ctx, {})
+		assert(result == "message: last message", result)
+	]])
+end
+
 T["selection templates capture the active selection before expansion"] = function()
 	child.lua([[
 		vim.api.nvim_buf_set_name(0, "selection.lua")

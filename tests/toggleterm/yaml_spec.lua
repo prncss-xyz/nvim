@@ -9,7 +9,13 @@ local T = MiniTest.new_set({
 				package.preload["lyaml"] = function()
 					return {
 						load = function(text) return { source = text } end,
-						dump = function(documents) return "---\ntitle: " .. documents[1].title .. "\n...\n" end,
+						dump = function(documents)
+						local value = documents[1]
+						if value.dependency then
+							return "---\ndependency:\n- " .. value.dependency[1] .. "\n...\n"
+						end
+						return "---\ntitle: " .. value.title .. "\n...\n"
+					end,
 					}
 				end
 			]]
@@ -56,6 +62,15 @@ T["does nothing when writing an empty mapping without frontmatter"] = function()
 	child.lua([[vim.api.nvim_buf_set_lines(0, 0, -1, false, { "# Heading" })
 		require("plugins.toggleterm.yaml").write(0, {})
 		assert(vim.deep_equal(vim.api.nvim_buf_get_lines(0, 0, -1, false), { "# Heading" }))]])
+end
+
+T["writes frontmatter to a file"] = function()
+	child.lua([[local path = vim.fn.tempname()
+		require("plugins.toggleterm.yaml").write_file(path, { dependency = { "index.md" } }, { "Body" })
+		assert(vim.deep_equal(vim.fn.readfile(path), {
+			"---", "dependency:", "- index.md", "---", "", "Body",
+		}))
+		vim.fn.delete(path)]])
 end
 
 T["refuses to write frontmatter that is not a YAML mapping"] = function()
