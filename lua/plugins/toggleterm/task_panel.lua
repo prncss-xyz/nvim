@@ -5,7 +5,31 @@ local get_last_file_win = require("my.windows").get_last_file_win
 local state
 local namespace = vim.api.nvim_create_namespace("toggleterm-task-panel")
 
+local function stop_watchers(panel)
+	for _, watcher in ipairs(panel.watchers or {}) do
+		watcher:stop()
+		if not watcher:is_closing() then
+			watcher:close()
+		end
+	end
+	panel.watchers = {}
+end
+
+local function stop_refresh_timer(panel)
+	if panel.refresh_timer then
+		panel.refresh_timer:stop()
+		if not panel.refresh_timer:is_closing() then
+			panel.refresh_timer:close()
+		end
+		panel.refresh_timer = nil
+	end
+end
+
 local function close()
+	if state then
+		stop_watchers(state)
+		stop_refresh_timer(state)
+	end
 	if state and vim.api.nvim_win_is_valid(state.win) then
 		vim.api.nvim_win_close(state.win, false)
 	end
@@ -46,8 +70,9 @@ local function create_rows(tasks, statuses, root_parts)
 					local child = node.children[name]
 					local child_parts = vim.deepcopy(parts)
 					table.insert(child_parts, name)
+					local icon = child.task and child.task.flat and "󰈙" or "󰉋"
 					table.insert(result, {
-						text = string.rep("  ", depth + 1) .. "󰉋 " .. name,
+						text = string.rep("  ", depth + 1) .. icon .. " " .. name,
 						status = status.name,
 						parts = child_parts,
 						has_children = not vim.tbl_isempty(child.children),
@@ -87,6 +112,45 @@ local function render()
 			hl_group = row.root and "Comment" or (row.task and "DiagnosticInfo" or "NeoTreeDirectoryName"),
 		})
 	end
+end
+
+local function start_watchers(panel)
+	stop_watchers(panel)
+	local recursive = vim.fn.has("macunix") == 1 or vim.fn.has("win32") == 1
+
+	local function changed()
+		if state ~= panel or not panel.refresh_timer then
+			return
+		end
+		panel.refresh_timer:stop()
+		panel.refresh_timer:start(100, 0, vim.schedule_wrap(function()
+			if state ~= panel or not vim.api.nvim_win_is_valid(panel.win) then
+				return
+			end
+			render()
+			start_watchers(panel)
+		end))
+	end
+
+	local function watch(dir)
+		local watcher = assert(vim.uv.new_fs_event())
+		local ok = watcher:start(dir, { recursive = recursive }, changed)
+		if not ok then
+			watcher:close()
+			return
+		end
+		table.insert(panel.watchers, watcher)
+
+		if not recursive then
+			for name, kind in vim.fs.dir(dir) do
+				if kind == "directory" and not vim.startswith(name, ".") then
+					watch(vim.fs.joinpath(dir, name))
+				end
+			end
+		end
+	end
+
+	watch(panel.artifacts)
 end
 
 local function selected_task(selected)
@@ -131,6 +195,34 @@ local function open_selected()
 	end
 end
 
+local function create_task()
+	local selected = state.rows[vim.api.nvim_win_get_cursor(state.win)[1]]
+	if not selected then
+		return
+	end
+	local directory
+	if selected.root then
+		directory = state.root
+	elseif selected.task and selected.task.flat then
+		directory = vim.fs.dirname(selected.task.path)
+	elseif selected.task then
+		directory = selected.task.dir
+	elseif selected.parts and #selected.parts > 0 then
+		directory = vim.fs.joinpath(state.artifacts, unpack(selected.parts))
+	end
+	if not directory then
+		return
+	end
+	local project_root = require("plugins.toggleterm.terms.artifact_cwd").resolve(directory)
+	if not project_root then
+		return
+	end
+	require("plugins.toggleterm.prompts").run(
+		require("plugins.toggleterm.prompt_utils").create_task(false, directory, project_root),
+		"task"
+	)
+end
+
 local function set_root()
 	local selected = state.rows[vim.api.nvim_win_get_cursor(state.win)[1]]
 	if not selected or not selected.has_children then
@@ -153,7 +245,8 @@ local function delete_task_buffers(task)
 	local task_dir = vim.fs.normalize(task.dir) .. "/"
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
 		local path = vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr))
-		if path ~= "" and vim.startswith(path .. "/", task_dir) then
+		local belongs_to_task = task.flat and task.files[path] or (path ~= "" and vim.startswith(path .. "/", task_dir))
+		if belongs_to_task then
 			if config.bdelete then
 				config.bdelete(bufnr)
 			else
@@ -179,7 +272,9 @@ local function delete_selected()
 			return
 		end
 		delete_task_buffers(task)
-		assert(vim.fn.delete(task.dir, "rf") == 0, "Failed to delete artifact task: " .. task.dir)
+		local target = task.flat and task.path or task.dir
+		local flags = task.flat and nil or "rf"
+		assert(vim.fn.delete(target, flags) == 0, "Failed to delete artifact task: " .. target)
 		render()
 	end)
 end
@@ -195,7 +290,16 @@ function M.toggle()
 	local buf = vim.api.nvim_create_buf(false, true)
 	vim.api.nvim_win_set_buf(win, buf)
 	local artifacts = require("my.parameters").dirs.artifacts
-	state = { win = win, buf = buf, rows = {}, tasks = {}, artifacts = artifacts, root = artifacts }
+	state = {
+		win = win,
+		buf = buf,
+		rows = {},
+		tasks = {},
+		watchers = {},
+		refresh_timer = assert(vim.uv.new_timer()),
+		artifacts = artifacts,
+		root = artifacts,
+	}
 	vim.bo[buf].buftype = "nofile"
 	vim.bo[buf].bufhidden = "wipe"
 	vim.bo[buf].filetype = "toggleterm-task-panel"
@@ -207,12 +311,14 @@ function M.toggle()
 	vim.wo[win].signcolumn = "no"
 	vim.wo[win].winfixwidth = true
 	vim.wo[win].wrap = false
+	vim.keymap.set("n", "c", create_task, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "r", set_root, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "u", up_root, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "<cr>", open_selected, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "x", delete_selected, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "q", close, { buffer = buf, silent = true, nowait = true })
 	render()
+	start_watchers(state)
 end
 
 return M

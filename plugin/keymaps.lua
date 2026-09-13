@@ -56,6 +56,10 @@ local function toggle_index_file()
 		return
 	end
 
+	if vim.bo.modified then
+		vim.cmd.write()
+	end
+
 	local directory = vim.fs.dirname(source)
 	local filename = vim.fs.basename(source)
 	local name, extension = filename:match("^(.*)(%.[^.]+)$")

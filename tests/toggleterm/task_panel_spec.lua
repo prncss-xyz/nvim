@@ -83,6 +83,79 @@ T["renders status project branch and opens the latest matching artifact"] = func
 	}, child.lua_get("result"))
 end
 
+T["supports flat branch.task.md tasks with a file icon"] = function()
+	child.lua([[
+		local root = vim.fn.tempname()
+		local project = vim.fs.joinpath(root, "nvim")
+		vim.fn.mkdir(project, "p")
+		local marker = vim.fs.joinpath(project, "flat-branch.task.md")
+		vim.fn.writefile({ "---", "status: done", "---" }, marker)
+		vim.cmd.enew()
+		local file_win = vim.api.nvim_get_current_win()
+		local created
+		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
+		package.loaded["plugins.toggleterm.config"] = {
+			panel = { width = 24 },
+			status = { { name = "draft" }, { name = "done" } },
+			create = function(path)
+				created = path
+				vim.cmd.edit(path)
+			end,
+		}
+		local tasks = require("plugins.toggleterm.artifact_tasks").scan(root, package.loaded["plugins.toggleterm.config"].status)
+		require("plugins.toggleterm.task_panel").toggle()
+		local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+		vim.api.nvim_win_set_cursor(0, { 4, 0 })
+		vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)
+		result = {
+			status = tasks[1].status,
+			project = tasks[1].project,
+			branch = tasks[1].branch,
+			flat = tasks[1].flat,
+			lines = lines,
+			created = created,
+			opened = vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(file_win)),
+		}
+		expected = marker
+	]])
+
+	assert.same({
+		status = "done",
+		project = "nvim",
+		branch = "flat-branch",
+		flat = true,
+		lines = { ".", "● done", "  󰉋 nvim", "    󰈙 flat-branch" },
+		created = child.lua_get("expected"),
+		opened = child.lua_get("expected"),
+	}, child.lua_get("result"))
+end
+
+T["recomputes after debounced filesystem changes"] = function()
+	child.lua([[
+		local root = vim.fn.tempname()
+		local project = vim.fs.joinpath(root, "nvim")
+		vim.fn.mkdir(project, "p")
+		local marker = vim.fs.joinpath(project, "watched.task.md")
+		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
+		package.loaded["plugins.toggleterm.config"] = {
+			panel = { width = 24 },
+			status = { { name = "draft" }, { name = "done" } },
+		}
+		require("plugins.toggleterm.task_panel").toggle()
+		vim.fn.writefile({ "task" }, marker)
+		local created = vim.wait(1000, function()
+			return vim.tbl_contains(vim.api.nvim_buf_get_lines(0, 0, -1, false), "    󰈙 watched")
+		end)
+		vim.fn.writefile({ "---", "status: done", "---" }, marker)
+		local changed = vim.wait(1000, function()
+			return vim.tbl_contains(vim.api.nvim_buf_get_lines(0, 0, -1, false), "● done")
+		end)
+		result = { created = created, changed = changed }
+	]])
+
+	assert.same({ created = true, changed = true }, child.lua_get("result"))
+end
+
 T["highlights only directories that immediately contain task.md"] = function()
 	child.lua([[
 		local root = vim.fn.tempname()

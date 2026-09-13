@@ -128,6 +128,9 @@ return {
 			cmd = "gacp",
 			on_exit = "keep",
 		},
+		["git push"] = { cmd = "git push", on_exit = "keep" },
+		["git pull"] = { cmd = "git pull", on_exit = "keep" },
+		["git rebase master"] = { cmd = "git rebase master", on_exit = "keep" },
 		["commit ongoing work"] = {
 			cmd = 'git add --all; git commit -m "changes from $(uname -n) on $(date)" --no-verify',
 			on_exit = "keep",

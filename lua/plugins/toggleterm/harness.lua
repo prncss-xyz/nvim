@@ -68,14 +68,35 @@ local function branch_name(input, callback, root)
 	end)
 end
 
-function M.create_artifact(input, filename, root)
-	branch_name(input, function(branch, project_root)
-		local artifact_root = artifact_cwd.for_project(project_root)
-		local path = vim.fs.joinpath(artifact_root, branch, filename)
-		vim.fn.mkdir(vim.fs.dirname(path), "p")
-		vim.fn.writefile(vim.split(input, "\n", { plain = true }), path)
-		vim.notify("Created " .. path, vim.log.levels.INFO)
-	end, root)
+function M.create_artifact(input, filename, root, directory)
+	local project_root = root or vim.fs.root(0, ".git") or vim.uv.cwd()
+	local artifact_root = artifact_cwd.for_project(project_root)
+
+	local function create(target)
+		branch_name(input, function(branch)
+			local path = vim.fs.joinpath(target, branch .. "." .. filename)
+			vim.fn.writefile(vim.split(input, "\n", { plain = true }), path)
+			vim.notify("Created " .. assert(vim.fs.relpath(artifact_root, path)), vim.log.levels.INFO)
+		end, project_root)
+	end
+
+	if directory then
+		create(directory)
+		return
+	end
+
+	local directories = {}
+	for name, kind in vim.fs.dir(artifact_root) do
+		if kind == "directory" then
+			table.insert(directories, name)
+		end
+	end
+	table.sort(directories)
+	vim.ui.select(directories, { prompt = "Select artifact directory" }, function(selected)
+		if selected then
+			create(vim.fs.joinpath(artifact_root, selected))
+		end
+	end)
 end
 
 function M.artifact_to_worktree(branch, opts)

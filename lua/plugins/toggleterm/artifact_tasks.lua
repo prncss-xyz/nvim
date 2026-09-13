@@ -29,12 +29,11 @@ function M.scan(root, statuses)
 		end)
 
 		local files = files_in(dir)
-		local task_file = vim.fs.joinpath(dir, "task.md")
-		if files[task_file] then
+		local function add_task(task_file, task_parts, task_files, flat)
 			local status = statuses[1].name
 			for _, candidate in ipairs(statuses) do
 				for _, filename in ipairs(candidate.files or {}) do
-					if files[vim.fs.joinpath(dir, filename)] then
+					if task_files[vim.fs.joinpath(dir, filename)] then
 						status = candidate.name
 					end
 				end
@@ -46,12 +45,27 @@ function M.scan(root, statuses)
 			end
 			table.insert(tasks, {
 				status = status,
-				project = parts[1],
-				branch = parts[#parts],
-				parts = vim.deepcopy(parts),
+				project = task_parts[1],
+				branch = task_parts[#task_parts],
+				parts = task_parts,
 				dir = dir,
-				files = files,
+				path = task_file,
+				files = task_files,
+				flat = flat,
 			})
+		end
+
+		local task_file = vim.fs.joinpath(dir, "task.md")
+		if files[task_file] then
+			add_task(task_file, vim.deepcopy(parts), files, false)
+		end
+		for path in pairs(files) do
+			local branch = vim.fs.basename(path):match("^(.*)%.task%.md$")
+			if branch then
+				local task_parts = vim.deepcopy(parts)
+				table.insert(task_parts, branch)
+				add_task(path, task_parts, { [path] = true }, true)
+			end
 		end
 
 		for _, entry in ipairs(entries) do
