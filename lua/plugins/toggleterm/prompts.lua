@@ -24,6 +24,13 @@ local function input_for_current_mode()
 	end
 end
 
+function M.run(contents, prompt, new_agent)
+	local input = input_for_current_mode()
+	vim.schedule(function()
+		contents(input, prompt, new_agent)
+	end)
+end
+
 function M.prompt(new_agent)
 	local input = input_for_current_mode()
 	local choices = vim.tbl_keys(config.prompts)

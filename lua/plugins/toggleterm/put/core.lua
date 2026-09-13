@@ -7,9 +7,7 @@ local vars = {
 	directory = function(ctx)
 		return vim.fn.fnamemodify(ctx.path, ":h")
 	end,
-	extension = function(ctx)
-		return vim.fn.fnamemodify(ctx.path, ":e")
-	end,
+	extension = function(ctx) return vim.fn.fnamemodify(ctx.path, ":e") end,
 	filename = function(ctx)
 		return vim.fn.fnamemodify(ctx.path, ":t")
 	end,

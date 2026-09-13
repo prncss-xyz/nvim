@@ -361,7 +361,10 @@ return {
 			{
 				"mn",
 				function()
-					require("plugins.toggleterm.prompt_utils").create_task(true)
+          -- TODO: make this more convenient
+					require("plugins.toggleterm.prompts").run(
+						require("plugins.toggleterm.prompt_utils").create_task(true)
+					)
 				end,
 				desc = "New Task",
 				mode = { "n", "x" },
