@@ -12,14 +12,24 @@ local function close()
 	state = nil
 end
 
-local function create_rows(tasks, statuses)
+local function has_prefix(parts, prefix)
+	for index, part in ipairs(prefix) do
+		if parts[index] ~= part then
+			return false
+		end
+	end
+	return true
+end
+
+local function create_rows(tasks, statuses, root_parts)
 	local result = {}
 	for _, status in ipairs(statuses) do
 		local root = { children = {} }
 		for _, task in ipairs(tasks) do
-			if task.status == status.name then
+			if task.status == status.name and #task.parts > #root_parts and has_prefix(task.parts, root_parts) then
 				local node = root
-				for _, name in ipairs(task.parts) do
+				for index = #root_parts + 1, #task.parts do
+					local name = task.parts[index]
 					node.children[name] = node.children[name] or { name = name, children = {} }
 					node = node.children[name]
 				end
@@ -40,13 +50,14 @@ local function create_rows(tasks, statuses)
 						text = string.rep("  ", depth + 1) .. "󰉋 " .. name,
 						status = status.name,
 						parts = child_parts,
+						has_children = not vim.tbl_isempty(child.children),
 						dir = child.task and child.task.dir or nil,
 						task = child.task,
 					})
 					append(child, depth + 1, child_parts)
 				end
 			end
-			append(root, 0, {})
+			append(root, 0, vim.deepcopy(root_parts))
 		end
 	end
 	return result
@@ -56,13 +67,16 @@ local function render()
 	local config = require("plugins.toggleterm.config")
 	state.tasks =
 		require("plugins.toggleterm.artifact_tasks").scan(require("my.parameters").dirs.artifacts, config.status)
-	state.rows = create_rows(state.tasks, config.status)
+	local relative_root = assert(vim.fs.relpath(state.artifacts, state.root))
+	local root_parts = relative_root == "." and {} or vim.split(relative_root, "/", { plain = true })
+	state.rows = create_rows(state.tasks, config.status, root_parts)
+	table.insert(state.rows, 1, { text = relative_root, root = true })
+	if #state.rows == 1 then
+		table.insert(state.rows, { text = "No artifact tasks" })
+	end
 	local lines = vim.tbl_map(function(row)
 		return row.text
 	end, state.rows)
-	if #lines == 0 then
-		lines = { "No artifact tasks" }
-	end
 	vim.bo[state.buf].modifiable = true
 	vim.api.nvim_buf_set_lines(state.buf, 0, -1, false, lines)
 	vim.bo[state.buf].modifiable = false
@@ -70,7 +84,7 @@ local function render()
 	for index, row in ipairs(state.rows) do
 		vim.api.nvim_buf_set_extmark(state.buf, namespace, index - 1, 0, {
 			end_col = #row.text,
-			hl_group = row.task and "DiagnosticInfo" or "NeoTreeDirectoryName",
+			hl_group = row.root and "Comment" or (row.task and "DiagnosticInfo" or "NeoTreeDirectoryName"),
 		})
 	end
 end
@@ -115,6 +129,23 @@ local function open_selected()
 		end)
 		vim.api.nvim_set_current_win(target_win)
 	end
+end
+
+local function set_root()
+	local selected = state.rows[vim.api.nvim_win_get_cursor(state.win)[1]]
+	if not selected or not selected.has_children then
+		return
+	end
+	state.root = vim.fs.joinpath(state.artifacts, unpack(selected.parts))
+	render()
+end
+
+local function up_root()
+	if state.root == state.artifacts then
+		return
+	end
+	state.root = vim.fs.dirname(state.root)
+	render()
 end
 
 local function delete_task_buffers(task)
@@ -163,7 +194,8 @@ function M.toggle()
 	local win = vim.api.nvim_get_current_win()
 	local buf = vim.api.nvim_create_buf(false, true)
 	vim.api.nvim_win_set_buf(win, buf)
-	state = { win = win, buf = buf, rows = {}, tasks = {} }
+	local artifacts = require("my.parameters").dirs.artifacts
+	state = { win = win, buf = buf, rows = {}, tasks = {}, artifacts = artifacts, root = artifacts }
 	vim.bo[buf].buftype = "nofile"
 	vim.bo[buf].bufhidden = "wipe"
 	vim.bo[buf].filetype = "toggleterm-task-panel"
@@ -175,7 +207,8 @@ function M.toggle()
 	vim.wo[win].signcolumn = "no"
 	vim.wo[win].winfixwidth = true
 	vim.wo[win].wrap = false
-	vim.keymap.set("n", "r", render, { buffer = buf, silent = true, nowait = true })
+	vim.keymap.set("n", "r", set_root, { buffer = buf, silent = true, nowait = true })
+	vim.keymap.set("n", "u", up_root, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "<cr>", open_selected, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "x", delete_selected, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "q", close, { buffer = buf, silent = true, nowait = true })
