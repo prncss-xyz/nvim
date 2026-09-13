@@ -1,71 +1,93 @@
 local parameters = require("my.parameters")
 local dirs = parameters.dirs
 
-local function default_checkout(repo_dir)
-	for _, branch in ipairs(parameters.default_branches) do
-		local checkout = vim.fs.joinpath(repo_dir, branch)
+local function default_checkout(project)
+	local project_dir = vim.fs.joinpath(dirs.projects, project)
+	for _, branch in ipairs(parameters.default_branches or { "main", "master" }) do
+		local checkout = vim.fs.joinpath(project_dir, branch)
 		if vim.fn.isdirectory(checkout) == 1 then
 			return checkout
 		end
 	end
-	error("Could not find a main or master checkout for " .. repo_dir)
+	error("Could not find a default checkout for " .. project)
 end
 
-local function add_definition(definitions, opts)
-	table.insert(definitions, {
-		name = opts.name,
-		builder = function()
-			return {
-				cmd = string.format(opts.cmd, opts.path),
-				cwd = opts.cwd,
-			}
-		end,
-	})
+local function quoted_path(path)
+	local home = vim.fs.normalize(vim.env.HOME)
+	path = vim.fs.normalize(path)
+	if path == home then
+		path = "~"
+	elseif vim.startswith(path, home .. "/") then
+		path = "~" .. path:sub(#home + 1)
+	end
+	return '"' .. path .. '"'
+end
+
+local function resolve_cmd(cmd, source, target)
+	if target == nil then
+		assert(not cmd:find("{target}", 1, true), "Task command references {target} without defining target")
+		return (cmd:gsub("{source}", quoted_path(source)))
+	end
+	return (cmd:gsub("{source}", quoted_path(source)):gsub("{target}", quoted_path(target)))
+end
+
+local function build_task(task, source, target, project)
+	local cwd = default_checkout(project)
+	local result = vim.deepcopy(task)
+	result.name = nil
+	result.source = nil
+	result.target = nil
+	result.cmd = resolve_cmd(task.cmd, vim.fs.abspath(source), target and vim.fs.abspath(target) or nil)
+	result.cwd = cwd
+	return result
 end
 
 return {
 	generator = function(opts)
 		local definitions = {}
-		local tasks_by_source = {}
 		for _, task in ipairs(opts.tasks or {}) do
-			assert(type(task.source) == "string", "Task source must be a string")
-			assert(type(task.cmd) == "string", string.format("Task %s cmd must be a string", task.source))
+			assert(type(task.name) == "string", "Task name must be a string")
+			assert(type(task.source) == "string", string.format("Task %s source must be a string", task.name))
 			assert(
-				task.fork == nil or type(task.fork) == "boolean",
-				string.format("Task %s fork must be a boolean", task.source)
+				task.target == nil or type(task.target) == "string",
+				string.format("Task %s target must be a string", task.name)
 			)
-			tasks_by_source[task.source] = tasks_by_source[task.source] or {}
-			table.insert(tasks_by_source[task.source], task)
-		end
+			assert(type(task.cmd) == "string", string.format("Task %s cmd must be a string", task.name))
 
-		local files = vim.fs.find(function(name)
-			return name:match("%.md$") ~= nil
-		end, { path = dirs.artifacts, type = "file", limit = math.huge })
-		table.sort(files)
+			local sources = vim.fs.find(function(name, path)
+				if name == task.source then
+					return true
+				end
+				local relative = vim.fs.relpath(dirs.artifacts, vim.fs.joinpath(path, name))
+				local parts = relative and vim.split(relative, "/", { plain = true, trimempty = true }) or {}
+				return task.target == nil and #parts == 2 and vim.endswith(name, "." .. task.source)
+			end, {
+				path = dirs.artifacts,
+				type = "file",
+				limit = math.huge,
+			})
+			table.sort(sources)
 
-		for _, path in ipairs(files) do
-			local relative = vim.fs.relpath(dirs.artifacts, path)
-			local repo, branch, task
-			if relative then
-				repo, branch, task = relative:match("^([^/]+)/([^/]+)/([^/]+)%.md$")
-			end
-			local matching_tasks = task and tasks_by_source[task]
-			if matching_tasks then
-				local absolute_path = vim.fs.abspath(path)
-				local name = string.format("%s (%s/%s)", task, repo, branch)
-				for index, matching_task in ipairs(matching_tasks) do
-					local cwd = matching_task.fork == false and default_checkout(vim.fs.joinpath(dirs.projects, repo))
-						or vim.fs.joinpath(dirs.projects, repo, branch)
-					add_definition(definitions, {
-						name = #matching_tasks == 1 and name or string.format("%s [%d]", name, index),
-						cmd = matching_task.cmd,
-						path = absolute_path,
-						cwd = cwd,
+			for _, source in ipairs(sources) do
+				local relative = assert(vim.fs.relpath(dirs.artifacts, source))
+				local parts = vim.split(relative, "/", { plain = true, trimempty = true })
+				local project, branch = parts[1], parts[2]
+				assert(project and branch, "Artifact task must be inside a project branch")
+				if #parts == 2 then
+					branch = assert(branch:match("^(.*)%." .. vim.pesc(task.source) .. "$"))
+				end
+
+				local target = task.target and vim.fs.joinpath(vim.fs.dirname(source), task.target) or nil
+				if target == nil or vim.fn.filereadable(target) == 0 then
+					table.insert(definitions, {
+						name = branch .. ":" .. task.name,
+						builder = function()
+							return build_task(task, source, target, project)
+						end,
 					})
 				end
 			end
 		end
-
 		return definitions
 	end,
 }

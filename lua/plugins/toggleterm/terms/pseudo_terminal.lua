@@ -39,14 +39,24 @@ function M.create(touch)
 	}
 	local term = {}
 
+	local function focus_buffer(bufnr)
+		if bufnr == vim.api.nvim_get_current_buf() then
+			return
+		end
+		local target_window = vim.fn.win_findbuf(bufnr)[1]
+		if target_window then
+			vim.api.nvim_set_current_win(target_window)
+		else
+			vim.cmd.buffer(bufnr)
+		end
+	end
+
 	local function focus_artifact()
 		local target = latest_artifact(project_dir())
 		if target == nil then
 			return
 		end
-		if target.bufnr ~= vim.api.nvim_get_current_buf() then
-			vim.cmd.buffer(target.bufnr)
-		end
+		focus_buffer(target.bufnr)
 		touch()
 	end
 
@@ -69,7 +79,7 @@ function M.create(touch)
 		local target_dir = artifact_cwd.for_checkout(dir)
 		local target = artifact_cwd.latest_in(target_dir)
 		if target then
-			vim.cmd.buffer(target.bufnr)
+			focus_buffer(target.bufnr)
 		else
 			vim.fn.mkdir(target_dir, "p")
 			require("plugins.toggleterm.config").create(vim.fn.fnameescape(vim.fs.joinpath(target_dir, "index.md")))
@@ -107,9 +117,7 @@ function M.create(touch)
 		local line = vim.api.nvim_buf_get_lines(target.bufnr, row - 1, row, false)[1] or ""
 		col = math.min(col, #line)
 		vim.api.nvim_buf_set_text(target.bufnr, row - 1, col, row - 1, col, vim.split(str, "\n", { plain = true }))
-		if target.bufnr ~= vim.api.nvim_get_current_buf() then
-			vim.cmd.buffer(target.bufnr)
-		end
+		focus_buffer(target.bufnr)
 		touch()
 	end
 

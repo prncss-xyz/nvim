@@ -60,32 +60,37 @@ local function branch_name(input, callback, root)
 end
 
 function M.create_artifact(input, filename, root, directory)
-	local project_root = root or vim.fs.root(0, ".git") or vim.uv.cwd()
-	local artifact_root = artifact_cwd.for_project(project_root)
+	local artifacts = require("my.parameters").dirs.artifacts
 
-	local function create(target)
+	local function create(target, project_root)
 		branch_name(input, function(branch)
 			local path = vim.fs.joinpath(target, branch .. "." .. filename)
 			vim.fn.writefile(vim.split(input, "\n", { plain = true }), path)
-			vim.notify("Created " .. assert(vim.fs.relpath(artifact_root, path)), vim.log.levels.INFO)
+			vim.notify("Created " .. assert(vim.fs.relpath(artifacts, path)), vim.log.levels.INFO)
 		end, project_root)
 	end
 
 	if directory then
-		create(directory)
+		create(directory, root or assert(artifact_cwd.resolve(directory), "Artifact project not found"))
 		return
 	end
 
 	local directories = {}
-	for name, kind in vim.fs.dir(artifact_root) do
-		if kind == "directory" then
-			table.insert(directories, name)
+	for name, kind in vim.fs.dir(artifacts, { depth = math.huge }) do
+		local path = vim.fs.joinpath(artifacts, name)
+		if kind == "directory" and artifact_cwd.resolve(path) then
+			table.insert(directories, path)
 		end
 	end
 	table.sort(directories)
-	vim.ui.select(directories, { prompt = "Select artifact directory" }, function(selected)
+	vim.ui.select(directories, {
+		prompt = "Select artifact directory",
+		format_item = function(path)
+			return assert(vim.fs.relpath(artifacts, path))
+		end,
+	}, function(selected)
 		if selected then
-			create(vim.fs.joinpath(artifact_root, selected))
+			create(selected, assert(artifact_cwd.resolve(selected), "Artifact project not found"))
 		end
 	end)
 end

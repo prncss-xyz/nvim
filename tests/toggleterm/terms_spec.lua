@@ -184,6 +184,42 @@ T["pseudo terminal"]["focuses the latest artifact for the current project"] = fu
 	assert.same(result.expected, result.actual)
 end
 
+T["pseudo terminal"]["focuses an existing artifact window instead of replacing the active buffer"] = function()
+	child.lua([[root = vim.fn.tempname()
+		local projects = vim.fs.joinpath(root, "projects")
+		local artifacts = vim.fs.joinpath(root, "artifacts")
+		local project = vim.fs.joinpath(projects, "alpha", "main")
+		local artifact = vim.fs.joinpath(artifacts, "alpha", "notes.md")
+		local source = vim.fs.joinpath(project, "src.lua")
+		vim.fn.mkdir(project, "p")
+		vim.fn.mkdir(vim.fs.dirname(artifact), "p")
+		vim.fn.writefile({ "source" }, source)
+		vim.fn.writefile({ "artifact" }, artifact)
+
+		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
+		package.loaded["plugins.toggleterm.terms.create_term"] = { new = function() end }
+		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+			get_commands = function() error("artifact must not query terminal commands") end,
+		}
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		vim.o.hidden = true
+		vim.cmd.cd(vim.fn.fnameescape(project))
+		vim.cmd.edit(vim.fn.fnameescape(artifact))
+		local artifact_win = vim.api.nvim_get_current_win()
+		vim.cmd.vsplit(vim.fn.fnameescape(source))
+		local source_win = vim.api.nvim_get_current_win()
+		require("plugins.toggleterm.terms").focus({ key = "artifact" })
+		result = {
+			focused_artifact = vim.api.nvim_get_current_win() == artifact_win,
+			source_unchanged = vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(source_win)) == source,
+		}
+	]])
+
+	assert.same({ focused_artifact = true, source_unchanged = true }, child.lua_get("result"))
+end
+
 T["pseudo terminal"]["inserts text at the artifact cursor"] = function()
 	child.lua([[root = vim.fn.tempname()
 		local projects = vim.fs.joinpath(root, "projects")

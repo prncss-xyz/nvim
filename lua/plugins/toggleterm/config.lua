@@ -2,6 +2,8 @@ local personal = require("my.conds").personal
 local notify = require("my.notify")
 local prompt_utils = require("plugins.toggleterm.prompt_utils")
 
+local agent = personal("p ", "claude ")
+
 return {
 	agents = { "p", "claude", "agy" },
 	min_runtime = 10000,
@@ -15,8 +17,11 @@ Generate a concise git branch name based on the task description.
 Rules:
 - Keep it short: 1-3 words, max 4 if necessary
 - Focus on the core task/feature, not implementation details
+- Non coding tasks should start with "todo-"
+- Coding tasks should start with conventional commits prefixes
 
 Examples of good branch names:
+- "Schedule a meeting with Amanda" → todo-meeting-amanda
 - "Add dark mode toggle" → feat-dark-mode
 - "Fix the search results not showing" → fix-search
 - "Refactor the authentication module" → refactor-auth
@@ -47,14 +52,21 @@ Output ONLY the branch name, nothing else.
 			message,
 		}, { detach = true })
 	end),
-	panel = {
-		width = 40,
-	},
+	panel = { width = personal(40, 60) },
 	tasks = {
 		{
-			source = "plan",
-			cmd = "pi -p /implement @%q",
-			fork = true,
+			name = "echo",
+			source = "task.md",
+			cmd = "echo {source}",
+			on_exit = "keep",
+			fork = false,
+		},
+		{
+			name = "task",
+			source = "task.md",
+			target = "design.md",
+			cmd = agent .. [[create the file {target} and write a broad design to implement @{source}]],
+			fork = false,
 		},
 	},
 	default_status = "draft",
@@ -66,6 +78,7 @@ Output ONLY the branch name, nothing else.
 			name = "ready",
 			files = { "design.md" },
 		},
+		{ name = "active" },
 		{ name = "blocked" },
 		{ name = "verify" },
 		{ name = "done" },
