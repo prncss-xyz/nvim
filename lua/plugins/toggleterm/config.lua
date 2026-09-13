@@ -13,7 +13,6 @@ return {
 Generate a concise git branch name based on the task description.
 
 Rules:
-- Use kebab-case (lowercase with hyphens)
 - Keep it short: 1-3 words, max 4 if necessary
 - Focus on the core task/feature, not implementation details
 
