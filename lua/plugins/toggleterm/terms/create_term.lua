@@ -93,6 +93,7 @@ function Term:new(opts, send, prepare, min_runtime, notify)
 	instance.terminal = Terminal:new({
 		cmd = opts.cmd,
 		dir = instance.cwd,
+		auto_scroll = opts.auto_scroll,
 		close_on_exit = instance.exit_policy ~= "keep" and instance.exit_policy ~= "restart",
 		on_open = function()
 			instance:on_open()

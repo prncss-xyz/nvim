@@ -183,6 +183,7 @@ local function create_and_notify(item, cb)
 		instance_count = item.instance_count,
 		on_exit = item.on_exit,
 		screen_manifest = item.screen_manifest,
+		auto_scroll = item.auto_scroll,
 	}, function(event)
 		if event.type == "dir" then
 			item.dir = event.value

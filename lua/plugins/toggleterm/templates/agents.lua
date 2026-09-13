@@ -13,6 +13,7 @@ return {
 						return {
 							cmd = agent,
 							priority = priority,
+							auto_scroll = false,
 						}
 					end,
 				})

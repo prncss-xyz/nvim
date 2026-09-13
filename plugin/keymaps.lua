@@ -66,17 +66,23 @@ local function toggle_index_file()
 
 	local target
 	local remove_directory = false
-	if name == "index" then
+	local branch, branch_name = name:match("^([^.]+)%.(.+)$")
+	if branch then
+		target = vim.fs.joinpath(directory, branch, branch_name .. extension)
+	else
 		for entry in vim.fs.dir(directory) do
 			if entry ~= filename then
 				vim.notify("Directory contains other files: " .. directory, vim.log.levels.WARN)
 				return
 			end
 		end
-		target = vim.fs.joinpath(vim.fs.dirname(directory), vim.fs.basename(directory) .. extension)
+
+		local flattened_name = vim.fs.basename(directory)
+		if name ~= "index" then
+			flattened_name = flattened_name .. "." .. name
+		end
+		target = vim.fs.joinpath(vim.fs.dirname(directory), flattened_name .. extension)
 		remove_directory = true
-	else
-		target = vim.fs.joinpath(directory, name, "index" .. extension)
 	end
 
 	if vim.uv.fs_stat(target) then
