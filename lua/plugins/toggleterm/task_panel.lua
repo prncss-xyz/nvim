@@ -300,11 +300,12 @@ function M.toggle()
 		return
 	end
 	local width = require("plugins.toggleterm.config").panel.width
+	local artifacts = require("my.parameters").dirs.artifacts
+	local root = default_root(artifacts)
 	vim.cmd(string.format("topleft %dvsplit", width))
 	local win = vim.api.nvim_get_current_win()
 	local buf = vim.api.nvim_create_buf(false, true)
 	vim.api.nvim_win_set_buf(win, buf)
-	local artifacts = require("my.parameters").dirs.artifacts
 	state = {
 		win = win,
 		buf = buf,
@@ -313,7 +314,7 @@ function M.toggle()
 		watchers = {},
 		refresh_timer = assert(vim.uv.new_timer()),
 		artifacts = artifacts,
-		root = default_root(artifacts),
+		root = root,
 	}
 	vim.bo[buf].buftype = "nofile"
 	vim.bo[buf].bufhidden = "wipe"
