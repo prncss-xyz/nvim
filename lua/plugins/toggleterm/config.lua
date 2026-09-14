@@ -116,8 +116,8 @@ Output ONLY the branch name, nothing else.
 		typescript = "node",
 		typescriptreact = "node",
 	},
-
 	commands = {
+		yazi = { cmd = "yazi" },
 		ddgr = {
 			cmd = "ddgr",
 			dir = vim.env.HOME,
