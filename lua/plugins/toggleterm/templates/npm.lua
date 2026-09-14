@@ -8,21 +8,20 @@ local manager_lockfiles = {
 }
 
 local function get_candidate_package_files(opts)
-	local matches = vim.fs.find("package.json", {
-		upward = true,
-		type = "file",
-		path = opts.dir,
-		stop = vim.fn.getcwd() .. "/..",
-		limit = math.huge,
-	})
-	if #matches > 0 then
-		return matches
+	local matches = {}
+	local dir = vim.fs.abspath(opts.dir)
+	for _ = 0, 2 do
+		local package = vim.fs.joinpath(dir, "package.json")
+		if vim.fn.filereadable(package) == 1 then
+			table.insert(matches, package)
+		end
+		local parent = vim.fs.dirname(dir)
+		if parent == dir then
+			break
+		end
+		dir = parent
 	end
-	return vim.fs.find("package.json", {
-		upward = true,
-		type = "file",
-		path = vim.fn.getcwd(),
-	})
+	return matches
 end
 
 local function detect_package_manager(package_dir, package)
@@ -36,6 +35,28 @@ local function detect_package_manager(package_dir, package)
 			end
 		end
 	end
+end
+
+local function descendant_packages(root, max_depth)
+	local packages = {}
+	local function scan(dir, depth)
+		if depth > max_depth then
+			return
+		end
+		for name, kind in vim.fs.dir(dir) do
+			if kind == "directory" and name ~= "node_modules" and not vim.startswith(name, ".") then
+				local child = vim.fs.joinpath(dir, name)
+				local package = vim.fs.joinpath(child, "package.json")
+				if vim.fn.filereadable(package) == 1 then
+					table.insert(packages, package)
+				end
+				scan(child, depth + 1)
+			end
+		end
+	end
+	scan(root, 1)
+	table.sort(packages)
+	return packages
 end
 
 local function get_package_and_manager(candidate_packages)
@@ -80,19 +101,18 @@ return {
 			end
 		end
 
-		if vim.islist(data.workspaces) then
-			for _, workspace in ipairs(data.workspaces) do
-				local workspace_path = vim.fs.joinpath(cwd, workspace)
-				local workspace_data = files.load_json_file(vim.fs.joinpath(workspace_path, "package.json"))
-				if workspace_data and workspace_data.scripts then
-					for script in pairs(workspace_data.scripts) do
-						table.insert(definitions, {
-							name = string.format("%s[%s] %s", manager, workspace, script),
-							builder = function()
-								return { cmd = { manager, "run", script }, cwd = workspace_path }
-							end,
-						})
-					end
+		for _, workspace_package in ipairs(descendant_packages(cwd, 2)) do
+			local workspace_path = vim.fs.dirname(workspace_package)
+			local workspace = assert(vim.fs.relpath(cwd, workspace_path))
+			local workspace_data = files.load_json_file(workspace_package)
+			if workspace_data and workspace_data.scripts then
+				for script in pairs(workspace_data.scripts) do
+					table.insert(definitions, {
+						name = string.format("%s[%s] %s", manager, workspace, script),
+						builder = function()
+							return { cmd = { manager, "run", script }, cwd = workspace_path }
+						end,
+					})
 				end
 			end
 		end

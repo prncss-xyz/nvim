@@ -76,13 +76,32 @@ function M.create_artifact(input, filename, root, directory)
 	end
 
 	local directories = {}
-	for name, kind in vim.fs.dir(artifacts, { depth = math.huge }) do
-		local path = vim.fs.joinpath(artifacts, name)
-		if kind == "directory" and artifact_cwd.resolve(path) then
+	local seen = {}
+	local function add_directory(path)
+		if not seen[path] then
+			seen[path] = true
 			table.insert(directories, path)
 		end
 	end
-	table.sort(directories)
+
+	local project_directory = artifact_cwd.for_project(root)
+	local branch_directory = artifact_cwd.for_checkout(root)
+	if branch_directory ~= project_directory then
+		add_directory(branch_directory)
+	end
+	add_directory(project_directory)
+
+	local existing_directories = {}
+	for name, kind in vim.fs.dir(artifacts, { depth = math.huge }) do
+		local path = vim.fs.joinpath(artifacts, name)
+		if kind == "directory" and artifact_cwd.resolve(path) then
+			table.insert(existing_directories, path)
+		end
+	end
+	table.sort(existing_directories)
+	for _, path in ipairs(existing_directories) do
+		add_directory(path)
+	end
 	vim.ui.select(directories, {
 		prompt = "Select artifact directory",
 		format_item = function(path)
@@ -90,7 +109,8 @@ function M.create_artifact(input, filename, root, directory)
 		end,
 	}, function(selected)
 		if selected then
-			create(selected, assert(artifact_cwd.resolve(selected), "Artifact project not found"))
+			vim.fn.mkdir(selected, "p")
+			create(selected, root)
 		end
 	end)
 end

@@ -2,6 +2,19 @@ local T = MiniTest.new_set()
 
 T["terminal item formatting"] = MiniTest.new_set()
 
+T["terminal item formatting"]["does not mark commands without a terminal as working"] = function()
+	local format_item = require("plugins.toggleterm.terms.format_item").format_item(false)
+	local item = {
+		key = "test",
+		instance_count = 1,
+		display_name = "test",
+	}
+
+	assert(vim.startswith(format_item(item), "  "))
+	item.status = "working"
+	assert(vim.startswith(format_item(item), "● "))
+end
+
 T["terminal item formatting"]["marks unseen terminals after the identifier"] = function()
 	local format_item = require("plugins.toggleterm.terms.format_item").format_item(false)
 	local item = {

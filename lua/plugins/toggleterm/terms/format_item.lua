@@ -1,6 +1,6 @@
 local M = {}
 
-local default_icon = "● "
+local default_icon = "  "
 
 local status_icons = {
 	idle = "○ ",

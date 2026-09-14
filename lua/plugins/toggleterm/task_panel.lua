@@ -5,6 +5,21 @@ local get_last_file_win = require("my.windows").get_last_file_win
 local state
 local namespace = vim.api.nvim_create_namespace("toggleterm-task-panel")
 
+local function default_root(artifacts)
+	local path = vim.api.nvim_buf_get_name(0)
+	if path ~= "" and vim.fs.relpath(artifacts, vim.fs.abspath(path)) then
+		return artifacts
+	end
+
+	local parameters = require("my.parameters")
+	local relative = vim.fs.relpath(parameters.dirs.projects, vim.fs.abspath(vim.fn.getcwd()))
+	if relative == nil or relative == "." then
+		return artifacts
+	end
+	local project = assert(vim.split(relative, "/", { plain = true, trimempty = true })[1])
+	return vim.fs.joinpath(artifacts, project)
+end
+
 local function stop_watchers(panel)
 	for _, watcher in ipairs(panel.watchers or {}) do
 		watcher:stop()
@@ -298,7 +313,7 @@ function M.toggle()
 		watchers = {},
 		refresh_timer = assert(vim.uv.new_timer()),
 		artifacts = artifacts,
-		root = artifacts,
+		root = default_root(artifacts),
 	}
 	vim.bo[buf].buftype = "nofile"
 	vim.bo[buf].bufhidden = "wipe"

@@ -55,10 +55,9 @@ Output ONLY the branch name, nothing else.
 	panel = { width = personal(40, 60) },
 	tasks = {
 		{
-			name = "echo",
+			name = "do",
 			source = "task.md",
-			cmd = "echo {source}",
-			on_exit = "keep",
+			cmd = agent .. "do this @{source}",
 			fork = false,
 		},
 		{
