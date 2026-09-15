@@ -154,7 +154,7 @@ subscribe(function(event, item)
 			item.changed = next_change_id
 			config.on_status(item)
 		end
-	elseif event.type == "url" then
+	elseif event.type == "url" and not vim.tbl_contains(item.term.url, event.value) then
 		table.insert(item.term.url, event.value)
 	elseif event.type == "title" then
 		item.title = event.value ~= "" and event.value or nil
@@ -182,7 +182,20 @@ local function prepare()
 	-- act as noop, but also used as a flag
 end
 
+local function normalize_cmd(cmd)
+	if vim.islist(cmd) then
+		return table.concat(
+			vim.tbl_map(function(value)
+				return string.format("%q", value)
+			end, cmd),
+			" "
+		)
+	end
+	return cmd
+end
+
 local function create_and_notify(item, cb)
+	item.cmd = normalize_cmd(item.cmd)
 	item.term = Term:new({
 		cmd = item.cmd,
 		cwd = item.dir,

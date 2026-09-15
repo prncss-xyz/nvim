@@ -57,14 +57,14 @@ Output ONLY the branch name, nothing else.
 		{
 			name = "do",
 			source = "task.md",
-			cmd = agent .. "do this @{source}",
+			cmd = { agent, "do this @{source}" },
 			fork = false,
 		},
 		{
 			name = "task",
 			source = "task.md",
 			target = "design.md",
-			cmd = agent .. [[create the file {target} and write a broad design to implement @{source}]],
+			cmd = { agent, [[create the file {target} and write a broad design to implement @{source}]] },
 			fork = false,
 		},
 	},

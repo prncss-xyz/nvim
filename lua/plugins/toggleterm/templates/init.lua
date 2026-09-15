@@ -1,22 +1,17 @@
 local M = {}
 
-local function shell_join(argv)
-	return table.concat(vim.tbl_map(vim.fn.shellescape, argv), " ")
-end
-
 local function normalize_task(definition)
 	local task = definition.builder({})
 	assert(type(task) == "table", "Template builder must return a task")
 	assert(task.cmd ~= nil, "Template task must define cmd")
 
-	local cmd = task.cmd
-	if type(cmd) == "table" then
-		cmd = shell_join(cmd)
-	end
-	assert(type(cmd) == "string" or type(cmd) == "function", "Template task cmd must be a string, function, or list")
+	assert(
+		type(task.cmd) == "string" or type(task.cmd) == "function" or vim.islist(task.cmd),
+		"Template task cmd must be a string, function, or list"
+	)
 
 	return {
-		cmd = cmd,
+		cmd = task.cmd,
 		dir = task.cwd or task.dir,
 		priority = task.priority,
 		auto_scroll = task.auto_scroll,

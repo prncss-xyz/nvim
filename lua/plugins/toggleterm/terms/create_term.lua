@@ -43,6 +43,11 @@ local function osc_notification(payload)
 	return title or "", message or notification
 end
 
+local function osc_url(payload)
+	local url = payload:match("^[^;]*;(.*)$")
+	return url ~= "" and url or nil
+end
+
 local shell_phases = {
 	A = "prompt",
 	B = "input",
@@ -153,6 +158,13 @@ function Term:handle_osc(generation, sequence)
 		self.send({ type = "title", value = payload })
 		if self.schedule_status_detection then
 			self.schedule_status_detection()
+		end
+		return
+	end
+	if command == "8" then
+		local url = osc_url(payload)
+		if url then
+			self.send({ type = "url", value = url })
 		end
 		return
 	end

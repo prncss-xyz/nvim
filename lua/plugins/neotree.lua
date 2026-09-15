@@ -34,6 +34,7 @@ return {
 				end
 			end
 			return {
+				window = { width = personal(40, 60) },
 				sources = {
 					"filesystem",
 					"buffers",
@@ -74,7 +75,6 @@ return {
 						hide_dotfiles = true,
 					},
 					window = {
-						width = personal(40, 60),
 						mappings = {
 							a = false,
 							s = false,
