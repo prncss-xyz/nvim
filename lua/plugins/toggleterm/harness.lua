@@ -63,6 +63,7 @@ function M.create_artifact(input, filename, root, directory)
 	local artifacts = require("my.parameters").dirs.artifacts
 
 	local function create(target, project_root)
+		vim.fn.mkdir(target, "p")
 		branch_name(input, function(branch)
 			local path = vim.fs.joinpath(target, branch .. "." .. filename)
 			vim.fn.writefile(vim.split(input, "\n", { plain = true }), path)
@@ -109,7 +110,6 @@ function M.create_artifact(input, filename, root, directory)
 		end,
 	}, function(selected)
 		if selected then
-			vim.fn.mkdir(selected, "p")
 			create(selected, root)
 		end
 	end)

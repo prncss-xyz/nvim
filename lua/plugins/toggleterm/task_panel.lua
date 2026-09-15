@@ -77,7 +77,12 @@ local function create_rows(tasks, statuses, root_parts)
 		end
 
 		if not vim.tbl_isempty(root.children) then
-			table.insert(result, { text = status.name .. ":", status = status.name, parts = {} })
+			table.insert(result, {
+				text = status.name .. ":",
+				status = status.name,
+				parts = {},
+				status_heading = true,
+			})
 			local function append(node, depth, parts)
 				local names = vim.tbl_keys(node.children)
 				table.sort(names)
@@ -124,7 +129,10 @@ local function render()
 	for index, row in ipairs(state.rows) do
 		vim.api.nvim_buf_set_extmark(state.buf, namespace, index - 1, 0, {
 			end_col = #row.text,
-			hl_group = row.root and "Comment" or (row.task and "DiagnosticInfo" or "NeoTreeDirectoryName"),
+			hl_group = row.root and "Comment"
+				or (row.status_heading and "DiagnosticWarn")
+				or (row.task and "DiagnosticInfo")
+				or "NeoTreeDirectoryName",
 		})
 	end
 end
