@@ -73,13 +73,12 @@ Output ONLY the branch name, nothing else.
 	unblock_with = { "done" },
 	status = {
 		{ name = "draft" },
-		{
-			name = "ready",
-			files = { "design.md" },
-		},
+		{ name = "maybe" },
+		{ name = "later" },
+		{ name = "ready" },
 		{ name = "active" },
 		{ name = "blocked" },
-		{ name = "verify" },
+		{ name = "review" },
 		{ name = "done" },
 		{ name = "aborted" },
 	},

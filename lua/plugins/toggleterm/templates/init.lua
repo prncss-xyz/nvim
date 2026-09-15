@@ -15,8 +15,8 @@ local function normalize_task(definition)
 		cwd = task.cwd,
 		priority = task.priority,
 		auto_scroll = task.auto_scroll,
-		tag = definition.tags and definition.tags[1],
-		on_exit = task.on_exit or "close",
+		tag = definition.tag,
+		on_exit = task.on_exit,
 	}
 end
 

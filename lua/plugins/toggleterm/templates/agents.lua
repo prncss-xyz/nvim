@@ -8,7 +8,7 @@ return {
 				local priority = #agents - index + 1
 				table.insert(definitions, {
 					name = agent,
-					tags = { "agent" },
+					tag = "agent",
 					builder = function()
 						return {
 							cmd = agent,
