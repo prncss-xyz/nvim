@@ -87,7 +87,7 @@ local function create_rows(tasks, statuses, root_parts)
 					table.insert(child_parts, name)
 					local icon = child.task and child.task.flat and "󰈙" or "󰉋"
 					table.insert(result, {
-						text = string.rep("  ", depth + 1) .. icon .. " " .. name,
+						text = string.rep("  ", depth) .. icon .. " " .. name,
 						status = status.name,
 						parts = child_parts,
 						has_children = not vim.tbl_isempty(child.children),

@@ -37,6 +37,11 @@ local function release(state)
 		state.unsubscribe()
 		state.unsubscribe = nil
 	end
+	if state.refresh_timer then
+		state.refresh_timer:stop()
+		state.refresh_timer:close()
+		state.refresh_timer = nil
+	end
 	if states[state.tab] == state then
 		states[state.tab] = nil
 	end
@@ -86,7 +91,21 @@ local function path_steps(dir)
 	return steps
 end
 
-local function create_rows(items, format)
+local function status_age(term)
+	if not term.status_changed_at then
+		return nil
+	end
+	local minutes = math.floor(os.difftime(os.time(), term.status_changed_at) / 60)
+	if minutes < 1 then
+		return nil
+	end
+	if minutes < 60 then
+		return minutes .. "m"
+	end
+	return math.floor(minutes / 60) .. "h"
+end
+
+local function create_rows(items, format, git_statuses, width)
 	local root = { children = {}, items = {} }
 	for _, item in ipairs(items) do
 		local node = root
@@ -128,7 +147,7 @@ local function create_rows(items, format)
 				table.insert(rows, {
 					instance_count = item.instance_count,
 					item = item,
-					text = "  " .. item.title,
+					text = indent .. item.title,
 					highlight = "Comment",
 					title = true,
 				})
@@ -147,9 +166,15 @@ local function create_rows(items, format)
 	local function append_directory(node, depth, name)
 		local indent = string.rep("  ", depth)
 		local icon = "󰉋 "
+		local text = indent .. icon .. name
+		local git_status = git_statuses[node.dir]
+		if git_status and git_status ~= "" then
+			local padding = math.max(1, width - vim.fn.strdisplaywidth(text) - vim.fn.strdisplaywidth(git_status))
+			text = text .. string.rep(" ", padding) .. git_status
+		end
 		table.insert(rows, {
 			dir = node.dir,
-			text = indent .. icon .. name,
+			text = text,
 			highlights = {
 				{ start_col = #indent, end_col = #indent + #icon, group = "NeoTreeDirectoryIcon" },
 				{ start_col = #indent + #icon, end_col = -1, group = "NeoTreeDirectoryName" },
@@ -163,7 +188,7 @@ local function create_rows(items, format)
 			local child = node.children[name]
 			append_directory(child, depth, child.name)
 			append(child, depth + 1)
-			append_items(child, depth + 1)
+			append_items(child, depth)
 		end
 	end
 
@@ -178,7 +203,7 @@ local function create_rows(items, format)
 	if common ~= root then
 		append_directory(common, 0, display_path(common.dir))
 		append(common, 1)
-		append_items(common, 1)
+		append_items(common, 0)
 	else
 		append(root, 0)
 	end
@@ -192,10 +217,42 @@ local function create_rows(items, format)
 	for _, row in ipairs(rows) do
 		if row.status then
 			local padding = status_column - vim.fn.strdisplaywidth(row.text) + 1
-			row.text = row.text .. string.rep(" ", padding) .. "(" .. row.status .. ")"
+			local age = status_age(row.item.term)
+			local status = age and row.status .. " " .. age or row.status
+			row.text = row.text .. string.rep(" ", padding) .. "(" .. status .. ")"
 		end
 	end
 	return rows
+end
+
+local refresh
+
+local function update_git_status(state, dir)
+	local cached = state.git_statuses[dir]
+	if cached and os.time() - cached.checked_at < 30 then
+		return
+	end
+	state.git_statuses[dir] = { checked_at = os.time(), pending = true }
+	vim.system({ "git", "rev-parse", "--show-toplevel" }, { cwd = dir, text = true }, function(root_result)
+		local root = vim.trim(root_result.stdout or "")
+		if root_result.code ~= 0 or vim.fs.normalize(root) ~= vim.fs.normalize(dir) then
+			vim.schedule(function()
+				state.git_statuses[dir] = { checked_at = os.time(), value = false }
+			end)
+			return
+		end
+		vim.system(
+			{ "starship", "module", "git_status" },
+			{ cwd = dir, text = true, env = { NO_COLOR = "1" } },
+			function(result)
+				local status = vim.trim(result.stdout or ""):gsub("\27%[[%d;]*m", ""):gsub("^%[(.*)%]$", "%1")
+				vim.schedule(function()
+					state.git_statuses[dir] = { checked_at = os.time(), value = result.code == 0 and status or false }
+					refresh(state)
+				end)
+			end
+		)
+	end)
 end
 
 local function render(state)
@@ -205,7 +262,17 @@ local function render(state)
 
 	local instance_count = selected_instance(state)
 	local items = state.deps.items(state.query)
-	local rows = create_rows(items, state.deps.format)
+	local git_statuses = {}
+	for dir, cached in pairs(state.git_statuses) do
+		git_statuses[dir] = cached.value
+	end
+	local width = valid_win(state.win) and vim.api.nvim_win_get_width(state.win) or state.deps.width
+	local rows = create_rows(items, state.deps.format, git_statuses, width)
+	for _, row in ipairs(rows) do
+		if row.dir then
+			update_git_status(state, row.dir)
+		end
+	end
 	local lines = vim.tbl_map(function(row)
 		return row.text
 	end, rows)
@@ -247,7 +314,7 @@ local function render(state)
 	vim.api.nvim_win_set_cursor(state.win, { math.min(target, #lines), 0 })
 end
 
-local function refresh(state)
+refresh = function(state)
 	if state.refresh_pending then
 		return
 	end
@@ -338,6 +405,7 @@ local function open(query, history, subscribe, create_in_dir)
 		query = vim.deepcopy(query or {}),
 		deps = deps,
 		rows = {},
+		git_statuses = {},
 	}
 	states[tab] = state
 
@@ -363,6 +431,15 @@ local function open(query, history, subscribe, create_in_dir)
 			release(state)
 		end,
 	})
+
+	state.refresh_timer = vim.uv.new_timer()
+	state.refresh_timer:start(
+		60000,
+		60000,
+		vim.schedule_wrap(function()
+			refresh(state)
+		end)
+	)
 
 	state.unsubscribe = deps.subscribe(function(event)
 		if

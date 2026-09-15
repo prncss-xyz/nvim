@@ -146,6 +146,7 @@ subscribe(function(event, item)
 		history.insert(item)
 	elseif event.type == "status" and event.value ~= item.status then
 		item.status = event.value
+		item.term.status_changed_at = os.time()
 		if event.visible == true or item.term:is_in_view() then
 			item.changed = nil
 		else
