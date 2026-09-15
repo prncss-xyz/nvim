@@ -34,11 +34,20 @@ local function quoted_path(path)
 end
 
 local function resolve_cmd(cmd, source, target)
-	if target == nil then
-		assert(not cmd:find("{target}", 1, true), "Task command references {target} without defining target")
-		return (cmd:gsub("{source}", quoted_path(source)))
+	local function resolve(value, resolved_source, resolved_target)
+		if target == nil then
+			assert(not value:find("{target}", 1, true), "Task command references {target} without defining target")
+			return (value:gsub("{source}", resolved_source))
+		end
+		return (value:gsub("{source}", resolved_source):gsub("{target}", resolved_target))
 	end
-	return (cmd:gsub("{source}", quoted_path(source)):gsub("{target}", quoted_path(target)))
+
+	if vim.islist(cmd) then
+		return vim.tbl_map(function(value)
+			return resolve(value, source, target)
+		end, cmd)
+	end
+	return resolve(cmd, quoted_path(source), target and quoted_path(target) or nil)
 end
 
 local function build_task(task, source, target, project, branch, current_cwd)
@@ -59,7 +68,10 @@ local function validate_task(task)
 		task.target == nil or type(task.target) == "string",
 		string.format("Task %s target must be a string", task.name)
 	)
-	assert(type(task.cmd) == "string", string.format("Task %s cmd must be a string", task.name))
+	assert(
+		type(task.cmd) == "string" or vim.islist(task.cmd),
+		string.format("Task %s cmd must be a string or list", task.name)
+	)
 end
 
 local function source_details(source, task)
