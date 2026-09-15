@@ -10,14 +10,7 @@ local function normalize_task(definition)
 		"Template task cmd must be a string, function, or list"
 	)
 
-	return {
-		cmd = task.cmd,
-		cwd = task.cwd,
-		priority = task.priority,
-		auto_scroll = task.auto_scroll,
-		tag = definition.tag,
-		on_exit = task.on_exit,
-	}
+	return task
 end
 
 function M.add_commands(commands, module_names, opts)

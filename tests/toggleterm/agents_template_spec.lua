@@ -20,7 +20,7 @@ T["agents template adds installed agents ranked by list order"] = function()
 		assert(#definitions == 2, "expected only installed agents")
 		assert(definitions[1].name == "first", "expected first agent")
 		assert(definitions[1].builder().priority == 3, "expected first agent to have highest rank")
-		assert(definitions[1].tag == "agent", "expected agent tag")
+		assert(definitions[1].builder().tag == "agent", "expected agent tag")
 		assert(definitions[2].name == "third", "expected third agent")
 		assert(definitions[2].builder().priority == 1, "expected third agent rank")
 	]])
@@ -36,6 +36,7 @@ T["templates close on exit by default"] = function()
 			agents = { "p" },
 		})
 		assert(commands.p.on_exit == "close", "expected template command to close on exit by default")
+		assert(commands.p.tag == "agent", "expected task tag to be preserved")
 	]])
 end
 
