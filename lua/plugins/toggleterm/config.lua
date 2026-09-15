@@ -9,7 +9,7 @@ return {
 	min_runtime = 10000,
 	ai_query = personal(
 		"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
-		"claude -p --model haiku --bare --disable-slash-commands --tools="
+		"claude -p --model haiku --disable-slash-commands --tools="
 	),
 	create_task_name = [==[
 Generate a concise git branch name based on the task description.
@@ -108,7 +108,6 @@ Output ONLY the branch name, nothing else.
 			notify.notify(string.format("%s in %s (%s)", item.key, item.dir, item.status))
 		end
 	end,
-
 	lang_to_REPL = {
 		lua = "lua",
 		javascript = "node",
@@ -163,20 +162,6 @@ Output ONLY the branch name, nothing else.
 			cmd = "git-sync-all",
 			on_exit = "keep",
 		}),
-		[":make daily-login"] = function()
-			if vim.fn.filereadable(vim.fn.getcwd() .. "/Makefile") == 1 then
-				return { cmd = "make daily-login" }
-			else
-				return nil
-			end
-		end,
-		[":make tilt"] = function()
-			if vim.fn.filereadable(vim.fn.getcwd() .. "/Makefile") == 1 then
-				return { cmd = "make tilt" }
-			else
-				return nil
-			end
-		end,
 	},
 	autostart = {},
 }
