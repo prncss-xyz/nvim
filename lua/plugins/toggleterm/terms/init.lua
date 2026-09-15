@@ -89,7 +89,7 @@ local listeners = {}
 local next_listener_id = 0
 local next_change_id = 0
 
-local function reserve_instance(item, requested_instance)
+local function available_instance(requested_instance)
 	if requested_instance then
 		assert(not instance_owners[requested_instance], "Terminal instance number is already in use")
 	end
@@ -97,6 +97,11 @@ local function reserve_instance(item, requested_instance)
 	while instance_owners[instance_count] do
 		instance_count = instance_count + 1
 	end
+	return instance_count
+end
+
+local function reserve_instance(item, requested_instance)
+	local instance_count = available_instance(requested_instance)
 	instance_owners[instance_count] = item
 	item.instance_count = instance_count
 end
@@ -337,7 +342,9 @@ function M.run_or_raise(query)
 	end
 	local items = get_query_commands(query, filter)
 	local choices = history.filter(filter)
+	local instance_count = available_instance(query.instance_count)
 	for _, item in pairs(items) do
+		item.instance_count = instance_count
 		local res = history.find(function(i)
 			return i.instance_count == item.instance_count and i.key == item.key
 		end)

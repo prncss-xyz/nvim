@@ -500,6 +500,41 @@ T["instance numbers"]["are globally unique and reuse the smallest available numb
 	}, child.lua_get("result"))
 end
 
+T["instance numbers"]["new command choices show the instance they will receive"] = function()
+	child.lua([[local selected_count
+		local created_count
+
+		package.loaded["plugins.toggleterm.terms.create_term"] = {
+			new = function(_, opts)
+				created_count = opts.instance_count
+				return { focus = function() end }
+			end,
+		}
+		package.loaded["plugins.toggleterm.config"] = {
+			autostart = {},
+			on_status = function() end,
+		}
+		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+			get_commands = function()
+				return {
+					shell = { key = "shell", dir = "/one", instance_count = 1 },
+				}
+			end,
+		}
+		vim.ui.select = function(items, _, cb)
+			selected_count = items[1].instance_count
+			cb(items[1])
+		end
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		local terms = require("plugins.toggleterm.terms")
+		terms.run_or_raise({ dir = "/one" })
+		result = { selected = selected_count, created = created_count }
+	]])
+
+	assert.same({ selected = 2, created = 2 }, child.lua_get("result"))
+end
+
 T["artifact cwd"] = MiniTest.new_set()
 
 T["artifact cwd"]["resolves explicit and default branches without git"] = function()
