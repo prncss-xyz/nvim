@@ -1,6 +1,6 @@
 local personal = require("my.conds").personal
 local notify = require("my.notify")
-local prompt_utils = require("plugins.toggleterm.prompt_utils")
+local prompt_utils = require("plugins.toggleterm.helpers.prompt")
 
 local agent = personal("p ", "claude ")
 

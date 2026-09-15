@@ -196,9 +196,31 @@ return {
 			{
 				"oz",
 				function()
-					require("plugins.toggleterm.harness").with_worktree()
+					local definitions = require("plugins.toggleterm.artifact_commands").for_file({
+						dir = require("plugins.toggleterm.terms.artifact_cwd").context_dir() or vim.fn.getcwd(),
+						file = vim.api.nvim_buf_get_name(0),
+						tasks = require("plugins.toggleterm.config").tasks,
+					})
+					vim.ui.select(definitions, {
+						prompt = "Select Buffer Task: ",
+						format_item = function(definition)
+							return definition.name
+						end,
+					}, function(definition)
+						if definition == nil then
+							return
+						end
+						local task = definition.builder({})
+						task.key = definition.name
+						task.display_name = definition.name
+						task.tag = definition.name
+						task.dir = task.cwd or task.dir
+						task.cwd = nil
+						task.on_exit = task.on_exit or "close"
+						require("plugins.toggleterm.terms").start(task)
+					end)
 				end,
-				desc = "With Worktree",
+				desc = "Run Buffer Task",
 			},
 			{
 				"o" .. reverse("z"),
@@ -279,33 +301,7 @@ return {
 			{
 				"mps",
 				function()
-					local artifacts = require("my.parameters").dirs.artifacts
-					local files = vim.fs.find("task.md", { path = artifacts, type = "file", limit = math.huge })
-					local function dependency_name(path)
-						return assert(vim.fs.relpath(artifacts, path)):gsub("/task%.md$", "")
-					end
-					table.sort(files)
-					vim.ui.select(files, {
-						prompt = "Select dependency",
-						format_item = dependency_name,
-					}, function(path)
-						if path == nil then
-							return
-						end
-
-						local dependency = dependency_name(path)
-						local yaml = require("plugins.toggleterm.yaml")
-						local frontmatter = yaml.read(0)
-						local dependencies = frontmatter.dependencies
-						if type(dependencies) == "string" then
-							dependencies = { dependencies }
-						elseif type(dependencies) ~= "table" or not vim.islist(dependencies) then
-							dependencies = {}
-						end
-						table.insert(dependencies, dependency)
-						frontmatter.dependencies = dependencies
-						yaml.write(0, frontmatter)
-					end)
+					require("plugins.toggleterm.helpers.frontmatter").add_dependency()
 				end,
 				desc = "Add Dependency",
 				ft = "markdown",
@@ -313,24 +309,7 @@ return {
 			{
 				"ms",
 				function()
-					local yaml = require("plugins.toggleterm.yaml")
-					local remove = "REMOVE"
-					local statuses = vim.tbl_map(function(status)
-						return status.name
-					end, require("plugins.toggleterm.config").status)
-					table.insert(statuses, remove)
-					vim.ui.select(statuses, { prompt = "Select status" }, function(choice)
-						if choice == nil then
-							return
-						end
-						local frontmatter = yaml.read(0)
-						if choice == remove then
-							frontmatter.status = nil
-						else
-							frontmatter.status = choice
-						end
-						yaml.write(0, frontmatter)
-					end)
+					require("plugins.toggleterm.helpers.frontmatter").update_status()
 				end,
 				desc = "Update Status",
 				mode = "n",
@@ -397,7 +376,7 @@ return {
 				function()
 					-- TODO: make this more convenient
 					require("plugins.toggleterm.prompts").run(
-						require("plugins.toggleterm.prompt_utils").create_task(true)
+						require("plugins.toggleterm.helpers.prompt").create_task(true)
 					)
 				end,
 				desc = "New Task",

@@ -233,7 +233,7 @@ local function create_task()
 		return
 	end
 	require("plugins.toggleterm.prompts").run(
-		require("plugins.toggleterm.prompt_utils").create_task(false, directory, project_root),
+		require("plugins.toggleterm.helpers.prompt").create_task(false, directory, project_root),
 		"task"
 	)
 end
