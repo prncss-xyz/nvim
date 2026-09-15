@@ -36,9 +36,9 @@ Output ONLY the branch name, nothing else.
 	bdelete = function(bufnr)
 		Snacks.bufdelete.delete(bufnr)
 	end,
-	notify = personal(function(title, message)
+	notify = personal() and function(title, message)
 		vim.system({ "notify-send", title, message }, { detach = true })
-	end, function(title, message)
+	end or function(title, message)
 		vim.system({
 			"osascript",
 			"-e",
@@ -51,7 +51,7 @@ Output ONLY the branch name, nothing else.
 			title,
 			message,
 		}, { detach = true })
-	end),
+	end,
 	panel = { width = personal(40, 60) },
 	tasks = {
 		{
