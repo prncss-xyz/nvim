@@ -25,8 +25,11 @@ end
 function M.sender(prefix)
 	return function(input, prompt, new_agent)
 		input(prompt, function(contents)
-			local method = new_agent and "put_new" or "put"
-			require("plugins.toggleterm.terms")[method]({ tag = "agent" }, (prefix or prompt) .. " " .. contents)
+			require("plugins.toggleterm.terms").put(
+				{ tag = "agent" },
+				(prefix or prompt) .. " " .. contents,
+				{ new = new_agent }
+			)
 		end)
 	end
 end

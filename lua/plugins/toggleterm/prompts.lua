@@ -46,8 +46,7 @@ function M.prompt(new_agent)
 		end
 		vim.schedule(function()
 			if type(contents) == "string" then
-				local method = new_agent and "put_new" or "put"
-				return require("plugins.toggleterm.terms")[method]({ tag = "agent" }, contents)
+				return require("plugins.toggleterm.terms").put({ tag = "agent" }, contents, { new = new_agent })
 			end
 			contents(input, choice, new_agent)
 		end)

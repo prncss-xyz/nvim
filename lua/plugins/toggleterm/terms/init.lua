@@ -469,22 +469,19 @@ local function put(instance, invocation, arg)
 	instance.term:put(arg, true)
 end
 
-function M.put(query, arg)
+function M.put(query, arg, opts)
 	local invocation
 	invocation, arg = prepare_put(arg)
+	if opts and opts.new then
+		query = normalize_query(query)
+		local item = utils.max_of(get_query_commands(query, get_filter(query)), gt_item) or without_query_options(query)
+		return make_item(item, function(instance)
+			put(instance, invocation, arg)
+		end, query.instance_count)
+	end
 	with_query(query, function(instance)
 		put(instance, invocation, arg)
 	end)
-end
-
-function M.put_new(query, arg)
-	local invocation
-	invocation, arg = prepare_put(arg)
-	query = normalize_query(query)
-	local item = utils.max_of(get_query_commands(query, get_filter(query)), gt_item) or without_query_options(query)
-	make_item(item, function(instance)
-		put(instance, invocation, arg)
-	end, query.instance_count)
 end
 
 function M.read(instance_count, opts, cb)

@@ -240,7 +240,7 @@ return {
 			{
 				"m" .. reverse("v"),
 				function()
-					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{selection}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{selection}", { new = true })
 				end,
 				desc = "Send Selection to New Agent",
 			},
@@ -255,7 +255,7 @@ return {
 			{
 				"m" .. reverse("a"),
 				function()
-					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{selection}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{selection}", { new = true })
 				end,
 				desc = "Send Selection to New Agent",
 				mode = "x",
@@ -271,7 +271,7 @@ return {
 			{
 				"m" .. reverse("c"),
 				function()
-					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{position}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{position}", { new = true })
 				end,
 				desc = "Put Current File Position in New Agent",
 				mode = "n",
@@ -347,7 +347,7 @@ return {
 			{
 				"m" .. reverse("d"),
 				function()
-					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{line}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{line}", { new = true })
 				end,
 				desc = "Put Current File Line in New Agent",
 				mode = "n",
@@ -363,7 +363,7 @@ return {
 			{
 				"m" .. reverse("e"),
 				function()
-					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{path}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{path}", { new = true })
 				end,
 				desc = "Put Current File Path in New Agent",
 				mode = "n",
@@ -379,7 +379,7 @@ return {
 			{
 				"m" .. reverse("h"),
 				function()
-					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{hunk}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{hunk}", { new = true })
 				end,
 				desc = "Put Current or Next Hunk in New Agent",
 				mode = "n",
@@ -438,7 +438,7 @@ return {
 			{
 				"m" .. reverse("z"),
 				function()
-					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{next_diagnostic}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{next_diagnostic}", { new = true })
 				end,
 				desc = "Put Diagnostic Prompt in New Agent",
 				mode = "n",
@@ -453,7 +453,7 @@ return {
 			{
 				"m" .. reverse("f"),
 				function()
-					require("plugins.toggleterm.terms").put_new({ tag = "agent" }, "{file_diagnostic}")
+					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{file_diagnostic}", { new = true })
 				end,
 				desc = "Put File Diagnostics Prompt in New Agent",
 			},

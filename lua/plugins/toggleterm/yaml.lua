@@ -24,7 +24,11 @@ local function decode(text)
 		return lyaml.load(text)
 	end
 	local args = is_mike_farah_yq() and { "-o=json", "." } or { "." }
-	local value = vim.json.decode(run_yq(args, text))
+	local output = run_yq(args, text)
+	if output:match("^%s*$") then
+		return nil
+	end
+	local value = vim.json.decode(output)
 	return value ~= vim.NIL and value or nil
 end
 
