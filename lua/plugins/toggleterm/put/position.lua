@@ -5,7 +5,7 @@ local function is_agent(instance)
 end
 
 local function path(ctx)
-	if ctx.path:find("[^%w%._/%-]") then
+	if ctx.path:find("[^%w%._/%-~]") then
 		return string.format("%q", ctx.path)
 	end
 

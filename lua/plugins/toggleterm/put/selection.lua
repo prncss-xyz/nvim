@@ -23,7 +23,7 @@ function M.capture()
 	end
 
 	local lines = vim.fn.getregion(anchor, cursor, { type = type_ })
-	local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":.")
+	local path = require("plugins.toggleterm.put.path").display(vim.api.nvim_buf_get_name(0))
 	local start_col = type_ == "V" and 1 or start[3]
 	local res = { string.format("%s L%iC:%i", path, start[2], start_col) }
 	vim.list_extend(res, lines)
@@ -48,7 +48,7 @@ function M.get_selection(ctx)
 	end
 
 	local lines = vim.api.nvim_buf_get_text(ctx.bufnr, start_row, start_col, end_row, end_col, {})
-	local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(ctx.bufnr), ":.")
+	local path = require("plugins.toggleterm.put.path").display(vim.api.nvim_buf_get_name(ctx.bufnr))
 
 	local res = { string.format("%s L%iC:%i", path, start_row + 1, start_col + 1) }
 	vim.list_extend(res, lines)

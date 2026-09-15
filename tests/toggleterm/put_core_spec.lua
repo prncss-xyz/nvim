@@ -33,6 +33,17 @@ T["buffer metadata templates expand context values"] = function()
 	]])
 end
 
+T["artifact paths are relative to home"] = function()
+	child.lua([[
+		local path = vim.fs.joinpath(vim.env.HOME, "projects/notes/main/dev/artifacts/nvim/neomux/varlock.task.md")
+		vim.api.nvim_buf_set_name(0, path)
+
+		local ctx = require("plugins.toggleterm.terms.window").get_ctx()
+		local result = require("plugins.toggleterm.put.core").template("{path}")(ctx, { tag = "agent" })
+		assert(result == "@~/projects/notes/main/dev/artifacts/nvim/neomux/varlock.task.md ", result)
+	]])
+end
+
 T["filetype templates use the source buffer filetype"] = function()
 	child.lua([[
 		vim.api.nvim_buf_set_name(0, "example.lua")

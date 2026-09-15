@@ -18,7 +18,7 @@ local ctx_by_cwd = {}
 
 local function get_ctx()
 	local bufnr = vim.api.nvim_win_get_buf(0)
-	local path = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(bufnr), ":.")
+	local path = require("plugins.toggleterm.put.path").display(vim.api.nvim_buf_get_name(bufnr))
 	local pos = vim.api.nvim_win_get_cursor(0)
 	local row = pos[1]
 	local col = pos[2]
