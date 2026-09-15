@@ -48,7 +48,7 @@ function M.scan(root, statuses)
 				project = task_parts[1],
 				branch = task_parts[#task_parts],
 				parts = task_parts,
-				dir = dir,
+				cwd = dir,
 				path = task_file,
 				files = task_files,
 				flat = flat,

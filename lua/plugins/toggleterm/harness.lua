@@ -118,7 +118,7 @@ end
 function M.artifact_to_worktree(branch, opts)
 	vim.notify("Creating worktree " .. branch .. "...", vim.log.levels.INFO)
 	require("plugins.toggleterm.terms.git").create_worktree(branch, function(_, worktree_path)
-		opts.dir = worktree_path
+		opts.cwd = worktree_path
 		require("plugins.toggleterm.terms").focus(opts)
 	end)
 end
@@ -134,7 +134,7 @@ local function pi_prompt(command)
 	return function(file, dir)
 		return {
 			key = "pi",
-			dir = dir,
+			cwd = dir,
 			cmd = string.format("p /%s @%q", command, file),
 		}
 	end

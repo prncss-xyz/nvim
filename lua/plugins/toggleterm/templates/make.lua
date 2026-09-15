@@ -1,5 +1,5 @@
 local function get_makefile(opts)
-	return vim.fs.find("Makefile", { upward = true, type = "file", path = opts.dir })[1]
+	return vim.fs.find("Makefile", { upward = true, type = "file", path = opts.cwd })[1]
 end
 
 return {

@@ -9,7 +9,7 @@ local manager_lockfiles = {
 
 local function get_candidate_package_files(opts)
 	local matches = {}
-	local dir = vim.fs.abspath(opts.dir)
+	local dir = vim.fs.abspath(opts.cwd)
 	for _ = 0, 2 do
 		local package = vim.fs.joinpath(dir, "package.json")
 		if vim.fn.filereadable(package) == 1 then

@@ -105,7 +105,7 @@ Output ONLY the branch name, nothing else.
 
 	on_status = function(item)
 		if item.changed then
-			notify.notify(string.format("%s in %s (%s)", item.key, item.dir, item.status))
+			notify.notify(string.format("%s in %s (%s)", item.key, item.cwd, item.status))
 		end
 	end,
 	lang_to_REPL = {
@@ -119,20 +119,20 @@ Output ONLY the branch name, nothing else.
 		yazi = { cmd = "yazi" },
 		ddgr = {
 			cmd = "ddgr",
-			dir = vim.env.HOME,
+			cwd = vim.env.HOME,
 		},
 		portless = {
 			cmd = "portless",
 			on_exit = "keep",
 		},
 		current = function()
-			return { dir = vim.fn.expand("%:p:h") }
+			return { cwd = vim.fn.expand("%:p:h") }
 		end,
 		shell = {
 			priority = 1,
 		},
 		["home shell"] = {
-			dir = vim.env.HOME,
+			cwd = vim.env.HOME,
 		},
 		diff = {
 			cmd = require("my.diff").get_cmd(),

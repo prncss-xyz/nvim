@@ -12,8 +12,8 @@ local function get_mise_file(opts)
 		return name:match("^%.?mise$") ~= nil or name:match("^%.?mise%-tasks$") ~= nil or name == ".config"
 	end
 
-	return vim.fs.find(is_mise_file, { type = "file", upward = true, path = opts.dir })[1]
-		or vim.fs.find(is_mise_dir, { type = "directory", upward = true, path = opts.dir })[1]
+	return vim.fs.find(is_mise_file, { type = "file", upward = true, path = opts.cwd })[1]
+		or vim.fs.find(is_mise_dir, { type = "directory", upward = true, path = opts.cwd })[1]
 end
 
 return {

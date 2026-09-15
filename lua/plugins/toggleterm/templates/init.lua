@@ -12,7 +12,7 @@ local function normalize_task(definition)
 
 	return {
 		cmd = task.cmd,
-		dir = task.cwd or task.dir,
+		cwd = task.cwd,
 		priority = task.priority,
 		auto_scroll = task.auto_scroll,
 		tag = definition.tags and definition.tags[1],

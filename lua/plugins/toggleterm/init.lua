@@ -84,7 +84,7 @@ return {
 				function()
 					require("plugins.toggleterm.terms").toggle({
 						prompt = "Select Terminal",
-						dir = require("plugins.toggleterm.terms.get_query_fn").any,
+						cwd = require("plugins.toggleterm.terms.get_query_fn").any,
 					})
 				end,
 				desc = "Select Any Terminal",
@@ -116,7 +116,7 @@ return {
 				function()
 					require("my.ui_toggle").activate("toggleterm", function()
 						require("plugins.toggleterm.terms").toggle_panel({
-							dir = require("plugins.toggleterm.terms.get_query_fn").any,
+							cwd = require("plugins.toggleterm.terms.get_query_fn").any,
 						})
 					end)
 				end,
@@ -197,7 +197,7 @@ return {
 				"oz",
 				function()
 					local definitions = require("plugins.toggleterm.artifact_commands").for_file({
-						dir = require("plugins.toggleterm.terms.artifact_cwd").context_dir() or vim.fn.getcwd(),
+						cwd = require("plugins.toggleterm.terms.artifact_cwd").context_dir() or vim.fn.getcwd(),
 						file = vim.api.nvim_buf_get_name(0),
 						tasks = require("plugins.toggleterm.config").tasks,
 					})
@@ -214,8 +214,6 @@ return {
 						task.key = definition.name
 						task.display_name = definition.name
 						task.tag = definition.name
-						task.dir = task.cwd or task.dir
-						task.cwd = nil
 						task.on_exit = task.on_exit or "close"
 						require("plugins.toggleterm.terms").start(task)
 					end)

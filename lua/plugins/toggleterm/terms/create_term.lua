@@ -195,7 +195,7 @@ function Term:handle_osc(generation, sequence)
 	end
 	local resolved_dir = project_dir(dir)
 	self.cwd = resolved_dir
-	self.send({ type = "dir", value = resolved_dir })
+	self.send({ type = "cwd", value = resolved_dir })
 	-- Leave TermRequest so opening a file can trigger BufRead and FileType autocmds.
 	vim.schedule(function()
 		if generation ~= self.attachment_generation or self.cwd ~= resolved_dir then

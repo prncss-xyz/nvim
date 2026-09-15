@@ -19,7 +19,7 @@ return {
 		end
 
 		local source_path = vim.trim(vim.fn.system("chezmoi source-path"))
-		if opts.dir ~= source_path then
+		if opts.cwd ~= source_path then
 			return nil
 		end
 

@@ -8,7 +8,7 @@ function M.get_commands(filter, cwd)
 	local commands = vim.deepcopy(config.commands)
 	templates.add_commands(commands, config.templates or {}, {
 		agents = config.agents,
-		dir = cwd,
+		cwd = cwd,
 		file = vim.api.nvim_buf_get_name(0),
 		filetype = vim.bo.filetype,
 		tasks = config.tasks,
@@ -29,7 +29,7 @@ function M.get_commands(filter, cwd)
 			v.tag = v.tag or k
 			v.idle_timeout = v.idle_timeout or config.idle_timeout
 			v.instance_count = vim.v.count1
-			v.dir = v.dir or cwd
+			v.cwd = v.cwd or cwd
 			if filter(v) then
 				res[k] = v
 			end

@@ -116,7 +116,7 @@ end
 
 function M.for_file(opts)
 	local definitions = {}
-	local cwd = opts.dir or vim.fn.getcwd()
+	local cwd = opts.cwd or vim.fn.getcwd()
 	local project = current_project(cwd)
 	local source = vim.fs.abspath(opts.file)
 	local artifact_dir = project and vim.fs.joinpath(dirs.artifacts, project) or nil
@@ -136,7 +136,7 @@ end
 
 function M.generator(opts)
 	local definitions = {}
-	local cwd = opts.dir or vim.fn.getcwd()
+	local cwd = opts.cwd or vim.fn.getcwd()
 	local project = current_project(cwd)
 	if project == nil then
 		return definitions

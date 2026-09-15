@@ -158,7 +158,7 @@ subscribe(function(event, item)
 		table.insert(item.term.url, event.value)
 	elseif event.type == "title" then
 		item.title = event.value ~= "" and event.value or nil
-	elseif event.type == "dir" then
+	elseif event.type == "cwd" then
 		history.insert(item)
 	elseif event.type == "detach" then
 		local current = history.find(function(candidate)
@@ -198,14 +198,14 @@ local function create_and_notify(item, cb)
 	item.cmd = normalize_cmd(item.cmd)
 	item.term = Term:new({
 		cmd = item.cmd,
-		cwd = item.dir,
+		cwd = item.cwd,
 		instance_count = item.instance_count,
 		on_exit = item.on_exit,
 		screen_manifest = item.screen_manifest,
 		auto_scroll = item.auto_scroll,
 	}, function(event)
-		if event.type == "dir" then
-			item.dir = event.value
+		if event.type == "cwd" then
+			item.cwd = event.value
 		end
 		notify(event, item)
 	end, cb == prepare, config.min_runtime, config.notify)
@@ -219,7 +219,7 @@ local function make_item(item, cb, requested_instance)
 	reserve_instance(item, requested_instance)
 	item.screen_manifest = screen_manifests[item.key]
 	assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
-	item.dir = type(item.dir) == "string" and item.dir or vim.fn.getcwd()
+	item.cwd = type(item.cwd) == "string" and item.cwd or vim.fn.getcwd()
 	local function create()
 		if type(item.cmd) == "function" then
 			return item.cmd(function(cmd)
@@ -229,7 +229,7 @@ local function make_item(item, cb, requested_instance)
 		end
 		create_and_notify(item, cb)
 	end
-	require("plugins.toggleterm.terms.git").ensure_worktree(item.dir, function(ok)
+	require("plugins.toggleterm.terms.git").ensure_worktree(item.cwd, function(ok)
 		if ok then
 			create()
 		else
@@ -239,11 +239,11 @@ local function make_item(item, cb, requested_instance)
 end
 
 local lt_item =
-	utils.compose_gt(utils.lt_field("dir", ""), utils.lt_field("key", ""), utils.lt_field("instance_count", 0))
+	utils.compose_gt(utils.lt_field("cwd", ""), utils.lt_field("key", ""), utils.lt_field("instance_count", 0))
 
 local gt_item = utils.compose_gt(
 	utils.gt_field("priority", 0),
-	utils.gt_field("dir", ""),
+	utils.gt_field("cwd", ""),
 	utils.gt_field("key", ""),
 	utils.gt_field("instance_count", 0)
 )
@@ -251,7 +251,7 @@ local gt_item = utils.compose_gt(
 local function normalize_query(query)
 	query = vim.tbl_extend("keep", query or {}, {})
 	query.instance_count = vim.v.count > 0 and vim.v.count or query.instance_count
-	query.dir = query.dir
+	query.cwd = query.cwd
 		or require("plugins.toggleterm.terms.artifact_cwd").context_dir()
 		or { vim.fn.getcwd(), vim.env.HOME }
 	return query
@@ -268,7 +268,7 @@ local function get_filter(query)
 		end
 	end
 	local artifact_query = vim.tbl_extend("force", {}, regular_query)
-	artifact_query.dir = nil
+	artifact_query.cwd = nil
 	local artifact_filter = get_query_fn(artifact_query)
 	return function(item)
 		if item.artifact then
@@ -285,7 +285,7 @@ local function without_query_options(query)
 end
 
 local function get_query_commands(query, filter)
-	local cwd = type(query.dir) == "string" and query.dir or nil
+	local cwd = type(query.cwd) == "string" and query.cwd or nil
 	return get_commands(filter, cwd)
 end
 
@@ -304,7 +304,7 @@ local function with_query(query, cb)
 		if #items > 0 then
 			return vim.ui.select(items, {
 				prompt = query.prompt,
-				format_item = format_item(query.dir == require("plugins.toggleterm.terms.get_query_fn").any),
+				format_item = format_item(query.cwd == require("plugins.toggleterm.terms.get_query_fn").any),
 			}, function(item)
 				if item then
 					cb(item)
@@ -315,7 +315,7 @@ local function with_query(query, cb)
 		table.sort(items, lt_item)
 		return vim.ui.select(items, {
 			prompt = query.prompt,
-			format_item = format_item(query.dir == vim.env.HOME),
+			format_item = format_item(query.cwd == vim.env.HOME),
 		}, function(item)
 			if item then
 				make_item(item, function(instance)
@@ -436,7 +436,7 @@ end
 local panel_history = {
 	filter = function(filter)
 		return history.filter(function(item)
-			return item.dir ~= nil and filter(item)
+			return item.cwd ~= nil and filter(item)
 		end)
 	end,
 }
@@ -448,13 +448,13 @@ function M.toggle_panel(query)
 		return selected.toggle_panel()
 	end
 	require("plugins.toggleterm.terms.panel").toggle(query, panel_history, subscribe, function(dir)
-		M.focus({ dir = dir, prompt = "Select Command: " })
+		M.focus({ cwd = dir, prompt = "Select Command: " })
 	end)
 end
 
 function M.raise_panel()
 	require("plugins.toggleterm.terms.panel").open(panel_history, subscribe, function(dir)
-		M.focus({ dir = dir, prompt = "Select Command: " })
+		M.focus({ cwd = dir, prompt = "Select Command: " })
 	end)
 end
 

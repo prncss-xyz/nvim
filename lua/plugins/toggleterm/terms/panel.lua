@@ -109,9 +109,9 @@ local function create_rows(items, format, git_statuses, width)
 	local root = { children = {}, items = {} }
 	for _, item in ipairs(items) do
 		local node = root
-		for _, step in ipairs(path_steps(item.dir)) do
+		for _, step in ipairs(path_steps(item.cwd)) do
 			if not node.children[step.name] then
-				node.children[step.name] = { children = {}, dir = step.path, name = step.name, items = {} }
+				node.children[step.name] = { children = {}, cwd = step.path, name = step.name, items = {} }
 			end
 			node = node.children[step.name]
 		end
@@ -167,13 +167,13 @@ local function create_rows(items, format, git_statuses, width)
 		local indent = string.rep("  ", depth)
 		local icon = "󰉋 "
 		local text = indent .. icon .. name
-		local git_status = git_statuses[node.dir]
+		local git_status = git_statuses[node.cwd]
 		if git_status and git_status ~= "" then
 			local padding = math.max(1, width - vim.fn.strdisplaywidth(text) - vim.fn.strdisplaywidth(git_status))
 			text = text .. string.rep(" ", padding) .. git_status
 		end
 		table.insert(rows, {
-			dir = node.dir,
+			cwd = node.cwd,
 			text = text,
 			highlights = {
 				{ start_col = #indent, end_col = #indent + #icon, group = "NeoTreeDirectoryIcon" },
@@ -201,7 +201,7 @@ local function create_rows(items, format, git_statuses, width)
 		common = common.children[names[1]]
 	end
 	if common ~= root then
-		append_directory(common, 0, display_path(common.dir))
+		append_directory(common, 0, display_path(common.cwd))
 		append(common, 1)
 		append_items(common, 0)
 	else
@@ -269,8 +269,8 @@ local function render(state)
 	local width = valid_win(state.win) and vim.api.nvim_win_get_width(state.win) or state.deps.width
 	local rows = create_rows(items, state.deps.format, git_statuses, width)
 	for _, row in ipairs(rows) do
-		if row.dir then
-			update_git_status(state, row.dir)
+		if row.cwd then
+			update_git_status(state, row.cwd)
 		end
 	end
 	local lines = vim.tbl_map(function(row)
@@ -337,7 +337,7 @@ local function focus_selected(state)
 	elseif selected.item then
 		selected.item.term:focus()
 	else
-		ensure_dir(selected.dir)
+		ensure_dir(selected.cwd)
 	end
 end
 
@@ -360,7 +360,7 @@ local function create_in_selected_dir(state)
 	if not selected then
 		return
 	end
-	local dir = selected.item and selected.item.dir or selected.dir
+	local dir = selected.item and selected.item.cwd or selected.cwd
 	if dir and state.deps.create_in_dir then
 		state.deps.create_in_dir(dir)
 	end
@@ -448,7 +448,7 @@ local function open(query, history, subscribe, create_in_dir)
 			or event.type == "status"
 			or event.type == "title"
 			or event.type == "url"
-			or event.type == "dir"
+			or event.type == "cwd"
 			or event.type == "detach"
 		then
 			refresh(state)

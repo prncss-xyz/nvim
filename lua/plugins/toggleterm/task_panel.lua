@@ -96,7 +96,7 @@ local function create_rows(tasks, statuses, root_parts)
 						status = status.name,
 						parts = child_parts,
 						has_children = not vim.tbl_isempty(child.children),
-						dir = child.task and child.task.dir or nil,
+						cwd = child.task and child.task.cwd or nil,
 						task = child.task,
 					})
 					append(child, depth + 1, child_parts)
@@ -212,7 +212,7 @@ local function open_selected()
 	elseif selected.task then
 		local task = assert(selected_task(selected), "Selected artifact task not found")
 		vim.api.nvim_win_call(target_win, function()
-			require("plugins.toggleterm.config").create(vim.fn.fnameescape(vim.fs.joinpath(task.dir, "index.md")))
+			require("plugins.toggleterm.config").create(vim.fn.fnameescape(vim.fs.joinpath(task.cwd, "index.md")))
 		end)
 		vim.api.nvim_set_current_win(target_win)
 	end
@@ -229,7 +229,7 @@ local function create_task()
 	elseif selected.task and selected.task.flat then
 		directory = vim.fs.dirname(selected.task.path)
 	elseif selected.task then
-		directory = selected.task.dir
+		directory = selected.task.cwd
 	elseif selected.parts and #selected.parts > 0 then
 		directory = vim.fs.joinpath(state.artifacts, unpack(selected.parts))
 	end
@@ -265,7 +265,7 @@ end
 
 local function delete_task_buffers(task)
 	local config = require("plugins.toggleterm.config")
-	local task_dir = vim.fs.normalize(task.dir) .. "/"
+	local task_dir = vim.fs.normalize(task.cwd) .. "/"
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
 		local path = vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr))
 		local belongs_to_task = task.flat and task.files[path] or (path ~= "" and vim.startswith(path .. "/", task_dir))
@@ -295,7 +295,7 @@ local function delete_selected()
 			return
 		end
 		delete_task_buffers(task)
-		local target = task.flat and task.path or task.dir
+		local target = task.flat and task.path or task.cwd
 		local flags = task.flat and nil or "rf"
 		assert(vim.fn.delete(target, flags) == 0, "Failed to delete artifact task: " .. target)
 		render()

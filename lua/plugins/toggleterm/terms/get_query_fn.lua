@@ -37,7 +37,7 @@ function M.get_query_fn(query)
 				if not v(item) then
 					return false
 				end
-			elseif k == "dir" then
+			elseif k == "cwd" then
 				if not matches_dir(v, item[k]) then
 					return false
 				end

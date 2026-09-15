@@ -21,7 +21,7 @@ end
 
 return {
 	generator = function(opts)
-		if not is_enabled(opts.dir) then
+		if not is_enabled(opts.cwd) then
 			return nil
 		end
 
@@ -29,7 +29,7 @@ return {
 			{
 				name = "git-sync",
 				builder = function()
-					return { cmd = "git-sync", cwd = opts.dir }
+					return { cmd = "git-sync", cwd = opts.cwd }
 				end,
 			},
 		}
