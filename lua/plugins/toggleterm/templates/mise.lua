@@ -17,7 +17,7 @@ local function get_mise_file(opts)
 end
 
 return {
-	generator = function(opts)
+	generator = function(opts, callback)
 		if vim.fn.executable("mise") == 0 then
 			return 'Command "mise" not found'
 		end
@@ -27,23 +27,28 @@ return {
 		end
 
 		local cwd = vim.fs.dirname(mise_file)
-		local out = vim.system({ "mise", "tasks", "--json" }, { cwd = cwd, text = true }):wait()
-		local ok, data = pcall(vim.json.decode, out.stdout or "", { luanil = { object = true } })
-		if not ok then
-			return data
-		end
+		vim.system(
+			{ "mise", "tasks", "--json" },
+			{ cwd = cwd, text = true },
+			vim.schedule_wrap(function(out)
+				local ok, data = pcall(vim.json.decode, out.stdout or "", { luanil = { object = true } })
+				if not ok then
+					return callback(data)
+				end
 
-		local definitions = {}
-		for _, value in pairs(data) do
-			local name = value.name
-			table.insert(definitions, {
-				name = string.format("mise %s", name),
-				desc = value.description ~= "" and value.description or nil,
-				builder = function()
-					return { cmd = { "mise", "run", name }, cwd = cwd }
-				end,
-			})
-		end
-		return definitions
+				local definitions = {}
+				for _, value in pairs(data) do
+					local name = value.name
+					table.insert(definitions, {
+						name = string.format("mise %s", name),
+						desc = value.description ~= "" and value.description or nil,
+						builder = function()
+							return { cmd = { "mise", "run", name }, cwd = cwd }
+						end,
+					})
+				end
+				callback(definitions)
+			end)
+		)
 	end,
 }

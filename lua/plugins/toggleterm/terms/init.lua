@@ -293,9 +293,9 @@ local function without_query_options(query)
 	return item
 end
 
-local function get_query_commands(query, filter)
+local function get_query_commands(query, filter, callback)
 	local cwd = type(query.cwd) == "string" and query.cwd or nil
-	return get_commands(filter, cwd)
+	get_commands(filter, cwd, callback)
 end
 
 local function with_query(query, cb)
@@ -320,32 +320,36 @@ local function with_query(query, cb)
 				end
 			end)
 		end
-		items = utils.all_of(get_query_commands(query, filter))
-		table.sort(items, lt_item)
-		return vim.ui.select(items, {
-			prompt = query.prompt,
-			format_item = format_item(query.cwd == vim.env.HOME),
-		}, function(item)
-			if item then
-				make_item(item, function(instance)
-					cb(instance, true)
-				end, query.instance_count)
-			end
+		return get_query_commands(query, filter, function(commands)
+			items = utils.all_of(commands)
+			table.sort(items, lt_item)
+			vim.ui.select(items, {
+				prompt = query.prompt,
+				format_item = format_item(query.cwd == vim.env.HOME),
+			}, function(item)
+				if item then
+					make_item(item, function(instance)
+						cb(instance, true)
+					end, query.instance_count)
+				end
+			end)
 		end)
 	end
 	local item = history.find(filter)
 	if item then
 		return cb(item)
 	end
-	item = utils.max_of(get_query_commands(query, filter), gt_item)
-	local function created(instance)
-		cb(instance, true)
-	end
-	if item then
-		make_item(item, created, query.instance_count)
-	else
-		make_item(without_query_options(query), created, query.instance_count)
-	end
+	get_query_commands(query, filter, function(commands)
+		item = utils.max_of(commands, gt_item)
+		local function created(instance)
+			cb(instance, true)
+		end
+		if item then
+			make_item(item, created, query.instance_count)
+		else
+			make_item(without_query_options(query), created, query.instance_count)
+		end
+	end)
 end
 
 local local_format_item = format_item(false)
@@ -363,32 +367,33 @@ function M.run_or_raise(query)
 	if selected and selected.artifact then
 		return selected.term:focus()
 	end
-	local items = get_query_commands(query, filter)
-	local choices = history.filter(filter)
-	local instance_count = available_instance(query.instance_count)
-	for _, item in pairs(items) do
-		item.instance_count = instance_count
-		local res = history.find(function(i)
-			return i.instance_count == item.instance_count and i.key == item.key
+	get_query_commands(query, filter, function(items)
+		local choices = history.filter(filter)
+		local instance_count = available_instance(query.instance_count)
+		for _, item in pairs(items) do
+			item.instance_count = instance_count
+			local res = history.find(function(i)
+				return i.instance_count == item.instance_count and i.key == item.key
+			end)
+			if not res then
+				table.insert(choices, item)
+			end
+		end
+		table.sort(choices, lt_item)
+		vim.ui.select(choices, {
+			prompt = "Select Command: ",
+			format_item = local_format_item,
+		}, function(item)
+			if not item then
+				return
+			end
+			if item.term then
+				return item.term:focus()
+			end
+			make_item(item, function(instance)
+				instance.term:focus()
+			end, query.instance_count)
 		end)
-		if not res then
-			table.insert(choices, item)
-		end
-	end
-	table.sort(choices, lt_item)
-	vim.ui.select(choices, {
-		prompt = "Select Command: ",
-		format_item = local_format_item,
-	}, function(item)
-		if not item then
-			return
-		end
-		if item.term then
-			return item.term:focus()
-		end
-		make_item(item, function(instance)
-			instance.term:focus()
-		end, query.instance_count)
 	end)
 end
 

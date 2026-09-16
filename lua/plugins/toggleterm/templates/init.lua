@@ -13,17 +13,36 @@ local function normalize_task(definition)
 	return task
 end
 
-function M.add_commands(commands, module_names, opts)
-	for _, module_name in ipairs(module_names) do
-		local provider = require("plugins.toggleterm.templates." .. module_name)
-		assert(type(provider.generator) == "function", "Template provider must define generator")
-		local definitions = provider.generator(opts)
+function M.add_commands(commands, module_names, opts, callback)
+	local pending = #module_names
+	if pending == 0 then
+		return callback(commands)
+	end
+	local function complete(definitions)
 		if type(definitions) == "table" then
 			for _, definition in ipairs(definitions) do
 				assert(type(definition.name) == "string", "Template definition must have a name")
 				assert(type(definition.builder) == "function", "Template definition must have a builder")
 				commands[definition.name] = normalize_task(definition)
 			end
+		end
+		pending = pending - 1
+		if pending == 0 then
+			callback(commands)
+		end
+	end
+	for _, module_name in ipairs(module_names) do
+		local provider = require("plugins.toggleterm.templates." .. module_name)
+		assert(type(provider.generator) == "function", "Template provider must define generator")
+		local called = false
+		local function done(definitions)
+			assert(not called, "Template generator completed twice")
+			called = true
+			complete(definitions)
+		end
+		local definitions = provider.generator(opts, done)
+		if definitions ~= nil then
+			done(definitions)
 		end
 	end
 end
