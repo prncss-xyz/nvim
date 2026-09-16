@@ -92,6 +92,7 @@ Output ONLY the branch name, nothing else.
 		"npm",
 	},
 	prompts = {
+		["artifacts"] = "create all artifacts inside {artifacts}/",
 		["nvim message"] = "{nvim_messages}",
 		["do"] = "do this: {position}",
 		["explain"] = "explain this: {position}",

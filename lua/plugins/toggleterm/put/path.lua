@@ -1,5 +1,17 @@
 local M = {}
 
+---@param path string
+---@return string
+function M.home_relative(path)
+	local home = vim.fs.normalize(vim.env.HOME)
+	path = vim.fs.normalize(path)
+	local relative = vim.fs.relpath(home, path)
+	if relative then
+		return relative == "." and "~" or "~/" .. relative
+	end
+	return path
+end
+
 ---@param filename string
 ---@return string
 function M.display(filename)
@@ -8,12 +20,7 @@ function M.display(filename)
 		return vim.fn.fnamemodify(absolute, ":.")
 	end
 
-	local relative = vim.fs.relpath(vim.env.HOME, absolute)
-	if relative then
-		return relative == "." and "~" or "~/" .. relative
-	end
-
-	return absolute
+	return M.home_relative(absolute)
 end
 
 return M
