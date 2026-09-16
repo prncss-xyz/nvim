@@ -24,7 +24,7 @@ T["derives task status in precedence order"] = function()
 			{ name = "ready", files = { "design.md" } },
 			{ name = "done" },
 		}
-		result = require("plugins.toggleterm.artifact_tasks").scan(root, statuses)
+		result = require("plugins.toggleterm.artifact_tasks").scan(root, statuses, "draft")
 	]])
 
 	local result = child.lua_get("result")
@@ -32,6 +32,39 @@ T["derives task status in precedence order"] = function()
 	assert.same("done", result[1].status)
 	assert.same("nvim", result[1].project)
 	assert.same("feature", result[1].branch)
+end
+
+T["uses the default status and warns about unknown explicit statuses"] = function()
+	child.lua([[
+		local root = vim.fn.tempname()
+		local task = vim.fs.joinpath(root, "nvim", "feature")
+		vim.fn.mkdir(task, "p")
+		local task_file = vim.fs.joinpath(task, "task.md")
+		vim.fn.writefile({ "---", "status: verify", "---" }, task_file)
+		vim.fn.writefile({ "ready" }, vim.fs.joinpath(task, "design.md"))
+		local notification
+		vim.notify = function(message, level)
+			notification = { message = message, level = level }
+		end
+		local statuses = {
+			{ name = "ready", files = { "design.md" } },
+			{ name = "draft" },
+		}
+		local tasks = require("plugins.toggleterm.artifact_tasks").scan(root, statuses, "draft")
+		result = {
+			status = tasks[1].status,
+			notification = notification,
+			task_file = task_file,
+		}
+	]])
+
+	local result = child.lua_get("result")
+	assert.same("draft", result.status)
+	assert.same(vim.log.levels.WARN, result.notification.level)
+	assert.same(
+		string.format('Unknown artifact task status "verify" in %s; using "draft"', result.task_file),
+		result.notification.message
+	)
 end
 
 T["renders status project branch and opens the latest matching artifact"] = function()
@@ -56,6 +89,7 @@ T["renders status project branch and opens the latest matching artifact"] = func
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
 		package.loaded["plugins.toggleterm.config"] = {
 			panel = { width = 24 },
+			default_status = "draft",
 			status = { { name = "draft" } },
 		}
 		require("plugins.toggleterm.task_panel").toggle()
@@ -96,13 +130,14 @@ T["supports flat branch.task.md tasks with a file icon"] = function()
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
 		package.loaded["plugins.toggleterm.config"] = {
 			panel = { width = 24 },
+			default_status = "draft",
 			status = { { name = "draft" }, { name = "done" } },
 			create = function(path)
 				created = path
 				vim.cmd.edit(path)
 			end,
 		}
-		local tasks = require("plugins.toggleterm.artifact_tasks").scan(root, package.loaded["plugins.toggleterm.config"].status)
+		local tasks = require("plugins.toggleterm.artifact_tasks").scan(root, package.loaded["plugins.toggleterm.config"].status, "draft")
 		require("plugins.toggleterm.task_panel").toggle()
 		local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
 		vim.api.nvim_win_set_cursor(0, { 4, 0 })
@@ -139,6 +174,7 @@ T["recomputes after debounced filesystem changes"] = function()
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
 		package.loaded["plugins.toggleterm.config"] = {
 			panel = { width = 24 },
+			default_status = "draft",
 			status = { { name = "draft" }, { name = "done" } },
 		}
 		require("plugins.toggleterm.task_panel").toggle()
@@ -170,6 +206,7 @@ T["highlights only directories that immediately contain task.md"] = function()
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
 		package.loaded["plugins.toggleterm.config"] = {
 			panel = { width = 24 },
+			default_status = "draft",
 			status = { { name = "draft" } },
 		}
 		require("plugins.toggleterm.task_panel").toggle()
@@ -215,6 +252,7 @@ T["sets and raises the displayed root path"] = function()
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
 		package.loaded["plugins.toggleterm.config"] = {
 			panel = { width = 24 },
+			default_status = "draft",
 			status = { { name = "draft" }, { name = "ready", files = { "design.md" } } },
 		}
 		require("plugins.toggleterm.task_panel").toggle()
@@ -253,6 +291,7 @@ T["opens an unloaded artifact instead of creating index.md"] = function()
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
 		package.loaded["plugins.toggleterm.config"] = {
 			panel = { width = 24 },
+			default_status = "draft",
 			status = { { name = "draft" } },
 			create = function(path)
 				created = path
@@ -288,6 +327,7 @@ T["opens task.md for a task with no other artifacts"] = function()
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
 		package.loaded["plugins.toggleterm.config"] = {
 			panel = { width = 24 },
+			default_status = "draft",
 			status = { { name = "draft" } },
 			create = function(path)
 				created = path
@@ -332,6 +372,7 @@ T["prompts before deleting a task and deletes its buffers through config"] = fun
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
 		package.loaded["plugins.toggleterm.config"] = {
 			panel = { width = 24 },
+			default_status = "draft",
 			status = { { name = "draft" } },
 			bdelete = function(bufnr)
 				table.insert(deleted_buffers, vim.api.nvim_buf_get_name(bufnr))

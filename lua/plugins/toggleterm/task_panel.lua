@@ -110,8 +110,11 @@ end
 
 local function render()
 	local config = require("plugins.toggleterm.config")
-	state.tasks =
-		require("plugins.toggleterm.artifact_tasks").scan(require("my.parameters").dirs.artifacts, config.status)
+	state.tasks = require("plugins.toggleterm.artifact_tasks").scan(
+		require("my.parameters").dirs.artifacts,
+		config.status,
+		config.default_status
+	)
 	local relative_root = assert(vim.fs.relpath(state.artifacts, state.root))
 	local root_parts = relative_root == "." and {} or vim.split(relative_root, "/", { plain = true })
 	state.rows = create_rows(state.tasks, config.status, root_parts)

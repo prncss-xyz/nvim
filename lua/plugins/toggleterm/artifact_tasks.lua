@@ -10,12 +10,13 @@ local function files_in(dir)
 	return files
 end
 
-function M.scan(root, statuses)
+function M.scan(root, statuses, default_status)
 	local tasks = {}
 	local status_names = {}
 	for index, status in ipairs(statuses) do
 		status_names[status.name] = index
 	end
+	assert(status_names[default_status], "Unknown default artifact task status: " .. tostring(default_status))
 
 	local function visit(dir, parts)
 		local entries = {}
@@ -30,7 +31,7 @@ function M.scan(root, statuses)
 
 		local files = files_in(dir)
 		local function add_task(task_file, task_parts, task_files, flat)
-			local status = statuses[1].name
+			local status = default_status
 			for _, candidate in ipairs(statuses) do
 				for _, filename in ipairs(candidate.files or {}) do
 					if task_files[vim.fs.joinpath(dir, filename)] then
@@ -40,8 +41,20 @@ function M.scan(root, statuses)
 			end
 			local explicit = require("plugins.toggleterm.yaml").read_file(task_file).status
 			if explicit ~= nil then
-				assert(status_names[explicit], "Unknown artifact task status: " .. tostring(explicit))
-				status = explicit
+				if status_names[explicit] then
+					status = explicit
+				else
+					status = default_status
+					vim.notify(
+						string.format(
+							"Unknown artifact task status %q in %s; using %q",
+							explicit,
+							task_file,
+							default_status
+						),
+						vim.log.levels.WARN
+					)
+				end
 			end
 			table.insert(tasks, {
 				status = status,
