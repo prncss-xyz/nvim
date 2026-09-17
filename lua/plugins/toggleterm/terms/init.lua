@@ -502,10 +502,12 @@ function M.put(query, arg, opts)
 	invocation, arg = prepare_put(arg)
 	if opts and opts.new then
 		query = normalize_query(query)
-		local item = utils.max_of(get_query_commands(query, get_filter(query)), gt_item) or without_query_options(query)
-		return make_item(item, function(instance)
-			put(instance, invocation, arg)
-		end, query.instance_count)
+		return get_query_commands(query, get_filter(query), function(commands)
+			local item = utils.max_of(commands, gt_item) or without_query_options(query)
+			make_item(item, function(instance)
+				put(instance, invocation, arg)
+			end, query.instance_count)
+		end)
 	end
 	with_query(query, function(instance)
 		put(instance, invocation, arg)
@@ -558,10 +560,12 @@ function M.start(query)
 		vim.notify(string.format("Terminal instance %d already exists", query.instance_count), vim.log.levels.ERROR)
 		return
 	end
-	local item = utils.max_of(get_query_commands(query, get_filter(query)), gt_item) or without_query_options(query)
-	make_item(item, function(instance)
-		instance.term:focus()
-	end, query.instance_count)
+	get_query_commands(query, get_filter(query), function(commands)
+		local item = utils.max_of(commands, gt_item) or without_query_options(query)
+		make_item(item, function(instance)
+			instance.term:focus()
+		end, query.instance_count)
+	end)
 end
 
 function M.restart(query)

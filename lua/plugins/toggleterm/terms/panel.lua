@@ -200,7 +200,14 @@ local function create_rows(items, format, git_statuses, width)
 		end
 		common = common.children[names[1]]
 	end
-	if common ~= root then
+	local only_directory = common ~= root and #common.items == #items and vim.tbl_isempty(common.children)
+	local home = vim.env.HOME and vim.fs.normalize(vim.env.HOME) or nil
+	if only_directory and common.cwd ~= home and common.cwd ~= "/" then
+		local parent = vim.fs.dirname(common.cwd)
+		append_directory({ cwd = parent }, 0, display_path(parent))
+		append_directory(common, 1, common.name)
+		append_items(common, 1)
+	elseif common ~= root then
 		append_directory(common, 0, display_path(common.cwd))
 		append(common, 1)
 		append_items(common, 0)

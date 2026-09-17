@@ -79,6 +79,7 @@ Output ONLY the branch name, nothing else.
 		{ name = "active" },
 		{ name = "blocked" },
 		{ name = "review" },
+		{ name = "merging" },
 		{ name = "done" },
 		{ name = "aborted" },
 	},
