@@ -33,6 +33,10 @@ end
 
 function M.prompt(new_agent)
 	local input = input_for_current_mode()
+	local query = {
+		tag = "agent",
+		instance_count = vim.v.count > 0 and vim.v.count or nil,
+	}
 	local choices = vim.tbl_keys(config.prompts)
 	vim.ui.select(choices, {
 		prompt = "Select prompt: ",
@@ -46,9 +50,9 @@ function M.prompt(new_agent)
 		end
 		vim.schedule(function()
 			if type(contents) == "string" then
-				return require("plugins.toggleterm.terms").put({ tag = "agent" }, contents, { new = new_agent })
+				return require("plugins.toggleterm.terms").put(query, contents, { new = new_agent })
 			end
-			contents(input, choice, new_agent)
+			contents(input, choice, new_agent, query)
 		end)
 	end)
 end

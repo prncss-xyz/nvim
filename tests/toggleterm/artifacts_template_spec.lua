@@ -75,6 +75,68 @@ T["creates tasks for sources without targets"] = function()
 	assert.same(child.lua_get("expected"), child.lua_get("result"))
 end
 
+T["creates tasks for executable artifact scripts"] = function()
+	child.lua([[
+		local root = vim.fn.tempname()
+		local artifacts = vim.fs.joinpath(root, "artifacts")
+		local projects = vim.fs.joinpath(root, "projects")
+		local project = vim.fs.joinpath(projects, "notes", "main")
+		local script_dir = vim.fs.joinpath(artifacts, "nvim", "neomux", "task")
+		vim.fn.mkdir(project, "p")
+		vim.fn.mkdir(script_dir, "p")
+		local task = vim.fs.joinpath(script_dir, "task.md")
+		local script = vim.fs.joinpath(script_dir, "review")
+		local regular = vim.fs.joinpath(script_dir, "notes")
+		vim.fn.writefile({ "task" }, task)
+		vim.fn.writefile({ "#!/bin/sh", "echo review" }, script)
+		vim.fn.writefile({ "notes" }, regular)
+		vim.uv.fs_chmod(script, 493)
+		package.loaded["my.parameters"] = {
+			dirs = { artifacts = artifacts, projects = projects },
+			default_branches = { "main", "master" },
+		}
+		package.loaded["plugins.toggleterm.terms.artifact_cwd"] = nil
+		package.loaded["plugins.toggleterm.templates.artifacts"] = nil
+		local definitions, artifact_definitions
+		local template = require("plugins.toggleterm.templates.artifacts")
+		template.generator({
+			dir = project,
+			file = task,
+			tasks = {},
+		}, function(value) definitions = value end)
+		template.generator({
+			dir = script_dir,
+			file = "",
+			tasks = {},
+		}, function(value) artifact_definitions = value end)
+		vim.wait(1000, function() return definitions ~= nil and artifact_definitions ~= nil end)
+		local built = definitions[1].builder()
+		local artifact_built = artifact_definitions[1].builder()
+		result = {
+			count = #definitions,
+			name = definitions[1].name,
+			cmd = built.cmd,
+			cwd = built.cwd,
+			on_exit = built.on_exit,
+			artifact_count = #artifact_definitions,
+			artifact_name = artifact_definitions[1].name,
+			artifact_cwd = artifact_built.cwd,
+		}
+		expected = {
+			count = 1,
+			name = "artifact review",
+			cmd = { script },
+			cwd = project,
+			on_exit = "keep",
+			artifact_count = 1,
+			artifact_name = "artifact review",
+			artifact_cwd = script_dir,
+		}
+	]])
+
+	assert.same(child.lua_get("expected"), child.lua_get("result"))
+end
+
 T["supports flat sources without a target"] = function()
 	child.lua([[
 		local root = vim.fn.tempname()

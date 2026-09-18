@@ -60,24 +60,8 @@ local function branch_name(input, callback, root)
 	end)
 end
 
-function M.create_artifact(input, filename, root, directory)
+function M.select_artifact_directory(root, callback)
 	local artifacts = require("my.parameters").dirs.artifacts
-
-	local function create(target, project_root)
-		vim.fn.mkdir(target, "p")
-		branch_name(input, function(branch)
-			local path = vim.fs.joinpath(target, branch .. "." .. filename)
-			vim.fn.writefile(vim.split(input, "\n", { plain = true }), path)
-			last_created_artifact = path
-			vim.notify("Created " .. assert(vim.fs.relpath(artifacts, path)), vim.log.levels.INFO)
-		end, project_root)
-	end
-
-	if directory then
-		create(directory, root or assert(artifact_cwd.resolve(directory), "Artifact project not found"))
-		return
-	end
-
 	local directories = {}
 	local seen = {}
 	local function add_directory(path)
@@ -112,8 +96,31 @@ function M.create_artifact(input, filename, root, directory)
 		end,
 	}, function(selected)
 		if selected then
-			create(selected, root)
+			callback(selected)
 		end
+	end)
+end
+
+function M.create_artifact(input, filename, root, directory)
+	local artifacts = require("my.parameters").dirs.artifacts
+
+	local function create(target, project_root)
+		vim.fn.mkdir(target, "p")
+		branch_name(input, function(branch)
+			local path = vim.fs.joinpath(target, branch .. "." .. filename)
+			vim.fn.writefile(vim.split(input, "\n", { plain = true }), path)
+			last_created_artifact = path
+			vim.notify("Created " .. assert(vim.fs.relpath(artifacts, path)), vim.log.levels.INFO)
+		end, project_root)
+	end
+
+	if directory then
+		create(directory, root or assert(artifact_cwd.resolve(directory), "Artifact project not found"))
+		return
+	end
+
+	M.select_artifact_directory(root, function(selected)
+		create(selected, root)
 	end)
 end
 
