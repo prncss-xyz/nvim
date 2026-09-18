@@ -370,6 +370,14 @@ return {
 				mode = { "n", "x" },
 			},
 			{
+				"m" .. reverse("n"),
+				function()
+					require("plugins.toggleterm.harness").focus_last_created_artifact()
+				end,
+				desc = "Focus Last Created Task",
+				mode = { "n", "x" },
+			},
+			{
 				"mn",
 				function()
 					-- TODO: make this more convenient

@@ -1,4 +1,5 @@
 local parameters = require("my.parameters")
+local async = require("plugins.toggleterm.templates.async")
 local dirs = parameters.dirs
 
 local M = {}
@@ -134,37 +135,76 @@ function M.for_file(opts)
 	return definitions
 end
 
-function M.generator(opts)
+function M.generator(opts, callback)
 	local definitions = {}
-	local cwd = opts.cwd or vim.fn.getcwd()
+	local cwd = opts.cwd or opts.dir or vim.fn.getcwd()
 	local project = current_project(cwd)
 	if project == nil then
-		return definitions
+		return vim.schedule(function()
+			callback(definitions)
+		end)
 	end
 	local artifact_dir = vim.fs.joinpath(dirs.artifacts, project)
-	if vim.fn.isdirectory(artifact_dir) == 0 then
-		return definitions
-	end
 
-	local checkout_branch = current_branch(cwd)
-	for _, task in ipairs(opts.tasks or {}) do
-		validate_task(task)
-		local sources = vim.fs.find(function(name)
-			return name == task.source or (task.target == nil and vim.endswith(name, "." .. task.source))
-		end, {
-			path = artifact_dir,
-			type = "file",
-			limit = math.huge,
-		})
-		table.sort(sources)
-
-		for _, source in ipairs(sources) do
-			if is_available(task, source, checkout_branch) then
-				table.insert(definitions, definition(task, source, cwd))
-			end
+	async.stat(artifact_dir, function(stat)
+		if not stat or stat.type ~= "directory" then
+			return callback(definitions)
 		end
-	end
-	return definitions
+		vim.system(
+			{ "git", "-C", cwd, "branch", "--show-current" },
+			{ text = true },
+			vim.schedule_wrap(function(result)
+				local checkout_branch = result.code == 0 and vim.trim(result.stdout or "") or nil
+				if checkout_branch == "" then
+					checkout_branch = nil
+				end
+				local tasks = opts.tasks or {}
+				for _, task in ipairs(tasks) do
+					validate_task(task)
+				end
+				async.walk_files(artifact_dir, math.huge, {}, function(files)
+					local candidates = {}
+					for _, task in ipairs(tasks) do
+						for _, source in ipairs(files) do
+							if task_matches_source(task, source) then
+								table.insert(candidates, { task = task, source = source })
+							end
+						end
+					end
+					local pending = #candidates
+					if pending == 0 then
+						return callback(definitions)
+					end
+					for _, candidate in ipairs(candidates) do
+						local _, branch = source_details(candidate.source, candidate.task)
+						local branch_matches = is_default_branch(checkout_branch) or branch == checkout_branch
+						local target = candidate.task.target
+								and vim.fs.joinpath(vim.fs.dirname(candidate.source), candidate.task.target)
+							or nil
+						local function complete(available)
+							if branch_matches and available then
+								table.insert(definitions, definition(candidate.task, candidate.source, cwd))
+							end
+							pending = pending - 1
+							if pending == 0 then
+								table.sort(definitions, function(a, b)
+									return a.name < b.name
+								end)
+								callback(definitions)
+							end
+						end
+						if target then
+							async.stat(target, function(target_stat)
+								complete(target_stat == nil)
+							end)
+						else
+							complete(true)
+						end
+					end
+				end)
+			end)
+		)
+	end)
 end
 
 return M

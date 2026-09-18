@@ -96,7 +96,6 @@ local history = create_history("instance_count")
 local instance_owners = {}
 local listeners = {}
 local next_listener_id = 0
-local next_change_id = 0
 
 local function available_instance(requested_instance)
 	if requested_instance then
@@ -159,8 +158,7 @@ subscribe(function(event, item)
 		if event.visible == true or item.term:is_in_view() then
 			item.changed = nil
 		else
-			next_change_id = next_change_id + 1
-			item.changed = next_change_id
+			item.changed = true
 			config.on_status(item)
 		end
 	elseif event.type == "url" and not vim.tbl_contains(item.term.url, event.value) then
@@ -430,19 +428,15 @@ function M.toggle_unseen_or_latest(query)
 	local oldest_changed
 	for _, instance in
 		ipairs(history.filter(function(candidate)
-			return filter(candidate) and candidate.changed ~= nil
+			return filter(candidate) and candidate.changed
 		end))
 	do
-		if not oldest_changed or instance.changed < oldest_changed.changed then
+		if not oldest_changed or instance.term.status_changed_at < oldest_changed.term.status_changed_at then
 			oldest_changed = instance
 		end
 	end
 	if oldest_changed then
 		return oldest_changed.term:focus()
-	end
-	local latest = history.find(filter)
-	if latest then
-		return latest.term:toggle()
 	end
 	M.toggle(query)
 end

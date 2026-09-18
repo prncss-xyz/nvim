@@ -19,10 +19,6 @@ end
 
 return {
 	generator = function(opts, callback)
-		if vim.fn.executable("chezmoi") == 0 then
-			return callback(nil)
-		end
-
 		vim.system(
 			{ "chezmoi", "source-path" },
 			{ text = true },

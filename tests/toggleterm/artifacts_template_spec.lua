@@ -35,7 +35,8 @@ T["creates tasks for sources without targets"] = function()
 			default_branches = { "main", "master" },
 		}
 		package.loaded["plugins.toggleterm.templates.artifacts"] = nil
-		local definitions = require("plugins.toggleterm.templates.artifacts").generator({
+		local definitions
+		require("plugins.toggleterm.templates.artifacts").generator({
 			dir = vim.fs.joinpath(projects, "nvim", "main"),
 			tasks = {
 				{
@@ -47,7 +48,8 @@ T["creates tasks for sources without targets"] = function()
 					auto_scroll = false,
 				},
 			},
-		})
+		}, function(value) definitions = value end)
+		vim.wait(1000, function() return definitions ~= nil end)
 		local built = definitions[1].builder()
 		result = {
 			count = #definitions,
@@ -91,15 +93,17 @@ T["supports flat sources without a target"] = function()
 		}
 		package.loaded["plugins.toggleterm.templates.artifacts"] = nil
 		local template = require("plugins.toggleterm.templates.artifacts")
-		local definitions = template.generator({
+		local definitions, invalid
+		template.generator({
 			dir = vim.fs.joinpath(projects, "nvim", "main"),
 			tasks = { { name = "run", source = "task.md", cmd = "pi {source}" } },
-		})
-		local built = definitions[1].builder()
-		local invalid = template.generator({
+		}, function(value) definitions = value end)
+		template.generator({
 			dir = vim.fs.joinpath(projects, "nvim", "main"),
 			tasks = { { name = "bad", source = "task.md", cmd = "pi {target}" } },
-		})
+		}, function(value) invalid = value end)
+		vim.wait(1000, function() return definitions ~= nil and invalid ~= nil end)
+		local built = definitions[1].builder()
 		local ok, err = pcall(invalid[1].builder)
 		result = {
 			count = #definitions,
@@ -135,17 +139,21 @@ T["filters non-default branches and resolves fork cwd"] = function()
 			dirs = { artifacts = artifacts, projects = projects },
 			default_branches = { "main", "master" },
 		}
-		vim.fn.system = function() return "feat-one\n" end
+		vim.system = function(_, _, callback)
+			vim.schedule(function() callback({ code = 0, stdout = "feat-one\n" }) end)
+		end
 		package.loaded["plugins.toggleterm.templates.artifacts"] = nil
 		local template = require("plugins.toggleterm.templates.artifacts")
-		local forked = template.generator({
+		local forked, local_task
+		template.generator({
 			dir = current,
 			tasks = { { name = "forked", source = "task.md", cmd = "run", fork = true } },
-		})
-		local local_task = template.generator({
+		}, function(value) forked = value end)
+		template.generator({
 			dir = current,
 			tasks = { { name = "local", source = "task.md", cmd = "run", fork = false } },
-		})
+		}, function(value) local_task = value end)
+		vim.wait(1000, function() return forked ~= nil and local_task ~= nil end)
 		result = {
 			forked_count = #forked,
 			forked_name = forked[1].name,

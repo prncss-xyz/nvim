@@ -2,6 +2,7 @@ local M = {}
 
 local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
 local config = require("plugins.toggleterm.config")
+local last_created_artifact
 
 local function sanitize_branch(summary)
 	local branch = summary:lower():gsub("[^%w._-]", "-")
@@ -67,6 +68,7 @@ function M.create_artifact(input, filename, root, directory)
 		branch_name(input, function(branch)
 			local path = vim.fs.joinpath(target, branch .. "." .. filename)
 			vim.fn.writefile(vim.split(input, "\n", { plain = true }), path)
+			last_created_artifact = path
 			vim.notify("Created " .. assert(vim.fs.relpath(artifacts, path)), vim.log.levels.INFO)
 		end, project_root)
 	end
@@ -113,6 +115,14 @@ function M.create_artifact(input, filename, root, directory)
 			create(selected, root)
 		end
 	end)
+end
+
+function M.focus_last_created_artifact()
+	if not last_created_artifact then
+		vim.notify("No artifact has been created in this session", vim.log.levels.WARN)
+		return
+	end
+	config.create(vim.fn.fnameescape(last_created_artifact))
 end
 
 function M.artifact_to_worktree(branch, opts)
