@@ -1,6 +1,5 @@
 local artifact_commands = require("plugins.toggleterm.artifact_commands")
 local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
-local async = require("plugins.toggleterm.templates.async")
 
 local function script_definitions(opts, callback)
 	local cwd = opts.cwd or opts.dir or vim.fn.getcwd()
@@ -13,27 +12,20 @@ local function script_definitions(opts, callback)
 	else
 		dir = artifact_cwd.for_checkout(cwd)
 	end
-	async.stat(dir, function(stat)
-		if not stat or stat.type ~= "directory" then
-			return callback({})
-		end
-
-		async.walk_files(dir, math.huge, {}, function(files)
-			local definitions = {}
-			for _, path in ipairs(files) do
-				if vim.fn.executable(path) == 1 then
-					local relative = assert(vim.fs.relpath(dir, path))
-					table.insert(definitions, {
-						name = "artifact " .. relative,
-						builder = function()
-							return { cmd = { path }, cwd = cwd, exit_policy = "keep" }
-						end,
-					})
-				end
-			end
-			callback(definitions)
-		end)
-	end)
+	if not dir then
+		return callback({})
+	end
+	local definitions = {}
+	for _, path in ipairs(require("plugins.toggleterm.artifact_tasks").executables(dir)) do
+		local relative = assert(vim.fs.relpath(dir, path))
+		table.insert(definitions, {
+			name = "artifact " .. relative,
+			builder = function()
+				return { cmd = { path }, cwd = cwd, exit_policy = "keep" }
+			end,
+		})
+	end
+	callback(definitions)
 end
 
 return {

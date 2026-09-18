@@ -20,30 +20,9 @@ local function default_root(artifacts)
 	return vim.fs.joinpath(artifacts, project)
 end
 
-local function stop_watchers(panel)
-	for _, watcher in ipairs(panel.watchers or {}) do
-		watcher:stop()
-		if not watcher:is_closing() then
-			watcher:close()
-		end
-	end
-	panel.watchers = {}
-end
-
-local function stop_refresh_timer(panel)
-	if panel.refresh_timer then
-		panel.refresh_timer:stop()
-		if not panel.refresh_timer:is_closing() then
-			panel.refresh_timer:close()
-		end
-		panel.refresh_timer = nil
-	end
-end
-
 local function close()
-	if state then
-		stop_watchers(state)
-		stop_refresh_timer(state)
+	if state and state.unsubscribe then
+		state.unsubscribe()
 	end
 	if state and vim.api.nvim_win_is_valid(state.win) then
 		vim.api.nvim_win_close(state.win, false)
@@ -110,11 +89,7 @@ end
 
 local function render()
 	local config = require("plugins.toggleterm.config")
-	state.tasks = require("plugins.toggleterm.artifact_tasks").scan(
-		require("my.parameters").dirs.artifacts,
-		config.status,
-		config.default_status
-	)
+	state.tasks = require("plugins.toggleterm.artifact_tasks").get()
 	local relative_root = assert(vim.fs.relpath(state.artifacts, state.root))
 	local root_parts = relative_root == "." and {} or vim.split(relative_root, "/", { plain = true })
 	local statuses = config.status
@@ -146,45 +121,6 @@ local function render()
 				or "NeoTreeDirectoryName",
 		})
 	end
-end
-
-local function start_watchers(panel)
-	stop_watchers(panel)
-	local recursive = vim.fn.has("macunix") == 1 or vim.fn.has("win32") == 1
-
-	local function changed()
-		if state ~= panel or not panel.refresh_timer then
-			return
-		end
-		panel.refresh_timer:stop()
-		panel.refresh_timer:start(100, 0, vim.schedule_wrap(function()
-			if state ~= panel or not vim.api.nvim_win_is_valid(panel.win) then
-				return
-			end
-			render()
-			start_watchers(panel)
-		end))
-	end
-
-	local function watch(dir)
-		local watcher = assert(vim.uv.new_fs_event())
-		local ok = watcher:start(dir, { recursive = recursive }, changed)
-		if not ok then
-			watcher:close()
-			return
-		end
-		table.insert(panel.watchers, watcher)
-
-		if not recursive then
-			for name, kind in vim.fs.dir(dir) do
-				if kind == "directory" and not vim.startswith(name, ".") then
-					watch(vim.fs.joinpath(dir, name))
-				end
-			end
-		end
-	end
-
-	watch(panel.artifacts)
 end
 
 local function selected_task(selected)
@@ -335,12 +271,16 @@ function M.toggle()
 		buf = buf,
 		rows = {},
 		tasks = {},
-		watchers = {},
-		refresh_timer = assert(vim.uv.new_timer()),
 		focus_mode = true,
 		artifacts = artifacts,
 		root = root,
 	}
+	local panel = state
+	state.unsubscribe = require("plugins.toggleterm.artifact_tasks").subscribe(function()
+		if state == panel and vim.api.nvim_win_is_valid(panel.win) then
+			render()
+		end
+	end)
 	vim.bo[buf].buftype = "nofile"
 	vim.bo[buf].bufhidden = "wipe"
 	vim.bo[buf].filetype = "toggleterm-task-panel"
@@ -360,7 +300,6 @@ function M.toggle()
 	vim.keymap.set("n", "x", delete_selected, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "q", close, { buffer = buf, silent = true, nowait = true })
 	render()
-	start_watchers(state)
 end
 
 return M

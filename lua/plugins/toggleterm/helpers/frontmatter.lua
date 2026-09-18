@@ -2,7 +2,9 @@ local M = {}
 
 function M.add_dependency()
 	local artifacts = require("my.parameters").dirs.artifacts
-	local files = vim.fs.find("task.md", { path = artifacts, type = "file", limit = math.huge })
+	local files = vim.tbl_filter(function(path)
+		return vim.fs.basename(path) == "task.md"
+	end, require("plugins.toggleterm.artifact_tasks").files(artifacts))
 	local function dependency_name(path)
 		return assert(vim.fs.relpath(artifacts, path)):gsub("/task%.md$", "")
 	end

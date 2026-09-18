@@ -7,6 +7,15 @@ local ai_insert = require("my.parameters").ai_insert
 return {
 	{
 		"akinsho/toggleterm.nvim",
+		init = function()
+			vim.api.nvim_create_autocmd("User", {
+				pattern = "VeryLazy",
+				once = true,
+				callback = function()
+					require("plugins.toggleterm.artifact_tasks").start()
+				end,
+			})
+		end,
 		dependencies = vim.uv.os_gethostname() == "crotte" and { "https://github.com/gvvaughan/lyaml" } or {},
 		opts = {
 			direction = "float",
