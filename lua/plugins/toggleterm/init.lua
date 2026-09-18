@@ -214,7 +214,7 @@ return {
 						task.key = definition.name
 						task.display_name = definition.name
 						task.tag = definition.name
-						task.on_exit = task.on_exit or "close"
+						task.exit_policy = task.exit_policy or "close"
 						require("plugins.toggleterm.terms").start(task)
 					end)
 				end,

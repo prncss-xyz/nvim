@@ -82,7 +82,7 @@ function Term:new(opts, send, prepare, min_runtime, notify)
 	local instance = setmetatable({
 		send = send,
 		notify = notify,
-		exit_policy = opts.on_exit,
+		exit_policy = opts.exit_policy,
 		cwd = opts.cwd or vim.fn.getcwd(),
 		screen_manifest = opts.screen_manifest,
 		min_runtime = min_runtime or 0,

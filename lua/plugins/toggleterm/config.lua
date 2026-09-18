@@ -75,8 +75,14 @@ Output ONLY the branch name, nothing else.
 		{ name = "draft" },
 		{ name = "maybe" },
 		{ name = "later" },
-		{ name = "ready" },
-		{ name = "active" },
+		{
+			name = "ready",
+			focus = true,
+		},
+		{
+			name = "active",
+			focus = true,
+		},
 		{ name = "blocked" },
 		{ name = "review" },
 		{ name = "merging" },
@@ -124,7 +130,7 @@ Output ONLY the branch name, nothing else.
 		},
 		portless = {
 			cmd = "portless",
-			on_exit = "keep",
+			exit_policy = "keep",
 		},
 		current = function()
 			return { cwd = vim.fn.expand("%:p:h") }
@@ -137,31 +143,31 @@ Output ONLY the branch name, nothing else.
 		},
 		diff = {
 			cmd = require("my.diff").get_cmd(),
-			on_exit = "keep",
+			exit_policy = "keep",
 		},
 		repl = require("plugins.toggleterm.repl").get_REPL,
 		gac = {
 			cmd = "gac",
-			on_exit = "keep",
+			exit_policy = "keep",
 		},
 		gacp = {
 			cmd = "gacp",
-			on_exit = "keep",
+			exit_policy = "keep",
 		},
-		["git push"] = { cmd = "git push", on_exit = "keep" },
-		["git pull"] = { cmd = "git pull", on_exit = "keep" },
-		["git rebase master"] = { cmd = "git rebase master", on_exit = "keep" },
+		["git push"] = { cmd = "git push", exit_policy = "keep" },
+		["git pull"] = { cmd = "git pull", exit_policy = "keep" },
+		["git rebase master"] = { cmd = "git rebase master", exit_policy = "keep" },
 		["commit ongoing work"] = {
 			cmd = 'git add --all; git commit -m "changes from $(uname -n) on $(date)" --no-verify',
-			on_exit = "keep",
+			exit_policy = "keep",
 		},
 		["commit ongoing work and push"] = {
 			cmd = 'git add --all; git commit -m "changes from $(uname -n) on $(date)" --no-verify; git push',
-			on_exit = "keep",
+			exit_policy = "keep",
 		},
 		["git-sync-all"] = personal({
 			cmd = "git-sync-all",
-			on_exit = "keep",
+			exit_policy = "keep",
 		}),
 	},
 	autostart = {},

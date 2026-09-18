@@ -207,7 +207,7 @@ local function create_and_notify(item, cb)
 		cmd = item.cmd,
 		cwd = item.cwd,
 		instance_count = item.instance_count,
-		on_exit = item.on_exit,
+		exit_policy = item.exit_policy,
 		screen_manifest = item.screen_manifest,
 		auto_scroll = item.auto_scroll,
 	}, function(event)

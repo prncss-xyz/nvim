@@ -117,7 +117,15 @@ local function render()
 	)
 	local relative_root = assert(vim.fs.relpath(state.artifacts, state.root))
 	local root_parts = relative_root == "." and {} or vim.split(relative_root, "/", { plain = true })
-	state.rows = create_rows(state.tasks, config.status, root_parts)
+	local statuses = config.status
+	if state.focus_mode and vim.iter(statuses):any(function(status)
+		return status.focus
+	end) then
+		statuses = vim.tbl_filter(function(status)
+			return status.focus
+		end, statuses)
+	end
+	state.rows = create_rows(state.tasks, statuses, root_parts)
 	table.insert(state.rows, 1, { text = relative_root, root = true })
 	if #state.rows == 1 then
 		table.insert(state.rows, { text = "No artifact tasks" })
@@ -266,6 +274,11 @@ local function up_root()
 	render()
 end
 
+local function toggle_focus_mode()
+	state.focus_mode = not state.focus_mode
+	render()
+end
+
 local function delete_task_buffers(task)
 	local config = require("plugins.toggleterm.config")
 	local task_dir = vim.fs.normalize(task.cwd) .. "/"
@@ -324,6 +337,7 @@ function M.toggle()
 		tasks = {},
 		watchers = {},
 		refresh_timer = assert(vim.uv.new_timer()),
+		focus_mode = true,
 		artifacts = artifacts,
 		root = root,
 	}
@@ -339,6 +353,7 @@ function M.toggle()
 	vim.wo[win].winfixwidth = true
 	vim.wo[win].wrap = false
 	vim.keymap.set("n", "c", create_task, { buffer = buf, silent = true, nowait = true })
+	vim.keymap.set("n", "f", toggle_focus_mode, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "r", set_root, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "u", up_root, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "<cr>", open_selected, { buffer = buf, silent = true, nowait = true })

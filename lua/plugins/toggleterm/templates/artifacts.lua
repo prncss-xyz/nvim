@@ -26,7 +26,7 @@ local function script_definitions(opts, callback)
 					table.insert(definitions, {
 						name = "artifact " .. relative,
 						builder = function()
-							return { cmd = { path }, cwd = cwd, on_exit = "keep" }
+							return { cmd = { path }, cwd = cwd, exit_policy = "keep" }
 						end,
 					})
 				end
