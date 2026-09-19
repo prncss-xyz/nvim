@@ -11,7 +11,6 @@ return {
 		projects = dirs.projects,
 		artifacts = dirs.notes .. "/dev/artifacts",
 	},
-	agents = { "p", "claude", "agy" },
 	min_runtime = 10000,
 	browser = (function()
 		local value
@@ -127,7 +126,6 @@ Output ONLY the branch name, nothing else.
 		{ name = "aborted" },
 	},
 	templates = {
-		"agents",
 		"artifacts",
 		"chezmoi",
 		"git_sync",
@@ -155,6 +153,9 @@ Output ONLY the branch name, nothing else.
 		require("neoterm.helpers.inhibit_sleep").set(working)
 	end,
 	commands = {
+		pi = personal(require("neoterm.helpers.agents").agent({ name = "pi" })),
+		agy = personal(require("neoterm.helpers.agents").agent({ name = "agy" })),
+		claude = personal(require("neoterm.helpers.agents").agent({ name = "claude" })),
 		yazi = { cmd = "yazi" },
 		ddgr = {
 			cmd = "ddgr",

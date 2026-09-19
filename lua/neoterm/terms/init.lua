@@ -10,95 +10,6 @@ local get_commands = commands.get_commands
 local format_item = require("neoterm.terms.format_item").format_item
 local create_pseudo_terminal = require("neoterm.terms.pseudo_terminal").create
 
-local screen_manifests = {
-	p = {
-		default_status = "idle",
-		rules = {
-			{
-				id = "working_literal",
-				status = "working",
-				priority = 100,
-				region = "whole_recent",
-				visible_working = true,
-				contains = { "Working..." },
-			},
-			{
-				id = "working_spinner",
-				status = "working",
-				priority = 100,
-				region = "bottom_non_empty_lines(12)",
-				visible_working = true,
-				line_regex = { [[^\s*[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏] Working\s*$]] },
-			},
-			id = "running_status_bar",
-			{
-				id = "working_border",
-				status = "working",
-				priority = 100,
-				region = "bottom_non_empty_lines(12)",
-				visible_working = true,
-				line_regex = { [[^── [⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏] Working ─\+$]] },
-			},
-		},
-	},
-	claude = {
-		default_status = "idle",
-		rules = {
-			{
-				id = "osc_title_working",
-				status = "working",
-				priority = 1100,
-				region = "osc_title",
-				visible_working = true,
-				regex = { "^[⠀-⣿◐-◓] " },
-			},
-			{
-				id = "permission_prompt",
-				status = "blocked",
-				priority = 900,
-				region = "after_last_horizontal_rule",
-				any = {
-					{ contains = { "do you want to proceed?" } },
-					{ contains = { "waiting for permission" } },
-					{ contains = { "tab to amend" } },
-					{ contains = { "esc to cancel", "enter to select" } },
-				},
-			},
-			{
-				id = "working_interrupt_hint",
-				status = "working",
-				priority = 500,
-				region = "bottom_non_empty_lines(5)",
-				any = {
-					{ contains = { "esc to interrupt" } },
-					{ contains = { "ctrl+c to interrupt" } },
-				},
-			},
-			{
-				id = "osc_title_idle",
-				status = "idle",
-				priority = 250,
-				region = "osc_title",
-				visible_idle = true,
-				regex = { "^✳ " },
-			},
-			{
-				id = "osc_progress_idle",
-				status = "idle",
-				priority = 250,
-				region = "osc_progress",
-				regex = { "^4;0" },
-			}, {
-				id = "prompt",
-				status = "idle",
-				priority = 100,
-				region = "prompt_box_body",
-				line_regex = { [[^\s*❯]] },
-			},
-		},
-	},
-}
-
 local history = create_history("instance_count")
 local instance_owners = {}
 local listeners = {}
@@ -253,7 +164,6 @@ local function make_item(item, cb, requested_instance)
 	item.status = "idle"
 	item.changed = nil
 	reserve_instance(item, requested_instance)
-	item.screen_manifest = screen_manifests[item.key]
 	assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
 	item.cwd = type(item.cwd) == "string" and item.cwd or vim.fn.getcwd()
 	local function create()
@@ -287,9 +197,7 @@ local gt_item = utils.compose_gt(
 local function normalize_query(query)
 	query = vim.tbl_extend("keep", query or {}, {})
 	query.instance_count = vim.v.count > 0 and vim.v.count or query.instance_count
-	query.cwd = query.cwd
-		or require("neoterm.terms.artifact_cwd").context_dir()
-		or { vim.fn.getcwd(), vim.env.HOME }
+	query.cwd = query.cwd or require("neoterm.terms.artifact_cwd").context_dir() or { vim.fn.getcwd(), vim.env.HOME }
 	return query
 end
 
