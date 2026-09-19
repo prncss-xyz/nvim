@@ -1,6 +1,7 @@
 local last_value
-local refreshing = false
-local last_refresh = -math.huge
+local last_cwd
+local refreshing_cwd
+local last_refresh = {}
 local throttle_ms = 500
 
 local function cwd_name(cwd)
@@ -24,35 +25,46 @@ local function format_prompt(output)
 	return table.concat(parts, " ")
 end
 
-local function refresh()
+local function refresh(cwd)
 	local now = vim.uv.now()
-	if refreshing or now - last_refresh < throttle_ms then
+	if refreshing_cwd or now - (last_refresh[cwd] or -math.huge) < throttle_ms then
 		return
 	end
 
-	refreshing = true
-	last_refresh = now
-	local cwd = vim.fn.getcwd()
+	refreshing_cwd = cwd
+	last_refresh[cwd] = now
 
-	vim.system({ "starship", "prompt", "--status=0", "--jobs=0" }, { cwd = cwd, text = true }, function(result)
-		local value = result.code == 0 and format_prompt(result.stdout or "") or ""
-		if value == "" then
-			value = cwd_name(cwd)
+	vim.system(
+		{ "starship", "prompt", "--status=0", "--jobs=0" },
+		{ cwd = cwd, text = true, env = { PWD = cwd } },
+		function(result)
+			local value = result.code == 0 and format_prompt(result.stdout or "") or ""
+			if value == "" then
+				value = cwd_name(cwd)
+			end
+
+			vim.schedule(function()
+				refreshing_cwd = nil
+				local current_cwd = vim.fn.getcwd()
+				if current_cwd ~= cwd then
+					refresh(current_cwd)
+					return
+				end
+
+				last_value = value
+				last_cwd = cwd
+				require("lualine").refresh()
+			end)
 		end
-
-		vim.schedule(function()
-			last_value = value
-			refreshing = false
-			require("lualine").refresh()
-		end)
-	end)
+	)
 end
 
 return function()
+	local cwd = vim.fn.getcwd()
 	if vim.fn.executable("starship") ~= 1 then
-		return cwd_name()
+		return cwd_name(cwd)
 	end
 
-	refresh()
-	return last_value
+	refresh(cwd)
+	return last_cwd == cwd and last_value or cwd_name(cwd)
 end

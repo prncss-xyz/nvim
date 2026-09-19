@@ -9,7 +9,7 @@ local is_visible = window.is_visible
 
 local ensure_dir = require("neoterm.terms.ensure_dir").ensure_dir
 -- TODO:
-local project_dir = require("my.rooter").project_dir
+local project_dir = require("neoterm.rooter").project_dir
 
 local function ensure_dir_without_focus(dir)
 	if not vim.uv.fs_stat(dir) then

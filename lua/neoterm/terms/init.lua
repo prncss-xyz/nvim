@@ -474,7 +474,7 @@ end
 local function prepare_put(arg)
 	local invocation
 	if type(arg) == "string" then
-		local put = require("neoterm.put.core")
+		local put = require("neoterm.put.init")
 		invocation = put.capture(arg)
 		arg = put.template(arg)
 	end
@@ -569,19 +569,6 @@ function M.restart(query)
 			instance.term:restart()
 		end
 	end)
-end
-
-local seen = {}
-
-function M.on_dir()
-	local cwd = vim.fn.getcwd()
-	if seen[cwd] then
-		return
-	end
-	seen[cwd] = true
-	for _, v in ipairs(config.autostart) do
-		M.prepare(v)
-	end
 end
 
 return M
