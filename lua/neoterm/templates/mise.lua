@@ -1,4 +1,4 @@
-local async = require("neoterm.templates.async")
+local async = require("neoterm.helpers.templates")
 
 local function is_mise_path(name, kind)
 	name = name:lower()

@@ -1,4 +1,4 @@
-local async = require("neoterm.templates.async")
+local async = require("neoterm.helpers.templates")
 
 local manager_lockfiles = {
 	npm = { "package-lock.json" },

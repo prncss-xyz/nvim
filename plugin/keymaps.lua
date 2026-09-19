@@ -70,8 +70,22 @@ local function toggle_index_file()
 
 	local target
 	local remove_directory = false
+	local create_directory = false
 	local branch, branch_name = name:match("^([^.]+)%.(.+)$")
-	if branch then
+	if extension == ".lua" and name == "init" then
+		for entry in vim.fs.dir(directory) do
+			if entry ~= filename then
+				vim.notify("Directory contains other files: " .. directory, vim.log.levels.WARN)
+				return
+			end
+		end
+
+		target = vim.fs.joinpath(vim.fs.dirname(directory), vim.fs.basename(directory) .. extension)
+		remove_directory = true
+	elseif extension == ".lua" and not branch then
+		target = vim.fs.joinpath(directory, name, "init" .. extension)
+		create_directory = true
+	elseif branch then
 		target = vim.fs.joinpath(directory, branch, branch_name .. extension)
 	else
 		for entry in vim.fs.dir(directory) do
@@ -94,6 +108,13 @@ local function toggle_index_file()
 		return
 	end
 
+	local target_directory = vim.fs.dirname(target)
+	local directory_created = create_directory and not vim.uv.fs_stat(target_directory)
+	if directory_created and vim.fn.mkdir(target_directory, "p") == 0 then
+		vim.notify("Failed to create directory: " .. target_directory, vim.log.levels.ERROR)
+		return
+	end
+
 	Snacks.rename.rename_file({
 		from = source,
 		to = target,
@@ -103,6 +124,8 @@ local function toggle_index_file()
 				if not removed then
 					vim.notify("Failed to remove directory: " .. error, vim.log.levels.ERROR)
 				end
+			elseif directory_created and not ok then
+				vim.uv.fs_rmdir(target_directory)
 			end
 		end,
 	})
