@@ -285,7 +285,7 @@ function M.start()
 		return
 	end
 	started = true
-	root = require("my.parameters").dirs.artifacts
+	root = assert(require("neoterm.config").dirs.artifacts, "Artifact directory is not configured")
 	refresh_timer = assert(vim.uv.new_timer())
 	request_rebuild()
 end

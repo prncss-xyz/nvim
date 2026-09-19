@@ -11,8 +11,8 @@ local function default_root(artifacts)
 		return artifacts
 	end
 
-	local parameters = require("my.parameters")
-	local relative = vim.fs.relpath(parameters.dirs.projects, vim.fs.abspath(vim.fn.getcwd()))
+	local projects = require("neoterm.config").dirs.projects
+	local relative = vim.fs.relpath(projects, vim.fs.abspath(vim.fn.getcwd()))
 	if relative == nil or relative == "." then
 		return artifacts
 	end
@@ -259,8 +259,9 @@ function M.toggle()
 		close()
 		return
 	end
-	local width = require("neoterm.config").panel.width
-	local artifacts = require("my.parameters").dirs.artifacts
+	local config = require("neoterm.config")
+	local width = config.panel.width
+	local artifacts = config.dirs.artifacts
 	local root = default_root(artifacts)
 	vim.cmd(string.format("topleft %dvsplit", width))
 	local win = vim.api.nvim_get_current_win()

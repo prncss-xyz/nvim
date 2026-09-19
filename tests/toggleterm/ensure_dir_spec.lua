@@ -24,7 +24,7 @@ T["focuses the first window with a buffer inside the requested directory"] = fun
 		package.loaded["my.windows"] = {
 			get_last_file_win = function() error("should not select a fallback window") end,
 		}
-		dofile(cwd .. "/lua/plugins/toggleterm/terms/ensure_dir.lua").ensure_dir(cwd)
+		dofile(cwd .. "/lua/neoterm/terms/ensure_dir.lua").ensure_dir(cwd)
 		result = vim.api.nvim_get_current_buf() == inside
 	]])
 
@@ -46,7 +46,7 @@ T["focuses a hidden buffer inside a descendant directory"] = function()
 		package.loaded["my.windows"] = {
 			get_last_file_win = function() return target_win end,
 		}
-		dofile(cwd .. "/lua/plugins/toggleterm/terms/ensure_dir.lua").ensure_dir(cwd)
+		dofile(cwd .. "/lua/neoterm/terms/ensure_dir.lua").ensure_dir(cwd)
 		result = {
 			focused = vim.api.nvim_get_current_win() == target_win,
 			bufnr = vim.api.nvim_win_get_buf(target_win),
@@ -76,7 +76,7 @@ T["opens the first oldfile inside the requested directory before using git"] = f
 		package.loaded["my.windows"] = {
 			get_last_file_win = function() return vim.api.nvim_get_current_win() end,
 		}
-		dofile(cwd .. "/lua/plugins/toggleterm/terms/ensure_dir.lua").ensure_dir(dir)
+		dofile(cwd .. "/lua/neoterm/terms/ensure_dir.lua").ensure_dir(dir)
 		result = { expected = oldfile, actual = created or false }
 		vim.fn.delete(dir, "rf")
 	]])
@@ -100,7 +100,7 @@ T["opens the selected file in the target window"] = function()
 		package.loaded["my.windows"] = {
 			get_last_file_win = function() return vim.api.nvim_get_current_win() end,
 		}
-		dofile(cwd .. "/lua/plugins/toggleterm/terms/ensure_dir.lua").ensure_dir(cwd)
+		dofile(cwd .. "/lua/neoterm/terms/ensure_dir.lua").ensure_dir(cwd)
 		result = { selected = selected, created = created }
 	]])
 
@@ -122,7 +122,7 @@ T["does nothing when the requested path is not a git repository"] = function()
 		package.loaded["my.windows"] = {
 			get_last_file_win = function() return vim.api.nvim_get_current_win() end,
 		}
-		dofile(cwd .. "/lua/plugins/toggleterm/terms/ensure_dir.lua").ensure_dir(dir)
+		dofile(cwd .. "/lua/neoterm/terms/ensure_dir.lua").ensure_dir(dir)
 		vim.fn.delete(dir, "rf")
 		result = created ~= nil
 	]])

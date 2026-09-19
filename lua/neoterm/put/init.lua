@@ -1,9 +1,9 @@
 local M = {}
-local path_utils = require("plugins.toggleterm.put.path")
+local path_utils = require("neoterm.put.path")
 
 local vars = {
 	artifacts = function(ctx)
-		local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
+		local artifact_cwd = require("neoterm.terms.artifact_cwd")
 		local path = vim.fs.abspath(vim.fn.expand(ctx.path))
 		local project_dir = artifact_cwd.resolve(path) or vim.fs.root(path, ".git")
 		return path_utils.home_relative(artifact_cwd.for_checkout(assert(project_dir, "Artifact project not found")))
@@ -14,7 +14,9 @@ local vars = {
 	directory = function(ctx)
 		return vim.fn.fnamemodify(ctx.path, ":h")
 	end,
-	extension = function(ctx) return vim.fn.fnamemodify(ctx.path, ":e") end,
+	extension = function(ctx)
+		return vim.fn.fnamemodify(ctx.path, ":e")
+	end,
 	filename = function(ctx)
 		return vim.fn.fnamemodify(ctx.path, ":t")
 	end,

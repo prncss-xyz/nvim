@@ -1,4 +1,4 @@
-local async = require("plugins.toggleterm.templates.async")
+local async = require("neoterm.templates.async")
 
 return {
 	generator = function(opts, callback)
