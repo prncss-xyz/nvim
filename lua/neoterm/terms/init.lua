@@ -30,14 +30,7 @@ local screen_manifests = {
 				visible_working = true,
 				line_regex = { [[^\s*[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏] Working\s*$]] },
 			},
-			{
-				id = "running_status_bar",
-				status = "working",
-				priority = 100,
-				region = "bottom_non_empty_lines(5)",
-				visible_working = true,
-				line_suffix = { "· running" },
-			},
+			id = "running_status_bar",
 			{
 				id = "working_border",
 				status = "working",
