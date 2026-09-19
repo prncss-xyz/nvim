@@ -36,7 +36,7 @@ end
 local function resolve_cmd(cmd, source, target)
 	local function resolve(value, resolved_source, resolved_target)
 		if target == nil then
-			assert(not value:find("{target}", 1, true), "Task command references {target} without defining target")
+			assert(not value:find("{target}", 1, true), "Step command references {target} without defining target")
 			return (value:gsub("{source}", resolved_source))
 		end
 		return (value:gsub("{source}", resolved_source):gsub("{target}", resolved_target))
@@ -50,66 +50,66 @@ local function resolve_cmd(cmd, source, target)
 	return resolve(cmd, quoted_path(source), target and quoted_path(target) or nil)
 end
 
-local function build_task(task, source, target, project, branch, current_cwd)
-	local cwd = task.fork == true and vim.fs.joinpath(dirs.projects, project, branch) or current_cwd
-	local result = vim.deepcopy(task)
+local function build_step(step, source, target, project, branch, current_cwd)
+	local cwd = step.fork == true and vim.fs.joinpath(dirs.projects, project, branch) or current_cwd
+	local result = vim.deepcopy(step)
 	result.name = nil
 	result.source = nil
 	result.target = nil
-	result.cmd = resolve_cmd(task.cmd, vim.fs.abspath(source), target and vim.fs.abspath(target) or nil)
+	result.cmd = resolve_cmd(step.cmd, vim.fs.abspath(source), target and vim.fs.abspath(target) or nil)
 	result.cwd = cwd
 	return result
 end
 
-local function validate_task(task)
-	assert(type(task.name) == "string", "Task name must be a string")
-	assert(type(task.source) == "string", string.format("Task %s source must be a string", task.name))
+local function validate_step(step)
+	assert(type(step.name) == "string", "Step name must be a string")
+	assert(type(step.source) == "string", string.format("Step %s source must be a string", step.name))
 	assert(
-		task.target == nil or type(task.target) == "string",
-		string.format("Task %s target must be a string", task.name)
+		step.target == nil or type(step.target) == "string",
+		string.format("Step %s target must be a string", step.name)
 	)
 	assert(
-		type(task.cmd) == "string" or vim.islist(task.cmd),
-		string.format("Task %s cmd must be a string or list", task.name)
+		type(step.cmd) == "string" or vim.islist(step.cmd),
+		string.format("Step %s cmd must be a string or list", step.name)
 	)
 end
 
-local function source_details(source, task)
+local function source_details(source, step)
 	local relative = assert(vim.fs.relpath(dirs.artifacts, source))
 	local parts = vim.split(relative, "/", { plain = true, trimempty = true })
 	local project, branch = parts[1], parts[2]
-	assert(project and branch, "Artifact task must be inside a project branch")
+	assert(project and branch, "Artifact step must be inside a project branch")
 	if #parts == 2 then
-		branch = branch:match("^(.*)%." .. vim.pesc(task.source) .. "$")
-			or (branch == task.source and (config.default_branches)[1])
-		assert(branch, "Project-level artifact must be a task source or encode its branch")
+		branch = branch:match("^(.*)%." .. vim.pesc(step.source) .. "$")
+			or (branch == step.source and (config.default_branches)[1])
+		assert(branch, "Project-level artifact must be a step source or encode its branch")
 	end
 
 	local filename = vim.fs.basename(source)
-	local identifier = filename == task.source and vim.fs.basename(vim.fs.dirname(source))
-		or assert(filename:match("^(.*)%." .. vim.pesc(task.source) .. "$"))
+	local identifier = filename == step.source and vim.fs.basename(vim.fs.dirname(source))
+		or assert(filename:match("^(.*)%." .. vim.pesc(step.source) .. "$"))
 	return project, branch, identifier
 end
 
-local function definition(task, source, cwd)
-	local project, branch, identifier = source_details(source, task)
-	local target = task.target and vim.fs.joinpath(vim.fs.dirname(source), task.target) or nil
+local function definition(step, source, cwd)
+	local project, branch, identifier = source_details(source, step)
+	local target = step.target and vim.fs.joinpath(vim.fs.dirname(source), step.target) or nil
 	return {
-		name = table.concat({ task.name, branch, identifier }, ":"),
+		name = table.concat({ step.name, branch, identifier }, ":"),
 		builder = function()
-			return build_task(task, source, target, project, branch, cwd)
+			return build_step(step, source, target, project, branch, cwd)
 		end,
 	}
 end
 
-local function task_matches_source(task, source)
+local function step_matches_source(step, source)
 	local filename = vim.fs.basename(source)
-	return filename == task.source or (task.target == nil and vim.endswith(filename, "." .. task.source))
+	return filename == step.source or (step.target == nil and vim.endswith(filename, "." .. step.source))
 end
 
-local function is_available(task, source, checkout_branch)
-	local _, branch = source_details(source, task)
-	local target = task.target and vim.fs.joinpath(vim.fs.dirname(source), task.target) or nil
+local function is_available(step, source, checkout_branch)
+	local _, branch = source_details(source, step)
+	local target = step.target and vim.fs.joinpath(vim.fs.dirname(source), step.target) or nil
 	return (is_default_branch(checkout_branch) or branch == checkout_branch)
 		and (target == nil or vim.fn.filereadable(target) == 0)
 end
@@ -125,10 +125,10 @@ function M.for_file(opts)
 	end
 
 	local checkout_branch = current_branch(cwd)
-	for _, task in ipairs(opts.tasks or {}) do
-		validate_task(task)
-		if task_matches_source(task, source) and is_available(task, source, checkout_branch) then
-			table.insert(definitions, definition(task, source, cwd))
+	for _, step in ipairs(opts.steps or {}) do
+		validate_step(step)
+		if step_matches_source(step, source) and is_available(step, source, checkout_branch) then
+			table.insert(definitions, definition(step, source, cwd))
 		end
 	end
 	return definitions
@@ -158,17 +158,17 @@ function M.generator(opts, callback)
 			if checkout_branch == "" then
 				checkout_branch = nil
 			end
-			for _, task in ipairs(opts.tasks or {}) do
-				validate_task(task)
+			for _, step in ipairs(opts.steps or {}) do
+				validate_step(step)
 				for _, source in ipairs(indexed_files) do
-					if task_matches_source(task, source) then
-						local _, branch = source_details(source, task)
-						local target = task.target and vim.fs.joinpath(vim.fs.dirname(source), task.target) or nil
+					if step_matches_source(step, source) then
+						local _, branch = source_details(source, step)
+						local target = step.target and vim.fs.joinpath(vim.fs.dirname(source), step.target) or nil
 						if
 							(is_default_branch(checkout_branch) or branch == checkout_branch)
 							and (target == nil or not present[target])
 						then
-							table.insert(definitions, definition(task, source, cwd))
+							table.insert(definitions, definition(step, source, cwd))
 						end
 					end
 				end

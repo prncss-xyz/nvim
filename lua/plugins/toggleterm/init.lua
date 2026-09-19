@@ -196,10 +196,10 @@ return {
 					local definitions = require("neoterm.artifact_commands").for_file({
 						cwd = require("neoterm.terms.artifact_cwd").context_dir() or vim.fn.getcwd(),
 						file = vim.api.nvim_buf_get_name(0),
-						tasks = require("neoterm.config").tasks,
+						steps = require("neoterm.config").steps,
 					})
 					vim.ui.select(definitions, {
-						prompt = "Select Buffer Task: ",
+						prompt = "Select Buffer Step: ",
 						format_item = function(definition)
 							return definition.name
 						end,
@@ -215,7 +215,7 @@ return {
 						require("neoterm.terms").start(task)
 					end)
 				end,
-				desc = "Run Buffer Task",
+				desc = "Run Buffer Step",
 			},
 			{
 				"o" .. reverse("z"),

@@ -11,7 +11,7 @@ function M.get_commands(filter, cwd, callback)
 		cwd = cwd,
 		file = vim.api.nvim_buf_get_name(0),
 		filetype = vim.bo.filetype,
-		tasks = config.tasks,
+		steps = config.steps,
 	}, function(all_commands)
 		local res = {}
 		for k, v in pairs(all_commands) do

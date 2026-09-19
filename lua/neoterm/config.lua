@@ -89,7 +89,7 @@ Output ONLY the branch name, nothing else.
 		stashed = "$",
 		untracked = "?",
 	},
-	tasks = {
+	steps = {
 		{
 			name = "do",
 			source = "task.md",
@@ -126,7 +126,7 @@ Output ONLY the branch name, nothing else.
 		{ name = "aborted" },
 	},
 	templates = {
-		"artifacts",
+		"steps",
 		"chezmoi",
 		"git_sync",
 		"make",
@@ -153,9 +153,9 @@ Output ONLY the branch name, nothing else.
 		require("neoterm.helpers.inhibit_sleep").set(working)
 	end,
 	commands = {
-		pi = personal(require("neoterm.helpers.agents").agent({ name = "pi" })),
-		agy = personal(require("neoterm.helpers.agents").agent({ name = "agy" })),
-		claude = personal(require("neoterm.helpers.agents").agent({ name = "claude" })),
+		pi = personal(require("neoterm.helpers.agents").agent({ agent = "pi" })),
+		agy = personal(require("neoterm.helpers.agents").agent({ agent = "agy" })),
+		claude = personal(require("neoterm.helpers.agents").agent({ agent = "claude" })),
 		yazi = { cmd = "yazi" },
 		ddgr = {
 			cmd = "ddgr",

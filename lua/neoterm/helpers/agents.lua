@@ -121,12 +121,12 @@ M.builders = {
 }
 
 function M.agent(opts)
-	local builder = assert(M.builders[opts.name], "Unknown coding agent: " .. opts.name)
+	local builder = assert(M.builders[opts.agent], "Unknown coding agent: " .. opts.agent)
 	return {
 		cmd = builder(opts),
 		auto_scroll = false,
 		tag = "agent",
-		screen_manifest = screen_manifests[opts.name],
+		screen_manifest = screen_manifests[opts.agent],
 	}
 end
 
