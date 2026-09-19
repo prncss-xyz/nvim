@@ -78,6 +78,18 @@ Output ONLY the branch name, nothing else.
 		}, { detach = true })
 	end,
 	panel = { width = personal(40, 60) },
+	git_status_icons = {
+		ahead = "⇡",
+		behind = "⇣",
+		conflicted = "=",
+		deleted = "✘",
+		diverged = "⇕",
+		modified = "!",
+		renamed = "»",
+		staged = "+",
+		stashed = "$",
+		untracked = "?",
+	},
 	tasks = {
 		{
 			name = "do",
@@ -138,6 +150,9 @@ Output ONLY the branch name, nothing else.
 		if item.changed then
 			notify.notify(string.format("%s in %s (%s)", item.key, item.cwd, item.status))
 		end
+	end,
+	on_working_change = function(working)
+		require("neoterm.helpers.inhibit_sleep").set(working)
 	end,
 	commands = {
 		yazi = { cmd = "yazi" },

@@ -103,6 +103,17 @@ local history = create_history("instance_count")
 local instance_owners = {}
 local listeners = {}
 local next_listener_id = 0
+local working_count = 0
+
+local function update_working_count(delta)
+	local was_working = working_count > 0
+	working_count = working_count + delta
+	assert(working_count >= 0, "Working terminal count cannot be negative")
+	local is_working = working_count > 0
+	if is_working ~= was_working and config.on_working_change then
+		config.on_working_change(is_working)
+	end
+end
 
 local function available_instance(requested_instance)
 	if requested_instance then
@@ -154,6 +165,12 @@ local function apply_event(event, item)
 		item.changed = nil
 		history.insert(item)
 	elseif event.type == "status" and event.value ~= item.status then
+		local was_working = item.status == "working"
+		local is_working = event.value == "working"
+		if was_working ~= is_working then
+			update_working_count(is_working and 1 or -1)
+			item.working_counted = is_working
+		end
 		item.status = event.value
 		item.term.status_changed_at = os.time()
 		if event.visible == true or item.term:is_in_view() then
@@ -169,6 +186,10 @@ local function apply_event(event, item)
 	elseif event.type == "cwd" then
 		history.insert(item)
 	elseif event.type == "detach" then
+		if item.working_counted then
+			update_working_count(-1)
+			item.working_counted = false
+		end
 		local current = history.find(function(candidate)
 			return candidate.instance_count == item.instance_count
 		end)
@@ -422,9 +443,7 @@ function M.has_changed()
 end
 
 function M.has_working()
-	return history.find(function(item)
-		return item.status == "working"
-	end) ~= nil
+	return working_count > 0
 end
 
 function M.toggle_unseen_or_latest(query)

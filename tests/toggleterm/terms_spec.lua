@@ -88,6 +88,79 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 	}, child.lua_get("result"))
 end
 
+T["screen status events"]["notifies when aggregate working state changes"] = function()
+	child.lua([[local changes = {}
+		local send
+		local item = {
+			key = "agent",
+			display_name = "agent",
+			dir = "/tmp",
+		}
+
+		package.loaded["neoterm.terms.history"] = {
+			create_history = function()
+				return {
+					insert = function() end,
+					find = function() return nil end,
+					purge = function() end,
+					filter = function() return {} end,
+				}
+			end,
+		}
+		package.loaded["neoterm.terms.create_term"] = {
+			new = function(_, _, callback)
+				send = callback
+				return {
+					focus = function() end,
+					is_in_view = function() return true end,
+				}
+			end,
+		}
+		package.loaded["neoterm.config"] = {
+			autostart = {},
+			on_status = function() end,
+			on_working_change = function(working)
+				table.insert(changes, working)
+			end,
+		}
+		package.loaded["neoterm.terms.get_query_fn"] = {
+			get_query_fn = function() return function() return true end end,
+		}
+		package.loaded["neoterm.terms.utils"] = {
+			compose_gt = function() return function() return false end end,
+			gt_field = function() return function() return false end end,
+			lt_field = function() return function() return false end end,
+			max_of = function() return item end,
+		}
+		package.loaded["neoterm.terms.get_commands"] = {
+			get_commands = function() return { item } end,
+		}
+		package.loaded["neoterm.terms.format_item"] = {
+			format_item = function() return function() return "agent" end end,
+		}
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+
+		local terms = require("neoterm.terms")
+		terms.focus({})
+		send({ type = "status", value = "working", visible = true })
+		local working = terms.has_working()
+		send({ type = "status", value = "working", visible = true })
+		send({ type = "status", value = "idle", visible = true })
+
+		result = {
+			working = working,
+			idle = not terms.has_working(),
+			changes = changes,
+		}
+	]])
+
+	assert.same({
+		working = true,
+		idle = true,
+		changes = { true, false },
+	}, child.lua_get("result"))
+end
+
 T["put"] = MiniTest.new_set()
 
 T["pseudo terminal"] = MiniTest.new_set()

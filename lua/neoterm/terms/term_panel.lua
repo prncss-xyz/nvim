@@ -279,6 +279,60 @@ end
 
 local refresh
 
+local git_status_order = { "conflicted", "stashed", "deleted", "renamed", "modified", "staged", "untracked" }
+
+local function format_git_status(output)
+	local counts = {}
+	local function increment(name, count)
+		counts[name] = (counts[name] or 0) + (count or 1)
+	end
+
+	for line in output:gmatch("[^\r\n]+") do
+		if line:match("^## stash ") then
+			increment("stashed", tonumber(line:match("(%d+)$")) or 0)
+		elseif vim.startswith(line, "## ") then
+			increment("ahead", tonumber(line:match("ahead (%d+)")) or 0)
+			increment("behind", tonumber(line:match("behind (%d+)")) or 0)
+		elseif line:sub(1, 2) == "??" then
+			increment("untracked")
+		elseif line:sub(1, 2) ~= "!!" then
+			local status = line:sub(1, 2)
+			local x, y = status:sub(1, 1), status:sub(2, 2)
+			if status:match("^(DD|AU|UD|UA|DU|AA|UU)$") then
+				increment("conflicted")
+			else
+				if x ~= " " then
+					increment("staged")
+				end
+				if x == "R" or y == "R" then
+					increment("renamed")
+				elseif x == "D" or y == "D" then
+					increment("deleted")
+				elseif y == "M" or y == "T" then
+					increment("modified")
+				end
+			end
+		end
+	end
+
+	local parts = {}
+	for _, name in ipairs(git_status_order) do
+		if (counts[name] or 0) > 0 then
+			table.insert(parts, neoterm_config.git_status_icons[name])
+		end
+	end
+
+	local ahead, behind = counts.ahead or 0, counts.behind or 0
+	if ahead > 0 and behind > 0 then
+		table.insert(parts, neoterm_config.git_status_icons.diverged)
+	elseif ahead > 0 then
+		table.insert(parts, neoterm_config.git_status_icons.ahead)
+	elseif behind > 0 then
+		table.insert(parts, neoterm_config.git_status_icons.behind)
+	end
+	return table.concat(parts)
+end
+
 local function update_git_status(state, dir)
 	local cached = state.git_statuses[dir]
 	if cached and os.time() - cached.checked_at < 30 then
@@ -294,12 +348,12 @@ local function update_git_status(state, dir)
 			return
 		end
 		vim.system(
-			{ "starship", "module", "git_status" },
-			{ cwd = dir, text = true, env = { NO_COLOR = "1" } },
+			{ "git", "status", "--porcelain=v1", "--branch", "--show-stash" },
+			{ cwd = dir, text = true },
 			function(result)
-				local status = vim.trim(result.stdout or ""):gsub("\27%[[%d;]*m", ""):gsub("^%[(.*)%]$", "%1")
+				local status = result.code == 0 and format_git_status(result.stdout or "") or false
 				vim.schedule(function()
-					state.git_statuses[dir] = { checked_at = os.time(), value = result.code == 0 and status or false }
+					state.git_statuses[dir] = { checked_at = os.time(), value = status }
 					refresh(state)
 				end)
 			end
