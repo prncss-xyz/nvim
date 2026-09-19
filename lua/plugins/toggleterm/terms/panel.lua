@@ -11,6 +11,51 @@ local highlight_namespace = vim.api.nvim_create_namespace("toggleterm-panel")
 local empty_message = "No matching terminals"
 local last_query = {}
 
+-- URL icon matching adapted from MeanderingProgrammer/render-markdown.nvim.
+local hyperlink_icon = "󰌹 "
+local link_icons = {
+	{ icon = "󰖟 ", pattern = "^http" },
+	{ icon = " ", pattern = "apple%.com", kind = "url" },
+	{ icon = "󰙯 ", pattern = "discord%.com", kind = "url" },
+	{ icon = "󰊤 ", pattern = "github%.com", kind = "url" },
+	{ icon = "󰮠 ", pattern = "gitlab%.com", kind = "url" },
+	{ icon = "󰊭 ", pattern = "google%.com", kind = "url" },
+	{ icon = " ", pattern = "ycombinator%.com", kind = "url" },
+	{ icon = "󰌻 ", pattern = "linkedin%.com", kind = "url" },
+	{ icon = " ", pattern = "microsoft%.com", kind = "url" },
+	{ icon = " ", pattern = "neovim%.io", kind = "url" },
+	{ icon = "󰑍 ", pattern = "reddit%.com", kind = "url" },
+	{ icon = "󰒱 ", pattern = "slack%.com", kind = "url" },
+	{ icon = "󰓌 ", pattern = "stackoverflow%.com", kind = "url" },
+	{ icon = " ", pattern = "steampowered%.com", kind = "url" },
+	{ icon = " ", pattern = "twitter%.com", kind = "url" },
+	{ icon = "󰖬 ", pattern = "wikipedia%.org", kind = "url" },
+	{ icon = " ", pattern = "x%.com", kind = "url" },
+	{ icon = "󰗃 ", pattern = "youtube[^.]*%.com", kind = "url" },
+	{ icon = "󰗃 ", pattern = "youtu%.be", kind = "url" },
+}
+
+local function url_icon(url)
+	local selected
+	for _, option in ipairs(link_icons) do
+		local matches
+		if option.kind == "url" then
+			local prefix = url:match("^(.*)" .. option.pattern)
+			if prefix then
+				prefix = prefix:gsub("^https?://", "", 1):gsub("^www%.", "", 1)
+				local last = prefix:sub(-1)
+				matches = last == "" or last == "."
+			end
+		else
+			matches = url:find(option.pattern) ~= nil
+		end
+		if matches and (not selected or #option.pattern > #selected.pattern) then
+			selected = option
+		end
+	end
+	return selected and selected.icon or hyperlink_icon
+end
+
 local function current_tab()
 	return vim.api.nvim_get_current_tabpage()
 end
@@ -156,7 +201,7 @@ local function create_rows(items, format, git_statuses, width)
 				table.insert(rows, {
 					instance_count = item.instance_count,
 					item = item,
-					text = "  " .. url,
+					text = "  " .. url_icon(url) .. url,
 					highlight = "Comment",
 					url = url,
 				})

@@ -21,6 +21,13 @@ return {
 		},
 		keys = {
 			{
+				domain.file .. "b",
+				function()
+					require("khutulun").chmod_x()
+				end,
+				desc = "Make Executable",
+			},
+			{
 				domain.file .. "d",
 				function()
 					require("khutulun").duplicate()
