@@ -8,14 +8,6 @@ vim.api.nvim_create_autocmd({ "BufEnter" }, {
 	group = group,
 	nested = true,
 	callback = function()
-		if vim.bo.buftype ~= "" then
-			return
-		end
-
-		local root = require("neoterm.rooter").root(0)
-		if root then
-			vim.api.nvim_set_current_dir(root)
-			require("neoterm.rooter").on_dir()
-		end
+		require("neoterm.rooter").on_buf_enter()
 	end,
 })
