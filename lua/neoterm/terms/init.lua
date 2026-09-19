@@ -9,8 +9,6 @@ local commands = require("neoterm.terms.get_commands")
 local get_commands = commands.get_commands
 local format_item = require("neoterm.terms.format_item").format_item
 local create_pseudo_terminal = require("neoterm.terms.pseudo_terminal").create
--- TODO:
-local visit = require("my.browser").visit
 
 local screen_manifests = {
 	p = {
@@ -81,8 +79,7 @@ local screen_manifests = {
 				priority = 250,
 				region = "osc_progress",
 				regex = { "^4;0" },
-			},
-			{
+			}, {
 				id = "prompt",
 				status = "idle",
 				priority = 100,
@@ -540,7 +537,7 @@ function M.browse()
 		end,
 	}, function(choice)
 		if choice then
-			visit(choice.url)
+			vim.system({ config.browser(), choice.url }, { detach = true })
 		end
 	end)
 end

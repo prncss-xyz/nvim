@@ -13,6 +13,25 @@ return {
 	},
 	agents = { "p", "claude", "agy" },
 	min_runtime = 10000,
+	browser = (function()
+		local value
+		return function()
+			if value then
+				return value
+			end
+
+			local uname = vim.loop.os_uname()
+			local os = uname.sysname
+			if os == "Darwin" then
+				value = "open"
+			elseif os:find("Windows") or (os == "Linux" and uname.release:lower():find("microsoft")) then
+				value = 'cmd.exe /c start ""'
+			else
+				value = "xdg-open"
+			end
+			return value
+		end
+	end)(),
 	ai_query = personal(
 		"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
 		"claude -p --model haiku --disable-slash-commands --tools="
