@@ -462,7 +462,7 @@ return {
 			{
 				"bz",
 				function()
-					if require("my.windows").is_file_cur_win then
+					if require("my.win_history").is_file_cur_win then
 						projects.open_project(vim.env.HOME, {
 							vim.fn.getcwd(),
 							require("my.parameters").dirs.notes,

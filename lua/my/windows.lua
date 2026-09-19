@@ -37,13 +37,6 @@ function M.close_all_but_current()
 	end
 end
 
-function M.is_file_cur_win()
-	local winid = vim.api.nvim_get_current_win()
-	local bufnr = vim.api.nvim_win_get_buf(winid)
-	local buf_type = vim.api.nvim_buf_get_option(bufnr, "buftype")
-	return buf_type == ""
-end
-
 local function get_last_win()
 	local current_win_id = vim.api.nvim_get_current_win()
 	local current_tab_id = vim.api.nvim_win_get_tabpage(current_win_id)
