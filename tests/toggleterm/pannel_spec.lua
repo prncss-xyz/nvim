@@ -58,7 +58,7 @@ T["terminal panel"]["toggles a filtered side panel and focuses the selected term
 			format_item = function() return function(item) return item.status .. " " .. item.display_name end end,
 		}
 
-		local panel = require("neoterm.terms.panel")
+		local panel = require("neoterm.terms.term_panel")
 		panel.toggle({ key = "agent" }, history, subscribe)
 		local win = vim.api.nvim_get_current_win()
 		local buf = vim.api.nvim_win_get_buf(win)
@@ -130,7 +130,7 @@ T["terminal panel"]["refreshes from events and preserves selection by hash"] = f
 		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function(item) return item.hash .. ":" .. item.status end end,
 		}
-		local panel = require("neoterm.terms.panel")
+		local panel = require("neoterm.terms.term_panel")
 		panel.toggle({}, history, subscribe)
 		local win = vim.api.nvim_get_current_win()
 		vim.api.nvim_win_set_cursor(win, { 3, 0 })
@@ -164,7 +164,7 @@ T["terminal panel"]["aligns statuses across different indentation depths"] = fun
 		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function(item) return item.label end end,
 		}
-		local panel = require("neoterm.terms.panel")
+		local panel = require("neoterm.terms.term_panel")
 		panel.toggle({}, history, subscribe)
 		result = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, -1, false)
 	]])
@@ -190,7 +190,7 @@ T["terminal panel"]["highlights directories and terminal states"] = function()
 		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function(item) return item.hash end end,
 		}
-		local panel = require("neoterm.terms.panel")
+		local panel = require("neoterm.terms.term_panel")
 		panel.toggle({}, history, subscribe)
 		local marks = vim.api.nvim_buf_get_extmarks(vim.api.nvim_get_current_buf(), -1, 0, -1, { details = true })
 		result = vim.tbl_map(function(mark)
@@ -217,7 +217,7 @@ T["terminal panel"]["renders an empty state and enter is a no-op"] = function()
 		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function() error("must not format") end end,
 		}
-		local panel = require("neoterm.terms.panel")
+		local panel = require("neoterm.terms.term_panel")
 		panel.toggle({}, history, subscribe)
 		local buf = vim.api.nvim_get_current_buf()
 		vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)

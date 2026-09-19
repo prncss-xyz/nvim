@@ -291,7 +291,7 @@ T["pseudo terminal"]["participates in history only when explicitly included"] = 
 			get_commands = function() return {} end,
 		}
 		package.loaded["my.ui_toggle"] = { activate = function(_, action) action() end }
-		package.loaded["neoterm.terms.panel"] = {
+		package.loaded["neoterm.terms.term_panel"] = {
 			toggle = function(_, _, subscribe)
 				subscribe(function(event) table.insert(events, event.type) end)
 			end,
@@ -697,7 +697,7 @@ T["terminal panel integration"]["forwards make_item lifecycle changes"] = functi
 		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function(value) return value.key end end,
 		}
-		package.loaded["neoterm.terms.panel"] = {
+		package.loaded["neoterm.terms.term_panel"] = {
 			toggle = function(query, history, subscribe)
 				listener = subscribe(function(event)
 					table.insert(events, event.type)

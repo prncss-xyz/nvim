@@ -463,13 +463,13 @@ function M.toggle_panel(query)
 	if selected and selected.toggle_panel then
 		return selected.toggle_panel()
 	end
-	require("neoterm.terms.panel").toggle(query, panel_history, subscribe, function(dir)
+	require("neoterm.terms.term_panel").toggle(query, panel_history, subscribe, function(dir)
 		M.focus({ cwd = dir, prompt = "Select Command: " })
 	end)
 end
 
 function M.raise_panel()
-	require("neoterm.terms.panel").open(panel_history, subscribe, function(dir)
+	require("neoterm.terms.term_panel").open(panel_history, subscribe, function(dir)
 		M.focus({ cwd = dir, prompt = "Select Command: " })
 	end)
 end
