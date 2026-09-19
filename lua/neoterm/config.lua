@@ -1,9 +1,10 @@
 local personal = require("my.conds").personal
+local work = require("my.conds").work
 local dirs = require("my.parameters").dirs
 local notify = require("my.notify")
 local prompt_utils = require("neoterm.helpers.prompt")
 
-local agent = personal("p", "claude")
+local agent = personal("pi", "claude")
 return {
 	rooter_patterns = { ".git", ".hg", ".svn" },
 	default_branches = { "main", "master" },
@@ -93,14 +94,22 @@ Output ONLY the branch name, nothing else.
 		{
 			name = "do",
 			source = "task.md",
-			cmd = { agent, "do this @{source}" },
+			command = {
+				agent = agent,
+				title = "{step}",
+				prompt = "do this @{source}",
+			},
 			fork = false,
 		},
 		{
 			name = "task",
 			source = "task.md",
 			target = "design.md",
-			cmd = { agent, [[create the file {target} and write a broad design to implement @{source}]] },
+			command = {
+				agent = agent,
+				title = "{step}",
+				prompt = [[create the file {target} and write a broad design to implement @{source}]],
+			},
 			fork = false,
 		},
 	},
@@ -153,9 +162,18 @@ Output ONLY the branch name, nothing else.
 		require("neoterm.helpers.inhibit_sleep").set(working)
 	end,
 	commands = {
-		pi = personal(require("neoterm.helpers.agents").agent({ agent = "pi" })),
-		agy = personal(require("neoterm.helpers.agents").agent({ agent = "agy" })),
-		claude = personal(require("neoterm.helpers.agents").agent({ agent = "claude" })),
+		pi = personal({
+			agent = "pi",
+			priority = 3,
+		}),
+		agy = personal({
+			agent = "agy",
+			priority = 2,
+		}),
+		claude = work({
+			agent = "claude",
+			priority = 1,
+		}),
 		yazi = { cmd = "yazi" },
 		ddgr = {
 			cmd = "ddgr",

@@ -3,10 +3,10 @@ local M = {}
 local function normalize_task(definition)
 	local task = definition.builder({})
 	assert(type(task) == "table", "Template builder must return a task")
-	assert(task.cmd ~= nil, "Template task must define cmd")
+	assert(task.cmd ~= nil or task.agent ~= nil, "Template task must define cmd or agent")
 
 	assert(
-		type(task.cmd) == "string" or type(task.cmd) == "function" or vim.islist(task.cmd),
+		task.cmd == nil or type(task.cmd) == "string" or type(task.cmd) == "function" or vim.islist(task.cmd),
 		"Template task cmd must be a string, function, or list"
 	)
 

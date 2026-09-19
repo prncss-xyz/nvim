@@ -33,31 +33,36 @@ local function quoted_path(path)
 	return '"' .. path .. '"'
 end
 
-local function resolve_cmd(cmd, source, target)
-	local function resolve(value, resolved_source, resolved_target)
+local function resolve_command(command, source, target, step)
+	local resolved_source = quoted_path(source)
+	local resolved_target = target and quoted_path(target) or nil
+	local function resolve(value)
+		if type(value) == "table" then
+			local result = {}
+			for key, item in pairs(value) do
+				result[key] = resolve(item)
+			end
+			return result
+		end
+		if type(value) ~= "string" then
+			return value
+		end
 		if target == nil then
 			assert(not value:find("{target}", 1, true), "Step command references {target} without defining target")
-			return (value:gsub("{source}", resolved_source))
+			return (value:gsub("{source}", resolved_source):gsub("{step}", step))
 		end
-		return (value:gsub("{source}", resolved_source):gsub("{target}", resolved_target))
+		return (value:gsub("{source}", resolved_source):gsub("{target}", resolved_target):gsub("{step}", step))
 	end
-
-	if vim.islist(cmd) then
-		return vim.tbl_map(function(value)
-			return resolve(value, source, target)
-		end, cmd)
-	end
-	return resolve(cmd, quoted_path(source), target and quoted_path(target) or nil)
+	return resolve(command)
 end
 
-local function build_step(step, source, target, project, branch, current_cwd)
+local function build_step(step, source, target, project, branch, current_cwd, name)
 	local cwd = step.fork == true and vim.fs.joinpath(dirs.projects, project, branch) or current_cwd
-	local result = vim.deepcopy(step)
-	result.name = nil
-	result.source = nil
-	result.target = nil
-	result.cmd = resolve_cmd(step.cmd, vim.fs.abspath(source), target and vim.fs.abspath(target) or nil)
-	result.cwd = cwd
+	local result = resolve_command(step.command, vim.fs.abspath(source), target and vim.fs.abspath(target) or nil, name)
+	if type(result) == "string" then
+		result = { cmd = result }
+	end
+	result.cwd = result.cwd or cwd
 	return result
 end
 
@@ -69,8 +74,8 @@ local function validate_step(step)
 		string.format("Step %s target must be a string", step.name)
 	)
 	assert(
-		type(step.cmd) == "string" or vim.islist(step.cmd),
-		string.format("Step %s cmd must be a string or list", step.name)
+		type(step.command) == "string" or type(step.command) == "table",
+		string.format("Step %s command must be a string or table", step.name)
 	)
 end
 
@@ -94,10 +99,11 @@ end
 local function definition(step, source, cwd)
 	local project, branch, identifier = source_details(source, step)
 	local target = step.target and vim.fs.joinpath(vim.fs.dirname(source), step.target) or nil
+	local name = table.concat({ step.name, branch, identifier }, ":")
 	return {
-		name = table.concat({ step.name, branch, identifier }, ":"),
+		name = name,
 		builder = function()
-			return build_step(step, source, target, project, branch, cwd)
+			return build_step(step, source, target, project, branch, cwd, name)
 		end,
 	}
 end

@@ -122,12 +122,12 @@ M.builders = {
 
 function M.agent(opts)
 	local builder = assert(M.builders[opts.agent], "Unknown coding agent: " .. opts.agent)
-	return {
+	return vim.tbl_extend("force", {
 		cmd = builder(opts),
 		auto_scroll = false,
 		tag = "agent",
 		screen_manifest = screen_manifests[opts.agent],
-	}
+	}, opts)
 end
 
 return M

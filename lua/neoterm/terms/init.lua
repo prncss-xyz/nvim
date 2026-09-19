@@ -161,6 +161,9 @@ local function create_and_notify(item, cb)
 end
 
 local function make_item(item, cb, requested_instance)
+	if item.agent then
+		item = require("neoterm.helpers.agents").agent(item)
+	end
 	item.status = "idle"
 	item.changed = nil
 	reserve_instance(item, requested_instance)

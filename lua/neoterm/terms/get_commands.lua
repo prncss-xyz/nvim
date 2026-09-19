@@ -24,6 +24,9 @@ function M.get_commands(filter, cwd, callback)
 				v = { cmd = v }
 			end
 			if v then
+				if v.agent then
+					v = require("neoterm.helpers.agents").agent(v)
+				end
 				v.key = k
 				v.display_name = v.display_name or k
 				v.tag = v.tag or k
