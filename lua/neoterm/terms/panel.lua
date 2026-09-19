@@ -1,11 +1,10 @@
 local M = {}
 
-local config = require("neoterm.config").panel
+local neoterm_config = require("neoterm.config")
+local config = neoterm_config.panel
 local ensure_dir = require("neoterm.terms.ensure_dir").ensure_dir
 local format_item = require("neoterm.terms.format_item").format_item(false, false)
 local get_query_fn = require("neoterm.terms.get_query_fn").get_query_fn
--- TODO:
-local visit = require("my.browser").visit
 
 local states = {}
 local highlight_namespace = vim.api.nvim_create_namespace("toggleterm-panel")
@@ -386,7 +385,7 @@ local function focus_selected(state)
 	end
 	state.selected_instance = selected.instance_count
 	if selected.url then
-		visit(selected.url)
+		vim.system({ neoterm_config.browser(), selected.url }, { detach = true })
 	elseif selected.item then
 		selected.item.term:focus()
 	else
