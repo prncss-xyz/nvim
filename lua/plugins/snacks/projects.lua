@@ -2,8 +2,6 @@ local M = {}
 
 local note_dir = require("my.parameters").dirs.notes
 
-local find_project_file = require("neoterm.helpers.project_file").get_project_file
-
 function M.toggle_project()
 	if vim.bo[0].buftype == "" then
 		M.open_project(vim.env.HOME, { vim.fn.getcwd() }, M.pick_project)
@@ -34,7 +32,7 @@ end
 
 function M.open_project(cwd, exclude, fallback)
 	cwd = vim.fs.normalize(cwd)
-	local path = find_project_file(cwd, exclude)
+	local path = require("neoterm.helpers.project_file").get_project_file(cwd, exclude)
 	if path then
 		vim.cmd.edit(vim.fn.fnameescape(path))
 	elseif fallback then

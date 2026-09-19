@@ -4,15 +4,30 @@ local window = require("neoterm.terms.window")
 local function noop() end
 
 local function project_dir()
-	return require("neoterm.terms.artifact_cwd").context_dir() or vim.fn.getcwd()
+	local artifact_cwd = require("neoterm.terms.artifact_cwd")
+	local current = vim.api.nvim_buf_get_name(0)
+	local dir = artifact_cwd.resolve(current)
+		or vim.fs.root(current, require("neoterm.config").rooter_patterns)
+		or vim.fn.getcwd()
+	dir = vim.uv.fs_realpath(dir) or vim.fs.normalize(dir)
+	if vim.fs.relpath(require("neoterm.config").dirs.projects, dir) == nil then
+		return nil
+	end
+	return dir
 end
 
 local function latest_artifact(dir)
+	if dir == nil then
+		return nil
+	end
 	local artifact_cwd = require("neoterm.terms.artifact_cwd")
 	return artifact_cwd.latest_in(artifact_cwd.for_checkout(dir))
 end
 
 local function source_context(dir, invocation)
+	if dir == nil then
+		return nil
+	end
 	local artifact_cwd = require("neoterm.terms.artifact_cwd")
 	local ctx = window.get_ctx(invocation)
 	if ctx == nil then
@@ -64,7 +79,11 @@ function M.create(touch)
 		local current = vim.fs.normalize(vim.api.nvim_buf_get_name(0))
 		local artifact_cwd = require("neoterm.terms.artifact_cwd")
 		local from_artifact = artifact_cwd.contains(current)
-		local dir = artifact_cwd.resolve(current) or assert(vim.uv.fs_realpath(vim.fn.getcwd()))
+		local dir = project_dir()
+		if dir == nil then
+			vim.notify("Project is outside projects directory", vim.log.levels.WARN)
+			return
+		end
 
 		if from_artifact then
 			local target = require("my.project_file").find(dir, { require("neoterm.config").dirs.artifacts })
