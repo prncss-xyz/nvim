@@ -160,7 +160,7 @@ end, {
 	desc = "Close Window",
 })
 vim.keymap.set({ "n", "x", "i", "t" }, "<c-j>", function()
-	require("my.win_history").focus_last_win()
+	require("neoterm.helpers.win_history").focus_last_win()
 end, { desc = "Window Toggle File" })
 vim.keymap.set("n", win .. "k", function()
 	require("my.windows").close_all_but_current()
@@ -177,7 +177,7 @@ vim.keymap.set("n", "bf", function()
 		vim.notify("No file under cursor", vim.log.levels.WARN)
 		return
 	end
-	local target_win = require("my.win_history").get_last_file_win()
+	local target_win = require("neoterm.helpers.win_history").get_last_file_win()
 	if target_win then
 		vim.api.nvim_set_current_win(target_win)
 	end

@@ -4,7 +4,7 @@ local valid_win = require("my.windows").valid
 
 local history = {}
 
-local function on_focus()
+function M.on_win_enter()
 	local current_win_id = vim.api.nvim_get_current_win()
 	if valid_win(current_win_id) then
 		local current_tab_id = vim.api.nvim_win_get_tabpage(0)
@@ -44,12 +44,6 @@ function M.focus_last_win()
 			vim.cmd.startinsert()
 		end
 	end
-end
-
-function M.setup()
-	vim.api.nvim_create_autocmd("WinEnter", {
-		callback = on_focus,
-	})
 end
 
 local function is_text_buf(winnr)

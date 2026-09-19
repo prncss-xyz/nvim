@@ -462,7 +462,8 @@ return {
 			{
 				"bz",
 				function()
-					if require("my.win_history").is_file_cur_win then
+					local win_history = require("neoterm.helpers.win_history")
+					if win_history.get_last_file_win() == vim.api.nvim_get_current_win() then
 						projects.open_project(vim.env.HOME, {
 							vim.fn.getcwd(),
 							require("my.parameters").dirs.notes,

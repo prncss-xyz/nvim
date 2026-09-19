@@ -21,7 +21,7 @@ T["focuses the first window with a buffer inside the requested directory"] = fun
 		package.loaded["my.project_file"] = {
 			find = function() return vim.api.nvim_buf_get_name(inside) end,
 		}
-		package.loaded["my.win_history"] = {
+		package.loaded["neoterm.helpers.win_history"] = {
 			get_last_file_win = function() error("should not select a fallback window") end,
 		}
 		dofile(cwd .. "/lua/neoterm/terms/ensure_dir.lua").ensure_dir(cwd)
@@ -43,7 +43,7 @@ T["focuses a hidden buffer inside a descendant directory"] = function()
 		package.loaded["my.project_file"] = {
 			find = function() return vim.api.nvim_buf_get_name(inside) end,
 		}
-		package.loaded["my.win_history"] = {
+		package.loaded["neoterm.helpers.win_history"] = {
 			get_last_file_win = function() return target_win end,
 		}
 		dofile(cwd .. "/lua/neoterm/terms/ensure_dir.lua").ensure_dir(cwd)
@@ -73,7 +73,7 @@ T["opens the first oldfile inside the requested directory before using git"] = f
 			get_path = function() return nil end,
 			create = function(path) created = path end,
 		}
-		package.loaded["my.win_history"] = {
+		package.loaded["neoterm.helpers.win_history"] = {
 			get_last_file_win = function() return vim.api.nvim_get_current_win() end,
 		}
 		dofile(cwd .. "/lua/neoterm/terms/ensure_dir.lua").ensure_dir(dir)
@@ -97,7 +97,7 @@ T["opens the selected file in the target window"] = function()
 		package.loaded["my.project_file"] = {
 			find = function() return selected end,
 		}
-		package.loaded["my.win_history"] = {
+		package.loaded["neoterm.helpers.win_history"] = {
 			get_last_file_win = function() return vim.api.nvim_get_current_win() end,
 		}
 		dofile(cwd .. "/lua/neoterm/terms/ensure_dir.lua").ensure_dir(cwd)
@@ -119,7 +119,7 @@ T["does nothing when the requested path is not a git repository"] = function()
 			get_path = function() return nil end,
 			create = function(path) created = path end,
 		}
-		package.loaded["my.win_history"] = {
+		package.loaded["neoterm.helpers.win_history"] = {
 			get_last_file_win = function() return vim.api.nvim_get_current_win() end,
 		}
 		dofile(cwd .. "/lua/neoterm/terms/ensure_dir.lua").ensure_dir(dir)

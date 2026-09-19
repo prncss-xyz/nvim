@@ -1,6 +1,6 @@
 local M = {}
 
-local get_last_file_win = require("my.win_history").get_last_file_win
+local get_last_file_win = require("neoterm.helpers.win_history").get_last_file_win
 
 local state
 local namespace = vim.api.nvim_create_namespace("toggleterm-task-panel")
