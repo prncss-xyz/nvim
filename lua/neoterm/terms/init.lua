@@ -169,14 +169,20 @@ local function make_item(item, cb, requested_instance)
 	reserve_instance(item, requested_instance)
 	assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
 	item.cwd = type(item.cwd) == "string" and item.cwd or vim.fn.getcwd()
+	local function sandbox()
+		if item.sandbox then
+			require("neoterm.helpers.sandbox").sandbox(item)
+		end
+		create_and_notify(item, cb)
+	end
 	local function create()
 		if type(item.cmd) == "function" then
 			return item.cmd(function(cmd)
 				item.cmd = cmd
-				create_and_notify(item, cb)
+				sandbox()
 			end)
 		end
-		create_and_notify(item, cb)
+		sandbox()
 	end
 	require("neoterm.terms.git").ensure_worktree(item.cwd, function(ok)
 		if ok then

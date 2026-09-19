@@ -125,6 +125,8 @@ function M.agent(opts)
 	return vim.tbl_extend("force", {
 		cmd = builder(opts),
 		auto_scroll = false,
+    -- sandbox = "bwrap", // FIXME:
+    exit_policy = "keep",
 		tag = "agent",
 		screen_manifest = screen_manifests[opts.agent],
 	}, opts)
