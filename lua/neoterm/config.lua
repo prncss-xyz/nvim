@@ -134,19 +134,11 @@ Output ONLY the branch name, nothing else.
 
 ]],
 	},
-
 	on_status = function(item)
 		if item.changed then
 			notify.notify(string.format("%s in %s (%s)", item.key, item.cwd, item.status))
 		end
 	end,
-	lang_to_REPL = {
-		lua = "lua",
-		javascript = "node",
-		javascriptreact = "node",
-		typescript = "node",
-		typescriptreact = "node",
-	},
 	commands = {
 		yazi = { cmd = "yazi" },
 		ddgr = {
@@ -170,7 +162,7 @@ Output ONLY the branch name, nothing else.
 			cmd = require("my.diff").get_cmd(),
 			exit_policy = "keep",
 		},
-		repl = require("neoterm.repl").get_REPL,
+		repl = require("my.repl").get_REPL,
 		gac = {
 			cmd = "gac",
 			exit_policy = "keep",

@@ -142,18 +142,6 @@ return {
 				desc = "Toggle Tasks Panel",
 			},
 			{
-				"oi",
-				function()
-					require("neoterm.repl").op:call({ domain = "outer" }, {
-						i = function()
-							require("neoterm.terms").focus({ key = "repl" })
-						end,
-					})
-				end,
-				desc = "Toggle REPL",
-				mode = { "n", "x" },
-			},
-			{
 				"ou",
 				function()
 					require("neoterm.terms").focus({ key = "test" })

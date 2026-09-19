@@ -1,7 +1,15 @@
 local M = {}
 
+local lang_to_REPL = {
+	lua = "lua",
+	javascript = "node",
+	javascriptreact = "node",
+	typescript = "node",
+	typescriptreact = "node",
+}
+
 local function get_REPL_from_lang(lang)
-	local key = require("neoterm.config").lang_to_REPL[lang]
+	local key = lang_to_REPL[lang]
 	if not key then
 		return nil
 	end
@@ -17,7 +25,7 @@ M.op = require("flies.operations._with_contents"):new({
 
 function M.get_REPL()
 	local lang = require("flies.utils.editor").get_lang_at_cursor()
-	return get_REPL_from_lang(lang)
+return get_REPL_from_lang(lang)
 end
 
 return M

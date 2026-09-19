@@ -360,6 +360,18 @@ return {
 				desc = "Move Word Forward",
 			},
 			{
+				"oi",
+				function()
+					require("my.repl").op:call({ domain = "outer" }, {
+						i = function()
+							require("neoterm.terms").focus({ key = "repl" })
+						end,
+					})
+				end,
+				desc = "Toggle REPL",
+				mode = { "n", "x" },
+			},
+			{
 				"<c-y>",
 				mode = "i",
 				function()
