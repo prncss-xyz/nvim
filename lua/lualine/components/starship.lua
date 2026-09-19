@@ -1,5 +1,4 @@
-local last_value
-local last_cwd
+local values = {}
 local refreshing_cwd
 local last_refresh = {}
 local throttle_ms = 500
@@ -45,15 +44,15 @@ local function refresh(cwd)
 
 			vim.schedule(function()
 				refreshing_cwd = nil
+				local changed = values[cwd] ~= value
+				values[cwd] = value
+
 				local current_cwd = vim.fn.getcwd()
 				if current_cwd ~= cwd then
 					refresh(current_cwd)
-					return
+				elseif changed then
+					require("lualine").refresh()
 				end
-
-				last_value = value
-				last_cwd = cwd
-				require("lualine").refresh()
 			end)
 		end
 	)
@@ -66,5 +65,5 @@ return function()
 	end
 
 	refresh(cwd)
-	return last_cwd == cwd and last_value or cwd_name(cwd)
+	return values[cwd] or cwd_name(cwd)
 end
