@@ -4,7 +4,7 @@ local window = require("neoterm.terms.window")
 local artifact_cwd = require("neoterm.terms.artifact_cwd")
 local find_project_file = require("neoterm.helpers.project_file").get_project_file
 -- TODO:
-local get_last_file_win = require("my.windows").get_last_file_win
+local get_last_file_win = require("my.win_history").get_last_file_win
 
 local function find_buffer(path)
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do

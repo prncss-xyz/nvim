@@ -11,3 +11,5 @@ vim.api.nvim_create_autocmd({ "BufEnter" }, {
 		require("neoterm.rooter").on_buf_enter()
 	end,
 })
+
+require("my.win_history").setup()
