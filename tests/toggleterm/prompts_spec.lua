@@ -16,9 +16,9 @@ T["selected prompts run outside the selector callback"] = function()
 		local captured
 
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.config"] = {
 			prompts = {
-				idea = require("plugins.toggleterm.prompt_utils").with_prompt(function(contents, prompt)
+				idea = require("neoterm.prompt_utils").with_prompt(function(contents, prompt)
 					captured = { contents, prompt }
 				end),
 			},
@@ -34,7 +34,7 @@ T["selected prompts run outside the selector callback"] = function()
 			table.insert(scheduled, callback)
 		end
 
-		require("plugins.toggleterm.prompts").prompt()
+		require("neoterm.prompts").prompt()
 		selector_callback("idea")
 		assert(not input_callback, "prompt ran directly in the selector callback")
 		assert(#scheduled == 1, "prompt was not scheduled")
@@ -51,11 +51,11 @@ T["direct prompts run with input"] = function()
 		local captured
 
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		package.loaded["plugins.toggleterm.config"] = { prompts = {} }
+		package.loaded["neoterm.config"] = { prompts = {} }
 		vim.schedule = function(callback) scheduled = callback end
 		vim.ui.input = function(_, callback) input_callback = callback end
 
-		require("plugins.toggleterm.prompts").run(function(input, prompt)
+		require("neoterm.prompts").run(function(input, prompt)
 			input(prompt, function(contents) captured = { contents, prompt } end)
 		end, "task")
 		assert(scheduled)
@@ -72,18 +72,18 @@ T["task prompts create a task inside the current artifact"] = function()
 	child.lua([[local created
 
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		package.loaded["plugins.toggleterm.terms.artifact_cwd"] = {
+		package.loaded["neoterm.terms.artifact_cwd"] = {
 			contains = function(path) return path == "/artifacts/neomux/topic/index.md" end,
 			resolve = function() return "/projects/neomux/main" end,
 		}
-		package.loaded["plugins.toggleterm.harness"] = {
+		package.loaded["neoterm.harness"] = {
 			create_artifact = function(input, filename, root)
 				created = { input, filename, root }
 			end,
 		}
 		vim.api.nvim_buf_set_name(0, "/artifacts/neomux/topic/index.md")
 
-		local prompt = require("plugins.toggleterm.prompt_utils").create_task()
+		local prompt = require("neoterm.prompt_utils").create_task()
 		prompt(function(_, callback) callback("new task") end, "task")
 		result = created
 	]])
@@ -95,17 +95,17 @@ T["task prompts create a new artifact outside artifacts"] = function()
 	child.lua([[local created
 
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		package.loaded["plugins.toggleterm.terms.artifact_cwd"] = {
+		package.loaded["neoterm.terms.artifact_cwd"] = {
 			contains = function() return false end,
 			resolve = function() return nil end,
 		}
-		package.loaded["plugins.toggleterm.harness"] = {
+		package.loaded["neoterm.harness"] = {
 			create_artifact = function(input, filename, root)
 				created = { input, filename, root }
 			end,
 		}
 
-		local prompt = require("plugins.toggleterm.prompt_utils").create_task()
+		local prompt = require("neoterm.prompt_utils").create_task()
 		prompt(function(_, callback) callback("new artifact") end, "task")
 		result = created
 	]])

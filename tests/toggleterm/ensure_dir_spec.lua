@@ -17,7 +17,7 @@ T["focuses the first window with a buffer inside the requested directory"] = fun
 		vim.api.nvim_buf_set_name(inside, cwd .. "/lua/example.lua")
 		vim.cmd.new()
 		vim.api.nvim_buf_set_name(0, "/outside/repo/file.md")
-		package.loaded["plugins.toggleterm.terms.window"] = {}
+		package.loaded["neoterm.terms.window"] = {}
 		package.loaded["my.project_file"] = {
 			find = function() return vim.api.nvim_buf_get_name(inside) end,
 		}
@@ -39,7 +39,7 @@ T["focuses a hidden buffer inside a descendant directory"] = function()
 		vim.api.nvim_buf_set_name(inside, cwd .. "/lua/plugins/example.lua")
 		vim.cmd.new()
 		vim.api.nvim_buf_set_name(0, "/outside/repo/file.md")
-		package.loaded["plugins.toggleterm.terms.window"] = {}
+		package.loaded["neoterm.terms.window"] = {}
 		package.loaded["my.project_file"] = {
 			find = function() return vim.api.nvim_buf_get_name(inside) end,
 		}
@@ -69,7 +69,7 @@ T["opens the first oldfile inside the requested directory before using git"] = f
 		vim.fn.writefile({ "return true" }, oldfile)
 		vim.cmd("let v:oldfiles = " .. vim.fn.string({ oldfile }))
 		vim.api.nvim_buf_set_name(0, "/outside/repo/file.md")
-		package.loaded["plugins.toggleterm.terms.window"] = {
+		package.loaded["neoterm.terms.window"] = {
 			get_path = function() return nil end,
 			create = function(path) created = path end,
 		}
@@ -91,7 +91,7 @@ T["opens the selected file in the target window"] = function()
 		local selected = cwd .. "/lua/example.lua"
 		local created
 		vim.api.nvim_buf_set_name(0, "/outside/repo/file.md")
-		package.loaded["plugins.toggleterm.terms.window"] = {
+		package.loaded["neoterm.terms.window"] = {
 			create = function(path) created = path end,
 		}
 		package.loaded["my.project_file"] = {
@@ -115,7 +115,7 @@ T["does nothing when the requested path is not a git repository"] = function()
 		local created
 		vim.fn.mkdir(dir, "p")
 		vim.api.nvim_buf_set_name(0, "/outside/repo/file.md")
-		package.loaded["plugins.toggleterm.terms.window"] = {
+		package.loaded["neoterm.terms.window"] = {
 			get_path = function() return nil end,
 			create = function(path) created = path end,
 		}

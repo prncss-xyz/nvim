@@ -101,7 +101,7 @@ local function finish_rebuild(id, directories, next_files, candidates)
 	if id ~= generation then
 		return
 	end
-	local config = require("plugins.toggleterm.config")
+	local config = require("neoterm.config")
 	local status_names = {}
 	for _, status in ipairs(config.status) do
 		status_names[status.name] = true
@@ -339,7 +339,7 @@ function M.latest(candidates, predicate)
 			end
 		end
 	end
-	local latest = require("plugins.toggleterm.terms.artifact_cwd").latest_file(paths)
+	local latest = require("neoterm.terms.artifact_cwd").latest_file(paths)
 	if latest then
 		return latest
 	end

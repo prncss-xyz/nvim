@@ -1,5 +1,5 @@
 return function()
-	local terms = package.loaded["plugins.toggleterm.terms"]
+	local terms = package.loaded["neoterm.terms"]
 	if not terms then
 		return ""
 	end

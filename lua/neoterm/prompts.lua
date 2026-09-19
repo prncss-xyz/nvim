@@ -1,5 +1,5 @@
 local M = {}
-local config = require("plugins.toggleterm.config")
+local config = require("neoterm.config")
 
 local function input_for_current_mode()
 	local mode = vim.fn.mode()
@@ -50,7 +50,7 @@ function M.prompt(new_agent)
 		end
 		vim.schedule(function()
 			if type(contents) == "string" then
-				return require("plugins.toggleterm.terms").put(query, contents, { new = new_agent })
+				return require("neoterm.terms").put(query, contents, { new = new_agent })
 			end
 			contents(input, choice, new_agent, query)
 		end)

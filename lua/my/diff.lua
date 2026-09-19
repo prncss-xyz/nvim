@@ -27,7 +27,7 @@ end
 
 function M.variant()
 	M.cp(variant, function()
-		require("plugins.toggleterm.terms").restart({ key = "diff" })
+		require("neoterm.terms").restart({ key = "diff" })
 	end)
 end
 

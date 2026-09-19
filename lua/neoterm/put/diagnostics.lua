@@ -1,8 +1,8 @@
 local M = {}
 
 local function diagnostic_position(bufnr, diagnostic, instance)
-	return require("plugins.toggleterm.put.position").position({
-		path = require("plugins.toggleterm.put.path").display(vim.api.nvim_buf_get_name(bufnr)),
+	return require("neoterm.put.position").position({
+		path = require("neoterm.put.path").display(vim.api.nvim_buf_get_name(bufnr)),
 		row = (diagnostic.lnum or 0) + 1,
 		col = (diagnostic.col or 0) + 1,
 	}, instance)

@@ -11,13 +11,13 @@ local T = MiniTest.new_set({
 
 T["agents template adds installed agents ranked by list order"] = function()
 	child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		package.loaded["plugins.toggleterm.templates.async"] = {
+		package.loaded["neoterm.templates.async"] = {
 			executable = function(name, callback)
 				vim.schedule(function() callback(name == "first" or name == "third") end)
 			end,
 		}
 		local definitions
-		require("plugins.toggleterm.templates.agents").generator({
+		require("neoterm.templates.agents").generator({
 			agents = { "first", "missing", "third" },
 		}, function(result) definitions = result end)
 		vim.wait(1000, function() return definitions ~= nil end)
@@ -32,11 +32,11 @@ end
 
 T["templates add asynchronous agent definitions"] = function()
 	child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		package.loaded["plugins.toggleterm.templates.async"] = {
+		package.loaded["neoterm.templates.async"] = {
 			executable = function(_, callback) vim.schedule(function() callback(true) end) end,
 		}
 		local commands
-		require("plugins.toggleterm.templates").add_commands({}, { "agents" }, {
+		require("neoterm.templates").add_commands({}, { "agents" }, {
 			agents = { "p" },
 		}, function(result) commands = result end)
 		vim.wait(1000, function() return commands ~= nil end)

@@ -26,10 +26,10 @@ T["discovers packages two levels deep without workspaces"] = function()
 		package(vim.fs.joinpath(root, "packages", "one", "deep"), { ignored = "ignored" })
 		package(vim.fs.joinpath(root, "node_modules", "dependency"), { ignored = "ignored" })
 		package(vim.fs.joinpath(root, ".hidden"), { ignored = "ignored" })
-		local async = require("plugins.toggleterm.templates.async")
+		local async = require("neoterm.templates.async")
 		async.executable = function(_, callback) vim.schedule(function() callback(true) end) end
 		local definitions
-		require("plugins.toggleterm.templates.npm").generator({ dir = root }, function(value) definitions = value end)
+		require("neoterm.templates.npm").generator({ dir = root }, function(value) definitions = value end)
 		vim.wait(1000, function() return definitions ~= nil end)
 		result = vim.tbl_map(function(definition) return definition.name end, definitions)
 		table.sort(result)
@@ -48,9 +48,9 @@ T["searches upward at most two levels without falling back to nvim cwd"] = funct
 		local root = vim.fn.tempname()
 		vim.fn.mkdir(vim.fs.joinpath(root, "one", "two", "three"), "p")
 		vim.fn.writefile({ vim.json.encode({ name = "root", packageManager = "pnpm@10", scripts = { test = "test" } }) }, vim.fs.joinpath(root, "package.json"))
-		local async = require("plugins.toggleterm.templates.async")
+		local async = require("neoterm.templates.async")
 		async.executable = function(_, callback) vim.schedule(function() callback(true) end) end
-		local npm = require("plugins.toggleterm.templates.npm")
+		local npm = require("neoterm.templates.npm")
 		local found, missing
 		npm.generator({ dir = vim.fs.joinpath(root, "one", "two") }, function(value) found = value end)
 		npm.generator({ dir = vim.fs.joinpath(root, "one", "two", "three") }, function(value) missing = value end)

@@ -1,7 +1,7 @@
 local M = {}
 
-local parameters = require("my.parameters")
-local dirs = parameters.dirs
+local config = require("neoterm.config")
+local dirs = config.dirs
 local projects = dirs.projects
 
 local function run(command, callback)
@@ -56,7 +56,7 @@ function M.ensure_worktree(dir, callback)
 
 	local repo_dir = vim.fs.joinpath(projects, parts[1])
 	local repo_root
-	for _, branch in ipairs(parameters.default_branches) do
+	for _, branch in ipairs(config.default_branches) do
 		local candidate = vim.fs.joinpath(repo_dir, branch)
 		if vim.uv.fs_stat(candidate) then
 			repo_root = candidate

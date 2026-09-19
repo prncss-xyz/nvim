@@ -25,13 +25,13 @@ local config = {
 		toggleterm = {
 			ft = { "toggleterm-panel" },
 			raise = function()
-				require("plugins.toggleterm.terms").raise_panel()
+				require("neoterm.terms").raise_panel()
 			end,
 		},
 		toggleterm_tasks = {
 			ft = { "toggleterm-task-panel" },
 			raise = function()
-				require("plugins.toggleterm.task_panel").toggle()
+				require("neoterm.task_panel").toggle()
 			end,
 		},
 		neotest = {

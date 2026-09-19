@@ -1,9 +1,10 @@
 local M = {}
 
-local config = require("plugins.toggleterm.config").panel
-local ensure_dir = require("plugins.toggleterm.terms.ensure_dir").ensure_dir
-local format_item = require("plugins.toggleterm.terms.format_item").format_item(false, false)
-local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
+local config = require("neoterm.config").panel
+local ensure_dir = require("neoterm.terms.ensure_dir").ensure_dir
+local format_item = require("neoterm.terms.format_item").format_item(false, false)
+local get_query_fn = require("neoterm.terms.get_query_fn").get_query_fn
+-- TODO:
 local visit = require("my.browser").visit
 
 local states = {}

@@ -20,12 +20,12 @@ T["attach terminal"]["emits status transitions with their visibility"] = functio
 			callbacks = opts
 			return true
 		end
-		package.loaded["plugins.toggleterm.terms.window"] = { is_in_view = function() return visible end }
+		package.loaded["neoterm.terms.window"] = { is_in_view = function() return visible end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		local bufnr = vim.api.nvim_create_buf(false, true)
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "❯ " })
-		require("plugins.toggleterm.terms.attach_term").attach_term({ bufnr = bufnr, window = 1 }, function(event)
+		require("neoterm.terms.attach_term").attach_term({ bufnr = bufnr, window = 1 }, function(event)
 			table.insert(events, event)
 		end, {
 			debounce_ms = 0,
@@ -71,7 +71,7 @@ T["attach terminal"]["checks status during continuous output"] = function()
 
 		local bufnr = vim.api.nvim_create_buf(false, true)
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "❯ " })
-		require("plugins.toggleterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
+		require("neoterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
 			table.insert(events, event)
 		end, {
 			debounce_ms = 30,
@@ -109,7 +109,7 @@ T["attach terminal"]["confirms plain idle without continuous terminal output"] =
 
 		local bufnr = vim.api.nvim_create_buf(false, true)
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Working..." })
-		require("plugins.toggleterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
+		require("neoterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
 			table.insert(events, event)
 		end, {
 			debounce_ms = 0,
@@ -155,7 +155,7 @@ T["attach terminal"]["does not publish transient plain idle"] = function()
 
 		local bufnr = vim.api.nvim_create_buf(false, true)
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Working..." })
-		require("plugins.toggleterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
+		require("neoterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
 			table.insert(events, event)
 		end, {
 			debounce_ms = 0,
@@ -195,7 +195,7 @@ T["attach terminal"]["visible idle bypasses confirmation"] = function()
 
 		local bufnr = vim.api.nvim_create_buf(false, true)
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "Working..." })
-		require("plugins.toggleterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
+		require("neoterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
 			table.insert(events, event)
 		end, {
 			debounce_ms = 0,
@@ -232,7 +232,7 @@ T["attach terminal"]["emits every local URL match"] = function()
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		local bufnr = vim.api.nvim_create_buf(false, true)
-		require("plugins.toggleterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
+		require("neoterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
 			table.insert(events, event)
 		end)
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, {

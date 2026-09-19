@@ -1,7 +1,7 @@
 local M = {}
 
-local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
-local config = require("plugins.toggleterm.config")
+local artifact_cwd = require("neoterm.terms.artifact_cwd")
+local config = require("neoterm.config")
 local last_created_artifact
 
 local function sanitize_branch(summary)
@@ -134,9 +134,9 @@ end
 
 function M.artifact_to_worktree(branch, opts)
 	vim.notify("Creating worktree " .. branch .. "...", vim.log.levels.INFO)
-	require("plugins.toggleterm.terms.git").create_worktree(branch, function(_, worktree_path)
+	require("neoterm.terms.git").create_worktree(branch, function(_, worktree_path)
 		opts.cwd = worktree_path
-		require("plugins.toggleterm.terms").focus(opts)
+		require("neoterm.terms").focus(opts)
 	end)
 end
 
@@ -184,14 +184,14 @@ local function with_worktree(path)
 	local current_branch = vim.trim(vim.fn.system({ "git", "-C", project_dir, "branch", "--show-current" }))
 	assert(vim.v.shell_error == 0 and current_branch ~= "", "Failed to determine current Git branch")
 
-	local terms = require("plugins.toggleterm.terms")
+	local terms = require("neoterm.terms")
 	if branch == current_branch then
 		terms.focus(prompt(path, project_dir))
 		return
 	end
 
 	vim.notify("Creating worktree " .. branch .. "...", vim.log.levels.INFO)
-	require("plugins.toggleterm.terms.git").create_worktree(branch, function(_, worktree_path)
+	require("neoterm.terms.git").create_worktree(branch, function(_, worktree_path)
 		terms.focus(prompt(path, worktree_path))
 	end)
 end

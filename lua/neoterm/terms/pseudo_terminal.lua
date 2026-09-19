@@ -1,19 +1,19 @@
 local M = {}
-local window = require("plugins.toggleterm.terms.window")
+local window = require("neoterm.terms.window")
 
 local function noop() end
 
 local function project_dir()
-	return require("plugins.toggleterm.terms.artifact_cwd").context_dir() or vim.fn.getcwd()
+	return require("neoterm.terms.artifact_cwd").context_dir() or vim.fn.getcwd()
 end
 
 local function latest_artifact(dir)
-	local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
+	local artifact_cwd = require("neoterm.terms.artifact_cwd")
 	return artifact_cwd.latest_in(artifact_cwd.for_checkout(dir))
 end
 
 local function source_context(dir, invocation)
-	local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
+	local artifact_cwd = require("neoterm.terms.artifact_cwd")
 	local ctx = window.get_ctx(invocation)
 	if ctx == nil then
 		return
@@ -62,16 +62,16 @@ function M.create(touch)
 
 	local function toggle_artifact()
 		local current = vim.fs.normalize(vim.api.nvim_buf_get_name(0))
-		local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
+		local artifact_cwd = require("neoterm.terms.artifact_cwd")
 		local from_artifact = artifact_cwd.contains(current)
 		local dir = artifact_cwd.resolve(current) or assert(vim.uv.fs_realpath(vim.fn.getcwd()))
 
 		if from_artifact then
-			local target = require("my.project_file").find(dir, { require("my.parameters").dirs.artifacts })
+			local target = require("my.project_file").find(dir, { require("neoterm.config").dirs.artifacts })
 			if target == nil then
 				target = vim.fs.joinpath(dir, "README.md")
 			end
-			require("plugins.toggleterm.config").create(vim.fn.fnameescape(target))
+			require("neoterm.config").create(vim.fn.fnameescape(target))
 			touch()
 			return
 		end
@@ -82,7 +82,7 @@ function M.create(touch)
 			focus_buffer(target.bufnr)
 		else
 			vim.fn.mkdir(target_dir, "p")
-			require("plugins.toggleterm.config").create(vim.fn.fnameescape(vim.fs.joinpath(target_dir, "index.md")))
+			require("neoterm.config").create(vim.fn.fnameescape(vim.fs.joinpath(target_dir, "index.md")))
 		end
 		touch()
 	end

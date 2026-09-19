@@ -1,14 +1,15 @@
 local M = {}
 
-local create_history = require("plugins.toggleterm.terms.history").create_history
-local Term = require("plugins.toggleterm.terms.create_term")
-local config = require("plugins.toggleterm.config")
-local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
-local utils = require("plugins.toggleterm.terms.utils")
-local commands = require("plugins.toggleterm.terms.get_commands")
+local create_history = require("neoterm.terms.history").create_history
+local Term = require("neoterm.terms.create_term")
+local config = require("neoterm.config")
+local get_query_fn = require("neoterm.terms.get_query_fn").get_query_fn
+local utils = require("neoterm.terms.utils")
+local commands = require("neoterm.terms.get_commands")
 local get_commands = commands.get_commands
-local format_item = require("plugins.toggleterm.terms.format_item").format_item
-local create_pseudo_terminal = require("plugins.toggleterm.terms.pseudo_terminal").create
+local format_item = require("neoterm.terms.format_item").format_item
+local create_pseudo_terminal = require("neoterm.terms.pseudo_terminal").create
+-- TODO:
 local visit = require("my.browser").visit
 
 local screen_manifests = {
@@ -236,7 +237,7 @@ local function make_item(item, cb, requested_instance)
 		end
 		create_and_notify(item, cb)
 	end
-	require("plugins.toggleterm.terms.git").ensure_worktree(item.cwd, function(ok)
+	require("neoterm.terms.git").ensure_worktree(item.cwd, function(ok)
 		if ok then
 			create()
 		else
@@ -259,7 +260,7 @@ local function normalize_query(query)
 	query = vim.tbl_extend("keep", query or {}, {})
 	query.instance_count = vim.v.count > 0 and vim.v.count or query.instance_count
 	query.cwd = query.cwd
-		or require("plugins.toggleterm.terms.artifact_cwd").context_dir()
+		or require("neoterm.terms.artifact_cwd").context_dir()
 		or { vim.fn.getcwd(), vim.env.HOME }
 	return query
 end
@@ -311,7 +312,7 @@ local function with_query(query, cb)
 		if #items > 0 then
 			return vim.ui.select(items, {
 				prompt = query.prompt,
-				format_item = format_item(query.cwd == require("plugins.toggleterm.terms.get_query_fn").any),
+				format_item = format_item(query.cwd == require("neoterm.terms.get_query_fn").any),
 			}, function(item)
 				if item then
 					cb(item)
@@ -455,13 +456,13 @@ function M.toggle_panel(query)
 	if selected and selected.toggle_panel then
 		return selected.toggle_panel()
 	end
-	require("plugins.toggleterm.terms.panel").toggle(query, panel_history, subscribe, function(dir)
+	require("neoterm.terms.panel").toggle(query, panel_history, subscribe, function(dir)
 		M.focus({ cwd = dir, prompt = "Select Command: " })
 	end)
 end
 
 function M.raise_panel()
-	require("plugins.toggleterm.terms.panel").open(panel_history, subscribe, function(dir)
+	require("neoterm.terms.panel").open(panel_history, subscribe, function(dir)
 		M.focus({ cwd = dir, prompt = "Select Command: " })
 	end)
 end
@@ -473,7 +474,7 @@ end
 local function prepare_put(arg)
 	local invocation
 	if type(arg) == "string" then
-		local put = require("plugins.toggleterm.put.core")
+		local put = require("neoterm.put.core")
 		invocation = put.capture(arg)
 		arg = put.template(arg)
 	end
@@ -482,7 +483,7 @@ end
 
 local function put(instance, invocation, arg)
 	local ctx = instance.term.get_ctx and instance.term.get_ctx(invocation)
-		or require("plugins.toggleterm.terms.window").get_ctx(invocation)
+		or require("neoterm.terms.window").get_ctx(invocation)
 	if ctx then
 		arg = arg(ctx, instance)
 	else

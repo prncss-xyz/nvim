@@ -286,7 +286,7 @@ return {
 			{
 				pick .. reverse("a"),
 				function()
-					local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
+					local artifact_cwd = require("neoterm.terms.artifact_cwd")
 					local project_dir = artifact_cwd.context_dir() or vim.fn.getcwd()
 					local target_dir = artifact_cwd.for_checkout(project_dir)
 					vim.fn.mkdir(target_dir, "p")
@@ -477,9 +477,9 @@ return {
 				"bn",
 				function()
 					local project_dir =
-						require("plugins.toggleterm.terms.artifact_cwd").resolve(vim.api.nvim_buf_get_name(0))
+						require("neoterm.terms.artifact_cwd").resolve(vim.api.nvim_buf_get_name(0))
 					if project_dir then
-						require("plugins.toggleterm.terms.ensure_dir").open_dir(project_dir, 0, false)
+						require("neoterm.terms.ensure_dir").open_dir(project_dir, 0, false)
 					else
 						projects.open_project(require("my.parameters").dirs.notes)
 					end

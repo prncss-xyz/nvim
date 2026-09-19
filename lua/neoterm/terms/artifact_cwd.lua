@@ -1,7 +1,7 @@
 local M = {}
 
-local parameters = require("my.parameters")
-local dirs = parameters.dirs
+local config = require("neoterm.config")
+local dirs = config.dirs
 
 local function is_directory(path)
 	local stat = vim.uv.fs_stat(path)
@@ -79,7 +79,7 @@ function M.resolve(filename)
 		return branch_dir
 	end
 
-	for _, branch in ipairs(parameters.default_branches or { "main", "master" }) do
+	for _, branch in ipairs(config.default_branches) do
 		local default_dir = vim.fs.joinpath(project_dir, branch)
 		if is_directory(default_dir) then
 			return default_dir
@@ -110,7 +110,7 @@ end
 function M.for_checkout(project_dir)
 	local project = project_name(project_dir)
 	local branch = branch_name(project_dir)
-	if branch and not vim.tbl_contains(parameters.default_branches or { "main", "master" }, branch) then
+	if branch and not vim.tbl_contains(config.default_branches, branch) then
 		return vim.fs.joinpath(dirs.artifacts, project, (branch:gsub("/", "-")))
 	end
 	return vim.fs.joinpath(dirs.artifacts, project)

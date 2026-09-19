@@ -32,23 +32,23 @@ local T = MiniTest.new_set({
 
 T["reads frontmatter from the start of a buffer"] = function()
 	child.lua([[vim.api.nvim_buf_set_lines(0, 0, -1, false, { "---", "title: Example", "---", "Body" })
-		local value = require("plugins.toggleterm.yaml").read(0)
+		local value = require("neoterm.yaml").read(0)
 		assert(vim.deep_equal(value, { source = "title: Example" }))]])
 end
 
 T["returns an empty mapping when frontmatter is absent"] = function()
 	child.lua([[vim.api.nvim_buf_set_lines(0, 0, -1, false, { "# Heading", "---" })
-		assert(vim.deep_equal(require("plugins.toggleterm.yaml").read(0), {}))]])
+		assert(vim.deep_equal(require("neoterm.yaml").read(0), {}))]])
 end
 
 T["returns an empty mapping when frontmatter is empty"] = function()
 	child.lua([[vim.api.nvim_buf_set_lines(0, 0, -1, false, { "---", "---", "Body" })
-		assert(vim.deep_equal(require("plugins.toggleterm.yaml").read(0), {}))]])
+		assert(vim.deep_equal(require("neoterm.yaml").read(0), {}))]])
 end
 
 T["replaces existing frontmatter without changing the body"] = function()
 	child.lua([[vim.api.nvim_buf_set_lines(0, 0, -1, false, { "---", "title: Old", "---", "Body" })
-		require("plugins.toggleterm.yaml").write(0, { title = "New" })
+		require("neoterm.yaml").write(0, { title = "New" })
 		assert(vim.deep_equal(vim.api.nvim_buf_get_lines(0, 0, -1, false), {
 			"---", "title: New", "---", "Body",
 		}))]])
@@ -56,7 +56,7 @@ end
 
 T["inserts frontmatter before an existing document"] = function()
 	child.lua([[vim.api.nvim_buf_set_lines(0, 0, -1, false, { "# Heading" })
-		require("plugins.toggleterm.yaml").write(0, { title = "New" })
+		require("neoterm.yaml").write(0, { title = "New" })
 		assert(vim.deep_equal(vim.api.nvim_buf_get_lines(0, 0, -1, false), {
 			"---", "title: New", "---", "", "# Heading",
 		}))]])
@@ -64,19 +64,19 @@ end
 
 T["deletes existing frontmatter when the mapping becomes empty"] = function()
 	child.lua([[vim.api.nvim_buf_set_lines(0, 0, -1, false, { "---", "title: Old", "---", "", "# Heading" })
-		require("plugins.toggleterm.yaml").write(0, {})
+		require("neoterm.yaml").write(0, {})
 		assert(vim.deep_equal(vim.api.nvim_buf_get_lines(0, 0, -1, false), { "# Heading" }))]])
 end
 
 T["does nothing when writing an empty mapping without frontmatter"] = function()
 	child.lua([[vim.api.nvim_buf_set_lines(0, 0, -1, false, { "# Heading" })
-		require("plugins.toggleterm.yaml").write(0, {})
+		require("neoterm.yaml").write(0, {})
 		assert(vim.deep_equal(vim.api.nvim_buf_get_lines(0, 0, -1, false), { "# Heading" }))]])
 end
 
 T["writes frontmatter to a file"] = function()
 	child.lua([[local path = vim.fn.tempname()
-		require("plugins.toggleterm.yaml").write_file(path, { dependency = { "index.md" } }, { "Body" })
+		require("neoterm.yaml").write_file(path, { dependency = { "index.md" } }, { "Body" })
 		assert(vim.deep_equal(vim.fn.readfile(path), {
 			"---", "dependency:", "- index.md", "---", "", "Body",
 		}))
@@ -84,7 +84,7 @@ T["writes frontmatter to a file"] = function()
 end
 
 T["refuses to write frontmatter that is not a YAML mapping"] = function()
-	child.lua([[local ok, err = pcall(require("plugins.toggleterm.yaml").write, 0, "title")
+	child.lua([[local ok, err = pcall(require("neoterm.yaml").write, 0, "title")
 		assert(not ok)
 		assert(err:find("must be a YAML mapping", 1, true))]])
 end

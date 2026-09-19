@@ -4,7 +4,7 @@ function M.add_dependency()
 	local artifacts = require("my.parameters").dirs.artifacts
 	local files = vim.tbl_filter(function(path)
 		return vim.fs.basename(path) == "task.md"
-	end, require("plugins.toggleterm.artifact_tasks").files(artifacts))
+	end, require("neoterm.artifact_tasks").files(artifacts))
 	local function dependency_name(path)
 		return assert(vim.fs.relpath(artifacts, path)):gsub("/task%.md$", "")
 	end
@@ -18,7 +18,7 @@ function M.add_dependency()
 		end
 
 		local dependency = dependency_name(path)
-		local yaml = require("plugins.toggleterm.yaml")
+		local yaml = require("neoterm.yaml")
 		local frontmatter = yaml.read(0)
 		local dependencies = frontmatter.dependencies
 		if type(dependencies) == "string" then
@@ -33,11 +33,11 @@ function M.add_dependency()
 end
 
 function M.update_status()
-	local yaml = require("plugins.toggleterm.yaml")
+	local yaml = require("neoterm.yaml")
 	local remove = "REMOVE"
 	local statuses = vim.tbl_map(function(status)
 		return status.name
-	end, require("plugins.toggleterm.config").status)
+	end, require("neoterm.config").status)
 	table.insert(statuses, remove)
 	vim.ui.select(statuses, { prompt = "Select status" }, function(choice)
 		if choice == nil then

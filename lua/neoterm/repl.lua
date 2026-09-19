@@ -1,7 +1,7 @@
 local M = {}
 
 local function get_REPL_from_lang(lang)
-	local key = require("plugins.toggleterm.config").lang_to_REPL[lang]
+	local key = require("neoterm.config").lang_to_REPL[lang]
 	if not key then
 		return nil
 	end
@@ -11,7 +11,7 @@ end
 M.op = require("flies.operations._with_contents"):new({
 	cb = function(lang, contents)
 		local key = get_REPL_from_lang(lang)
-		require("plugins.toggleterm.terms").put({ key = key }, contents)
+		require("neoterm.terms").put({ key = key }, contents)
 	end,
 })
 

@@ -2,12 +2,13 @@ local Term = {}
 Term.__index = Term
 
 local Terminal = require("toggleterm.terminal").Terminal
-local attach_term = require("plugins.toggleterm.terms.attach_term").attach_term
+local attach_term = require("neoterm.terms.attach_term").attach_term
 local last_terminal
-local window = require("plugins.toggleterm.terms.window")
+local window = require("neoterm.terms.window")
 local is_visible = window.is_visible
 
-local ensure_dir = require("plugins.toggleterm.terms.ensure_dir").ensure_dir
+local ensure_dir = require("neoterm.terms.ensure_dir").ensure_dir
+-- TODO:
 local project_dir = require("my.rooter").project_dir
 
 local function ensure_dir_without_focus(dir)

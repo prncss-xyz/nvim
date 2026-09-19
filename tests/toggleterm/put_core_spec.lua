@@ -19,7 +19,7 @@ T["buffer metadata templates expand context values"] = function()
 		vim.bo.filetype = "lua"
 		vim.api.nvim_win_set_cursor(0, { 1, 0 })
 
-		local ctx = require("plugins.toggleterm.terms.window").get_ctx()
+		local ctx = require("neoterm.terms.window").get_ctx()
 		local template = table.concat({
 			"{filename}",
 			"{directory}",
@@ -28,7 +28,7 @@ T["buffer metadata templates expand context values"] = function()
 			"{extension}",
 			"{filetype}",
 		}, "|")
-		local result = require("plugins.toggleterm.put.core").template(template)(ctx, {})
+		local result = require("neoterm.put.core").template(template)(ctx, {})
 		assert(result == "module.test.lua|src/example|1|1|lua|lua", result)
 	]])
 end
@@ -38,8 +38,8 @@ T["artifact paths are relative to home"] = function()
 		local path = vim.fs.joinpath(vim.env.HOME, "projects/notes/main/dev/artifacts/nvim/neomux/varlock.task.md")
 		vim.api.nvim_buf_set_name(0, path)
 
-		local ctx = require("plugins.toggleterm.terms.window").get_ctx()
-		local result = require("plugins.toggleterm.put.core").template("{path}")(ctx, { tag = "agent" })
+		local ctx = require("neoterm.terms.window").get_ctx()
+		local result = require("neoterm.put.core").template("{path}")(ctx, { tag = "agent" })
 		assert(result == "@~/projects/notes/main/dev/artifacts/nvim/neomux/varlock.task.md ", result)
 	]])
 end
@@ -49,21 +49,21 @@ T["filetype templates use the source buffer filetype"] = function()
 		vim.api.nvim_buf_set_name(0, "example.lua")
 		vim.bo.filetype = "lua"
 
-		local ctx = require("plugins.toggleterm.terms.window").get_ctx()
-		local result = require("plugins.toggleterm.put.core").template("language: {filetype}")(ctx, {})
+		local ctx = require("neoterm.terms.window").get_ctx()
+		local result = require("neoterm.put.core").template("language: {filetype}")(ctx, {})
 		assert(result == "language: lua", result)
 	]])
 end
 
 T["filetype templates preserve the source filetype after focusing a terminal"] = function()
 	child.lua([[
-		local window = require("plugins.toggleterm.terms.window")
+		local window = require("neoterm.terms.window")
 		vim.api.nvim_buf_set_name(0, "example.lua")
 		vim.bo.filetype = "lua"
 		vim.cmd.terminal()
 
 		local ctx = window.get_ctx()
-		local result = require("plugins.toggleterm.put.core").template("language: {filetype}")(ctx, {})
+		local result = require("neoterm.put.core").template("language: {filetype}")(ctx, {})
 		assert(result == "language: lua", result)
 	]])
 end
@@ -73,8 +73,8 @@ T["message templates expand the last Neovim message"] = function()
 		vim.api.nvim_echo({ { "first message" } }, true, {})
 		vim.api.nvim_echo({ { "last message" } }, true, {})
 
-		local ctx = require("plugins.toggleterm.terms.window").get_ctx()
-		local result = require("plugins.toggleterm.put.core").template("message: {message}")(ctx, {})
+		local ctx = require("neoterm.terms.window").get_ctx()
+		local result = require("neoterm.put.core").template("message: {message}")(ctx, {})
 		assert(result == "message: last message", result)
 	]])
 end
@@ -86,13 +86,13 @@ T["selection templates capture the active selection before expansion"] = functio
 		vim.api.nvim_win_set_cursor(0, { 1, 6 })
 		vim.cmd("normal! v4l")
 
-		local put = require("plugins.toggleterm.put.core")
+		local put = require("neoterm.put.core")
 		local invocation = put.capture("explain {selection}")
 
 		vim.cmd("normal! \\<Esc>")
 		vim.api.nvim_buf_set_lines(0, 0, 1, false, { "local other = 2" })
 
-		local ctx = require("plugins.toggleterm.terms.window").get_ctx(invocation)
+		local ctx = require("neoterm.terms.window").get_ctx(invocation)
 		local result = put.template("explain {selection}")(ctx, {})
 		assert(result == "explain selection.lua L1C:7\nvalue\n", result)
 	]])
@@ -100,7 +100,7 @@ end
 
 T["selection templates use the last selection after focusing a terminal"] = function()
 	child.lua([[
-		local window = require("plugins.toggleterm.terms.window")
+		local window = require("neoterm.terms.window")
 		vim.api.nvim_buf_set_name(0, "selection.lua")
 		vim.api.nvim_buf_set_lines(0, 0, -1, false, { "local value = 1", "return value" })
 		vim.api.nvim_win_set_cursor(0, { 1, 6 })
@@ -109,7 +109,7 @@ T["selection templates use the last selection after focusing a terminal"] = func
 
 		vim.cmd.terminal()
 
-		local put = require("plugins.toggleterm.put.core")
+		local put = require("neoterm.put.core")
 		local invocation = put.capture("explain {selection}")
 		local ctx = window.get_ctx(invocation)
 		local result = put.template("explain {selection}")(ctx, {})
@@ -124,7 +124,7 @@ T["selection capture preserves linewise regions"] = function()
 		vim.api.nvim_win_set_cursor(0, { 1, 2 })
 		vim.cmd("normal! Vj")
 
-		local selection = require("plugins.toggleterm.put.selection").capture()
+		local selection = require("neoterm.put.selection").capture()
 		assert(selection == "selection.lua L1C:1\nfirst\nsecond\n", selection)
 	]])
 end

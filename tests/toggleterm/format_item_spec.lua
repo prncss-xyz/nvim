@@ -3,7 +3,7 @@ local T = MiniTest.new_set()
 T["terminal item formatting"] = MiniTest.new_set()
 
 T["terminal item formatting"]["does not mark commands without a terminal as working"] = function()
-	local format_item = require("plugins.toggleterm.terms.format_item").format_item(false)
+	local format_item = require("neoterm.terms.format_item").format_item(false)
 	local item = {
 		key = "test",
 		instance_count = 1,
@@ -16,7 +16,7 @@ T["terminal item formatting"]["does not mark commands without a terminal as work
 end
 
 T["terminal item formatting"]["marks unseen terminals after the identifier"] = function()
-	local format_item = require("plugins.toggleterm.terms.format_item").format_item(false)
+	local format_item = require("neoterm.terms.format_item").format_item(false)
 	local item = {
 		key = "agent",
 		instance_count = 1,

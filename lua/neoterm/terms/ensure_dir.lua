@@ -1,8 +1,10 @@
 local M = {}
 
-local window = require("plugins.toggleterm.terms.window")
-local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
+local window = require("neoterm.terms.window")
+local artifact_cwd = require("neoterm.terms.artifact_cwd")
+-- TODO:
 local find_project_file = require("my.project_file").find
+-- TODO:
 local get_last_file_win = require("my.windows").get_last_file_win
 
 local function find_buffer(path)

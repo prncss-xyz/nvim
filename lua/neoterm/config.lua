@@ -1,10 +1,16 @@
 local personal = require("my.conds").personal
+local dirs = require("my.parameters").dirs
 local notify = require("my.notify")
-local prompt_utils = require("plugins.toggleterm.helpers.prompt")
+local prompt_utils = require("neoterm.helpers.prompt")
 
 local agent = personal("p", "claude")
-
 return {
+	rooter_patterns = { ".git", ".hg", ".svn" },
+	default_branches = { "main", "master" },
+	dirs = {
+		projects = dirs.projects,
+		artifacts = dirs.notes .. "/dev/artifacts",
+	},
 	agents = { "p", "claude", "agy" },
 	min_runtime = 10000,
 	ai_query = personal(
@@ -145,7 +151,7 @@ Output ONLY the branch name, nothing else.
 			cmd = require("my.diff").get_cmd(),
 			exit_policy = "keep",
 		},
-		repl = require("plugins.toggleterm.repl").get_REPL,
+		repl = require("neoterm.repl").get_REPL,
 		gac = {
 			cmd = "gac",
 			exit_policy = "keep",

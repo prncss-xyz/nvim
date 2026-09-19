@@ -1,5 +1,5 @@
-local parameters = require("my.parameters")
-local dirs = parameters.dirs
+local config = require("neoterm.config")
+local dirs = config.dirs
 
 local M = {}
 
@@ -11,7 +11,7 @@ local function current_branch(cwd)
 end
 
 local function is_default_branch(branch)
-	return branch == nil or vim.tbl_contains(parameters.default_branches or { "main", "master" }, branch)
+	return branch == nil or vim.tbl_contains(config.default_branches, branch)
 end
 
 local function current_project(cwd)
@@ -81,7 +81,7 @@ local function source_details(source, task)
 	assert(project and branch, "Artifact task must be inside a project branch")
 	if #parts == 2 then
 		branch = branch:match("^(.*)%." .. vim.pesc(task.source) .. "$")
-			or (branch == task.source and (parameters.default_branches or { "main", "master" })[1])
+			or (branch == task.source and (config.default_branches)[1])
 		assert(branch, "Project-level artifact must be a task source or encode its branch")
 	end
 

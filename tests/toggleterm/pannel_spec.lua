@@ -52,13 +52,13 @@ T["terminal panel"]["toggles a filtered side panel and focuses the selected term
 			listener = cb
 			return function() listener = nil end
 		end
-		package.loaded["plugins.toggleterm.config"] = { panel = { width = 24 } }
+		package.loaded["neoterm.config"] = { panel = { width = 24 } }
 		package.loaded["my.browser"] = { visit = function(url) table.insert(visited, url) end }
-		package.loaded["plugins.toggleterm.terms.format_item"] = {
+		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function(item) return item.status .. " " .. item.display_name end end,
 		}
 
-		local panel = require("plugins.toggleterm.terms.panel")
+		local panel = require("neoterm.terms.panel")
 		panel.toggle({ key = "agent" }, history, subscribe)
 		local win = vim.api.nvim_get_current_win()
 		local buf = vim.api.nvim_win_get_buf(win)
@@ -126,11 +126,11 @@ T["terminal panel"]["refreshes from events and preserves selection by hash"] = f
 			listener = cb
 			return function() listener = nil end
 		end
-		package.loaded["plugins.toggleterm.config"] = { panel = { width = 24 } }
-		package.loaded["plugins.toggleterm.terms.format_item"] = {
+		package.loaded["neoterm.config"] = { panel = { width = 24 } }
+		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function(item) return item.hash .. ":" .. item.status end end,
 		}
-		local panel = require("plugins.toggleterm.terms.panel")
+		local panel = require("neoterm.terms.panel")
 		panel.toggle({}, history, subscribe)
 		local win = vim.api.nvim_get_current_win()
 		vim.api.nvim_win_set_cursor(win, { 3, 0 })
@@ -160,11 +160,11 @@ T["terminal panel"]["aligns statuses across different indentation depths"] = fun
 		}
 		local history = { filter = function() return items end }
 		local function subscribe() return function() end end
-		package.loaded["plugins.toggleterm.config"] = { panel = { width = 24 } }
-		package.loaded["plugins.toggleterm.terms.format_item"] = {
+		package.loaded["neoterm.config"] = { panel = { width = 24 } }
+		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function(item) return item.label end end,
 		}
-		local panel = require("plugins.toggleterm.terms.panel")
+		local panel = require("neoterm.terms.panel")
 		panel.toggle({}, history, subscribe)
 		result = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, -1, false)
 	]])
@@ -186,11 +186,11 @@ T["terminal panel"]["highlights directories and terminal states"] = function()
 		}
 		local history = { filter = function() return items end }
 		local function subscribe() return function() end end
-		package.loaded["plugins.toggleterm.config"] = { panel = { width = 24 } }
-		package.loaded["plugins.toggleterm.terms.format_item"] = {
+		package.loaded["neoterm.config"] = { panel = { width = 24 } }
+		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function(item) return item.hash end end,
 		}
-		local panel = require("plugins.toggleterm.terms.panel")
+		local panel = require("neoterm.terms.panel")
 		panel.toggle({}, history, subscribe)
 		local marks = vim.api.nvim_buf_get_extmarks(vim.api.nvim_get_current_buf(), -1, 0, -1, { details = true })
 		result = vim.tbl_map(function(mark)
@@ -213,11 +213,11 @@ T["terminal panel"]["renders an empty state and enter is a no-op"] = function()
 			filter = function() return {} end,
 		}
 		local function subscribe() return function() end end
-		package.loaded["plugins.toggleterm.config"] = { panel = { width = 24 } }
-		package.loaded["plugins.toggleterm.terms.format_item"] = {
+		package.loaded["neoterm.config"] = { panel = { width = 24 } }
+		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function() error("must not format") end end,
 		}
-		local panel = require("plugins.toggleterm.terms.panel")
+		local panel = require("neoterm.terms.panel")
 		panel.toggle({}, history, subscribe)
 		local buf = vim.api.nvim_get_current_buf()
 		vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)

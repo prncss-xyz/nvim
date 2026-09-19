@@ -32,7 +32,7 @@ function M.add_commands(commands, module_names, opts, callback)
 		end
 	end
 	for _, module_name in ipairs(module_names) do
-		local provider = require("plugins.toggleterm.templates." .. module_name)
+		local provider = require("neoterm.templates." .. module_name)
 		assert(type(provider.generator) == "function", "Template provider must define generator")
 		local called = false
 		local function done(definitions)

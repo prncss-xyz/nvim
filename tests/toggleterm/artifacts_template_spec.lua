@@ -34,9 +34,9 @@ T["creates tasks for sources without targets"] = function()
 			dirs = { artifacts = artifacts, projects = projects },
 			default_branches = { "main", "master" },
 		}
-		package.loaded["plugins.toggleterm.templates.artifacts"] = nil
+		package.loaded["neoterm.templates.artifacts"] = nil
 		local definitions
-		require("plugins.toggleterm.templates.artifacts").generator({
+		require("neoterm.templates.artifacts").generator({
 			dir = vim.fs.joinpath(projects, "nvim", "main"),
 			tasks = {
 				{
@@ -95,10 +95,10 @@ T["creates tasks for executable artifact scripts"] = function()
 			dirs = { artifacts = artifacts, projects = projects },
 			default_branches = { "main", "master" },
 		}
-		package.loaded["plugins.toggleterm.terms.artifact_cwd"] = nil
-		package.loaded["plugins.toggleterm.templates.artifacts"] = nil
+		package.loaded["neoterm.terms.artifact_cwd"] = nil
+		package.loaded["neoterm.templates.artifacts"] = nil
 		local definitions, artifact_definitions
-		local template = require("plugins.toggleterm.templates.artifacts")
+		local template = require("neoterm.templates.artifacts")
 		template.generator({
 			dir = project,
 			file = task,
@@ -153,8 +153,8 @@ T["supports flat sources without a target"] = function()
 			dirs = { artifacts = artifacts, projects = projects },
 			default_branches = { "main", "master" },
 		}
-		package.loaded["plugins.toggleterm.templates.artifacts"] = nil
-		local template = require("plugins.toggleterm.templates.artifacts")
+		package.loaded["neoterm.templates.artifacts"] = nil
+		local template = require("neoterm.templates.artifacts")
 		local definitions, invalid
 		template.generator({
 			dir = vim.fs.joinpath(projects, "nvim", "main"),
@@ -204,8 +204,8 @@ T["filters non-default branches and resolves fork cwd"] = function()
 		vim.system = function(_, _, callback)
 			vim.schedule(function() callback({ code = 0, stdout = "feat-one\n" }) end)
 		end
-		package.loaded["plugins.toggleterm.templates.artifacts"] = nil
-		local template = require("plugins.toggleterm.templates.artifacts")
+		package.loaded["neoterm.templates.artifacts"] = nil
+		local template = require("neoterm.templates.artifacts")
 		local forked, local_task
 		template.generator({
 			dir = current,

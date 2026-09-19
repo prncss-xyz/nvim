@@ -21,7 +21,7 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 			dir = "/tmp",
 		}
 
-		package.loaded["plugins.toggleterm.terms.history"] = {
+		package.loaded["neoterm.terms.history"] = {
 			create_history = function()
 				return {
 					insert = function() end,
@@ -31,7 +31,7 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 				}
 			end,
 		}
-		package.loaded["plugins.toggleterm.terms.create_term"] = {
+		package.loaded["neoterm.terms.create_term"] = {
 			new = function(_, _, callback)
 				send = callback
 				return {
@@ -40,30 +40,30 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 				}
 			end,
 		}
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.config"] = {
 			autostart = {},
 			on_status = function(instance)
 				table.insert(notifications, instance.status)
 			end,
 		}
-		package.loaded["plugins.toggleterm.terms.get_query_fn"] = {
+		package.loaded["neoterm.terms.get_query_fn"] = {
 			get_query_fn = function() return function() return true end end,
 		}
-		package.loaded["plugins.toggleterm.terms.utils"] = {
+		package.loaded["neoterm.terms.utils"] = {
 			compose_gt = function() return function() return false end end,
 			gt_field = function() return function() return false end end,
 			lt_field = function() return function() return false end end,
 			max_of = function() return item end,
 		}
-		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() return { item } end,
 		}
-		package.loaded["plugins.toggleterm.terms.format_item"] = {
+		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function() return "agent" end end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		require("plugins.toggleterm.terms").focus({})
+		require("neoterm.terms").focus({})
 		send({ type = "status", value = "working", visible = true })
 		local visible_status = item.status
 		send({ type = "status", value = "working", visible = false })
@@ -100,20 +100,20 @@ T["pseudo terminal"]["toggles the artifact index without querying terminals"] = 
 				artifacts = vim.fn.tempname(),
 			},
 		}
-		package.loaded["plugins.toggleterm.terms.create_term"] = {
+		package.loaded["neoterm.terms.create_term"] = {
 			new = function() error("artifact must not create a terminal") end,
 		}
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.config"] = {
 			autostart = {},
 			on_status = function() end,
 			create = function() toggled = toggled + 1 end,
 		}
-		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not query terminal commands") end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		require("plugins.toggleterm.terms").toggle({ key = "artifact", dir = "/does/not/matter" })
+		require("neoterm.terms").toggle({ key = "artifact", dir = "/does/not/matter" })
 		result = toggled
 	]])
 
@@ -130,13 +130,13 @@ T["pseudo terminal"]["ignores stale artifact buffers whose files no longer exist
 		vim.fn.mkdir(vim.fs.dirname(stale), "p")
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
-		package.loaded["plugins.toggleterm.terms.create_term"] = { new = function() end }
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.terms.create_term"] = { new = function() end }
+		package.loaded["neoterm.config"] = {
 			autostart = {},
 			on_status = function() end,
 			create = function(path) created = path end,
 		}
-		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not query terminal commands") end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
@@ -145,7 +145,7 @@ T["pseudo terminal"]["ignores stale artifact buffers whose files no longer exist
 		vim.cmd.cd(vim.fn.fnameescape(project))
 		vim.cmd.edit(vim.fn.fnameescape(stale))
 		vim.cmd.enew()
-		require("plugins.toggleterm.terms").toggle({ key = "artifact" })
+		require("neoterm.terms").toggle({ key = "artifact" })
 		result = created
 	]])
 
@@ -165,9 +165,9 @@ T["pseudo terminal"]["focuses the latest artifact for the current project"] = fu
 		vim.fn.writefile({ "artifact" }, artifact)
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
-		package.loaded["plugins.toggleterm.terms.create_term"] = { new = function() end }
-		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
-		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+		package.loaded["neoterm.terms.create_term"] = { new = function() end }
+		package.loaded["neoterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not query terminal commands") end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
@@ -176,7 +176,7 @@ T["pseudo terminal"]["focuses the latest artifact for the current project"] = fu
 		vim.cmd.cd(vim.fn.fnameescape(project))
 		vim.cmd.edit(vim.fn.fnameescape(artifact))
 		vim.cmd.edit(vim.fn.fnameescape(source))
-		require("plugins.toggleterm.terms").focus({ key = "artifact" })
+		require("neoterm.terms").focus({ key = "artifact" })
 		result = { expected = artifact, actual = vim.api.nvim_buf_get_name(0) }
 	]])
 
@@ -197,9 +197,9 @@ T["pseudo terminal"]["focuses an existing artifact window instead of replacing t
 		vim.fn.writefile({ "artifact" }, artifact)
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
-		package.loaded["plugins.toggleterm.terms.create_term"] = { new = function() end }
-		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
-		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+		package.loaded["neoterm.terms.create_term"] = { new = function() end }
+		package.loaded["neoterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not query terminal commands") end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
@@ -210,7 +210,7 @@ T["pseudo terminal"]["focuses an existing artifact window instead of replacing t
 		local artifact_win = vim.api.nvim_get_current_win()
 		vim.cmd.vsplit(vim.fn.fnameescape(source))
 		local source_win = vim.api.nvim_get_current_win()
-		require("plugins.toggleterm.terms").focus({ key = "artifact" })
+		require("neoterm.terms").focus({ key = "artifact" })
 		result = {
 			focused_artifact = vim.api.nvim_get_current_win() == artifact_win,
 			source_unchanged = vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(source_win)) == source,
@@ -231,9 +231,9 @@ T["pseudo terminal"]["inserts text at the artifact cursor"] = function()
 		vim.fn.writefile({ "before after" }, artifact)
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
-		package.loaded["plugins.toggleterm.terms.create_term"] = { new = function() end }
-		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
-		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+		package.loaded["neoterm.terms.create_term"] = { new = function() end }
+		package.loaded["neoterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not query terminal commands") end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
@@ -242,7 +242,7 @@ T["pseudo terminal"]["inserts text at the artifact cursor"] = function()
 		vim.cmd.cd(vim.fn.fnameescape(project))
 		vim.cmd.edit(vim.fn.fnameescape(artifact))
 		vim.api.nvim_win_set_cursor(0, { 1, 7 })
-		require("plugins.toggleterm.terms").put({ key = "artifact" }, "inserted ")
+		require("neoterm.terms").put({ key = "artifact" }, "inserted ")
 		result = vim.api.nvim_buf_get_lines(0, 0, -1, false)
 	]])
 
@@ -253,7 +253,7 @@ T["pseudo terminal"]["participates in history only when explicitly included"] = 
 	child.lua([[local sent = {}
 		local created = {}
 		local events = {}
-		package.loaded["plugins.toggleterm.terms.pseudo_terminal"] = {
+		package.loaded["neoterm.terms.pseudo_terminal"] = {
 			create = function(touch)
 				local item = {
 					key = "artifact",
@@ -276,7 +276,7 @@ T["pseudo terminal"]["participates in history only when explicitly included"] = 
 				return item
 			end,
 		}
-		package.loaded["plugins.toggleterm.terms.create_term"] = {
+		package.loaded["neoterm.terms.create_term"] = {
 			new = function(_, item, callback)
 				table.insert(created, item.instance_count)
 				return {
@@ -286,19 +286,19 @@ T["pseudo terminal"]["participates in history only when explicitly included"] = 
 				}
 			end,
 		}
-		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
-		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+		package.loaded["neoterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() return {} end,
 		}
 		package.loaded["my.ui_toggle"] = { activate = function(_, action) action() end }
-		package.loaded["plugins.toggleterm.terms.panel"] = {
+		package.loaded["neoterm.terms.panel"] = {
 			toggle = function(_, _, subscribe)
 				subscribe(function(event) table.insert(events, event.type) end)
 			end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local terms = require("plugins.toggleterm.terms")
+		local terms = require("neoterm.terms")
 		terms.toggle_panel({})
 		terms.focus({ key = "agent", dir = "/tmp" })
 		terms.put({ artifact = true, dir = "/tmp" }, "latest-terminal")
@@ -325,7 +325,7 @@ end
 T["put"]["leaves the terminal in insert mode"] = function()
 	child.lua([[local sent
 		local item = { key = "agent", dir = "/tmp" }
-		package.loaded["plugins.toggleterm.terms.create_term"] = {
+		package.loaded["neoterm.terms.create_term"] = {
 			new = function()
 				return {
 					put = function(_, str, start_insert)
@@ -335,16 +335,16 @@ T["put"]["leaves the terminal in insert mode"] = function()
 				}
 			end,
 		}
-		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
-		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+		package.loaded["neoterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() return { item } end,
 		}
-		package.loaded["plugins.toggleterm.terms.get_query_fn"] = {
+		package.loaded["neoterm.terms.get_query_fn"] = {
 			get_query_fn = function() return function() return true end end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		require("plugins.toggleterm.terms").put({ key = "agent", dir = "/tmp" }, "hello")
+		require("neoterm.terms").put({ key = "agent", dir = "/tmp" }, "hello")
 		result = sent
 	]])
 
@@ -364,19 +364,19 @@ T["put"]["formats the current project buffer for the latest artifact"] = functio
 		vim.fn.writefile({ "artifact" }, artifact)
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
-		package.loaded["plugins.toggleterm.terms.create_term"] = { new = function() end }
-		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
-		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+		package.loaded["neoterm.terms.create_term"] = { new = function() end }
+		package.loaded["neoterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not create a terminal") end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local terms = require("plugins.toggleterm.terms")
+		local terms = require("neoterm.terms")
 		vim.o.hidden = true
 		vim.cmd.cd(vim.fn.fnameescape(project))
 		vim.cmd.edit(vim.fn.fnameescape(artifact))
 		vim.cmd.edit(vim.fn.fnameescape(source))
-		terms.put({ key = "artifact" }, require("plugins.toggleterm.put.position").row)
+		terms.put({ key = "artifact" }, require("neoterm.put.position").row)
 		focused = vim.api.nvim_buf_get_name(0)
 		expected = artifact
 		vim.cmd.write()
@@ -403,20 +403,20 @@ T["put"]["uses the last project buffer from a terminal"] = function()
 		package.loaded["toggleterm.terminal"] = {
 			identify = function() return nil, { dir = project } end,
 		}
-		package.loaded["plugins.toggleterm.terms.create_term"] = { new = function() end }
-		package.loaded["plugins.toggleterm.config"] = { autostart = {}, on_status = function() end }
-		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+		package.loaded["neoterm.terms.create_term"] = { new = function() end }
+		package.loaded["neoterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not create a terminal") end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local terms = require("plugins.toggleterm.terms")
+		local terms = require("neoterm.terms")
 		vim.o.hidden = true
 		vim.cmd.cd(vim.fn.fnameescape(project))
 		vim.cmd.edit(vim.fn.fnameescape(artifact))
 		vim.cmd.edit(vim.fn.fnameescape(source))
 		vim.cmd.terminal()
-		terms.put({ key = "artifact" }, require("plugins.toggleterm.put.position").row)
+		terms.put({ key = "artifact" }, require("neoterm.put.position").row)
 		focused = vim.api.nvim_buf_get_name(0)
 		expected = artifact
 		vim.cmd.write()
@@ -444,7 +444,7 @@ T["instance numbers"]["are globally unique and reuse the smallest available numb
 			["/ignored"] = "ignored",
 			["/three"] = "repl",
 		}
-		package.loaded["plugins.toggleterm.terms.create_term"] = {
+		package.loaded["neoterm.terms.create_term"] = {
 			new = function(_, opts, callback)
 				local key = key_by_cwd[opts.cwd]
 				table.insert(created, { key = key, instance_count = opts.instance_count })
@@ -456,16 +456,16 @@ T["instance numbers"]["are globally unique and reuse the smallest available numb
 				}
 			end,
 		}
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.config"] = {
 			autostart = {},
 			on_status = function() end,
 		}
-		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() return {} end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local terms = require("plugins.toggleterm.terms")
+		local terms = require("neoterm.terms")
 		terms.focus({ key = "shell", dir = "/one" })
 		terms.focus({ key = "agent", dir = "/two" })
 		local next_query = { key = "ignored", dir = "/ignored" }
@@ -504,17 +504,17 @@ T["instance numbers"]["new command choices show the instance they will receive"]
 	child.lua([[local selected_count
 		local created_count
 
-		package.loaded["plugins.toggleterm.terms.create_term"] = {
+		package.loaded["neoterm.terms.create_term"] = {
 			new = function(_, opts)
 				created_count = opts.instance_count
 				return { focus = function() end }
 			end,
 		}
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.config"] = {
 			autostart = {},
 			on_status = function() end,
 		}
-		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function()
 				return {
 					shell = { key = "shell", dir = "/one", instance_count = 1 },
@@ -527,7 +527,7 @@ T["instance numbers"]["new command choices show the instance they will receive"]
 		end
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local terms = require("plugins.toggleterm.terms")
+		local terms = require("neoterm.terms")
 		terms.run_or_raise({ dir = "/one" })
 		result = { selected = selected_count, created = created_count }
 	]])
@@ -549,7 +549,7 @@ T["artifact cwd"]["resolves explicit and default branches without git"] = functi
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		local resolve = require("plugins.toggleterm.terms.artifact_cwd").resolve
+		local resolve = require("neoterm.terms.artifact_cwd").resolve
 		result = {
 			explicit = resolve(vim.fs.joinpath(artifacts, "alpha", "feature", "issue.md")),
 			missing_branch = resolve(vim.fs.joinpath(artifacts, "alpha", "missing", "issue.md")),
@@ -577,7 +577,7 @@ T["artifact cwd"]["maps a checkout to its project artifacts"] = function()
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		result = require("plugins.toggleterm.terms.artifact_cwd").for_project(checkout)
+		result = require("neoterm.terms.artifact_cwd").for_project(checkout)
 	]])
 
 	local root = child.lua_get("root")
@@ -598,7 +598,7 @@ T["artifact cwd"]["maps feature checkouts to branch artifact paths"] = function(
 			default_branches = { "main", "master" },
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		result = require("plugins.toggleterm.terms.artifact_cwd").for_checkout(checkout)
+		result = require("neoterm.terms.artifact_cwd").for_checkout(checkout)
 	]])
 
 	local root = child.lua_get("root")
@@ -621,7 +621,7 @@ T["artifact cwd"]["maps default and unidentified branches to project artifacts"]
 			default_branches = { "main", "master" },
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		local for_checkout = require("plugins.toggleterm.terms.artifact_cwd").for_checkout
+		local for_checkout = require("neoterm.terms.artifact_cwd").for_checkout
 		result = {
 			default_branch = for_checkout(default_checkout),
 			without_git = for_checkout(plain_checkout),
@@ -638,7 +638,7 @@ end
 T["directory queries"] = MiniTest.new_set()
 
 T["directory queries"]["matches HOME exactly"] = function()
-	local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
+	local get_query_fn = require("neoterm.terms.get_query_fn").get_query_fn
 	local filter = get_query_fn({ dir = vim.env.HOME })
 
 	assert(filter({ dir = vim.env.HOME }))
@@ -646,7 +646,7 @@ T["directory queries"]["matches HOME exactly"] = function()
 end
 
 T["directory queries"]["matches descendants of other directories"] = function()
-	local get_query_fn = require("plugins.toggleterm.terms.get_query_fn").get_query_fn
+	local get_query_fn = require("neoterm.terms.get_query_fn").get_query_fn
 	local parent = vim.fs.joinpath(vim.env.HOME, "project")
 	local filter = get_query_fn({ dir = parent })
 
@@ -666,7 +666,7 @@ T["terminal panel integration"]["forwards make_item lifecycle changes"] = functi
 		}
 		local stored = {}
 
-		package.loaded["plugins.toggleterm.terms.history"] = {
+		package.loaded["neoterm.terms.history"] = {
 			create_history = function()
 				return {
 					insert = function(value) stored = { value } end,
@@ -676,7 +676,7 @@ T["terminal panel integration"]["forwards make_item lifecycle changes"] = functi
 				}
 			end,
 		}
-		package.loaded["plugins.toggleterm.terms.create_term"] = {
+		package.loaded["neoterm.terms.create_term"] = {
 			new = function(_, _, callback)
 				sent = callback
 				return {
@@ -685,31 +685,31 @@ T["terminal panel integration"]["forwards make_item lifecycle changes"] = functi
 				}
 			end,
 		}
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.config"] = {
 			autostart = {},
 			min_runtime = 0,
 			on_status = function() end,
 			panel = { width = 24 },
 		}
-		package.loaded["plugins.toggleterm.terms.get_commands"] = {
+		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() return { item } end,
 		}
-		package.loaded["plugins.toggleterm.terms.format_item"] = {
+		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function(value) return value.key end end,
 		}
-		package.loaded["plugins.toggleterm.terms.panel"] = {
+		package.loaded["neoterm.terms.panel"] = {
 			toggle = function(query, history, subscribe)
 				listener = subscribe(function(event)
 					table.insert(events, event.type)
 				end)
-				result_items = history.filter(require("plugins.toggleterm.terms.get_query_fn").get_query_fn(query))
+				result_items = history.filter(require("neoterm.terms.get_query_fn").get_query_fn(query))
 			end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local terms = require("plugins.toggleterm.terms")
+		local terms = require("neoterm.terms")
 		terms.focus({ key = "agent" })
-		terms.toggle_panel({ key = "agent", dir = require("plugins.toggleterm.terms.get_query_fn").any })
+		terms.toggle_panel({ key = "agent", dir = require("neoterm.terms.get_query_fn").any })
 		sent({ type = "dir", value = "/project" })
 		sent({ type = "status", value = "working" })
 		sent({ type = "detach" })

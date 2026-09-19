@@ -88,8 +88,8 @@ local function create_rows(tasks, statuses, root_parts)
 end
 
 local function render()
-	local config = require("plugins.toggleterm.config")
-	state.tasks = require("plugins.toggleterm.artifact_tasks").get()
+	local config = require("neoterm.config")
+	state.tasks = require("neoterm.artifact_tasks").get()
 	local relative_root = assert(vim.fs.relpath(state.artifacts, state.root))
 	local root_parts = relative_root == "." and {} or vim.split(relative_root, "/", { plain = true })
 	local statuses = config.status
@@ -132,7 +132,7 @@ local function open_selected()
 	if not selected then
 		return
 	end
-	local latest = require("plugins.toggleterm.artifact_tasks").latest(state.tasks, function(task)
+	local latest = require("neoterm.artifact_tasks").latest(state.tasks, function(task)
 		if task.status ~= selected.status then
 			return false
 		end
@@ -152,14 +152,14 @@ local function open_selected()
 			vim.api.nvim_win_set_buf(target_win, latest.bufnr)
 		else
 			vim.api.nvim_win_call(target_win, function()
-				require("plugins.toggleterm.config").create(vim.fn.fnameescape(latest.path))
+				require("neoterm.config").create(vim.fn.fnameescape(latest.path))
 			end)
 		end
 		vim.api.nvim_set_current_win(target_win)
 	elseif selected.task then
 		local task = assert(selected_task(selected), "Selected artifact task not found")
 		vim.api.nvim_win_call(target_win, function()
-			require("plugins.toggleterm.config").create(vim.fn.fnameescape(vim.fs.joinpath(task.cwd, "index.md")))
+			require("neoterm.config").create(vim.fn.fnameescape(vim.fs.joinpath(task.cwd, "index.md")))
 		end)
 		vim.api.nvim_set_current_win(target_win)
 	end
@@ -183,12 +183,12 @@ local function create_task()
 	if not directory then
 		return
 	end
-	local project_root = require("plugins.toggleterm.terms.artifact_cwd").resolve(directory)
+	local project_root = require("neoterm.terms.artifact_cwd").resolve(directory)
 	if not project_root then
 		return
 	end
-	require("plugins.toggleterm.prompts").run(
-		require("plugins.toggleterm.helpers.prompt").create_task(false, directory, project_root),
+	require("neoterm.prompts").run(
+		require("neoterm.helpers.prompt").create_task(false, directory, project_root),
 		"task"
 	)
 end
@@ -216,7 +216,7 @@ local function toggle_focus_mode()
 end
 
 local function delete_task_buffers(task)
-	local config = require("plugins.toggleterm.config")
+	local config = require("neoterm.config")
 	local task_dir = vim.fs.normalize(task.cwd) .. "/"
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
 		local path = vim.fs.normalize(vim.api.nvim_buf_get_name(bufnr))
@@ -259,7 +259,7 @@ function M.toggle()
 		close()
 		return
 	end
-	local width = require("plugins.toggleterm.config").panel.width
+	local width = require("neoterm.config").panel.width
 	local artifacts = require("my.parameters").dirs.artifacts
 	local root = default_root(artifacts)
 	vim.cmd(string.format("topleft %dvsplit", width))
@@ -276,7 +276,7 @@ function M.toggle()
 		root = root,
 	}
 	local panel = state
-	state.unsubscribe = require("plugins.toggleterm.artifact_tasks").subscribe(function()
+	state.unsubscribe = require("neoterm.artifact_tasks").subscribe(function()
 		if state == panel and vim.api.nvim_win_is_valid(panel.win) then
 			render()
 		end

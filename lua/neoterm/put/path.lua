@@ -16,7 +16,7 @@ end
 ---@return string
 function M.display(filename)
 	local absolute = vim.fs.abspath(filename)
-	if not require("plugins.toggleterm.terms.artifact_cwd").contains(absolute) then
+	if not require("neoterm.terms.artifact_cwd").contains(absolute) then
 		return vim.fn.fnamemodify(absolute, ":.")
 	end
 

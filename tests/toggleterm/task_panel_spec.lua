@@ -24,7 +24,7 @@ T["derives task status in precedence order"] = function()
 			{ name = "ready", files = { "design.md" } },
 			{ name = "done" },
 		}
-		result = require("plugins.toggleterm.artifact_tasks").scan(root, statuses, "draft")
+		result = require("neoterm.artifact_tasks").scan(root, statuses, "draft")
 	]])
 
 	local result = child.lua_get("result")
@@ -50,7 +50,7 @@ T["uses the default status and warns about unknown explicit statuses"] = functio
 			{ name = "ready", files = { "design.md" } },
 			{ name = "draft" },
 		}
-		local tasks = require("plugins.toggleterm.artifact_tasks").scan(root, statuses, "draft")
+		local tasks = require("neoterm.artifact_tasks").scan(root, statuses, "draft")
 		result = {
 			status = tasks[1].status,
 			notification = notification,
@@ -87,12 +87,12 @@ T["renders status project branch and opens the latest matching artifact"] = func
 		local file_win = vim.api.nvim_get_current_win()
 		expected = latest
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.config"] = {
 			panel = { width = 24 },
 			default_status = "draft",
 			status = { { name = "draft" } },
 		}
-		require("plugins.toggleterm.task_panel").toggle()
+		require("neoterm.task_panel").toggle()
 		local panel_win = vim.api.nvim_get_current_win()
 		local buf = vim.api.nvim_get_current_buf()
 		local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
@@ -128,7 +128,7 @@ T["supports flat branch.task.md tasks with a file icon"] = function()
 		local file_win = vim.api.nvim_get_current_win()
 		local created
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.config"] = {
 			panel = { width = 24 },
 			default_status = "draft",
 			status = { { name = "draft" }, { name = "done" } },
@@ -137,8 +137,8 @@ T["supports flat branch.task.md tasks with a file icon"] = function()
 				vim.cmd.edit(path)
 			end,
 		}
-		local tasks = require("plugins.toggleterm.artifact_tasks").scan(root, package.loaded["plugins.toggleterm.config"].status, "draft")
-		require("plugins.toggleterm.task_panel").toggle()
+		local tasks = require("neoterm.artifact_tasks").scan(root, package.loaded["neoterm.config"].status, "draft")
+		require("neoterm.task_panel").toggle()
 		local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
 		vim.api.nvim_win_set_cursor(0, { 4, 0 })
 		vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)
@@ -172,12 +172,12 @@ T["recomputes after debounced filesystem changes"] = function()
 		vim.fn.mkdir(project, "p")
 		local marker = vim.fs.joinpath(project, "watched.task.md")
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.config"] = {
 			panel = { width = 24 },
 			default_status = "draft",
 			status = { { name = "draft" }, { name = "done" } },
 		}
-		require("plugins.toggleterm.task_panel").toggle()
+		require("neoterm.task_panel").toggle()
 		vim.fn.writefile({ "task" }, marker)
 		local created = vim.wait(1000, function()
 			return vim.tbl_contains(vim.api.nvim_buf_get_lines(0, 0, -1, false), "    󰈙 watched")
@@ -204,12 +204,12 @@ T["highlights only directories that immediately contain task.md"] = function()
 		vim.fn.mkdir(vim.fs.joinpath(root, ".hidden"), "p")
 		vim.fn.writefile({ "task" }, vim.fs.joinpath(root, ".hidden", "task.md"))
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.config"] = {
 			panel = { width = 24 },
 			default_status = "draft",
 			status = { { name = "draft" } },
 		}
-		require("plugins.toggleterm.task_panel").toggle()
+		require("neoterm.task_panel").toggle()
 		local marks = vim.api.nvim_buf_get_extmarks(vim.api.nvim_get_current_buf(), -1, 0, -1, { details = true })
 		result = {
 			lines = vim.api.nvim_buf_get_lines(0, 0, -1, false),
@@ -250,12 +250,12 @@ T["sets and raises the displayed root path"] = function()
 		vim.fn.writefile({ "task" }, vim.fs.joinpath(outside, "task.md"))
 		vim.fn.writefile({ "ready" }, vim.fs.joinpath(outside, "design.md"))
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.config"] = {
 			panel = { width = 24 },
 			default_status = "draft",
 			status = { { name = "draft" }, { name = "ready", files = { "design.md" } } },
 		}
-		require("plugins.toggleterm.task_panel").toggle()
+		require("neoterm.task_panel").toggle()
 		vim.api.nvim_win_set_cursor(0, { 3, 0 })
 		vim.api.nvim_feedkeys("r", "x", false)
 		local rooted = vim.api.nvim_buf_get_lines(0, 0, -1, false)
@@ -289,7 +289,7 @@ T["opens an unloaded artifact instead of creating index.md"] = function()
 		local file_win = vim.api.nvim_get_current_win()
 		local created
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.config"] = {
 			panel = { width = 24 },
 			default_status = "draft",
 			status = { { name = "draft" } },
@@ -298,7 +298,7 @@ T["opens an unloaded artifact instead of creating index.md"] = function()
 				vim.cmd.edit(path)
 			end,
 		}
-		require("plugins.toggleterm.task_panel").toggle()
+		require("neoterm.task_panel").toggle()
 		vim.api.nvim_win_set_cursor(0, { 3, 0 })
 		vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)
 		result = {
@@ -325,7 +325,7 @@ T["opens task.md for a task with no other artifacts"] = function()
 		local file_win = vim.api.nvim_get_current_win()
 		local created
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.config"] = {
 			panel = { width = 24 },
 			default_status = "draft",
 			status = { { name = "draft" } },
@@ -334,7 +334,7 @@ T["opens task.md for a task with no other artifacts"] = function()
 				vim.cmd.edit(path)
 			end,
 		}
-		require("plugins.toggleterm.task_panel").toggle()
+		require("neoterm.task_panel").toggle()
 		vim.api.nvim_win_set_cursor(0, { 3, 0 })
 		vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)
 		result = {
@@ -370,7 +370,7 @@ T["prompts before deleting a task and deletes its buffers through config"] = fun
 		vim.cmd.enew()
 		local deleted_buffers = {}
 		package.loaded["my.parameters"] = { dirs = { artifacts = root } }
-		package.loaded["plugins.toggleterm.config"] = {
+		package.loaded["neoterm.config"] = {
 			panel = { width = 24 },
 			default_status = "draft",
 			status = { { name = "draft" } },
@@ -384,7 +384,7 @@ T["prompts before deleting a task and deletes its buffers through config"] = fun
 			prompt = opts.prompt
 			callback(items[1])
 		end
-		require("plugins.toggleterm.task_panel").toggle()
+		require("neoterm.task_panel").toggle()
 		vim.api.nvim_win_set_cursor(0, { 4, 0 })
 		vim.api.nvim_feedkeys("x", "x", false)
 		table.sort(deleted_buffers)

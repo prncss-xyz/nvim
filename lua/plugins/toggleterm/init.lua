@@ -12,7 +12,7 @@ return {
 				pattern = "VeryLazy",
 				once = true,
 				callback = function()
-					require("plugins.toggleterm.artifact_tasks").start()
+					require("neoterm.artifact_tasks").start()
 				end,
 			})
 		end,
@@ -84,16 +84,16 @@ return {
 			{
 				domain.move .. "a",
 				function()
-					require("plugins.toggleterm.terms").toggle({ key = "artifact" })
+					require("neoterm.terms").toggle({ key = "artifact" })
 				end,
 				desc = "Artifact Index",
 			},
 			{
 				domain.pick .. theme.run,
 				function()
-					require("plugins.toggleterm.terms").toggle({
+					require("neoterm.terms").toggle({
 						prompt = "Select Terminal",
-						cwd = require("plugins.toggleterm.terms.get_query_fn").any,
+						cwd = require("neoterm.terms.get_query_fn").any,
 					})
 				end,
 				desc = "Select Any Terminal",
@@ -101,21 +101,21 @@ return {
 			{
 				domain.pick .. reverse(theme.run),
 				function()
-					require("plugins.toggleterm.terms").focus({ prompt = "Select Terminal" })
+					require("neoterm.terms").focus({ prompt = "Select Terminal" })
 				end,
 				desc = "Select Terminal",
 			},
 			{
 				"mb",
 				function()
-					require("plugins.toggleterm.terms").toggle_unseen_or_latest()
+					require("neoterm.terms").toggle_unseen_or_latest()
 				end,
 				desc = "Toggle Last Terminal",
 			},
 			{
 				ai_insert.toggle,
 				function()
-					require("plugins.toggleterm.terms").toggle()
+					require("neoterm.terms").toggle()
 				end,
 				desc = "Toggle Last Terminal",
 				mode = { "n", "x", "i", "t" },
@@ -124,8 +124,8 @@ return {
 				"ru",
 				function()
 					require("my.ui_toggle").activate("toggleterm", function()
-						require("plugins.toggleterm.terms").toggle_panel({
-							cwd = require("plugins.toggleterm.terms.get_query_fn").any,
+						require("neoterm.terms").toggle_panel({
+							cwd = require("neoterm.terms.get_query_fn").any,
 						})
 					end)
 				end,
@@ -136,7 +136,7 @@ return {
 				"r" .. reverse("u"),
 				function()
 					require("my.ui_toggle").activate("toggleterm_tasks", function()
-						require("plugins.toggleterm.task_panel").toggle()
+						require("neoterm.task_panel").toggle()
 					end)
 				end,
 				desc = "Toggle Tasks Panel",
@@ -144,9 +144,9 @@ return {
 			{
 				"oi",
 				function()
-					require("plugins.toggleterm.repl").op:call({ domain = "outer" }, {
+					require("neoterm.repl").op:call({ domain = "outer" }, {
 						i = function()
-							require("plugins.toggleterm.terms").focus({ key = "repl" })
+							require("neoterm.terms").focus({ key = "repl" })
 						end,
 					})
 				end,
@@ -156,59 +156,59 @@ return {
 			{
 				"ou",
 				function()
-					require("plugins.toggleterm.terms").focus({ key = "test" })
+					require("neoterm.terms").focus({ key = "test" })
 				end,
 				desc = "Toggle Terminal Test",
 			},
 			{
 				"o" .. reverse("e"),
 				function()
-					require("plugins.toggleterm.terms").start({ key = "shell" })
+					require("neoterm.terms").start({ key = "shell" })
 				end,
 				desc = "New Terminal Shell",
 			},
 			{
 				"oe",
 				function()
-					require("plugins.toggleterm.terms").focus({ key = "shell" })
+					require("neoterm.terms").focus({ key = "shell" })
 				end,
 				desc = "Toggle Terminal Shell",
 			},
 			{
 				"o" .. reverse("r"),
 				function()
-					require("plugins.toggleterm.terms").start({ key = "home shell" })
+					require("neoterm.terms").start({ key = "home shell" })
 				end,
 				desc = "New Terminal Home Shell",
 			},
 			{
 				"or",
 				function()
-					require("plugins.toggleterm.terms").focus({ key = "home shell" })
+					require("neoterm.terms").focus({ key = "home shell" })
 				end,
 				desc = "Toggle Terminal Home Shell",
 			},
 			{
 				"oyw",
 				function()
-					require("plugins.toggleterm.terms").browse()
+					require("neoterm.terms").browse()
 				end,
 				desc = "Browse Terminal",
 			},
 			{
 				"ow",
 				function()
-					require("plugins.toggleterm.terms").run_or_raise()
+					require("neoterm.terms").run_or_raise()
 				end,
 				desc = "Select Command",
 			},
 			{
 				"oz",
 				function()
-					local definitions = require("plugins.toggleterm.artifact_commands").for_file({
-						cwd = require("plugins.toggleterm.terms.artifact_cwd").context_dir() or vim.fn.getcwd(),
+					local definitions = require("neoterm.artifact_commands").for_file({
+						cwd = require("neoterm.terms.artifact_cwd").context_dir() or vim.fn.getcwd(),
 						file = vim.api.nvim_buf_get_name(0),
-						tasks = require("plugins.toggleterm.config").tasks,
+						tasks = require("neoterm.config").tasks,
 					})
 					vim.ui.select(definitions, {
 						prompt = "Select Buffer Task: ",
@@ -224,7 +224,7 @@ return {
 						task.display_name = definition.name
 						task.tag = definition.name
 						task.exit_policy = task.exit_policy or "close"
-						require("plugins.toggleterm.terms").start(task)
+						require("neoterm.terms").start(task)
 					end)
 				end,
 				desc = "Run Buffer Task",
@@ -232,21 +232,21 @@ return {
 			{
 				"o" .. reverse("z"),
 				function()
-					require("plugins.toggleterm.harness").pick_with_worktree()
+					require("neoterm.harness").pick_with_worktree()
 				end,
 				desc = "Pick With Worktree",
 			},
 			{
 				"oo",
 				function()
-					require("plugins.toggleterm.terms").focus({ key = "diff" })
+					require("neoterm.terms").focus({ key = "diff" })
 				end,
 				desc = "Toggle Terminal Diff",
 			},
 			{
 				"m" .. reverse("a"),
 				function()
-					require("plugins.toggleterm.terms").start({ tag = "agent" })
+					require("neoterm.terms").start({ tag = "agent" })
 				end,
 				desc = "New Agent",
 				mode = "n",
@@ -254,7 +254,7 @@ return {
 			{
 				"ma",
 				function()
-					require("plugins.toggleterm.terms").focus({ tag = "agent" })
+					require("neoterm.terms").focus({ tag = "agent" })
 				end,
 				desc = "Focus Agent",
 				mode = "n",
@@ -262,21 +262,21 @@ return {
 			{
 				"mv",
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{selection}")
+					require("neoterm.terms").put({ tag = "agent" }, "{selection}")
 				end,
 				desc = "Send Selection to Agent",
 			},
 			{
 				"m" .. reverse("v"),
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{selection}", { new = true })
+					require("neoterm.terms").put({ tag = "agent" }, "{selection}", { new = true })
 				end,
 				desc = "Send Selection to New Agent",
 			},
 			{
 				"ma",
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{selection}")
+					require("neoterm.terms").put({ tag = "agent" }, "{selection}")
 				end,
 				desc = "Send Selection to Agent",
 				mode = "x",
@@ -284,7 +284,7 @@ return {
 			{
 				"m" .. reverse("a"),
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{selection}", { new = true })
+					require("neoterm.terms").put({ tag = "agent" }, "{selection}", { new = true })
 				end,
 				desc = "Send Selection to New Agent",
 				mode = "x",
@@ -292,7 +292,7 @@ return {
 			{
 				"mc",
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{position}")
+					require("neoterm.terms").put({ tag = "agent" }, "{position}")
 				end,
 				desc = "Put Current File Position",
 				mode = "n",
@@ -300,7 +300,7 @@ return {
 			{
 				"m" .. reverse("c"),
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{position}", { new = true })
+					require("neoterm.terms").put({ tag = "agent" }, "{position}", { new = true })
 				end,
 				desc = "Put Current File Position in New Agent",
 				mode = "n",
@@ -308,7 +308,7 @@ return {
 			{
 				"mps",
 				function()
-					require("plugins.toggleterm.helpers.frontmatter").add_dependency()
+					require("neoterm.helpers.frontmatter").add_dependency()
 				end,
 				desc = "Add Dependency",
 				ft = "markdown",
@@ -316,7 +316,7 @@ return {
 			{
 				"ms",
 				function()
-					require("plugins.toggleterm.helpers.frontmatter").update_status()
+					require("neoterm.helpers.frontmatter").update_status()
 				end,
 				desc = "Update Status",
 				mode = "n",
@@ -325,7 +325,7 @@ return {
 			{
 				"md",
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{line}")
+					require("neoterm.terms").put({ tag = "agent" }, "{line}")
 				end,
 				desc = "Put Current File Line",
 				mode = "n",
@@ -333,7 +333,7 @@ return {
 			{
 				"m" .. reverse("d"),
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{line}", { new = true })
+					require("neoterm.terms").put({ tag = "agent" }, "{line}", { new = true })
 				end,
 				desc = "Put Current File Line in New Agent",
 				mode = "n",
@@ -341,7 +341,7 @@ return {
 			{
 				"me",
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{path}")
+					require("neoterm.terms").put({ tag = "agent" }, "{path}")
 				end,
 				desc = "Put Current File Path",
 				mode = "n",
@@ -349,7 +349,7 @@ return {
 			{
 				"m" .. reverse("e"),
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{path}", { new = true })
+					require("neoterm.terms").put({ tag = "agent" }, "{path}", { new = true })
 				end,
 				desc = "Put Current File Path in New Agent",
 				mode = "n",
@@ -357,7 +357,7 @@ return {
 			{
 				"mh",
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{hunk}")
+					require("neoterm.terms").put({ tag = "agent" }, "{hunk}")
 				end,
 				desc = "Put Current or Next Hunk",
 				mode = "n",
@@ -365,7 +365,7 @@ return {
 			{
 				"m" .. reverse("h"),
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{hunk}", { new = true })
+					require("neoterm.terms").put({ tag = "agent" }, "{hunk}", { new = true })
 				end,
 				desc = "Put Current or Next Hunk in New Agent",
 				mode = "n",
@@ -373,7 +373,7 @@ return {
 			{
 				"mm",
 				function()
-					require("plugins.toggleterm.prompts").prompt()
+					require("neoterm.prompts").prompt()
 				end,
 				desc = "Put Prompt Result",
 				mode = { "n", "x" },
@@ -381,7 +381,7 @@ return {
 			{
 				"m" .. reverse("n"),
 				function()
-					require("plugins.toggleterm.harness").focus_last_created_artifact()
+					require("neoterm.harness").focus_last_created_artifact()
 				end,
 				desc = "Focus Last Created Task",
 				mode = { "n", "x" },
@@ -390,8 +390,8 @@ return {
 				"mn",
 				function()
 					-- TODO: make this more convenient
-					require("plugins.toggleterm.prompts").run(
-						require("plugins.toggleterm.helpers.prompt").create_task(true)
+					require("neoterm.prompts").run(
+						require("neoterm.helpers.prompt").create_task(true)
 					)
 				end,
 				desc = "New Task",
@@ -400,7 +400,7 @@ return {
 			{
 				"m" .. reverse("m"),
 				function()
-					require("plugins.toggleterm.prompts").prompt(true)
+					require("neoterm.prompts").prompt(true)
 				end,
 				desc = "Put Prompt Result in New Agent",
 				mode = { "n", "x" },
@@ -408,7 +408,7 @@ return {
 			{
 				"mr",
 				function()
-					require("plugins.toggleterm.terms").restart({})
+					require("neoterm.terms").restart({})
 				end,
 				desc = "Restart Last Terminal",
 				mode = { "n", "x" },
@@ -416,7 +416,7 @@ return {
 			{
 				"my",
 				function()
-					require("plugins.toggleterm.terms").focus({ key = "ddgr" })
+					require("neoterm.terms").focus({ key = "ddgr" })
 				end,
 				desc = "ddgr",
 				mode = "n",
@@ -424,7 +424,7 @@ return {
 			{
 				"mz",
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{next_diagnostic}")
+					require("neoterm.terms").put({ tag = "agent" }, "{next_diagnostic}")
 				end,
 				desc = "Put Diagnostic Prompt",
 				mode = "n",
@@ -432,7 +432,7 @@ return {
 			{
 				"m" .. reverse("z"),
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{next_diagnostic}", { new = true })
+					require("neoterm.terms").put({ tag = "agent" }, "{next_diagnostic}", { new = true })
 				end,
 				desc = "Put Diagnostic Prompt in New Agent",
 				mode = "n",
@@ -440,14 +440,14 @@ return {
 			{
 				"mf",
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{file_diagnostic}")
+					require("neoterm.terms").put({ tag = "agent" }, "{file_diagnostic}")
 				end,
 				desc = "Put File Diagnostics Prompt",
 			},
 			{
 				"m" .. reverse("f"),
 				function()
-					require("plugins.toggleterm.terms").put({ tag = "agent" }, "{file_diagnostic}", { new = true })
+					require("neoterm.terms").put({ tag = "agent" }, "{file_diagnostic}", { new = true })
 				end,
 				desc = "Put File Diagnostics Prompt in New Agent",
 			},

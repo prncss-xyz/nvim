@@ -32,21 +32,21 @@ local vars = {
 		return messages[#messages] or ""
 	end,
 	selection = function(ctx)
-		return ctx.selection or require("plugins.toggleterm.put.selection").get_selection(ctx)
+		return ctx.selection or require("neoterm.put.selection").get_selection(ctx)
 	end,
-	path = require("plugins.toggleterm.put.position").path,
-	line = require("plugins.toggleterm.put.position").row,
-	position = require("plugins.toggleterm.put.position").position,
-	hunk = require("plugins.toggleterm.put.hunk").hunk,
-	project_diagnostic = require("plugins.toggleterm.put.diagnostics").get_diagnostics("project"),
-	file_diagnostic = require("plugins.toggleterm.put.diagnostics").get_diagnostics("file"),
-	next_diagnostic = require("plugins.toggleterm.put.diagnostics").get_diagnostics("next"),
+	path = require("neoterm.put.position").path,
+	line = require("neoterm.put.position").row,
+	position = require("neoterm.put.position").position,
+	hunk = require("neoterm.put.hunk").hunk,
+	project_diagnostic = require("neoterm.put.diagnostics").get_diagnostics("project"),
+	file_diagnostic = require("neoterm.put.diagnostics").get_diagnostics("file"),
+	next_diagnostic = require("neoterm.put.diagnostics").get_diagnostics("next"),
 }
 
 function M.capture(str)
 	local invocation = {}
 	if str:find("{selection}", 1, true) then
-		invocation.selection = require("plugins.toggleterm.put.selection").capture()
+		invocation.selection = require("neoterm.put.selection").capture()
 	end
 	return invocation
 end

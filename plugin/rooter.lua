@@ -15,7 +15,7 @@ vim.api.nvim_create_autocmd({ "BufEnter" }, {
 		local root = require("my.rooter").root(0)
 		if root then
 			vim.api.nvim_set_current_dir(root)
-			require("plugins.toggleterm.terms").on_dir()
+			require("neoterm.terms").on_dir()
 		end
 	end,
 })

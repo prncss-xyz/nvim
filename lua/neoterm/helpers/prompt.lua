@@ -10,8 +10,8 @@ end
 
 function M.create_task(remove, directory, project_root)
 	return function(input, prompt)
-		local artifact_cwd = require("plugins.toggleterm.terms.artifact_cwd")
-		local harness = require("plugins.toggleterm.harness")
+		local artifact_cwd = require("neoterm.terms.artifact_cwd")
+		local harness = require("neoterm.harness")
 		local current = vim.api.nvim_buf_get_name(0)
 		local root = project_root or artifact_cwd.resolve(current) or vim.fs.root(0, ".git") or vim.uv.cwd()
 
@@ -35,7 +35,7 @@ end
 function M.sender(prefix)
 	return function(input, prompt, new_agent, query)
 		input(prompt, function(contents)
-			require("plugins.toggleterm.terms").put(
+			require("neoterm.terms").put(
 				query or { tag = "agent" },
 				(prefix or prompt) .. " " .. contents,
 				{ new = new_agent }
