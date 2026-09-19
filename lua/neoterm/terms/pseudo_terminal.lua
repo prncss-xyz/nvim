@@ -86,7 +86,7 @@ function M.create(touch)
 		end
 
 		if from_artifact then
-			local target = require("my.project_file").find(dir, { require("neoterm.config").dirs.artifacts })
+			local target = require("neoterm.helpers.project_file").get_project_file(dir, { require("neoterm.config").dirs.artifacts })
 			if target == nil then
 				target = vim.fs.joinpath(dir, "README.md")
 			end

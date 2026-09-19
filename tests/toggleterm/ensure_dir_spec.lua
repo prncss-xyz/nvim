@@ -4,7 +4,12 @@ local T = MiniTest.new_set({
 	hooks = {
 		pre_case = function()
 			child.restart({ "-u", "NONE" })
-			child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. package.path]])
+			child.lua([[
+				package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+				package.loaded["neoterm.terms.artifact_cwd"] = {
+					contains = function() return false end,
+				}
+			]])
 		end,
 		post_once = child.stop,
 	},
@@ -18,8 +23,8 @@ T["focuses the first window with a buffer inside the requested directory"] = fun
 		vim.cmd.new()
 		vim.api.nvim_buf_set_name(0, "/outside/repo/file.md")
 		package.loaded["neoterm.terms.window"] = {}
-		package.loaded["my.project_file"] = {
-			find = function() return vim.api.nvim_buf_get_name(inside) end,
+		package.loaded["neoterm.helpers.project_file"] = {
+			get_project_file = function() return vim.api.nvim_buf_get_name(inside) end,
 		}
 		package.loaded["neoterm.helpers.win_history"] = {
 			get_last_file_win = function() error("should not select a fallback window") end,
@@ -40,8 +45,8 @@ T["focuses a hidden buffer inside a descendant directory"] = function()
 		vim.cmd.new()
 		vim.api.nvim_buf_set_name(0, "/outside/repo/file.md")
 		package.loaded["neoterm.terms.window"] = {}
-		package.loaded["my.project_file"] = {
-			find = function() return vim.api.nvim_buf_get_name(inside) end,
+		package.loaded["neoterm.helpers.project_file"] = {
+			get_project_file = function() return vim.api.nvim_buf_get_name(inside) end,
 		}
 		package.loaded["neoterm.helpers.win_history"] = {
 			get_last_file_win = function() return target_win end,
@@ -94,8 +99,8 @@ T["opens the selected file in the target window"] = function()
 		package.loaded["neoterm.terms.window"] = {
 			create = function(path) created = path end,
 		}
-		package.loaded["my.project_file"] = {
-			find = function() return selected end,
+		package.loaded["neoterm.helpers.project_file"] = {
+			get_project_file = function() return selected end,
 		}
 		package.loaded["neoterm.helpers.win_history"] = {
 			get_last_file_win = function() return vim.api.nvim_get_current_win() end,

@@ -23,6 +23,22 @@ local screen_manifests = {
 				contains = { "Working..." },
 			},
 			{
+				id = "working_spinner",
+				status = "working",
+				priority = 100,
+				region = "bottom_non_empty_lines(12)",
+				visible_working = true,
+				line_regex = { [[^\s*[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏] Working\s*$]] },
+			},
+			{
+				id = "running_status_bar",
+				status = "working",
+				priority = 100,
+				region = "bottom_non_empty_lines(5)",
+				visible_working = true,
+				line_suffix = { "· running" },
+			},
+			{
 				id = "working_border",
 				status = "working",
 				priority = 100,
@@ -118,12 +134,6 @@ local function release_instance(item)
 	end
 end
 
-local function notify(...)
-	for _, listener in pairs(listeners) do
-		pcall(listener, ...)
-	end
-end
-
 local function subscribe(listener)
 	next_listener_id = next_listener_id + 1
 	local id = next_listener_id
@@ -144,7 +154,7 @@ artifact.status = "idle"
 instance_owners[1] = artifact
 history.insert(artifact)
 
-subscribe(function(event, item)
+local function apply_event(event, item)
 	if event.type == "create" then
 		history.insert(item)
 	elseif event.type == "focus" then
@@ -181,7 +191,14 @@ subscribe(function(event, item)
 			end
 		end)
 	end
-end)
+end
+
+local function notify(event, item)
+	apply_event(event, item)
+	for _, listener in pairs(listeners) do
+		pcall(listener, event, item)
+	end
+end
 
 local function prepare()
 	-- act as noop, but also used as a flag
