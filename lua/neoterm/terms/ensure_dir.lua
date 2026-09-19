@@ -2,8 +2,7 @@ local M = {}
 
 local window = require("neoterm.terms.window")
 local artifact_cwd = require("neoterm.terms.artifact_cwd")
--- TODO:
-local find_project_file = require("my.project_file").find
+local find_project_file = require("neoterm.helpers.project_file").get_project_file
 -- TODO:
 local get_last_file_win = require("my.windows").get_last_file_win
 

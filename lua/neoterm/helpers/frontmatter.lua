@@ -1,7 +1,7 @@
 local M = {}
 
 function M.add_dependency()
-	local artifacts = require("my.parameters").dirs.artifacts
+	local artifacts = require("neoterm.config").dirs.artifacts
 	local files = vim.tbl_filter(function(path)
 		return vim.fs.basename(path) == "task.md"
 	end, require("neoterm.artifact_tasks").files(artifacts))

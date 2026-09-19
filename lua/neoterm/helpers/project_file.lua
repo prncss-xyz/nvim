@@ -40,7 +40,7 @@ end
 ---@param dir string
 ---@param exclude? string[]
 ---@return string?
-function M.find(dir, exclude)
+function M.get_project_file(dir, exclude)
 	dir = vim.fs.normalize(dir)
 	local test = get_test(dir, exclude)
 	local jumplist = vim.fn.getjumplist()[1]

@@ -130,7 +130,7 @@ function M.project_file(path)
 	if project_dir == nil then
 		return nil
 	end
-	return require("my.project_file").find(project_dir)
+	return require("neoterm.helpers.project_file").get_project_file(project_dir)
 end
 
 return M

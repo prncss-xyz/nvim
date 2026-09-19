@@ -3,7 +3,7 @@ local M = {}
 local note_dir = require("my.parameters").dirs.notes
 
 local is_file_cur_win = require("my.windows").is_file_cur_win
-local find_project_file = require("my.project_file").find
+local find_project_file = require("neoterm.helpers.project_file").get_project_file
 
 function M.toggle_project()
 	if is_file_cur_win() then

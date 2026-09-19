@@ -61,7 +61,7 @@ local function branch_name(input, callback, root)
 end
 
 function M.select_artifact_directory(root, callback)
-	local artifacts = require("my.parameters").dirs.artifacts
+	local artifacts = config.dirs.artifacts
 	local directories = {}
 	local seen = {}
 	local function add_directory(path)
@@ -102,7 +102,7 @@ function M.select_artifact_directory(root, callback)
 end
 
 function M.create_artifact(input, filename, root, directory)
-	local artifacts = require("my.parameters").dirs.artifacts
+	local artifacts = config.dirs.artifacts
 
 	local function create(target, project_root)
 		vim.fn.mkdir(target, "p")
