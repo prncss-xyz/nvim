@@ -37,13 +37,19 @@ M.builders = {
 			"--bind",
 			artifacts,
 			artifacts,
+		}
+		for _, path in ipairs(opts.writable_paths or {}) do
+			path = vim.fs.abspath(path)
+			vim.list_extend(cmd, { "--bind", path, path })
+		end
+		vim.list_extend(cmd, {
 			"--bind",
 			cwd,
 			cwd,
 			"--chdir",
 			cwd,
 			"--",
-		}
+		})
 		vim.list_extend(cmd, command(opts.cmd))
 		return cmd
 	end,

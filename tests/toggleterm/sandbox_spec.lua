@@ -7,6 +7,7 @@ T["bwrap sandbox"] = function()
 		cwd = "/tmp/project",
 		artifacts_dir = "/tmp/artifacts",
 		projects_dir = "/tmp/projects",
+		writable_paths = { "/tmp/pi-agent" },
 		cmd = { "printf", "%s", "hello world" },
 	})
 
@@ -32,6 +33,9 @@ T["bwrap sandbox"] = function()
 		"/tmp/artifacts",
 		"/tmp/artifacts",
 		"--bind",
+		"/tmp/pi-agent",
+		"/tmp/pi-agent",
+		"--bind",
 		"/tmp/project",
 		"/tmp/project",
 		"--chdir",
@@ -51,6 +55,7 @@ T["bwrap sandbox preserves shell commands"] = function()
 		cwd = "/tmp/project",
 		artifacts_dir = "/tmp/artifacts",
 		projects_dir = "/tmp/projects",
+		writable_paths = { "/tmp/pi-agent" },
 		cmd = "printf 'hello world'",
 	})
 

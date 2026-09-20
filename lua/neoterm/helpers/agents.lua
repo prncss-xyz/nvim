@@ -1,5 +1,20 @@
 local M = {}
 
+local writable_paths = {
+	pi = { vim.env.PI_CODING_AGENT_DIR or "~/.pi/agent" },
+	agy = {
+		"~/.gemini",
+		"~/.antigravity",
+		"~/.antigravitycli",
+		"~/.cache/antigravity",
+	},
+	claude = {
+		vim.env.CLAUDE_CONFIG_DIR or "~/.claude",
+		"~/.claude.json",
+		"~/.claude.json.lock",
+	},
+}
+
 local screen_manifests = {
 	pi = {
 		default_status = "idle",
@@ -103,6 +118,9 @@ M.builders = {
 	end,
 	claude = function(opts)
 		local cmd = { "claude" }
+		if opts.sandbox then
+			table.insert(cmd, "--dangerously-skip-permissions")
+		end
 		if opts.title then
 			vim.list_extend(cmd, { "--name", opts.title })
 		end
@@ -113,6 +131,9 @@ M.builders = {
 	end,
 	agy = function(opts)
 		local cmd = { "agy" }
+		if opts.sandbox then
+			table.insert(cmd, "--dangerously-skip-permissions")
+		end
 		if opts.prompt then
 			vim.list_extend(cmd, { "--prompt-interactive", opts.prompt })
 		end
@@ -122,14 +143,15 @@ M.builders = {
 
 function M.agent(opts)
 	local builder = assert(M.builders[opts.agent], "Unknown coding agent: " .. opts.agent)
+	local resolved = vim.tbl_extend("force", { sandbox = require("my.conds").personal("bwrap") }, opts)
 	return vim.tbl_extend("force", {
-		cmd = builder(opts),
+		cmd = builder(resolved),
 		auto_scroll = false,
-    -- sandbox = "bwrap", // FIXME:
-    exit_policy = "keep",
+		writable_paths = writable_paths[opts.agent],
+		exit_policy = "keep",
 		tag = "agent",
 		screen_manifest = screen_manifests[opts.agent],
-	}, opts)
+	}, resolved)
 end
 
 return M
