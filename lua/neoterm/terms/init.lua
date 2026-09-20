@@ -162,7 +162,7 @@ end
 
 local function make_item(item, cb, requested_instance)
 	if item.agent then
-		item = require("neoterm.terms.middleware.agents").agent(item)
+		item = require("neoterm.terms.middlewares.agents").agent(item)
 	end
 	item.status = item.status or "idle"
 	item.changed = nil
@@ -171,7 +171,7 @@ local function make_item(item, cb, requested_instance)
 	item.cwd = type(item.cwd) == "string" and item.cwd or vim.fn.getcwd()
 	local function sandbox()
 		if item.sandbox then
-			require("neoterm.terms.middleware.sandbox").sandbox(item)
+			require("neoterm.terms.middlewares.sandbox").sandbox(item)
 		end
 		create_and_notify(item, cb)
 	end

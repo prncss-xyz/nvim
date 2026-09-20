@@ -25,7 +25,7 @@ function M.get_commands(filter, cwd, callback)
 			end
 			if v then
 				if v.agent then
-					v = require("neoterm.terms.middleware.agents").agent(v)
+					v = require("neoterm.terms.middlewares.agents").agent(v)
 				end
 				v.key = k
 				v.display_name = v.display_name or k
