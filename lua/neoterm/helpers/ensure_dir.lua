@@ -49,7 +49,7 @@ function M.open_dir(dir, target_win, use_visible_window, exclude)
 	end)
 end
 
-local function ensure_dir(dir, exclude)
+function M.ensure_dir(dir, exclude)
 	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
 		local path = vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(win))
 		local is_excluded = exclude and vim.iter(exclude):any(function(excluded)
@@ -76,14 +76,6 @@ local function ensure_dir(dir, exclude)
 	end
 
 	M.open_dir(dir, target_win, true, exclude)
-end
-
-function M.ensure_dir(dir)
-	ensure_dir(dir)
-end
-
-function M.ensure_dir_excluding(dir, exclude)
-	ensure_dir(dir, exclude)
 end
 
 return M

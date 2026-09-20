@@ -201,7 +201,7 @@ function M.with_worktree()
 end
 
 function M.pick_with_worktree(include_dirty)
-	local dirs = require("my.parameters").dirs
+	local dirs = config.dirs
 	local files = vim.fs.find(function(name, path)
 		if not name:match("%.md$") then
 			return false

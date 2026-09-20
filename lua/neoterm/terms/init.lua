@@ -164,7 +164,7 @@ local function make_item(item, cb, requested_instance)
 	if item.agent then
 		item = require("neoterm.helpers.agents").agent(item)
 	end
-	item.status = "idle"
+	item.status = item.status or "idle"
 	item.changed = nil
 	reserve_instance(item, requested_instance)
 	assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")

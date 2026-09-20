@@ -29,7 +29,7 @@ T["create_term"]["reports process exit status"] = function()
 			is_visible = function() return false end,
 			is_in_view = function() return visible end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		local Term = require("neoterm.terms.create_term")
@@ -63,7 +63,7 @@ T["create_term"]["reports whether its terminal is in view"] = function()
 			is_visible = function() return false end,
 			is_in_view = function(winnr) return visible and winnr == terminal.window end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		local Term = require("neoterm.terms.create_term")
@@ -93,7 +93,7 @@ T["create_term"]["passes OSC notifications to the configured notifier"] = functi
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		local Term = require("neoterm.terms.create_term")
@@ -129,7 +129,7 @@ T["create_term"]["does not steal focus when attaching a created terminal"] = fun
 			is_visible = function() return true end,
 			is_in_view = function() return true end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = {
+		package.loaded["neoterm.helpers.ensure_dir"] = {
 			ensure_dir = function()
 				vim.api.nvim_set_current_win(file_win)
 				ensured = true
@@ -164,7 +164,7 @@ T["create_term"]["does not let OSC directory updates steal focus"] = function()
 			is_visible = function() return true end,
 			is_in_view = function() return true end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = {
+		package.loaded["neoterm.helpers.ensure_dir"] = {
 			ensure_dir = function()
 				vim.api.nvim_set_current_win(file_win)
 				ensured = true
@@ -205,7 +205,7 @@ T["create_term"]["retains OSC title and progress for status detection"] = functi
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		require("neoterm.terms.create_term"):new({}, function() end)
@@ -251,7 +251,7 @@ T["create_term"]["sends strings as bracketed paste"] = function()
 			is_visible = function() return true end,
 			is_in_view = function() return true end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 		vim.api.nvim_chan_send = function(job_id, str)
 			sent = { job_id, str }
@@ -287,7 +287,7 @@ T["create_term"]["ignores process exits while Neovim is shutting down"] = functi
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		local Term = require("neoterm.terms.create_term")
@@ -318,7 +318,7 @@ T["create_term"]["passes only explicitly supported options to toggleterm"] = fun
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		require("neoterm.terms.create_term"):new({
@@ -375,7 +375,7 @@ T["create_term"]["maps on_exit to toggleterm's close_on_exit option"] = function
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		local Term = require("neoterm.terms.create_term")
@@ -423,7 +423,7 @@ T["create_term"]["restarts long-running failed processes in the same hidden term
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = {
+		package.loaded["neoterm.helpers.ensure_dir"] = {
 			ensure_dir = function()
 				calls.ensure_dir = calls.ensure_dir + 1
 			end,
@@ -474,7 +474,7 @@ T["create_term"]["reattaches status detection when toggleterm replaces the buffe
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		local Term = require("neoterm.terms.create_term")
@@ -530,7 +530,7 @@ T["create_term"]["resets status and screen detection when manually restarted"] =
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 		vim.fn.jobwait = function() return { -1 } end
 		vim.fn.jobstop = function() end
@@ -581,7 +581,7 @@ T["create_term"]["reuses a terminal buffer containing output"] = function()
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		local Term = require("neoterm.terms.create_term")
@@ -618,7 +618,7 @@ T["create_term"]["does not restart successful or short-lived processes"] = funct
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.terms.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		local Term = require("neoterm.terms.create_term")

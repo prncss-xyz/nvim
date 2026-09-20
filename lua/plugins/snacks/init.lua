@@ -480,7 +480,7 @@ return {
 					local project_dir =
 						require("neoterm.terms.artifact_cwd").resolve(vim.api.nvim_buf_get_name(0))
 					if project_dir then
-						require("neoterm.terms.ensure_dir").open_dir(project_dir, 0, false)
+						require("neoterm.helpers.ensure_dir").open_dir(project_dir, 0, false)
 					else
 						projects.open_project(require("my.parameters").dirs.notes)
 					end

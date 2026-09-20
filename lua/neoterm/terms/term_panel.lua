@@ -2,7 +2,7 @@ local M = {}
 
 local neoterm_config = require("neoterm.config")
 local config = neoterm_config.panel
-local ensure_dir = require("neoterm.terms.ensure_dir").ensure_dir
+local ensure_dir = require("neoterm.helpers.ensure_dir").ensure_dir
 local format_item = require("neoterm.terms.format_item").format_item(false, false)
 local get_query_fn = require("neoterm.terms.get_query_fn").get_query_fn
 

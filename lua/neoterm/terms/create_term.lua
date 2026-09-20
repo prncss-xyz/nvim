@@ -7,7 +7,7 @@ local last_terminal
 local window = require("neoterm.terms.window")
 local is_visible = window.is_visible
 
-local ensure_dir = require("neoterm.terms.ensure_dir").ensure_dir
+local ensure_dir = require("neoterm.helpers.ensure_dir").ensure_dir
 local project_dir = require("neoterm.rooter").project_dir
 
 local function ensure_dir_without_focus(dir)

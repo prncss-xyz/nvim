@@ -36,7 +36,7 @@ T["templates add asynchronous agent definitions"] = function()
 			executable = function(_, callback) vim.schedule(function() callback(true) end) end,
 		}
 		local commands
-		require("neoterm.templates").add_commands({}, { "agents" }, {
+		require("neoterm.term_templates").add_commands({}, { "agents" }, {
 			agents = { "p" },
 		}, function(result) commands = result end)
 		vim.wait(1000, function() return commands ~= nil end)

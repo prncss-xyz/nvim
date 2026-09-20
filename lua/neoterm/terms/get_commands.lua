@@ -1,7 +1,7 @@
 local M = {}
 
 local config = require("neoterm.config")
-local templates = require("neoterm.templates")
+local templates = require("neoterm.term_templates")
 
 function M.get_commands(filter, cwd, callback)
 	cwd = cwd or vim.fn.getcwd()
