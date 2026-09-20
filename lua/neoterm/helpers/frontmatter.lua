@@ -35,9 +35,19 @@ end
 function M.update_status()
 	local yaml = require("neoterm.yaml")
 	local remove = "REMOVE"
-	local statuses = vim.tbl_map(function(status)
-		return status.name
-	end, require("neoterm.config").tasks.status)
+	local modes = require("neoterm.config").tasks.modes
+	local statuses = {}
+	local seen = {}
+	local mode_names = vim.tbl_keys(modes)
+	table.sort(mode_names)
+	for _, mode in ipairs(mode_names) do
+		for _, status in ipairs(modes[mode]) do
+			if not seen[status] then
+				seen[status] = true
+				table.insert(statuses, status)
+			end
+		end
+	end
 	table.insert(statuses, remove)
 	vim.ui.select(statuses, { prompt = "Select status" }, function(choice)
 		if choice == nil then

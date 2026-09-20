@@ -39,12 +39,18 @@ local function has_prefix(parts, prefix)
 	return true
 end
 
-local function create_rows(tasks, statuses, root_parts)
+local function create_rows(tasks, statuses, status_names, root_parts)
 	local result = {}
+	local groups = { { name = "BROKEN", broken = true } }
 	for _, status in ipairs(statuses) do
+		table.insert(groups, { name = status })
+	end
+	for _, group in ipairs(groups) do
 		local root = { children = {} }
 		for _, task in ipairs(tasks) do
-			if task.status == status.name and #task.parts > #root_parts and has_prefix(task.parts, root_parts) then
+			local matches = group.broken and not status_names[task.status]
+				or not group.broken and task.status == group.name
+			if matches and #task.parts > #root_parts and has_prefix(task.parts, root_parts) then
 				local node = root
 				for index = #root_parts + 1, #task.parts do
 					local name = task.parts[index]
@@ -57,8 +63,9 @@ local function create_rows(tasks, statuses, root_parts)
 
 		if not vim.tbl_isempty(root.children) then
 			table.insert(result, {
-				text = status.name .. ":",
-				status = status.name,
+				text = group.name .. ":",
+				status = group.name,
+				broken = group.broken,
 				parts = {},
 				status_heading = true,
 			})
@@ -72,7 +79,8 @@ local function create_rows(tasks, statuses, root_parts)
 					local icon = child.task and child.task.flat and "󰈙" or "󰉋"
 					table.insert(result, {
 						text = string.rep("  ", depth) .. icon .. " " .. name,
-						status = status.name,
+						status = group.name,
+						broken = group.broken,
 						parts = child_parts,
 						has_children = not vim.tbl_isempty(child.children),
 						cwd = child.task and child.task.cwd or nil,
@@ -92,16 +100,16 @@ local function render()
 	state.tasks = require("neoterm.terms.artifacts.tasks").get()
 	local relative_root = assert(vim.fs.relpath(state.artifacts, state.root))
 	local root_parts = relative_root == "." and {} or vim.split(relative_root, "/", { plain = true })
-	local statuses = config.tasks.status
-	if state.focus_mode and vim.iter(statuses):any(function(status)
-		return status.focus
-	end) then
-		statuses = vim.tbl_filter(function(status)
-			return status.focus
-		end, statuses)
+	local statuses = assert(config.tasks.modes[state.mode], "Unknown task panel mode: " .. state.mode)
+	local status_names = {}
+	for _, mode_statuses in pairs(config.tasks.modes) do
+		for _, status in ipairs(mode_statuses) do
+			status_names[status] = true
+		end
 	end
-	state.rows = create_rows(state.tasks, statuses, root_parts)
-	table.insert(state.rows, 1, { text = relative_root, root = true })
+	state.status_names = status_names
+	state.rows = create_rows(state.tasks, statuses, status_names, root_parts)
+	table.insert(state.rows, 1, { text = string.format("%s [%s]", relative_root, state.mode), root = true })
 	if #state.rows == 1 then
 		table.insert(state.rows, { text = "No artifact tasks" })
 	end
@@ -133,7 +141,11 @@ local function open_selected()
 		return
 	end
 	local latest = require("neoterm.terms.artifacts.tasks").latest(state.tasks, function(task)
-		if task.status ~= selected.status then
+		if selected.broken then
+			if state.status_names[task.status] then
+				return false
+			end
+		elseif task.status ~= selected.status then
 			return false
 		end
 		for index, part in ipairs(selected.parts) do
@@ -210,8 +222,9 @@ local function up_root()
 	render()
 end
 
-local function toggle_focus_mode()
-	state.focus_mode = not state.focus_mode
+local function cycle_mode()
+	local index = assert(vim.fn.index(state.modes, state.mode)) + 2
+	state.mode = state.modes[index] or state.modes[1]
 	render()
 end
 
@@ -263,6 +276,16 @@ function M.toggle()
 	local width = config.panel.width
 	local artifacts = config.dirs.artifacts
 	local root = default_root(artifacts)
+	local modes = vim.tbl_keys(config.tasks.modes)
+	table.sort(modes)
+	for index, mode in ipairs(modes) do
+		if mode == "default" then
+			table.remove(modes, index)
+			break
+		end
+	end
+	table.insert(modes, 1, "default")
+	assert(config.tasks.modes.default, "Default task panel mode is not configured")
 	vim.cmd(string.format("topleft %dvsplit", width))
 	local win = vim.api.nvim_get_current_win()
 	local buf = vim.api.nvim_create_buf(false, true)
@@ -272,7 +295,8 @@ function M.toggle()
 		buf = buf,
 		rows = {},
 		tasks = {},
-		focus_mode = true,
+		mode = "default",
+		modes = modes,
 		artifacts = artifacts,
 		root = root,
 	}
@@ -294,7 +318,7 @@ function M.toggle()
 	vim.wo[win].winfixwidth = true
 	vim.wo[win].wrap = false
 	vim.keymap.set("n", "c", create_task, { buffer = buf, silent = true, nowait = true })
-	vim.keymap.set("n", "f", toggle_focus_mode, { buffer = buf, silent = true, nowait = true })
+	vim.keymap.set("n", "f", cycle_mode, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "r", set_root, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "u", up_root, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "<cr>", open_selected, { buffer = buf, silent = true, nowait = true })

@@ -101,17 +101,6 @@ local function finish_rebuild(id, directories, next_files, candidates)
 	if id ~= generation then
 		return
 	end
-	local config = require("neoterm.config")
-	local task_config = config.tasks
-	local status_names = {}
-	for _, status in ipairs(task_config.status) do
-		status_names[status.name] = true
-	end
-	assert(
-		status_names[task_config.default_status],
-		"Unknown default artifact task status: " .. tostring(task_config.default_status)
-	)
-
 	local next_tasks = {}
 	local pending = #candidates
 	local function complete()
@@ -140,33 +129,7 @@ local function finish_rebuild(id, directories, next_files, candidates)
 			if id ~= generation then
 				return
 			end
-			local status = task_config.default_status
-			for _, configured in ipairs(task_config.status) do
-				for _, filename in ipairs(configured.files or {}) do
-					if candidate.files[vim.fs.joinpath(candidate.cwd, filename)] then
-						status = configured.name
-					end
-				end
-			end
-			local explicit = explicit_status(text)
-			if explicit ~= nil then
-				if status_names[explicit] then
-					status = explicit
-				else
-					vim.schedule(function()
-						vim.notify(
-							string.format(
-								"Unknown artifact task status %q in %s; using %q",
-								explicit,
-								candidate.path,
-								task_config.default_status
-							),
-							vim.log.levels.WARN
-						)
-					end)
-				end
-			end
-			candidate.status = status
+			candidate.status = explicit_status(text) or require("neoterm.config").tasks.default_status
 			table.insert(next_tasks, candidate)
 			complete()
 		end)
