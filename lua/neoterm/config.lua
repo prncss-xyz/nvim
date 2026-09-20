@@ -6,7 +6,13 @@ local notify = require("my.notify")
 local prompt_utils = require("neoterm.helpers.prompt")
 
 return {
-	default_agent = personal("pi", "claude"),
+	agent = {
+		list = { "pi", "agy", "claude" },
+		query = personal(
+			"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
+			"claude -p --model haiku --disable-slash-commands --tools="
+		),
+	},
 	rooter_patterns = { ".git", ".hg", ".svn" },
 	default_branches = { "main", "master" },
 	dirs = {
@@ -34,10 +40,6 @@ return {
 			return value
 		end
 	end)(),
-	ai_query = personal(
-		"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
-		"claude -p --model haiku --disable-slash-commands --tools="
-	),
 	create = require("my.create").create,
 	bdelete = function(bufnr)
 		Snacks.bufdelete.delete(bufnr)
@@ -145,6 +147,7 @@ Output ONLY the branch name, nothing else.
 		},
 	},
 	templates = {
+		"agents",
 		"steps",
 		"chezmoi",
 		"git_sync",
@@ -172,21 +175,6 @@ Output ONLY the branch name, nothing else.
 		require("neoterm.helpers.inhibit_sleep").set(working)
 	end,
 	commands = {
-		pi = personal({
-			agent = "pi",
-			tag = "agent",
-			priority = 3,
-		}),
-		agy = personal({
-			agent = "agy",
-			tag = "agent",
-			priority = 2,
-		}),
-		claude = work({
-			agent = "claude",
-			tag = "agent",
-			priority = 1,
-		}),
 		yazi = { cmd = "yazi" },
 		ddgr = {
 			cmd = "ddgr",

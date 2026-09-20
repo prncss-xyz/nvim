@@ -9,7 +9,7 @@ local T = MiniTest.new_set({
 	},
 })
 
-T["agents template adds installed agents ranked by list order"] = function()
+T["agents template adds installed agents and prioritizes the default"] = function()
 	child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 		package.loaded["neoterm.templates.async"] = {
 			executable = function(name, callback)
@@ -19,14 +19,15 @@ T["agents template adds installed agents ranked by list order"] = function()
 		local definitions
 		require("neoterm.templates.agents").generator({
 			agents = { "first", "missing", "third" },
+			default_agent = "first",
 		}, function(result) definitions = result end)
 		vim.wait(1000, function() return definitions ~= nil end)
 		assert(#definitions == 2, "expected only installed agents")
 		assert(definitions[1].name == "first", "expected first agent")
-		assert(definitions[1].builder().priority == 3, "expected first agent to have highest rank")
+		assert(definitions[1].builder().priority == 100, "expected default agent priority")
 		assert(definitions[1].builder().tag == "agent", "expected agent tag")
 		assert(definitions[2].name == "third", "expected third agent")
-		assert(definitions[2].builder().priority == 1, "expected third agent rank")
+		assert(definitions[2].builder().priority == 1, "expected last agent priority")
 	]])
 end
 
