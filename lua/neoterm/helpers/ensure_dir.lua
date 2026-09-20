@@ -3,7 +3,7 @@ local M = {}
 local window = require("neoterm.terms.window")
 local artifact_cwd = require("neoterm.terms.artifacts.cwd")
 local find_project_file = require("neoterm.helpers.project_file").get_project_file
--- TODO:
+local file_windows = require("neoterm.helpers.file_windows")
 local get_last_file_win = require("neoterm.helpers.win_history").get_last_file_win
 
 local function find_buffer(path)
@@ -27,7 +27,7 @@ function M.open_dir(dir, target_win, use_visible_window, exclude)
 	local bufnr = find_buffer(path)
 	if bufnr and use_visible_window then
 		for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-			if vim.api.nvim_win_get_buf(win) == bufnr then
+			if file_windows.can_focus(win) and vim.api.nvim_win_get_buf(win) == bufnr then
 				vim.api.nvim_set_current_win(win)
 				return
 			end
@@ -52,17 +52,18 @@ end
 function M.ensure_dir(dir, exclude)
 	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
 		local path = vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(win))
-		local is_excluded = exclude and vim.iter(exclude):any(function(excluded)
-			return is_in_dir(path, excluded)
-		end)
-		if is_in_dir(path, dir) and not is_excluded then
+		local is_excluded = exclude
+			and vim.iter(exclude):any(function(excluded)
+				return is_in_dir(path, excluded)
+			end)
+		if file_windows.can_focus(win) and is_in_dir(path, dir) and not is_excluded then
 			vim.api.nvim_set_current_win(win)
 			return
 		end
 	end
 
 	local target_win = get_last_file_win()
-	if not target_win or not vim.api.nvim_win_is_valid(target_win) then
+	if not target_win or not file_windows.can_replace(target_win) then
 		return
 	end
 

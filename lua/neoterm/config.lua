@@ -1,6 +1,7 @@
 local personal = require("my.conds").personal
 local work = require("my.conds").work
 local dirs = require("my.parameters").dirs
+local do_not_replace_types = require("my.parameters").open_files_do_not_replace_types
 local notify = require("my.notify")
 local prompt_utils = require("neoterm.helpers.prompt")
 
@@ -13,6 +14,7 @@ return {
 		artifacts = dirs.notes .. "/dev/artifacts",
 	},
 	min_runtime = 10000,
+	open_files_do_not_replace_types = do_not_replace_types,
 	browser = (function()
 		local value
 		return function()

@@ -9,6 +9,15 @@ end
 local projects = vim.env.HOME .. "/projects"
 local notes = projects .. "/notes/main"
 
+-- Shared with Neo-tree so both openers preserve utility panels.
+M.open_files_do_not_replace_types = {
+	"terminal",
+	"Trouble",
+	"qf",
+	"neotest-summary",
+	"neotest-output-panel",
+}
+
 M.rooter_patterns = { ".git", ".hg", ".svn" }
 
 M.dirs = {
