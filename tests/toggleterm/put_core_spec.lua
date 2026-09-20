@@ -87,14 +87,14 @@ T["selection templates capture the active selection before expansion"] = functio
 		vim.cmd("normal! v4l")
 
 		local put = require("neoterm.put.core")
-		local invocation = put.capture("explain {selection}")
+		local invocation = put.capture("explain {selection_span}\n{selection_contents}")
 
 		vim.cmd("normal! \\<Esc>")
 		vim.api.nvim_buf_set_lines(0, 0, 1, false, { "local other = 2" })
 
 		local ctx = require("neoterm.terms.window").get_ctx(invocation)
-		local result = put.template("explain {selection}")(ctx, {})
-		assert(result == "explain selection.lua L1C:7\nvalue\n", result)
+		local result = put.template("explain {selection_span}\n{selection_contents}")(ctx, { tag = "agent" })
+		assert(result == "explain @selection.lua:L1C:7-L1C:11\nvalue\n", result)
 	]])
 end
 
@@ -110,10 +110,10 @@ T["selection templates use the last selection after focusing a terminal"] = func
 		vim.cmd.terminal()
 
 		local put = require("neoterm.put.core")
-		local invocation = put.capture("explain {selection}")
+		local invocation = put.capture("explain {selection_span}\n{selection_contents}")
 		local ctx = window.get_ctx(invocation)
-		local result = put.template("explain {selection}")(ctx, {})
-		assert(result == "explain selection.lua L1C:7\nvalue\n", result)
+		local result = put.template("explain {selection_span}\n{selection_contents}")(ctx, { tag = "agent" })
+		assert(result == "explain @selection.lua:L1C:7-L1C:11\nvalue\n", result)
 	]])
 end
 
@@ -125,7 +125,8 @@ T["selection capture preserves linewise regions"] = function()
 		vim.cmd("normal! Vj")
 
 		local selection = require("neoterm.put.selection").capture()
-		assert(selection == "selection.lua L1C:1\nfirst\nsecond\n", selection)
+		assert(require("neoterm.put.selection").span(selection, { tag = "agent" }) == "@selection.lua:L1-L2")
+		assert(selection.contents == "first\nsecond\n", selection.contents)
 	]])
 end
 

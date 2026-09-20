@@ -33,8 +33,13 @@ local vars = {
 		end
 		return messages[#messages] or ""
 	end,
-	selection = function(ctx)
-		return ctx.selection or require("neoterm.put.selection").get_selection(ctx)
+	selection_span = function(ctx, instance)
+		local selection = ctx.selection or require("neoterm.put.selection").get(ctx)
+		return require("neoterm.put.selection").span(selection, instance)
+	end,
+	selection_contents = function(ctx)
+		local selection = ctx.selection or require("neoterm.put.selection").get(ctx)
+		return selection.contents
 	end,
 	path = require("neoterm.put.position").path,
 	line = require("neoterm.put.position").row,
@@ -47,7 +52,7 @@ local vars = {
 
 function M.capture(str)
 	local invocation = {}
-	if str:find("{selection}", 1, true) then
+	if str:find("{selection_span}", 1, true) or str:find("{selection_contents}", 1, true) then
 		invocation.selection = require("neoterm.put.selection").capture()
 	end
 	return invocation

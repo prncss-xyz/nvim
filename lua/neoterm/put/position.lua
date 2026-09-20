@@ -5,11 +5,7 @@ local function is_agent(instance)
 end
 
 local function path(ctx)
-	if ctx.path:find("[^%w%._/%-~]") then
-		return string.format("%q", ctx.path)
-	end
-
-	return ctx.path
+	return require("neoterm.put.path").format(ctx.path)
 end
 
 function M.path(ctx, instance)

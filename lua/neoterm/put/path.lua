@@ -12,6 +12,15 @@ function M.home_relative(path)
 	return path
 end
 
+---@param path string
+---@return string
+function M.format(path)
+	if path:find("[^%w%._/%-~]") then
+		return string.format("%q", path)
+	end
+	return path
+end
+
 ---@param filename string
 ---@return string
 function M.display(filename)

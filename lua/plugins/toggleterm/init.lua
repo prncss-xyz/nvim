@@ -237,7 +237,6 @@ return {
 					require("neoterm.terms").start({ tag = "agent" })
 				end,
 				desc = "New Agent",
-				mode = "n",
 			},
 			{
 				"ma",
@@ -245,26 +244,27 @@ return {
 					require("neoterm.terms").focus({ tag = "agent" })
 				end,
 				desc = "Focus Agent",
-				mode = "n",
 			},
 			{
 				"mv",
 				function()
-					require("neoterm.terms").put({ tag = "agent" }, "{selection}")
+					require("neoterm.terms").put({ tag = "agent" }, "{selection_span}\n{selection_contents}")
 				end,
 				desc = "Send Selection to Agent",
+				mode = { "n", "x" },
 			},
 			{
 				"m" .. reverse("v"),
 				function()
-					require("neoterm.terms").put({ tag = "agent" }, "{selection}", { new = true })
+					require("neoterm.terms").put({ tag = "agent" }, "{selection_span}\n{selection_contents}", { new = true })
 				end,
 				desc = "Send Selection to New Agent",
+				mode = { "n", "x" },
 			},
 			{
 				"ma",
 				function()
-					require("neoterm.terms").put({ tag = "agent" }, "{selection}")
+					require("neoterm.terms").put({ tag = "agent" }, "{selection_contents}")
 				end,
 				desc = "Send Selection to Agent",
 				mode = "x",
@@ -272,7 +272,7 @@ return {
 			{
 				"m" .. reverse("a"),
 				function()
-					require("neoterm.terms").put({ tag = "agent" }, "{selection}", { new = true })
+					require("neoterm.terms").put({ tag = "agent" }, "{selection_contents}", { new = true })
 				end,
 				desc = "Send Selection to New Agent",
 				mode = "x",
@@ -283,7 +283,6 @@ return {
 					require("neoterm.terms").put({ tag = "agent" }, "{position}")
 				end,
 				desc = "Put Current File Position",
-				mode = "n",
 			},
 			{
 				"m" .. reverse("c"),
@@ -291,7 +290,6 @@ return {
 					require("neoterm.terms").put({ tag = "agent" }, "{position}", { new = true })
 				end,
 				desc = "Put Current File Position in New Agent",
-				mode = "n",
 			},
 			{
 				"mps",
@@ -316,7 +314,6 @@ return {
 					require("neoterm.terms").put({ tag = "agent" }, "{line}")
 				end,
 				desc = "Put Current File Line",
-				mode = "n",
 			},
 			{
 				"m" .. reverse("d"),
@@ -324,7 +321,6 @@ return {
 					require("neoterm.terms").put({ tag = "agent" }, "{line}", { new = true })
 				end,
 				desc = "Put Current File Line in New Agent",
-				mode = "n",
 			},
 			{
 				"me",
@@ -332,7 +328,6 @@ return {
 					require("neoterm.terms").put({ tag = "agent" }, "{path}")
 				end,
 				desc = "Put Current File Path",
-				mode = "n",
 			},
 			{
 				"m" .. reverse("e"),
@@ -340,7 +335,6 @@ return {
 					require("neoterm.terms").put({ tag = "agent" }, "{path}", { new = true })
 				end,
 				desc = "Put Current File Path in New Agent",
-				mode = "n",
 			},
 			{
 				"mh",
@@ -348,7 +342,6 @@ return {
 					require("neoterm.terms").put({ tag = "agent" }, "{hunk}")
 				end,
 				desc = "Put Current or Next Hunk",
-				mode = "n",
 			},
 			{
 				"m" .. reverse("h"),
@@ -356,7 +349,6 @@ return {
 					require("neoterm.terms").put({ tag = "agent" }, "{hunk}", { new = true })
 				end,
 				desc = "Put Current or Next Hunk in New Agent",
-				mode = "n",
 			},
 			{
 				"mm",
@@ -378,9 +370,7 @@ return {
 				"mn",
 				function()
 					-- TODO: make this more convenient
-					require("neoterm.prompts").run(
-						require("neoterm.helpers.prompt").create_task(true)
-					)
+					require("neoterm.prompts").run(require("neoterm.helpers.prompt").create_task(true))
 				end,
 				desc = "New Task",
 				mode = { "n", "x" },
@@ -407,7 +397,6 @@ return {
 					require("neoterm.terms").focus({ key = "ddgr" })
 				end,
 				desc = "ddgr",
-				mode = "n",
 			},
 			{
 				"mz",
@@ -415,7 +404,6 @@ return {
 					require("neoterm.terms").put({ tag = "agent" }, "{next_diagnostic}")
 				end,
 				desc = "Put Diagnostic Prompt",
-				mode = "n",
 			},
 			{
 				"m" .. reverse("z"),
@@ -423,7 +411,6 @@ return {
 					require("neoterm.terms").put({ tag = "agent" }, "{next_diagnostic}", { new = true })
 				end,
 				desc = "Put Diagnostic Prompt in New Agent",
-				mode = "n",
 			},
 			{
 				"mf",
