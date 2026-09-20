@@ -151,7 +151,7 @@ function M.generator(opts, callback)
 	end
 	local artifact_dir = vim.fs.joinpath(dirs.artifacts, project)
 
-	local indexed_files = require("neoterm.artifact_tasks").files(artifact_dir)
+	local indexed_files = require("neoterm.terms.artifacts.tasks").files(artifact_dir)
 	local present = {}
 	for _, path in ipairs(indexed_files) do
 		present[path] = true

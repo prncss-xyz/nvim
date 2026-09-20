@@ -339,7 +339,7 @@ function M.latest(candidates, predicate)
 			end
 		end
 	end
-	local latest = require("neoterm.terms.artifact_cwd").latest_file(paths)
+	local latest = require("neoterm.terms.artifacts.cwd").latest_file(paths)
 	if latest then
 		return latest
 	end

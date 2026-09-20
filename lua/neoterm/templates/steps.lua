@@ -1,3 +1,3 @@
 return {
-	generator = require("neoterm.artifact_commands").generator,
+	generator = require("neoterm.terms.artifacts.commands").generator,
 }

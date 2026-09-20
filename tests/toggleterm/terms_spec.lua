@@ -622,7 +622,7 @@ T["artifact cwd"]["resolves explicit and default branches without git"] = functi
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		local resolve = require("neoterm.terms.artifact_cwd").resolve
+		local resolve = require("neoterm.terms.artifacts.cwd").resolve
 		result = {
 			explicit = resolve(vim.fs.joinpath(artifacts, "alpha", "feature", "issue.md")),
 			missing_branch = resolve(vim.fs.joinpath(artifacts, "alpha", "missing", "issue.md")),
@@ -650,7 +650,7 @@ T["artifact cwd"]["maps a checkout to its project artifacts"] = function()
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		result = require("neoterm.terms.artifact_cwd").for_project(checkout)
+		result = require("neoterm.terms.artifacts.cwd").for_project(checkout)
 	]])
 
 	local root = child.lua_get("root")
@@ -671,7 +671,7 @@ T["artifact cwd"]["maps feature checkouts to branch artifact paths"] = function(
 			default_branches = { "main", "master" },
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		result = require("neoterm.terms.artifact_cwd").for_checkout(checkout)
+		result = require("neoterm.terms.artifacts.cwd").for_checkout(checkout)
 	]])
 
 	local root = child.lua_get("root")
@@ -694,7 +694,7 @@ T["artifact cwd"]["maps default and unidentified branches to project artifacts"]
 			default_branches = { "main", "master" },
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		local for_checkout = require("neoterm.terms.artifact_cwd").for_checkout
+		local for_checkout = require("neoterm.terms.artifacts.cwd").for_checkout
 		result = {
 			default_branch = for_checkout(default_checkout),
 			without_git = for_checkout(plain_checkout),

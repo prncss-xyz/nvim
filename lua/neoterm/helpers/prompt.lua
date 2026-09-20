@@ -10,7 +10,7 @@ end
 
 function M.create_task(remove, directory, project_root)
 	return function(input, prompt)
-		local artifact_cwd = require("neoterm.terms.artifact_cwd")
+		local artifact_cwd = require("neoterm.terms.artifacts.cwd")
 		local harness = require("neoterm.harness")
 		local current = vim.api.nvim_buf_get_name(0)
 		local root = project_root or artifact_cwd.resolve(current) or vim.fs.root(0, ".git") or vim.uv.cwd()

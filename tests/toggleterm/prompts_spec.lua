@@ -72,7 +72,7 @@ T["task prompts create a task inside the current artifact"] = function()
 	child.lua([[local created
 
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		package.loaded["neoterm.terms.artifact_cwd"] = {
+		package.loaded["neoterm.terms.artifacts.cwd"] = {
 			contains = function(path) return path == "/artifacts/neomux/topic/index.md" end,
 			resolve = function() return "/projects/neomux/main" end,
 		}
@@ -95,7 +95,7 @@ T["task prompts create a new artifact outside artifacts"] = function()
 	child.lua([[local created
 
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		package.loaded["neoterm.terms.artifact_cwd"] = {
+		package.loaded["neoterm.terms.artifacts.cwd"] = {
 			contains = function() return false end,
 			resolve = function() return nil end,
 		}

@@ -4,7 +4,7 @@ local window = require("neoterm.terms.window")
 local function noop() end
 
 local function project_dir()
-	local artifact_cwd = require("neoterm.terms.artifact_cwd")
+	local artifact_cwd = require("neoterm.terms.artifacts.cwd")
 	local current = vim.api.nvim_buf_get_name(0)
 	local dir = artifact_cwd.resolve(current)
 		or vim.fs.root(current, require("neoterm.config").rooter_patterns)
@@ -20,7 +20,7 @@ local function latest_artifact(dir)
 	if dir == nil then
 		return nil
 	end
-	local artifact_cwd = require("neoterm.terms.artifact_cwd")
+	local artifact_cwd = require("neoterm.terms.artifacts.cwd")
 	return artifact_cwd.latest_in(artifact_cwd.for_checkout(dir))
 end
 
@@ -28,7 +28,7 @@ local function source_context(dir, invocation)
 	if dir == nil then
 		return nil
 	end
-	local artifact_cwd = require("neoterm.terms.artifact_cwd")
+	local artifact_cwd = require("neoterm.terms.artifacts.cwd")
 	local ctx = window.get_ctx(invocation)
 	if ctx == nil then
 		return
@@ -77,7 +77,7 @@ function M.create(touch)
 
 	local function toggle_artifact()
 		local current = vim.fs.normalize(vim.api.nvim_buf_get_name(0))
-		local artifact_cwd = require("neoterm.terms.artifact_cwd")
+		local artifact_cwd = require("neoterm.terms.artifacts.cwd")
 		local from_artifact = artifact_cwd.contains(current)
 		local dir = project_dir()
 		if dir == nil then

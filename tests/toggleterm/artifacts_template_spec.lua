@@ -95,7 +95,7 @@ T["creates tasks for executable artifact scripts"] = function()
 			dirs = { artifacts = artifacts, projects = projects },
 			default_branches = { "main", "master" },
 		}
-		package.loaded["neoterm.terms.artifact_cwd"] = nil
+		package.loaded["neoterm.terms.artifacts.cwd"] = nil
 		package.loaded["neoterm.templates.artifacts"] = nil
 		local definitions, artifact_definitions
 		local template = require("neoterm.templates.artifacts")

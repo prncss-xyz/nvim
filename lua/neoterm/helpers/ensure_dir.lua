@@ -1,7 +1,7 @@
 local M = {}
 
 local window = require("neoterm.terms.window")
-local artifact_cwd = require("neoterm.terms.artifact_cwd")
+local artifact_cwd = require("neoterm.terms.artifacts.cwd")
 local find_project_file = require("neoterm.helpers.project_file").get_project_file
 -- TODO:
 local get_last_file_win = require("neoterm.helpers.win_history").get_last_file_win

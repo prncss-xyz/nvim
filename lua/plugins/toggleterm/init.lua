@@ -12,7 +12,7 @@ return {
 				pattern = "VeryLazy",
 				once = true,
 				callback = function()
-					require("neoterm.artifact_tasks").start()
+					require("neoterm.terms.artifacts.tasks").start()
 				end,
 			})
 		end,
@@ -193,8 +193,8 @@ return {
 			{
 				"oz",
 				function()
-					local definitions = require("neoterm.artifact_commands").for_file({
-						cwd = require("neoterm.terms.artifact_cwd").context_dir() or vim.fn.getcwd(),
+					local definitions = require("neoterm.terms.artifacts.commands").for_file({
+						cwd = require("neoterm.terms.artifacts.cwd").context_dir() or vim.fn.getcwd(),
 						file = vim.api.nvim_buf_get_name(0),
 						steps = require("neoterm.config").steps,
 					})
@@ -329,7 +329,7 @@ return {
 			{
 				"me",
 				function()
-					require("neoterm.terms").put({ key = "agent" }, "{path}")
+					require("neoterm.terms").put({ tag = "agent" }, "{path}")
 				end,
 				desc = "Put Current File Path",
 				mode = "n",

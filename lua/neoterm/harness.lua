@@ -1,6 +1,6 @@
 local M = {}
 
-local artifact_cwd = require("neoterm.terms.artifact_cwd")
+local artifact_cwd = require("neoterm.terms.artifacts.cwd")
 local config = require("neoterm.config")
 local last_created_artifact
 

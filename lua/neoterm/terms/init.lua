@@ -202,7 +202,7 @@ local gt_item = utils.compose_gt(
 local function normalize_query(query)
 	query = vim.tbl_extend("keep", query or {}, {})
 	query.instance_count = vim.v.count > 0 and vim.v.count or query.instance_count
-	query.cwd = query.cwd or require("neoterm.terms.artifact_cwd").context_dir() or { vim.fn.getcwd(), vim.env.HOME }
+	query.cwd = query.cwd or require("neoterm.terms.artifacts.cwd").context_dir() or { vim.fn.getcwd(), vim.env.HOME }
 	return query
 end
 

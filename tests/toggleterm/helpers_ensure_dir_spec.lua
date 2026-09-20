@@ -6,7 +6,7 @@ local T = MiniTest.new_set({
 			child.restart({ "-u", "NONE" })
 			child.lua([[
 				package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-				package.loaded["neoterm.terms.artifact_cwd"] = {
+				package.loaded["neoterm.terms.artifacts.cwd"] = {
 					contains = function() return false end,
 				}
 			]])

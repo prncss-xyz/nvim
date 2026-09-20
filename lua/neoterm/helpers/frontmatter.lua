@@ -4,7 +4,7 @@ function M.add_dependency()
 	local artifacts = require("neoterm.config").dirs.artifacts
 	local files = vim.tbl_filter(function(path)
 		return vim.fs.basename(path) == "task.md"
-	end, require("neoterm.artifact_tasks").files(artifacts))
+	end, require("neoterm.terms.artifacts.tasks").files(artifacts))
 	local function dependency_name(path)
 		return assert(vim.fs.relpath(artifacts, path)):gsub("/task%.md$", "")
 	end

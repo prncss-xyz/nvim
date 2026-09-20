@@ -89,7 +89,7 @@ end
 
 local function render()
 	local config = require("neoterm.config")
-	state.tasks = require("neoterm.artifact_tasks").get()
+	state.tasks = require("neoterm.terms.artifacts.tasks").get()
 	local relative_root = assert(vim.fs.relpath(state.artifacts, state.root))
 	local root_parts = relative_root == "." and {} or vim.split(relative_root, "/", { plain = true })
 	local statuses = config.status
@@ -132,7 +132,7 @@ local function open_selected()
 	if not selected then
 		return
 	end
-	local latest = require("neoterm.artifact_tasks").latest(state.tasks, function(task)
+	local latest = require("neoterm.terms.artifacts.tasks").latest(state.tasks, function(task)
 		if task.status ~= selected.status then
 			return false
 		end
@@ -183,7 +183,7 @@ local function create_task()
 	if not directory then
 		return
 	end
-	local project_root = require("neoterm.terms.artifact_cwd").resolve(directory)
+	local project_root = require("neoterm.terms.artifacts.cwd").resolve(directory)
 	if not project_root then
 		return
 	end
@@ -277,7 +277,7 @@ function M.toggle()
 		root = root,
 	}
 	local panel = state
-	state.unsubscribe = require("neoterm.artifact_tasks").subscribe(function()
+	state.unsubscribe = require("neoterm.terms.artifacts.tasks").subscribe(function()
 		if state == panel and vim.api.nvim_win_is_valid(panel.win) then
 			render()
 		end

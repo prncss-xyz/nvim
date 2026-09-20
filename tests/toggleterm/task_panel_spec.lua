@@ -24,7 +24,7 @@ T["derives task status in precedence order"] = function()
 			{ name = "ready", files = { "design.md" } },
 			{ name = "done" },
 		}
-		result = require("neoterm.artifact_tasks").scan(root, statuses, "draft")
+		result = require("neoterm.terms.artifacts.tasks").scan(root, statuses, "draft")
 	]])
 
 	local result = child.lua_get("result")
@@ -50,7 +50,7 @@ T["uses the default status and warns about unknown explicit statuses"] = functio
 			{ name = "ready", files = { "design.md" } },
 			{ name = "draft" },
 		}
-		local tasks = require("neoterm.artifact_tasks").scan(root, statuses, "draft")
+		local tasks = require("neoterm.terms.artifacts.tasks").scan(root, statuses, "draft")
 		result = {
 			status = tasks[1].status,
 			notification = notification,
@@ -137,7 +137,7 @@ T["supports flat branch.task.md tasks with a file icon"] = function()
 				vim.cmd.edit(path)
 			end,
 		}
-		local tasks = require("neoterm.artifact_tasks").scan(root, package.loaded["neoterm.config"].status, "draft")
+		local tasks = require("neoterm.terms.artifacts.tasks").scan(root, package.loaded["neoterm.config"].status, "draft")
 		require("neoterm.task_panel").toggle()
 		local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
 		vim.api.nvim_win_set_cursor(0, { 4, 0 })
