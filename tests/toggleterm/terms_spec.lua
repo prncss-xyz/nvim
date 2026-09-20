@@ -41,7 +41,6 @@ T["screen status events"]["notify only for unseen status transitions"] = functio
 			end,
 		}
 		package.loaded["neoterm.config"] = {
-			autostart = {},
 			on_status = function(instance)
 				table.insert(notifications, instance.status)
 			end,
@@ -117,7 +116,6 @@ T["screen status events"]["notifies when aggregate working state changes"] = fun
 			end,
 		}
 		package.loaded["neoterm.config"] = {
-			autostart = {},
 			on_status = function() end,
 			on_working_change = function(working)
 				table.insert(changes, working)
@@ -177,7 +175,6 @@ T["pseudo terminal"]["toggles the artifact index without querying terminals"] = 
 			new = function() error("artifact must not create a terminal") end,
 		}
 		package.loaded["neoterm.config"] = {
-			autostart = {},
 			on_status = function() end,
 			create = function() toggled = toggled + 1 end,
 		}
@@ -205,7 +202,6 @@ T["pseudo terminal"]["ignores stale artifact buffers whose files no longer exist
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
 		package.loaded["neoterm.terms.create_term"] = { new = function() end }
 		package.loaded["neoterm.config"] = {
-			autostart = {},
 			on_status = function() end,
 			create = function(path) created = path end,
 		}
@@ -239,7 +235,7 @@ T["pseudo terminal"]["focuses the latest artifact for the current project"] = fu
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
 		package.loaded["neoterm.terms.create_term"] = { new = function() end }
-		package.loaded["neoterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["neoterm.config"] = { on_status = function() end }
 		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not query terminal commands") end,
 		}
@@ -271,7 +267,7 @@ T["pseudo terminal"]["focuses an existing artifact window instead of replacing t
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
 		package.loaded["neoterm.terms.create_term"] = { new = function() end }
-		package.loaded["neoterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["neoterm.config"] = { on_status = function() end }
 		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not query terminal commands") end,
 		}
@@ -305,7 +301,7 @@ T["pseudo terminal"]["inserts text at the artifact cursor"] = function()
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
 		package.loaded["neoterm.terms.create_term"] = { new = function() end }
-		package.loaded["neoterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["neoterm.config"] = { on_status = function() end }
 		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not query terminal commands") end,
 		}
@@ -359,7 +355,7 @@ T["pseudo terminal"]["participates in history only when explicitly included"] = 
 				}
 			end,
 		}
-		package.loaded["neoterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["neoterm.config"] = { on_status = function() end }
 		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() return {} end,
 		}
@@ -408,7 +404,7 @@ T["put"]["leaves the terminal in insert mode"] = function()
 				}
 			end,
 		}
-		package.loaded["neoterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["neoterm.config"] = { on_status = function() end }
 		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() return { item } end,
 		}
@@ -438,7 +434,7 @@ T["put"]["formats the current project buffer for the latest artifact"] = functio
 
 		package.loaded["my.parameters"] = { dirs = { projects = projects, artifacts = artifacts } }
 		package.loaded["neoterm.terms.create_term"] = { new = function() end }
-		package.loaded["neoterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["neoterm.config"] = { on_status = function() end }
 		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not create a terminal") end,
 		}
@@ -477,7 +473,7 @@ T["put"]["uses the last project buffer from a terminal"] = function()
 			identify = function() return nil, { dir = project } end,
 		}
 		package.loaded["neoterm.terms.create_term"] = { new = function() end }
-		package.loaded["neoterm.config"] = { autostart = {}, on_status = function() end }
+		package.loaded["neoterm.config"] = { on_status = function() end }
 		package.loaded["neoterm.terms.get_commands"] = {
 			get_commands = function() error("artifact must not create a terminal") end,
 		}
@@ -530,7 +526,6 @@ T["instance numbers"]["are globally unique and reuse the smallest available numb
 			end,
 		}
 		package.loaded["neoterm.config"] = {
-			autostart = {},
 			on_status = function() end,
 		}
 		package.loaded["neoterm.terms.get_commands"] = {
@@ -584,7 +579,6 @@ T["instance numbers"]["new command choices show the instance they will receive"]
 			end,
 		}
 		package.loaded["neoterm.config"] = {
-			autostart = {},
 			on_status = function() end,
 		}
 		package.loaded["neoterm.terms.get_commands"] = {
@@ -759,7 +753,6 @@ T["terminal panel integration"]["forwards make_item lifecycle changes"] = functi
 			end,
 		}
 		package.loaded["neoterm.config"] = {
-			autostart = {},
 			min_runtime = 0,
 			on_status = function() end,
 			panel = { width = 24 },

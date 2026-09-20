@@ -176,7 +176,7 @@ T["supports flat sources without a target"] = function()
 		}
 		expected = {
 			count = 2,
-			name = "run:feat-flat:feat-flat",
+			name = "run:feat-flat",
 			nested_name = "run:neomux:fix-pnpm-template",
 			cmd = "pi \"" .. source .. "\"",
 			target_error = true,

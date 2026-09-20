@@ -99,7 +99,11 @@ end
 local function definition(step, source, cwd)
 	local project, branch, identifier = source_details(source, step)
 	local target = step.target and vim.fs.joinpath(vim.fs.dirname(source), step.target) or nil
-	local name = table.concat({ step.name, branch, identifier }, ":")
+	local name_parts = { step.name, branch }
+	if vim.fs.basename(source) == step.source or identifier ~= branch then
+		table.insert(name_parts, identifier)
+	end
+	local name = table.concat(name_parts, ":")
 	return {
 		name = name,
 		builder = function()

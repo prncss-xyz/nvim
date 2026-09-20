@@ -42,7 +42,7 @@ function M.format_item(global, include_title)
 		if global then
 			res = res .. " (" .. format_dir(item.cwd) .. ")"
 		end
-		if include_title and item.title then
+		if include_title and item.title and item.title ~= item.key and item.title ~= item.display_name then
 			res = res .. "  \u{2014}  " .. item.title
 		end
 		return res

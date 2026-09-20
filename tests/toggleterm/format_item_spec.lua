@@ -15,6 +15,18 @@ T["terminal item formatting"]["does not mark commands without a terminal as work
 	assert(vim.startswith(format_item(item), "● "))
 end
 
+T["terminal item formatting"]["does not repeat the task name as its title"] = function()
+	local format_item = require("neoterm.terms.format_item").format_item(false)
+	local item = {
+		key = "run:feat-flat",
+		instance_count = 1,
+		display_name = "run:feat-flat",
+		title = "run:feat-flat",
+	}
+
+	assert(not format_item(item):find("—", 1, true))
+end
+
 T["terminal item formatting"]["marks unseen terminals after the identifier"] = function()
 	local format_item = require("neoterm.terms.format_item").format_item(false)
 	local item = {

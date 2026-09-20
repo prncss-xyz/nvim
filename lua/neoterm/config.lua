@@ -234,5 +234,4 @@ Output ONLY the branch name, nothing else.
 			exit_policy = "keep",
 		}),
 	},
-	autostart = { { tag = "agent" } },
 }
