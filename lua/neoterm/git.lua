@@ -147,7 +147,7 @@ function M.clone_github()
 		end
 
 		local target = get_default_file(repo_dir)
-		require("my.create").create(vim.fn.fnameescape(target))
+		config.create(vim.fn.fnameescape(target))
 	end)
 end
 

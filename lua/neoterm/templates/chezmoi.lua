@@ -1,4 +1,4 @@
-local async = require("neoterm.helpers.templates")
+local async = require("neoterm.helpers.term_templates")
 
 local function target_path(source_path, file, callback)
 	if file == "" or not vim.startswith(vim.fs.normalize(file), vim.fs.normalize(source_path) .. "/") then

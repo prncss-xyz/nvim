@@ -1,5 +1,7 @@
 local M = {}
 
+local config = require("neoterm.config")
+
 local nvim_has_focus = true
 
 vim.api.nvim_create_autocmd("FocusGained", {
@@ -67,7 +69,7 @@ end
 
 ---@param path string
 function M.create(path)
-	require("my.create").create(path)
+	config.create(path)
 end
 
 function M.is_visible(winnr)

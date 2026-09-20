@@ -1,7 +1,7 @@
 local T = MiniTest.new_set()
 
 T["bwrap sandbox"] = function()
-	local sandbox = require("neoterm.helpers.sandbox")
+	local sandbox = require("neoterm.terms.middleware.sandbox")
 	local item = sandbox.sandbox({
 		sandbox = "bwrap",
 		cwd = "/tmp/project",
@@ -54,7 +54,7 @@ T["bwrap sandbox"] = function()
 end
 
 T["bwrap sandbox preserves shell commands"] = function()
-	local sandbox = require("neoterm.helpers.sandbox")
+	local sandbox = require("neoterm.terms.middleware.sandbox")
 	local item = sandbox.sandbox({
 		sandbox = "bwrap",
 		cwd = "/tmp/project",

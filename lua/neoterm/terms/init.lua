@@ -4,7 +4,7 @@ local create_history = require("neoterm.terms.history").create_history
 local Term = require("neoterm.terms.create_term")
 local config = require("neoterm.config")
 local get_query_fn = require("neoterm.terms.get_query_fn").get_query_fn
-local utils = require("neoterm.terms.utils")
+local utils = require("neoterm.terms.sort_utils")
 local commands = require("neoterm.terms.get_commands")
 local get_commands = commands.get_commands
 local format_item = require("neoterm.terms.format_item").format_item
@@ -162,7 +162,7 @@ end
 
 local function make_item(item, cb, requested_instance)
 	if item.agent then
-		item = require("neoterm.helpers.agents").agent(item)
+		item = require("neoterm.terms.middleware.agents").agent(item)
 	end
 	item.status = item.status or "idle"
 	item.changed = nil
@@ -171,7 +171,7 @@ local function make_item(item, cb, requested_instance)
 	item.cwd = type(item.cwd) == "string" and item.cwd or vim.fn.getcwd()
 	local function sandbox()
 		if item.sandbox then
-			require("neoterm.helpers.sandbox").sandbox(item)
+			require("neoterm.terms.middleware.sandbox").sandbox(item)
 		end
 		create_and_notify(item, cb)
 	end
@@ -184,7 +184,7 @@ local function make_item(item, cb, requested_instance)
 		end
 		sandbox()
 	end
-	require("neoterm.terms.git").ensure_worktree(item.cwd, function(ok)
+	require("neoterm.git").ensure_worktree(item.cwd, function(ok)
 		if ok then
 			create()
 		else
