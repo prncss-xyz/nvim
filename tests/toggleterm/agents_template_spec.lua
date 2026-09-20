@@ -44,4 +44,23 @@ T["templates add asynchronous agent definitions"] = function()
 	]])
 end
 
+T["agent templates can use the default agent"] = function()
+	child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+		package.preload["neoterm.templates.default_agent_test"] = function()
+			return {
+				generator = function()
+					return {
+						{ name = "default agent", builder = function() return { tag = "agent" } end },
+					}
+				end,
+			}
+		end
+		local commands
+		require("neoterm.term_templates").add_commands({}, { "default_agent_test" }, {}, function(result)
+			commands = result
+		end)
+		assert(commands["default agent"].tag == "agent", "expected task without explicit agent")
+	]])
+end
+
 return T

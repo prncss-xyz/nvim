@@ -24,6 +24,7 @@ M.dirs = {
 	projects = projects,
 	notes = notes,
 	dotfiles = projects .. "/dotfiles",
+	artifacts = notes .. "/dev/artifacts",
 }
 
 M.ai_config = {

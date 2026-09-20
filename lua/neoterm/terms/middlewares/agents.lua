@@ -144,14 +144,15 @@ function M.agent(opts)
 	if opts.tag ~= "agent" then
 		return opts
 	end
-	local builder = assert(M.builders[opts.agent], "Unknown coding agent: " .. tostring(opts.agent))
-	local resolved = vim.tbl_extend("force", { sandbox = require("my.conds").personal("bwrap") }, opts)
+	local agent = opts.agent or require("neoterm.config").default_agent
+	local builder = assert(M.builders[agent], "Unknown coding agent: " .. tostring(agent))
+	local resolved = vim.tbl_extend("force", { agent = agent, sandbox = require("my.conds").personal("bwrap") }, opts)
 	return vim.tbl_extend("force", {
 		cmd = builder(resolved),
 		auto_scroll = false,
-		writable_paths = writable_paths[opts.agent],
+		writable_paths = writable_paths[agent],
 		exit_policy = "keep",
-		screen_manifest = screen_manifests[opts.agent],
+		screen_manifest = screen_manifests[agent],
 	}, resolved)
 end
 

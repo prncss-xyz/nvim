@@ -5,13 +5,13 @@ local do_not_replace_types = require("my.parameters").open_files_do_not_replace_
 local notify = require("my.notify")
 local prompt_utils = require("neoterm.helpers.prompt")
 
-local default_agent = personal("pi", "claude")
 return {
+	default_agent = personal("pi", "claude"),
 	rooter_patterns = { ".git", ".hg", ".svn" },
 	default_branches = { "main", "master" },
 	dirs = {
 		projects = dirs.projects,
-		artifacts = dirs.notes .. "/dev/artifacts",
+		artifacts = dirs.artifacts,
 	},
 	min_runtime = 10000,
 	open_files_do_not_replace_types = do_not_replace_types,
@@ -76,7 +76,6 @@ return {
 			name = "do",
 			source = "task.md",
 			command = {
-				agent = default_agent,
 				tag = "agent",
 				title = "{step}",
 				prompt = "do this @{source}",
@@ -88,7 +87,6 @@ return {
 			source = "task.md",
 			target = "design.md",
 			command = {
-				agent = default_agent,
 				tag = "agent",
 				title = "{step}",
 				prompt = [[create the file {target} and write a broad design to implement @{source}]],
@@ -119,7 +117,7 @@ Output ONLY the branch name, nothing else.
 <task>{input}</task>
 ]==],
 		default_status = "inbox",
-    default_mode = "focus",
+		default_mode = "focus",
 		blocking = {
 			status = "blocked",
 			unblock = { "done" },
@@ -236,5 +234,5 @@ Output ONLY the branch name, nothing else.
 			exit_policy = "keep",
 		}),
 	},
-	autostart = {},
+	autostart = { { tag = "agent" } },
 }
