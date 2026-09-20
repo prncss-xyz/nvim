@@ -24,15 +24,13 @@ function M.get_commands(filter, cwd, callback)
 				v = { cmd = v }
 			end
 			if v then
-				if v.agent then
-					v = require("neoterm.terms.middlewares.agents").agent(v)
-				end
 				v.key = k
 				v.display_name = v.display_name or k
 				v.tag = v.tag or k
 				v.idle_timeout = v.idle_timeout or config.idle_timeout
 				v.instance_count = vim.v.count1
 				v.cwd = v.cwd or cwd
+				v = require("neoterm.terms.middlewares").apply_middleware(v)
 				if filter(v) then
 					res[k] = v
 				end

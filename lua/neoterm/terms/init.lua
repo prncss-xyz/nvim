@@ -161,28 +161,24 @@ local function create_and_notify(item, cb)
 end
 
 local function make_item(item, cb, requested_instance)
-	if item.agent then
-		item = require("neoterm.terms.middlewares.agents").agent(item)
-	end
 	item.status = item.status or "idle"
 	item.changed = nil
 	reserve_instance(item, requested_instance)
 	assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
 	item.cwd = type(item.cwd) == "string" and item.cwd or vim.fn.getcwd()
-	local function sandbox()
-		if item.sandbox then
-			require("neoterm.terms.middlewares.sandbox").sandbox(item)
-		end
+	local function spawn()
+		item = require("neoterm.terms.middlewares").apply_middleware(item)
+		instance_owners[item.instance_count] = item
 		create_and_notify(item, cb)
 	end
 	local function create()
 		if type(item.cmd) == "function" then
 			return item.cmd(function(cmd)
 				item.cmd = cmd
-				sandbox()
+				spawn()
 			end)
 		end
-		sandbox()
+		spawn()
 	end
 	require("neoterm.git").ensure_worktree(item.cwd, function(ok)
 		if ok then
