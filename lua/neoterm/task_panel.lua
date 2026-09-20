@@ -41,14 +41,30 @@ end
 
 local function create_rows(tasks, statuses, status_names, root_parts)
 	local result = {}
-	local groups = { { name = "BROKEN", broken = true } }
+	local mode_statuses = {}
+	for _, status in ipairs(statuses) do
+		mode_statuses[status] = true
+	end
+	local error_groups = { { name = "ERROR:UNKNOWN TAG", broken = true } }
+	local seen_errors = {}
+	for _, task in ipairs(tasks) do
+		local status = task.status
+		if vim.startswith(status, "ERROR:") and not seen_errors[status] and not mode_statuses[status] then
+			seen_errors[status] = true
+			table.insert(error_groups, { name = status })
+		end
+	end
+	table.sort(error_groups, function(left, right)
+		return left.name < right.name
+	end)
+	local groups = error_groups
 	for _, status in ipairs(statuses) do
 		table.insert(groups, { name = status })
 	end
 	for _, group in ipairs(groups) do
 		local root = { children = {} }
 		for _, task in ipairs(tasks) do
-			local matches = group.broken and not status_names[task.status]
+			local matches = group.broken and unknown_status(task.status, status_names)
 				or not group.broken and task.status == group.name
 			if matches and #task.parts > #root_parts and has_prefix(task.parts, root_parts) then
 				local node = root
@@ -143,6 +159,10 @@ local function selected_task(selected)
 	return selected.task
 end
 
+local function unknown_status(status, status_names)
+	return not status_names[status] and not vim.startswith(status, "ERROR:")
+end
+
 local function open_selected()
 	local selected = state.rows[vim.api.nvim_win_get_cursor(state.win)[1]]
 	if not selected then
@@ -150,7 +170,7 @@ local function open_selected()
 	end
 	local latest = require("neoterm.terms.artifacts.tasks").latest(state.tasks, function(task)
 		if selected.broken then
-			if state.status_names[task.status] then
+			if not unknown_status(task.status, state.status_names) then
 				return false
 			end
 		elseif task.status ~= selected.status then
