@@ -35,7 +35,6 @@ local screen_manifests = {
 				visible_working = true,
 				line_regex = { [[^\s*[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏] Working\s*$]] },
 			},
-			id = "running_status_bar",
 			{
 				id = "working_border",
 				status = "working",
@@ -142,6 +141,9 @@ M.builders = {
 }
 
 function M.agent(opts)
+	if opts.agent == nil then
+		return opts
+	end
 	local builder = assert(M.builders[opts.agent], "Unknown coding agent: " .. opts.agent)
 	local resolved = vim.tbl_extend("force", { sandbox = require("my.conds").personal("bwrap") }, opts)
 	return vim.tbl_extend("force", {

@@ -57,6 +57,9 @@ M.builders = {
 }
 
 function M.sandbox(opts)
+	if opts.sandbox == nil then
+		return opts
+	end
 	local builder = assert(M.builders[opts.sandbox], "Unknown sandbox: " .. opts.sandbox)
 	opts.cmd = builder(opts)
 	opts.sandbox = nil
