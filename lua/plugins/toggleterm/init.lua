@@ -329,7 +329,7 @@ return {
 			{
 				"me",
 				function()
-					require("neoterm.terms").put({ tag = "agent" }, "{path}")
+					require("neoterm.terms").put({ key = "agent" }, "{path}")
 				end,
 				desc = "Put Current File Path",
 				mode = "n",

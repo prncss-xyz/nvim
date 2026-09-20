@@ -121,6 +121,10 @@ Output ONLY the branch name, nothing else.
 		{ name = "maybe" },
 		{ name = "later" },
 		{
+			name = "explore",
+			focus = true,
+		},
+		{
 			name = "ready",
 			focus = true,
 		},
