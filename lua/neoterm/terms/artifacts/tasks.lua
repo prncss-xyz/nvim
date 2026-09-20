@@ -108,6 +108,22 @@ local function finish_rebuild(id, directories, next_files, candidates)
 		if pending > 0 or id ~= generation then
 			return
 		end
+		local flat_parts = {}
+		local directory_parts = {}
+		for _, task in ipairs(next_tasks) do
+			local key = table.concat(task.parts, "/")
+			if task.flat then
+				flat_parts[key] = true
+			else
+				directory_parts[key] = true
+			end
+		end
+		for _, task in ipairs(next_tasks) do
+			local key = table.concat(task.parts, "/")
+			if flat_parts[key] and directory_parts[key] then
+				task.status = "ERROR:DUPLICATE"
+			end
+		end
 		tasks = next_tasks
 		files = next_files
 		install_watchers(directories)

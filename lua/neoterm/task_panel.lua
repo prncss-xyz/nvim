@@ -39,6 +39,10 @@ local function has_prefix(parts, prefix)
 	return true
 end
 
+local function unknown_status(status, status_names)
+	return not status_names[status] and not vim.startswith(status, "ERROR:")
+end
+
 local function create_rows(tasks, statuses, status_names, root_parts)
 	local result = {}
 	local mode_statuses = {}
@@ -157,10 +161,6 @@ end
 
 local function selected_task(selected)
 	return selected.task
-end
-
-local function unknown_status(status, status_names)
-	return not status_names[status] and not vim.startswith(status, "ERROR:")
 end
 
 local function open_selected()
