@@ -1,5 +1,11 @@
 local M = {}
 
+local writable_paths = {
+	"~/.local/share/pnpm",
+	"~/.local/state/pnpm",
+	"~/.cache/pnpm",
+}
+
 local function command(cmd)
 	if cmd == nil then
 		return { vim.o.shell }
@@ -13,9 +19,7 @@ end
 M.builders = {
 	bwrap = function(opts)
 		local cwd = vim.fs.abspath(opts.cwd)
-		local dirs = (not opts.artifacts_dir or not opts.projects_dir) and require("neoterm.config").dirs or {}
-		local artifacts = vim.fs.abspath(opts.artifacts_dir or dirs.artifacts)
-		local projects = vim.fs.abspath(opts.projects_dir or dirs.projects)
+		local artifacts = vim.fs.abspath(opts.artifacts_dir or require("neoterm.config").dirs.artifacts)
 		local cmd = {
 			"bwrap",
 			"--die-with-parent",
@@ -31,14 +35,11 @@ M.builders = {
 			"/proc",
 			"--tmpfs",
 			"/tmp",
-			"--ro-bind",
-			projects,
-			projects,
 			"--bind",
 			artifacts,
 			artifacts,
 		}
-		for _, path in ipairs(opts.writable_paths or {}) do
+		for _, path in ipairs(vim.list_extend(vim.deepcopy(writable_paths), opts.writable_paths or {})) do
 			path = vim.fs.abspath(path)
 			vim.list_extend(cmd, { "--bind", path, path })
 		end
