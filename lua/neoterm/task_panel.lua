@@ -131,6 +131,14 @@ local function render()
 	end
 end
 
+function M.list_tasks()
+	local tasks = vim.list_extend({}, require("neoterm.terms.artifacts.tasks").get())
+	table.sort(tasks, function(left, right)
+		return table.concat(left.parts, "/") < table.concat(right.parts, "/")
+	end)
+	return tasks
+end
+
 local function selected_task(selected)
 	return selected.task
 end

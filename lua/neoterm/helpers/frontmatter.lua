@@ -1,23 +1,19 @@
 local M = {}
 
 function M.add_dependency()
-	local artifacts = require("neoterm.config").dirs.artifacts
-	local files = vim.tbl_filter(function(path)
-		return vim.fs.basename(path) == "task.md"
-	end, require("neoterm.terms.artifacts.tasks").files(artifacts))
-	local function dependency_name(path)
-		return assert(vim.fs.relpath(artifacts, path)):gsub("/task%.md$", "")
+	local tasks = require("neoterm.task_panel").list_tasks()
+	local function dependency_name(task)
+		return table.concat(task.parts, "/")
 	end
-	table.sort(files)
-	vim.ui.select(files, {
+	vim.ui.select(tasks, {
 		prompt = "Select dependency",
 		format_item = dependency_name,
-	}, function(path)
-		if path == nil then
+	}, function(task)
+		if task == nil then
 			return
 		end
 
-		local dependency = dependency_name(path)
+		local dependency = dependency_name(task)
 		local yaml = require("neoterm.yaml")
 		local frontmatter = yaml.read(0)
 		local dependencies = frontmatter.dependencies
