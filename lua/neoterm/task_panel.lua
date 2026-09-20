@@ -286,14 +286,6 @@ function M.toggle()
 	local root = default_root(artifacts)
 	local modes = vim.tbl_keys(config.tasks.modes)
 	table.sort(modes)
-	for index, mode in ipairs(modes) do
-		if mode == "default" then
-			table.remove(modes, index)
-			break
-		end
-	end
-	table.insert(modes, 1, "default")
-	assert(config.tasks.modes.default, "Default task panel mode is not configured")
 	vim.cmd(string.format("topleft %dvsplit", width))
 	local win = vim.api.nvim_get_current_win()
 	local buf = vim.api.nvim_create_buf(false, true)
@@ -303,7 +295,7 @@ function M.toggle()
 		buf = buf,
 		rows = {},
 		tasks = {},
-		mode = "default",
+		mode = config.tasks.default_mode or modes[1],
 		modes = modes,
 		artifacts = artifacts,
 		root = root,

@@ -119,12 +119,13 @@ Output ONLY the branch name, nothing else.
 <task>{input}</task>
 ]==],
 		default_status = "inbox",
+    default_mode = "focus",
 		blocking = {
 			status = "blocked",
 			unblock = { "done" },
 		},
 		modes = {
-			default = {
+			all = {
 				"draft",
 				"maybe",
 				"later",
