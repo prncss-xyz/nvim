@@ -141,17 +141,16 @@ M.builders = {
 }
 
 function M.agent(opts)
-	if opts.agent == nil then
+	if opts.tag ~= "agent" then
 		return opts
 	end
-	local builder = assert(M.builders[opts.agent], "Unknown coding agent: " .. opts.agent)
+	local builder = assert(M.builders[opts.agent], "Unknown coding agent: " .. tostring(opts.agent))
 	local resolved = vim.tbl_extend("force", { sandbox = require("my.conds").personal("bwrap") }, opts)
 	return vim.tbl_extend("force", {
 		cmd = builder(resolved),
 		auto_scroll = false,
 		writable_paths = writable_paths[opts.agent],
 		exit_policy = "keep",
-		tag = "agent",
 		screen_manifest = screen_manifests[opts.agent],
 	}, resolved)
 end

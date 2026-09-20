@@ -98,6 +98,7 @@ Output ONLY the branch name, nothing else.
 			source = "task.md",
 			command = {
 				agent = agent,
+				tag = "agent",
 				title = "{step}",
 				prompt = "do this @{source}",
 			},
@@ -109,6 +110,7 @@ Output ONLY the branch name, nothing else.
 			target = "design.md",
 			command = {
 				agent = agent,
+				tag = "agent",
 				title = "{step}",
 				prompt = [[create the file {target} and write a broad design to implement @{source}]],
 			},
@@ -170,14 +172,17 @@ Output ONLY the branch name, nothing else.
 	commands = {
 		pi = personal({
 			agent = "pi",
+			tag = "agent",
 			priority = 3,
 		}),
 		agy = personal({
 			agent = "agy",
+			tag = "agent",
 			priority = 2,
 		}),
 		claude = work({
 			agent = "claude",
+			tag = "agent",
 			priority = 1,
 		}),
 		yazi = { cmd = "yazi" },
