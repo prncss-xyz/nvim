@@ -108,6 +108,33 @@ local function definition(step, source, cwd)
 	}
 end
 
+local function executable_definition(path, cwd)
+	local relative = assert(vim.fs.relpath(dirs.artifacts, path), "Executable must be inside the artifact directory")
+	local name = "script:" .. vim.fs.dirname(relative) .. " " .. vim.fs.basename(relative)
+	return {
+		name = name,
+		builder = function()
+			return { cmd = { path }, cwd = cwd, exit_policy = "keep" }
+		end,
+	}
+end
+
+local function add_task_executables(definitions, task_source, cwd, checkout_branch, executables)
+	if vim.fs.basename(task_source) ~= "task.md" then
+		return
+	end
+	local _, branch = source_details(task_source, { source = "task.md" })
+	if not is_default_branch(checkout_branch) and branch ~= checkout_branch then
+		return
+	end
+	local task_dir = vim.fs.dirname(task_source)
+	for _, path in ipairs(executables) do
+		if vim.fs.dirname(path) == task_dir then
+			table.insert(definitions, executable_definition(path, cwd))
+		end
+	end
+end
+
 local function step_matches_source(step, source)
 	local filename = vim.fs.basename(source)
 	return filename == step.source or (step.target == nil and vim.endswith(filename, "." .. step.source))
@@ -137,6 +164,13 @@ function M.for_file(opts)
 			table.insert(definitions, definition(step, source, cwd))
 		end
 	end
+	add_task_executables(
+		definitions,
+		source,
+		cwd,
+		checkout_branch,
+		require("neoterm.terms.artifacts.tasks").executables(vim.fs.dirname(source))
+	)
 	return definitions
 end
 
@@ -151,7 +185,9 @@ function M.generator(opts, callback)
 	end
 	local artifact_dir = vim.fs.joinpath(dirs.artifacts, project)
 
-	local indexed_files = require("neoterm.terms.artifacts.tasks").files(artifact_dir)
+	local tasks = require("neoterm.terms.artifacts.tasks")
+	local indexed_files = tasks.files(artifact_dir)
+	local executables = tasks.executables(artifact_dir)
 	local present = {}
 	for _, path in ipairs(indexed_files) do
 		present[path] = true
@@ -178,6 +214,9 @@ function M.generator(opts, callback)
 						end
 					end
 				end
+			end
+			for _, source in ipairs(indexed_files) do
+				add_task_executables(definitions, source, cwd, checkout_branch, executables)
 			end
 			table.sort(definitions, function(a, b)
 				return a.name < b.name
