@@ -38,27 +38,6 @@ return {
 		"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
 		"claude -p --model haiku --disable-slash-commands --tools="
 	),
-	create_task_name = [==[
-Generate a concise git branch name based on the task description.
-
-Rules:
-- Keep it short: 1-3 words, max 4 if necessary
-- Focus on the core task/feature, not implementation details
-- Non coding tasks should start with "todo-"
-- Coding tasks should start with conventional commits prefixes
-
-Examples of good branch names:
-- "Schedule a meeting with Amanda" → todo-meeting-amanda
-- "Add dark mode toggle" → feat-dark-mode
-- "Fix the search results not showing" → fix-search
-- "Refactor the authentication module" → refactor-auth
-- "Add CSV export to reports" → feat-export-csv
-- "Shell completion is broken" → feat-shell-completion
-
-Output ONLY the branch name, nothing else.
-
-<task>{input}</task>
-]==],
 	create = require("my.create").create,
 	bdelete = function(bufnr)
 		Snacks.bufdelete.delete(bufnr)
@@ -117,33 +96,56 @@ Output ONLY the branch name, nothing else.
 			fork = false,
 		},
 	},
-	default_status = "inbox",
-	blocking = {
-		status = "blocked",
-		unblock = { "done" },
-	},
-	status = {
-		{ name = "draft" },
-		{ name = "maybe" },
-		{ name = "later" },
-		{ name = "inbox" },
-		{
-			name = "explore",
-			focus = true,
+	tasks = {
+		create_task_name = [==[
+Generate a concise git branch name based on the task description.
+
+Rules:
+- Keep it short: 1-3 words, max 4 if necessary
+- Focus on the core task/feature, not implementation details
+- Non coding tasks should start with "todo-"
+- Coding tasks should start with conventional commits prefixes
+
+Examples of good branch names:
+- "Schedule a meeting with Amanda" → todo-meeting-amanda
+- "Add dark mode toggle" → feat-dark-mode
+- "Fix the search results not showing" → fix-search
+- "Refactor the authentication module" → refactor-auth
+- "Add CSV export to reports" → feat-export-csv
+- "Shell completion is broken" → feat-shell-completion
+
+Output ONLY the branch name, nothing else.
+
+<task>{input}</task>
+]==],
+		default_status = "inbox",
+		blocking = {
+			status = "blocked",
+			unblock = { "done" },
 		},
-		{
-			name = "ready",
-			focus = true,
+		status = {
+			{ name = "draft" },
+			{ name = "maybe" },
+			{ name = "later" },
+			{ name = "inbox" },
+			{
+				name = "explore",
+				focus = true,
+			},
+			{
+				name = "ready",
+				focus = true,
+			},
+			{
+				name = "active",
+				focus = true,
+			},
+			{ name = "blocked" },
+			{ name = "review" },
+			{ name = "merging" },
+			{ name = "done" },
+			{ name = "aborted" },
 		},
-		{
-			name = "active",
-			focus = true,
-		},
-		{ name = "blocked" },
-		{ name = "review" },
-		{ name = "merging" },
-		{ name = "done" },
-		{ name = "aborted" },
 	},
 	templates = {
 		"steps",
@@ -197,7 +199,7 @@ Output ONLY the branch name, nothing else.
 			cmd = "portless",
 			exit_policy = "keep",
 		},
-		current = function()
+		["run current"] = function()
 			return { cwd = vim.fn.expand("%:p:h") }
 		end,
 		shell = {

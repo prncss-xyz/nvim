@@ -45,7 +45,7 @@ local function branch_name(input, callback, root)
 	root = root or vim.fs.root(0, ".git") or vim.uv.cwd()
 	vim.notify("Naming branch...", vim.log.levels.INFO)
 	local command = vim.split(config.ai_query, "%s+", { trimempty = true })
-	local prompt = config.create_task_name:gsub("{input}", function()
+	local prompt = config.tasks.create_task_name:gsub("{input}", function()
 		return input
 	end)
 	vim.system(command, { cwd = root, text = true, stdin = prompt }, function(result)

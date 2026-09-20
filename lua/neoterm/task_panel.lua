@@ -92,7 +92,7 @@ local function render()
 	state.tasks = require("neoterm.terms.artifacts.tasks").get()
 	local relative_root = assert(vim.fs.relpath(state.artifacts, state.root))
 	local root_parts = relative_root == "." and {} or vim.split(relative_root, "/", { plain = true })
-	local statuses = config.status
+	local statuses = config.tasks.status
 	if state.focus_mode and vim.iter(statuses):any(function(status)
 		return status.focus
 	end) then

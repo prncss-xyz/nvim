@@ -37,7 +37,7 @@ function M.update_status()
 	local remove = "REMOVE"
 	local statuses = vim.tbl_map(function(status)
 		return status.name
-	end, require("neoterm.config").status)
+	end, require("neoterm.config").tasks.status)
 	table.insert(statuses, remove)
 	vim.ui.select(statuses, { prompt = "Select status" }, function(choice)
 		if choice == nil then
