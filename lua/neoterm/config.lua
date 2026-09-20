@@ -117,13 +117,16 @@ Output ONLY the branch name, nothing else.
 			fork = false,
 		},
 	},
-	default_status = "draft",
-	block_as = "blocked",
-	unblock_with = { "done" },
+	default_status = "inbox",
+	blocking = {
+		status = "blocked",
+		unblock = { "done" },
+	},
 	status = {
 		{ name = "draft" },
 		{ name = "maybe" },
 		{ name = "later" },
+		{ name = "inbox" },
 		{
 			name = "explore",
 			focus = true,
