@@ -5,7 +5,7 @@ local do_not_replace_types = require("my.parameters").open_files_do_not_replace_
 local notify = require("my.notify")
 local prompt_utils = require("neoterm.helpers.prompt")
 
-local agent = personal("pi", "claude")
+local default_agent = personal("pi", "claude")
 return {
 	rooter_patterns = { ".git", ".hg", ".svn" },
 	default_branches = { "main", "master" },
@@ -76,7 +76,7 @@ return {
 			name = "do",
 			source = "task.md",
 			command = {
-				agent = agent,
+				agent = default_agent,
 				tag = "agent",
 				title = "{step}",
 				prompt = "do this @{source}",
@@ -88,7 +88,7 @@ return {
 			source = "task.md",
 			target = "design.md",
 			command = {
-				agent = agent,
+				agent = default_agent,
 				tag = "agent",
 				title = "{step}",
 				prompt = [[create the file {target} and write a broad design to implement @{source}]],
