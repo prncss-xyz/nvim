@@ -11,7 +11,6 @@ function M.agent(opts)
 		cmd = config.builder(resolved),
 		auto_scroll = false,
 		writable_paths = config.writable_paths,
-		exit_policy = "keep",
 		screen_manifest = config.screen_manifest,
 	}, resolved)
 end
