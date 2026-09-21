@@ -108,7 +108,9 @@ return {
 			{
 				"mb",
 				function()
-					require("neoterm.terms").toggle_unseen_or_latest()
+					require("neoterm.terms").toggle_unseen_or_latest({
+						cwd = require("neoterm.terms.get_query_fn").any,
+					})
 				end,
 				desc = "Toggle Last Terminal",
 			},
@@ -256,7 +258,11 @@ return {
 			{
 				"m" .. reverse("v"),
 				function()
-					require("neoterm.terms").put({ tag = "agent" }, "{selection_span}\n{selection_contents}", { new = true })
+					require("neoterm.terms").put(
+						{ tag = "agent" },
+						"{selection_span}\n{selection_contents}",
+						{ new = true }
+					)
 				end,
 				desc = "Send Selection to New Agent",
 				mode = { "n", "x" },

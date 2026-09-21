@@ -43,6 +43,32 @@ T["discovers packages two levels deep without workspaces"] = function()
 	}, child.lua_get("result"))
 end
 
+T["searches down two levels when no package exists above"] = function()
+	child.lua([[
+		local root = vim.fn.tempname()
+		local function package(path, name)
+			vim.fn.mkdir(path, "p")
+			vim.fn.writefile({ vim.json.encode({ name = name, packageManager = "pnpm@10", scripts = { test = "test" } }) }, vim.fs.joinpath(path, "package.json"))
+		end
+		vim.fn.mkdir(root, "p")
+		package(vim.fs.joinpath(root, "projects", "app"), "app")
+		package(vim.fs.joinpath(root, "node_modules", "dependency"), "dependency")
+		package(vim.fs.joinpath(root, ".hidden"), "hidden")
+		local async = require("neoterm.templates.async")
+		async.executable = function(_, callback) vim.schedule(function() callback(true) end) end
+		local definitions
+		require("neoterm.templates.npm").generator({ dir = root }, function(value) definitions = value end)
+		vim.wait(1000, function() return definitions ~= nil end)
+		result = vim.tbl_map(function(definition) return definition.name end, definitions)
+		table.sort(result)
+	]])
+
+	assert.same({
+		"pnpm install",
+		"pnpm test (app)",
+	}, child.lua_get("result"))
+end
+
 T["searches upward at most two levels without falling back to nvim cwd"] = function()
 	child.lua([[
 		local root = vim.fn.tempname()
