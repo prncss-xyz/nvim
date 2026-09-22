@@ -128,7 +128,9 @@ Output ONLY the branch name, nothing else.
 			all = {
 				"draft",
 				"maybe",
-				"later",
+				"later 2",
+				"later 1",
+				"later 0",
 				"inbox",
 				"explore",
 				"ready",
