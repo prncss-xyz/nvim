@@ -73,16 +73,50 @@ local function get_status_icons(buffer, path)
 	return "  " .. table.concat(icons, " ")
 end
 
-local last_value = ""
+local function file_buffer(win)
+	if
+		not vim.api.nvim_win_is_valid(win)
+		or vim.api.nvim_win_get_tabpage(win) ~= vim.api.nvim_get_current_tabpage()
+	then
+		return
+	end
+	local buffer = vim.api.nvim_win_get_buf(win)
+	-- Files opened with nvim_win_set_buf() can remain unlisted.
+	if vim.bo[buffer].buftype == "" then
+		return buffer
+	end
+end
+
+local function displayed_buffer()
+	local win = vim.api.nvim_get_current_win()
+	local current = file_buffer(win)
+	if current then
+		-- Window changes refresh lualine synchronously, so no separate history is needed.
+		vim.t.lualine_file_win = win
+		return current
+	end
+	local previous = vim.t.lualine_file_win
+	local buffer = previous and file_buffer(previous)
+	if buffer then
+		return buffer
+	end
+	-- Lualine may load after a panel has already taken focus.
+	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+		local buffer = file_buffer(win)
+		if buffer then
+			vim.t.lualine_file_win = win
+			return buffer
+		end
+	end
+end
 
 return function()
-	local buffer = vim.api.nvim_get_current_buf()
-	if vim.bo[buffer].buftype ~= "" or not vim.bo[buffer].buflisted then
-		return last_value
+	local buffer = displayed_buffer()
+	if not buffer then
+		return ""
 	end
 
 	local path = vim.api.nvim_buf_get_name(buffer)
 	local name = path == "" and "[No Name]" or get_displayed_name(path)
-	last_value = get_file_icon(buffer, path) .. name .. " " .. get_status_icons(buffer, path) .. "  "
-	return last_value
+	return get_file_icon(buffer, path) .. name .. " " .. get_status_icons(buffer, path) .. "  "
 end

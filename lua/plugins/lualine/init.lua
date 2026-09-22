@@ -28,6 +28,18 @@ return {
 				lualine_z = { { "terminal_changed", color = "DiagnosticWarn" } },
 			},
 		},
+		config = function(_, opts)
+			local lualine = require("lualine")
+			lualine.setup(opts)
+			vim.api.nvim_create_autocmd({ "BufWinEnter", "WinEnter" }, {
+				group = vim.api.nvim_create_augroup("LualineWindowRefresh", { clear = true }),
+				callback = function()
+					-- New buffer/window views inherit lualine's blank global statusline.
+					-- Populate it before a redraw, rather than waiting for the refresh queue.
+					lualine.refresh({ place = { "statusline" }, force = true })
+				end,
+			})
+		end,
 		cond = not_vscode,
 	},
 }
