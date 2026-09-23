@@ -21,6 +21,13 @@ M.builders = {
 		local cwd = vim.fs.abspath(opts.cwd)
 		local artifacts = vim.fs.abspath(opts.artifacts_dir or require("neoterm.config").dirs.artifacts)
 		local cmd = {
+			"varlock",
+			"run",
+			"--path",
+			vim.fs.joinpath(vim.env.HOME, ".config/varlock/.env.agent.schema"),
+			"--inject",
+			"vars",
+			"--",
 			"bwrap",
 			"--die-with-parent",
 			"--new-session",
