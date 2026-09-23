@@ -24,7 +24,7 @@ M.builders = {
 			"varlock",
 			"run",
 			"--path",
-			vim.fs.joinpath(vim.env.HOME, ".config/varlock/.env.agent.schema"),
+			vim.fs.joinpath(vim.env.HOME, ".config/varlock/env.agent.schema"),
 			"--inject",
 			"vars",
 			"--",
@@ -48,6 +48,7 @@ M.builders = {
 		}
 		for _, path in ipairs(vim.list_extend(vim.deepcopy(writable_paths), opts.writable_paths or {})) do
 			path = vim.fs.abspath(path)
+			vim.fn.mkdir(path, "p")
 			vim.list_extend(cmd, { "--bind", path, path })
 		end
 		vim.list_extend(cmd, {

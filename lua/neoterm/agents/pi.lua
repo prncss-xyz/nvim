@@ -30,7 +30,7 @@ return {
 		},
 	},
 	builder = function(opts)
-		local cmd = { "p" }
+		local cmd = { "pi" }
 		if opts.title then
 			vim.list_extend(cmd, { "--name", opts.title })
 		end
