@@ -46,7 +46,7 @@ function M.attach_term(term, send, screen_manifest, osc)
 		clear_pending_idle()
 	end
 
-	vim.api.nvim_create_autocmd("TermEnter", {
+	vim.api.nvim_create_autocmd({ "TermEnter", "WinEnter", "BufEnter" }, {
 		buffer = term.bufnr,
 		callback = function()
 			send({ type = "focus" })
