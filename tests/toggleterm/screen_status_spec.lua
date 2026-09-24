@@ -218,4 +218,17 @@ T["screen status"]["keeps the earlier rule when priorities tie"] = function()
 	assert.same("working", child.lua_get("result.status"))
 end
 
+T["screen status"]["fx activity ignores the blinking bullet and requires a live timer"] = function()
+	child.lua([[local detect = require("neoterm.terms.screen_status").detect
+		local manifest = require("neoterm.agents.fx").screen_manifest
+		results = {}
+		for _, screen in ipairs({ "• Thinking (12s)", "Thinking (12s)", "Running (1m 4s)" }) do
+			table.insert(results, detect(manifest, screen).status)
+		end
+		for _, screen in ipairs({ "Thinking (12s)\n■ response", "Thinking (12s)\n• response", "Thinking without timer" }) do
+			table.insert(results, detect(manifest, screen).status)
+		end]])
+	assert.same({ "working", "working", "working", "idle", "idle", "idle" }, child.lua_get("results"))
+end
+
 return T

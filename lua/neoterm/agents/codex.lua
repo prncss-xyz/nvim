@@ -106,6 +106,15 @@ return {
 		if opts.sandbox then
 			table.insert(cmd, "--dangerously-bypass-approvals-and-sandbox")
 		end
+		if opts.provider then
+			vim.list_extend(cmd, { "--config", "model_provider=" .. vim.json.encode(opts.provider) })
+		end
+		if opts.model then
+			vim.list_extend(cmd, { "--model", opts.model })
+		end
+		if opts.effort then
+			vim.list_extend(cmd, { "--config", "model_reasoning_effort=" .. opts.effort })
+		end
 		if opts.prompt then
 			table.insert(cmd, opts.prompt)
 		end

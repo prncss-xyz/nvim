@@ -69,6 +69,12 @@ return {
 		if opts.title then
 			vim.list_extend(cmd, { "--name", opts.title })
 		end
+		if opts.model then
+			vim.list_extend(cmd, { "--model", opts.model })
+		end
+		if opts.effort then
+			vim.list_extend(cmd, { "--effort", opts.effort })
+		end
 		if opts.prompt then
 			table.insert(cmd, opts.prompt)
 		end
