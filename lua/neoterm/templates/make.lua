@@ -35,9 +35,8 @@ return {
 								local target = line:sub(1, separator - 1)
 								table.insert(definitions, {
 									name = string.format("make %s", target),
-									builder = function()
-										return { cmd = { "make", target }, cwd = cwd }
-									end,
+									cmd = { "make", target },
+									cwd = cwd,
 								})
 							end
 						end

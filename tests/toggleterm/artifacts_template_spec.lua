@@ -50,7 +50,7 @@ T["creates tasks for sources without targets"] = function()
 			},
 		}, function(value) definitions = value end)
 		vim.wait(1000, function() return definitions ~= nil end)
-		local built = definitions[1].builder()
+		local built = definitions[1]
 		result = {
 			count = #definitions,
 			name = definitions[1].name,
@@ -58,7 +58,7 @@ T["creates tasks for sources without targets"] = function()
 			cwd = built.cwd,
 			on_exit = built.on_exit,
 			auto_scroll = built.auto_scroll,
-			metadata_removed = built.name == nil and built.source == nil and built.target == nil,
+			metadata_removed = built.source == nil and built.target == nil,
 		}
 		local cwd = vim.fs.joinpath(projects, "nvim", "main")
 		expected = {
@@ -110,8 +110,8 @@ T["creates tasks for executable artifact scripts"] = function()
 			tasks = {},
 		}, function(value) artifact_definitions = value end)
 		vim.wait(1000, function() return definitions ~= nil and artifact_definitions ~= nil end)
-		local built = definitions[1].builder()
-		local artifact_built = artifact_definitions[1].builder()
+		local built = definitions[1]
+		local artifact_built = artifact_definitions[1]
 		result = {
 			count = #definitions,
 			name = definitions[1].name,
@@ -160,13 +160,15 @@ T["supports flat sources without a target"] = function()
 			dir = vim.fs.joinpath(projects, "nvim", "main"),
 			tasks = { { name = "run", source = "task.md", cmd = "pi {source}" } },
 		}, function(value) definitions = value end)
-		template.generator({
-			dir = vim.fs.joinpath(projects, "nvim", "main"),
-			tasks = { { name = "bad", source = "task.md", cmd = "pi {target}" } },
-		}, function(value) invalid = value end)
-		vim.wait(1000, function() return definitions ~= nil and invalid ~= nil end)
-		local built = definitions[1].builder()
-		local ok, err = pcall(invalid[1].builder)
+		local ok, err = pcall(function()
+			template.generator({
+				dir = vim.fs.joinpath(projects, "nvim", "main"),
+				tasks = { { name = "bad", source = "task.md", cmd = "pi {target}" } },
+			}, function(value) invalid = value end)
+			vim.wait(1000, function() return invalid ~= nil end)
+		end)
+		vim.wait(1000, function() return definitions ~= nil end)
+		local built = definitions[1]
 		result = {
 			count = #definitions,
 			name = definitions[1].name,
@@ -219,9 +221,9 @@ T["filters non-default branches and resolves fork cwd"] = function()
 		result = {
 			forked_count = #forked,
 			forked_name = forked[1].name,
-			forked_cwd_matches = forked[1].builder().cwd == current,
+			forked_cwd_matches = forked[1].cwd == current,
 			local_count = #local_task,
-			local_cwd_matches = local_task[1].builder().cwd == current,
+			local_cwd_matches = local_task[1].cwd == current,
 		}
 	]])
 

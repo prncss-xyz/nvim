@@ -38,9 +38,8 @@ return {
 			callback({
 				{
 					name = "git-sync",
-					builder = function()
-						return { cmd = "git-sync", cwd = opts.cwd }
-					end,
+					cmd = "git-sync",
+					cwd = opts.cwd,
 				},
 			})
 		end)

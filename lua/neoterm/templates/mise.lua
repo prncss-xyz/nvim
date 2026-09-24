@@ -35,9 +35,8 @@ return {
 						table.insert(definitions, {
 							name = string.format("mise %s", name),
 							desc = value.description ~= "" and value.description or nil,
-							builder = function()
-								return { cmd = { "mise", "run", name }, cwd = cwd }
-							end,
+							cmd = { "mise", "run", name },
+							cwd = cwd,
 						})
 					end
 					callback(definitions)

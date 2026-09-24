@@ -64,9 +64,8 @@ local function add_scripts(definitions, data, manager, cwd, workspace)
 			or string.format("%s %s (%s)", manager, script, data.name or vim.fs.basename(cwd))
 		table.insert(definitions, {
 			name = name,
-			builder = function()
-				return { cmd = { manager, "run", script }, cwd = cwd }
-			end,
+			cmd = { manager, "run", script },
+			cwd = cwd,
 		})
 	end
 end
@@ -106,9 +105,8 @@ return {
 								local function complete()
 									table.insert(definitions, {
 										name = manager .. " install",
-										builder = function()
-											return { cmd = { manager, "install" }, cwd = root }
-										end,
+										cmd = { manager, "install" },
+										cwd = root,
 									})
 									callback(definitions)
 								end

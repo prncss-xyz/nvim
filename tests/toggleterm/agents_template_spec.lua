@@ -24,10 +24,10 @@ T["agents template adds installed agents and prioritizes the default"] = functio
 		vim.wait(1000, function() return definitions ~= nil end)
 		assert(#definitions == 2, "expected only installed agents")
 		assert(definitions[1].name == "first", "expected first agent")
-		assert(definitions[1].builder().priority == 100, "expected default agent priority")
-		assert(definitions[1].builder().tag == "agent", "expected agent tag")
+		assert(definitions[1].priority == 100, "expected default agent priority")
+		assert(definitions[1].tag == "agent", "expected agent tag")
 		assert(definitions[2].name == "third", "expected third agent")
-		assert(definitions[2].builder().priority == 1, "expected last agent priority")
+		assert(definitions[2].priority == 1, "expected last agent priority")
 	]])
 end
 
@@ -51,7 +51,7 @@ T["agent templates can use the default agent"] = function()
 			return {
 				generator = function()
 					return {
-						{ name = "default agent", builder = function() return { tag = "agent" } end },
+						{ name = "default agent", tag = "agent" },
 					}
 				end,
 			}

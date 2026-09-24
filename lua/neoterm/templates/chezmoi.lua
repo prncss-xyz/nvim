@@ -41,13 +41,9 @@ return {
 					local definitions = {
 						{
 							name = "chezmoi apply",
-							builder = function()
-								return {
-									cmd = { "chezmoi", "apply" },
-									cwd = source_path,
-									close_on_exit = false,
-								}
-							end,
+							cmd = { "chezmoi", "apply" },
+							cwd = source_path,
+							close_on_exit = false,
 						},
 					}
 
@@ -57,13 +53,9 @@ return {
 								local command = value
 								table.insert(definitions, {
 									name = "chezmoi " .. command,
-									builder = function()
-										return {
-											cmd = { "chezmoi", command, target },
-											cwd = source_path,
-											close_on_exit = false,
-										}
-									end,
+									cmd = { "chezmoi", command, target },
+									cwd = source_path,
+									close_on_exit = false,
 								})
 							end
 						end

@@ -104,23 +104,15 @@ local function definition(step, source, cwd)
 		table.insert(name_parts, identifier)
 	end
 	local name = table.concat(name_parts, ":")
-	return {
-		name = name,
-		builder = function()
-			return build_step(step, source, target, project, branch, cwd, name)
-		end,
-	}
+	local task = build_step(step, source, target, project, branch, cwd, name)
+	task.name = name
+	return task
 end
 
 local function executable_definition(path, cwd)
 	local relative = assert(vim.fs.relpath(dirs.artifacts, path), "Executable must be inside the artifact directory")
 	local name = "script:" .. vim.fs.dirname(relative) .. " " .. vim.fs.basename(relative)
-	return {
-		name = name,
-		builder = function()
-			return { cmd = { path }, cwd = cwd, exit_policy = "keep" }
-		end,
-	}
+	return { name = name, cmd = { path }, cwd = cwd, exit_policy = "keep" }
 end
 
 local function add_task_executables(definitions, task_source, cwd, checkout_branch, executables)

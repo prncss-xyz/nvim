@@ -20,13 +20,9 @@ return {
 					table.insert(definitions, {
 						index = index,
 						name = agent,
-						builder = function()
-							return {
-								agent = agent,
-								tag = "agent",
-								priority = agent == opts.default_agent and 100 or #agents - index + 1,
-							}
-						end,
+						agent = agent,
+						tag = "agent",
+						priority = agent == opts.default_agent and 100 or #agents - index + 1,
 					})
 				end
 				pending = pending - 1
