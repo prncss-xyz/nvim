@@ -133,6 +133,11 @@ local function render()
 	if #state.rows == 1 then
 		table.insert(state.rows, { text = "No artifact tasks" })
 	end
+	if state.filter and state.filter ~= "" then
+		state.rows = vim.tbl_filter(function(row)
+			return row.text:find(state.filter, 1, true) ~= nil
+		end, state.rows)
+	end
 	local lines = vim.tbl_map(function(row)
 		return row.text
 	end, state.rows)
@@ -147,6 +152,12 @@ local function render()
 				or (row.status_heading and "DiagnosticWarn")
 				or (row.task and "DiagnosticInfo")
 				or "NeoTreeDirectoryName",
+		})
+	end
+	if state.filter ~= nil and #state.rows > 0 then
+		state.filter_index = math.min(state.filter_index or 1, #state.rows)
+		vim.api.nvim_buf_set_extmark(state.buf, namespace, state.filter_index - 1, 0, {
+			line_hl_group = "Visual",
 		})
 	end
 end
@@ -295,6 +306,78 @@ local function delete_selected()
 	end)
 end
 
+local function filter_panel()
+	local panel = state
+	local original_cursor = vim.api.nvim_win_get_cursor(panel.win)
+	local input = vim.api.nvim_create_buf(false, true)
+	local width = vim.api.nvim_win_get_width(panel.win)
+	local popup = vim.api.nvim_open_win(input, true, {
+		relative = "win",
+		win = panel.win,
+		row = vim.api.nvim_win_get_height(panel.win) - 1,
+		col = 0,
+		width = width,
+		height = 1,
+		style = "minimal",
+		border = "single",
+	})
+	vim.bo[input].buftype = "prompt"
+	vim.fn.prompt_setprompt(input, "")
+	local function finish(accept)
+		local selected = panel.rows[panel.filter_index or 1]
+		panel.filter = nil
+		panel.filter_index = nil
+		vim.cmd.stopinsert()
+		vim.api.nvim_win_close(popup, true)
+		vim.api.nvim_set_current_win(panel.win)
+		render()
+		if accept and selected then
+			for line, row in ipairs(panel.rows) do
+				if row.text == selected.text then
+					vim.api.nvim_win_set_cursor(panel.win, { line, #(row.text:match("^%s*") or "") })
+					break
+				end
+			end
+		else
+			vim.api.nvim_win_set_cursor(panel.win, original_cursor)
+		end
+	end
+	vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+		buffer = input,
+		callback = function()
+			if state ~= panel then
+				return
+			end
+			panel.filter = vim.api.nvim_buf_get_lines(input, -2, -1, false)[1]
+			panel.filter_index = 1
+			render()
+		end,
+	})
+	vim.keymap.set({ "n", "i" }, "<Esc>", function()
+		finish(false)
+	end, { buffer = input })
+	vim.keymap.set({ "n", "i" }, "<CR>", function()
+		finish(true)
+	end, { buffer = input })
+	local function move(delta)
+		if #panel.rows == 0 then
+			return
+		end
+		panel.filter_index = ((panel.filter_index or 1) - 1 + delta) % #panel.rows + 1
+		render()
+	end
+	vim.keymap.set({ "n", "i" }, "<C-n>", function()
+		move(1)
+	end, { buffer = input })
+	vim.keymap.set({ "n", "i" }, "<C-p>", function()
+		move(-1)
+	end, { buffer = input })
+	panel.filter = ""
+	panel.filter_index = 1
+	render()
+	vim.cmd.startinsert()
+end
+
 function M.toggle()
 	if state and vim.api.nvim_win_is_valid(state.win) then
 		close()
@@ -337,6 +420,7 @@ function M.toggle()
 	vim.wo[win].signcolumn = "no"
 	vim.wo[win].winfixwidth = true
 	vim.wo[win].wrap = false
+	vim.keymap.set("n", "é", filter_panel, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "c", create_task, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "f", cycle_mode, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "r", set_root, { buffer = buf, silent = true, nowait = true })
