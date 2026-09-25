@@ -28,8 +28,7 @@ local function is_enabled(cwd, callback)
 	end)
 end
 
-return {
-	generator = function(opts, callback)
+return function(opts, callback)
 		is_enabled(opts.cwd, function(enabled)
 			if not enabled then
 				return callback(nil)
@@ -43,5 +42,4 @@ return {
 				},
 			})
 		end)
-	end,
-}
+end

@@ -1,4 +1,4 @@
-local function apply_agent(opts)
+return function(opts)
 	if opts.tag ~= "agent" then
 		return opts
 	end
@@ -20,5 +20,3 @@ local function apply_agent(opts)
 		screen_manifest = config.screen_manifest,
 	}, resolved)
 end
-
-return apply_agent

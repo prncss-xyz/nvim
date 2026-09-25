@@ -70,8 +70,7 @@ local function add_scripts(definitions, data, manager, cwd, workspace)
 	end
 end
 
-return {
-	generator = function(opts, callback)
+return function(opts, callback)
 		local cwd = opts.cwd or opts.dir
 		async.find_up("package.json", cwd, 2, function(candidates)
 			local function use_candidates(package_files)
@@ -152,5 +151,4 @@ return {
 				end,
 			}, use_candidates)
 		end)
-	end,
-}
+end

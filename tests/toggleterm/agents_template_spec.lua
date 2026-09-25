@@ -11,13 +11,13 @@ local T = MiniTest.new_set({
 
 T["agents template adds installed agents and prioritizes the default"] = function()
 	child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		package.loaded["neoterm.templates.async"] = {
+		package.loaded["neoterm.helpers.term_templates"] = {
 			executable = function(name, callback)
 				vim.schedule(function() callback(name == "first" or name == "third") end)
 			end,
 		}
 		local definitions
-		require("neoterm.templates.agents").generator({
+		require("neoterm.templates.agents")({
 			agents = { "first", "missing", "third" },
 			default_agent = "first",
 		}, function(result) definitions = result end)
@@ -33,7 +33,7 @@ end
 
 T["templates add asynchronous agent definitions"] = function()
 	child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		package.loaded["neoterm.templates.async"] = {
+		package.loaded["neoterm.helpers.term_templates"] = {
 			executable = function(_, callback) vim.schedule(function() callback(true) end) end,
 		}
 		local commands
@@ -48,13 +48,11 @@ end
 T["agent templates can use the default agent"] = function()
 	child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 		package.preload["neoterm.templates.default_agent_test"] = function()
-			return {
-				generator = function()
-					return {
-						{ name = "default agent", tag = "agent" },
-					}
-				end,
-			}
+			return function()
+				return {
+					{ name = "default agent", tag = "agent" },
+				}
+			end
 		end
 		local commands
 		require("neoterm.term_templates").add_commands({}, { "default_agent_test" }, {}, function(result)

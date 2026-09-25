@@ -1,7 +1,6 @@
 local async = require("neoterm.helpers.term_templates")
 
-return {
-	generator = function(opts, callback)
+return function(opts, callback)
 		async.find_up("Makefile", opts.cwd or opts.dir, math.huge, function(makefiles)
 			local makefile = makefiles[1]
 			if not makefile then
@@ -46,5 +45,4 @@ return {
 				end)
 			)
 		end)
-	end,
-}
+end

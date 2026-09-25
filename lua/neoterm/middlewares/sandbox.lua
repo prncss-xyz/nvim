@@ -66,7 +66,7 @@ local builders = {
 	end,
 }
 
-local function sandbox(opts)
+return function(opts)
 	if opts.sandbox == nil then
 		return opts
 	end
@@ -75,5 +75,3 @@ local function sandbox(opts)
 	opts.sandbox = nil
 	return opts
 end
-
-return sandbox

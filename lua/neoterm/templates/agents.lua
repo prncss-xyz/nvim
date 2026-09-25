@@ -1,12 +1,11 @@
-local async = require("neoterm.templates.async")
+local async = require("neoterm.helpers.term_templates")
 
 local function executable(agent)
 	local ok, config = pcall(require, "neoterm.agents." .. agent)
 	return ok and config.executable or agent
 end
 
-return {
-	generator = function(opts, callback)
+return function(opts, callback)
 		local agents = opts.agents or {}
 		local pending = #agents
 		local definitions = {}
@@ -34,5 +33,4 @@ return {
 				end
 			end)
 		end
-	end,
-}
+end

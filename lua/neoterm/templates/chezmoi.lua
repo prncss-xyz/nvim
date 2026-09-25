@@ -19,8 +19,7 @@ local function target_path(source_path, file, callback)
 	)
 end
 
-return {
-	generator = function(opts, callback)
+return function(opts, callback)
 		async.executable("chezmoi", function(installed)
 			if not installed then
 				return callback(nil)
@@ -64,5 +63,4 @@ return {
 				end)
 			)
 		end)
-	end,
-}
+end

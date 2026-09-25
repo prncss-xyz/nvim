@@ -12,8 +12,7 @@ local function is_mise_path(name, kind)
 		and (name:match("^%.?mise$") ~= nil or name:match("^%.?mise%-tasks$") ~= nil or name == ".config")
 end
 
-return {
-	generator = function(opts, callback)
+return function(opts, callback)
 		async.find_up_match(opts.cwd or opts.dir, is_mise_path, function(mise_file)
 			if not mise_file then
 				return callback("No mise file or directory found")
@@ -43,5 +42,4 @@ return {
 				end)
 			)
 		end)
-	end,
-}
+end

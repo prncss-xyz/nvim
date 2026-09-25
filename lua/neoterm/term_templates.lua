@@ -30,15 +30,15 @@ function M.add_commands(commands, module_names, opts, callback)
 		end
 	end
 	for _, module_name in ipairs(module_names) do
-		local provider = require("neoterm.templates." .. module_name)
-		assert(type(provider.generator) == "function", "Template provider must define generator")
+		local generator = require("neoterm.templates." .. module_name)
+		assert(type(generator) == "function", "Template provider must be a function")
 		local called = false
 		local function done(definitions)
 			assert(not called, "Template generator completed twice")
 			called = true
 			complete(definitions)
 		end
-		local definitions = provider.generator(opts, done)
+		local definitions = generator(opts, done)
 		if definitions ~= nil then
 			done(definitions)
 		end
