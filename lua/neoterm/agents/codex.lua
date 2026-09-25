@@ -1,6 +1,6 @@
 return {
 	executable = "codex",
-	writable_paths = { vim.env.CODEX_HOME or "~/.codex" },
+	writable_dirs = { vim.env.CODEX_HOME or "~/.codex" },
 	screen_manifest = {
 		default_status = "idle",
 		rules = {

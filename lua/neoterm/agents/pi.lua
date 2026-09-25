@@ -1,5 +1,5 @@
 return {
-	writable_paths = { vim.env.PI_CODING_AGENT_DIR or "~/.pi/agent" },
+	writable_dirs = { vim.env.PI_CODING_AGENT_DIR or "~/.pi/agent" },
 	screen_manifest = {
 		default_status = "idle",
 		rules = {

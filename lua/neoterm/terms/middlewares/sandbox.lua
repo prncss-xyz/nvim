@@ -1,6 +1,6 @@
 local M = {}
 
-local writable_paths = {
+local writable_dirs = {
 	"~/.local/share/pnpm",
 	"~/.local/state/pnpm",
 	"~/.cache/pnpm",
@@ -46,10 +46,14 @@ M.builders = {
 			artifacts,
 			artifacts,
 		}
-		for _, path in ipairs(vim.list_extend(vim.deepcopy(writable_paths), opts.writable_paths or {})) do
+		for _, path in ipairs(vim.list_extend(vim.deepcopy(writable_dirs), opts.writable_dirs or {})) do
 			path = vim.fs.abspath(path)
 			vim.fn.mkdir(path, "p")
 			vim.list_extend(cmd, { "--bind", path, path })
+		end
+		for _, path in ipairs(opts.writable_files or {}) do
+			path = vim.fs.abspath(path)
+			vim.list_extend(cmd, { "--bind-try", path, path })
 		end
 		vim.list_extend(cmd, {
 			"--bind",

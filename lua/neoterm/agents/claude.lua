@@ -1,6 +1,8 @@
 return {
-	writable_paths = {
+	writable_dirs = {
 		vim.env.CLAUDE_CONFIG_DIR or "~/.claude",
+	},
+	writable_files = {
 		"~/.claude.json",
 		"~/.claude.json.lock",
 	},

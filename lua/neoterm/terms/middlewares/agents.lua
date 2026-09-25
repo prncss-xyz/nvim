@@ -10,7 +10,8 @@ function M.agent(opts)
 	return vim.tbl_extend("force", {
 		cmd = config.builder(resolved),
 		auto_scroll = false,
-		writable_paths = config.writable_paths,
+		writable_dirs = config.writable_dirs,
+		writable_files = config.writable_files,
 		screen_manifest = config.screen_manifest,
 	}, resolved)
 end

@@ -1,5 +1,5 @@
 return {
-	writable_paths = {
+	writable_dirs = {
 		"~/.gemini",
 		"~/.antigravity",
 		"~/.antigravitycli",

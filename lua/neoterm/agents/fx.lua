@@ -1,5 +1,5 @@
 return {
-	writable_paths = { "~/.fx" },
+	writable_dirs = { "~/.fx" },
 	screen_manifest = {
 		default_status = "idle",
 		rules = {
@@ -48,4 +48,3 @@ return {
 		return cmd
 	end,
 }
-

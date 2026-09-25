@@ -1,12 +1,14 @@
 local T = MiniTest.new_set()
 
 T["bwrap sandbox"] = function()
-	local sandbox = require("neoterm.terms.middleware.sandbox")
+	local sandbox = require("neoterm.terms.middlewares.sandbox")
+	local writable_file = vim.fn.tempname()
 	local item = sandbox.sandbox({
 		sandbox = "bwrap",
 		cwd = "/tmp/project",
 		artifacts_dir = "/tmp/artifacts",
-		writable_paths = { "/tmp/pi-agent" },
+		writable_dirs = { "/tmp/pi-agent" },
+		writable_files = { writable_file },
 		cmd = { "printf", "%s", "hello world" },
 	})
 
@@ -14,7 +16,7 @@ T["bwrap sandbox"] = function()
 		"varlock",
 		"run",
 		"--path",
-		vim.fs.joinpath(vim.env.HOME, ".config/varlock/.env.agent.schema"),
+		vim.fs.joinpath(vim.env.HOME, ".config/varlock/env.agent.schema"),
 		"--inject",
 		"vars",
 		"--",
@@ -47,6 +49,9 @@ T["bwrap sandbox"] = function()
 		"--bind",
 		"/tmp/pi-agent",
 		"/tmp/pi-agent",
+		"--bind-try",
+		writable_file,
+		writable_file,
 		"--bind",
 		"/tmp/project",
 		"/tmp/project",
@@ -57,16 +62,17 @@ T["bwrap sandbox"] = function()
 		"%s",
 		"hello world",
 	}, item.cmd)
+	assert(vim.fn.isdirectory(writable_file) == 0)
 	assert(item.sandbox == nil)
 end
 
 T["bwrap sandbox preserves shell commands"] = function()
-	local sandbox = require("neoterm.terms.middleware.sandbox")
+	local sandbox = require("neoterm.terms.middlewares.sandbox")
 	local item = sandbox.sandbox({
 		sandbox = "bwrap",
 		cwd = "/tmp/project",
 		artifacts_dir = "/tmp/artifacts",
-		writable_paths = { "/tmp/pi-agent" },
+		writable_dirs = { "/tmp/pi-agent" },
 		cmd = "printf 'hello world'",
 	})
 
