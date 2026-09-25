@@ -321,6 +321,7 @@ local function filter_panel()
 		style = "minimal",
 		border = "single",
 	})
+	vim.wo[popup].winblend = 0
 	vim.bo[input].buftype = "prompt"
 	vim.fn.prompt_setprompt(input, "")
 	local function finish(accept)
