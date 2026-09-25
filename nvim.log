@@ -1,0 +1,6 @@
+WRN 2026-09-24T20:05:16.668 c/nvim.9190.0 server_start:197: Failed to start server: read-only file system: /run/user/1000/nvim.318.0
+WRN 2026-09-24T20:05:23.084 c/nvim.9190.0 server_start:197: Failed to start server: read-only file system: /run/user/1000/nvim.372.0
+WRN 2026-09-24T20:07:32.222 c/nvim.9190.0 server_start:197: Failed to start server: read-only file system: /run/user/1000/nvim.431.0
+WRN 2026-09-24T20:07:32.238 c/nvim.9190.0 server_start:197: Failed to start server: read-only file system: /run/user/1000/nvim.432.0
+WRN 2026-09-24T20:07:55.063 c/nvim.9190.0 server_start:197: Failed to start server: read-only file system: /run/user/1000/nvim.468.0
+WRN 2026-09-24T20:08:50.844 c/nvim.9190.0 server_start:197: Failed to start server: read-only file system: /run/user/1000/nvim.532.0

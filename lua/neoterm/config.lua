@@ -7,11 +7,43 @@ local prompt_utils = require("neoterm.helpers.prompt")
 
 return {
 	agent = {
-		list = { "codex", "pi", "agy", "claude", "fx" },
+		list = { "pi", "codex", "agy", "claude", "fx" },
 		query = personal(
 			"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
 			"claude -p --model haiku --disable-slash-commands --tools="
 		),
+		alias = {
+			deep = {
+				codex = {
+					model = "sol-6",
+					effort = "low",
+				},
+				pi = {
+					provider = "openai-codex",
+					model = "gpt-sol-6",
+					effort = "low",
+				},
+				claude = {
+					model = "opus",
+					effort = "low",
+				},
+			},
+			fast = {
+				codex = {
+					model = "luna-6",
+					effort = "low",
+				},
+				pi = {
+					provider = "opencode-go",
+					model = "glm-5.3-flash",
+					effort = "low",
+				},
+				claude = {
+					model = "haiku",
+					effort = "low",
+				},
+			},
+		},
 	},
 	rooter_patterns = { ".git", ".hg", ".svn" },
 	default_branches = { "main", "master" },
@@ -176,6 +208,10 @@ Output ONLY the branch name, nothing else.
 	on_working_change = function(working)
 		require("neoterm.helpers.inhibit_sleep").set(working)
 	end,
+	middlewares = {
+		"agents",
+		"sandbox",
+	},
 	commands = {
 		yazi = { cmd = "yazi" },
 		ddgr = {

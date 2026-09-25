@@ -1,5 +1,3 @@
-local M = {}
-
 local writable_dirs = {
 	"~/.local/share/pnpm",
 	"~/.local/state/pnpm",
@@ -16,7 +14,7 @@ local function command(cmd)
 	return { vim.o.shell, vim.o.shellcmdflag, cmd }
 end
 
-M.builders = {
+local builders = {
 	bwrap = function(opts)
 		local cwd = vim.fs.abspath(opts.cwd)
 		local artifacts = vim.fs.abspath(opts.artifacts_dir or require("neoterm.config").dirs.artifacts)
@@ -68,14 +66,14 @@ M.builders = {
 	end,
 }
 
-function M.sandbox(opts)
+local function sandbox(opts)
 	if opts.sandbox == nil then
 		return opts
 	end
-	local builder = assert(M.builders[opts.sandbox], "Unknown sandbox: " .. opts.sandbox)
+	local builder = assert(builders[opts.sandbox], "Unknown sandbox: " .. opts.sandbox)
 	opts.cmd = builder(opts)
 	opts.sandbox = nil
 	return opts
 end
 
-return M
+return sandbox

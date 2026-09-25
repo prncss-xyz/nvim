@@ -1,9 +1,9 @@
 local T = MiniTest.new_set()
 
 T["bwrap sandbox"] = function()
-	local sandbox = require("neoterm.terms.middlewares.sandbox")
+	local sandbox = require("neoterm.middlewares.sandbox")
 	local writable_file = vim.fn.tempname()
-	local item = sandbox.sandbox({
+	local item = sandbox({
 		sandbox = "bwrap",
 		cwd = "/tmp/project",
 		artifacts_dir = "/tmp/artifacts",
@@ -67,8 +67,8 @@ T["bwrap sandbox"] = function()
 end
 
 T["bwrap sandbox preserves shell commands"] = function()
-	local sandbox = require("neoterm.terms.middlewares.sandbox")
-	local item = sandbox.sandbox({
+	local sandbox = require("neoterm.middlewares.sandbox")
+	local item = sandbox({
 		sandbox = "bwrap",
 		cwd = "/tmp/project",
 		artifacts_dir = "/tmp/artifacts",

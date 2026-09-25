@@ -167,7 +167,9 @@ local function make_item(item, cb, requested_instance)
 	assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
 	item.cwd = type(item.cwd) == "string" and item.cwd or vim.fn.getcwd()
 	local function spawn()
-		item = require("neoterm.terms.middlewares").apply_middleware(item)
+		for _, name in ipairs(config.middlewares) do
+			item = require("neoterm.middlewares." .. name)(item)
+		end
 		instance_owners[item.instance_count] = item
 		create_and_notify(item, cb)
 	end
