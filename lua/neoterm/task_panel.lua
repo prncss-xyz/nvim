@@ -4,6 +4,7 @@ local get_last_file_win = require("neoterm.helpers.win_history").get_last_file_w
 
 local state
 local namespace = vim.api.nvim_create_namespace("toggleterm-task-panel")
+local events = vim.api.nvim_create_augroup("toggleterm-task-panel-focus", { clear = true })
 
 local function default_root(artifacts)
 	local path = vim.api.nvim_buf_get_name(0)
@@ -21,6 +22,7 @@ local function default_root(artifacts)
 end
 
 local function close()
+	vim.api.nvim_clear_autocmds({ group = events })
 	if state and state.unsubscribe then
 		state.unsubscribe()
 	end
@@ -115,6 +117,23 @@ local function create_rows(tasks, statuses, status_names, root_parts)
 	return result
 end
 
+local function active_task_line()
+	local path = state.active_file
+	if not path or path == "" then
+		return nil
+	end
+	local selected, depth
+	for index, row in ipairs(state.rows) do
+		local task = row.task
+		if task and (task.flat and task.files[path] or (not task.flat and vim.startswith(path, task.cwd .. "/"))) then
+			if not depth or #task.parts > depth then
+				selected, depth = index, #task.parts
+			end
+		end
+	end
+	return selected
+end
+
 local function render()
 	local config = require("neoterm.config")
 	state.tasks = require("neoterm.terms.artifacts.tasks").get()
@@ -134,8 +153,14 @@ local function render()
 		table.insert(state.rows, { text = "No artifact tasks" })
 	end
 	if state.filter and state.filter ~= "" then
+		local words = vim.split(state.filter, "%s+", { trimempty = true })
 		state.rows = vim.tbl_filter(function(row)
-			return row.text:find(state.filter, 1, true) ~= nil
+			for _, word in ipairs(words) do
+				if not row.text:find(word, 1, true) then
+					return false
+				end
+			end
+			return true
 		end, state.rows)
 	end
 	local lines = vim.tbl_map(function(row)
@@ -159,6 +184,13 @@ local function render()
 		vim.api.nvim_buf_set_extmark(state.buf, namespace, state.filter_index - 1, 0, {
 			line_hl_group = "Visual",
 		})
+	elseif state.filter == nil then
+		local line = active_task_line()
+		if line then
+			vim.api.nvim_buf_set_extmark(state.buf, namespace, line - 1, 0, {
+			line_hl_group = "Visual",
+			})
+		end
 	end
 end
 
@@ -324,7 +356,20 @@ local function filter_panel()
 	vim.wo[popup].winblend = 0
 	vim.bo[input].buftype = "prompt"
 	vim.fn.prompt_setprompt(input, "")
+	local timer = assert(vim.uv.new_timer())
+	local pending = false
+	local function apply_filter()
+		pending = false
+		panel.filter = vim.api.nvim_buf_get_lines(input, -2, -1, false)[1]
+		panel.filter_index = 1
+		render()
+	end
 	local function finish(accept)
+		timer:stop()
+		timer:close()
+		if accept and pending then
+			apply_filter()
+		end
 		local selected = panel.rows[panel.filter_index or 1]
 		panel.filter = nil
 		panel.filter_index = nil
@@ -336,6 +381,7 @@ local function filter_panel()
 			for line, row in ipairs(panel.rows) do
 				if row.text == selected.text then
 					vim.api.nvim_win_set_cursor(panel.win, { line, #(row.text:match("^%s*") or "") })
+					open_selected()
 					break
 				end
 			end
@@ -349,9 +395,13 @@ local function filter_panel()
 			if state ~= panel then
 				return
 			end
-			panel.filter = vim.api.nvim_buf_get_lines(input, -2, -1, false)[1]
-			panel.filter_index = 1
-			render()
+			pending = true
+			timer:stop()
+			timer:start(100, 0, vim.schedule_wrap(function()
+				if state == panel and vim.api.nvim_buf_is_valid(input) then
+					apply_filter()
+				end
+			end))
 		end,
 	})
 	vim.keymap.set({ "n", "i" }, "<Esc>", function()
@@ -405,6 +455,8 @@ function M.toggle()
 		root = root,
 	}
 	local panel = state
+	local file_win = get_last_file_win()
+	state.active_file = file_win and vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(file_win)) or nil
 	state.unsubscribe = require("neoterm.terms.artifacts.tasks").subscribe(function()
 		if state == panel and vim.api.nvim_win_is_valid(panel.win) then
 			render()
@@ -429,7 +481,37 @@ function M.toggle()
 	vim.keymap.set("n", "<cr>", open_selected, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "x", delete_selected, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "q", close, { buffer = buf, silent = true, nowait = true })
+	vim.api.nvim_create_autocmd("BufEnter", {
+		group = events,
+		buffer = buf,
+		callback = function()
+			if state ~= panel then
+				return
+			end
+			local line = active_task_line()
+			if line then
+				vim.api.nvim_win_set_cursor(win, { line, #(state.rows[line].text:match("^%s*") or "") })
+			end
+		end,
+	})
+	vim.api.nvim_create_autocmd("BufEnter", {
+		group = events,
+		callback = function(args)
+			if state ~= panel or args.buf == buf then
+				return
+			end
+			local path = vim.api.nvim_buf_get_name(args.buf)
+			if path ~= "" then
+				panel.active_file = path
+				render()
+			end
+		end,
+	})
 	render()
+	local line = active_task_line()
+	if line then
+		vim.api.nvim_win_set_cursor(win, { line, #(state.rows[line].text:match("^%s*") or "") })
+	end
 end
 
 return M
