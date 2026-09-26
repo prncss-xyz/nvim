@@ -282,9 +282,10 @@ local function up_root()
 	render()
 end
 
-local function cycle_mode()
-	local index = assert(vim.fn.index(state.modes, state.mode)) + 2
-	state.mode = state.modes[index] or state.modes[1]
+local function change_mode(delta)
+	local index = vim.fn.index(state.modes, state.mode)
+	assert(index >= 0, "Unknown task panel mode: " .. state.mode)
+	state.mode = state.modes[(index + delta) % #state.modes + 1]
 	render()
 end
 
@@ -388,7 +389,12 @@ function M.toggle()
 	local operations = {
 		filter = filter_panel,
 		create = create_task,
-		cycle_mode = cycle_mode,
+		next_mode = function()
+			change_mode(1)
+		end,
+		previous_mode = function()
+			change_mode(-1)
+		end,
 		set_root = set_root,
 		up_root = up_root,
 		open = open_selected,

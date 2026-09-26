@@ -118,7 +118,8 @@ return {
 		keybindings = {
 			["é"] = "filter",
 			c = "create",
-			f = "cycle_mode",
+			n = "next_mode",
+			p = "previous_mode",
 			r = "set_root",
 			u = "up_root",
 			["<CR>"] = "open",
@@ -191,7 +192,9 @@ Output ONLY the branch name, nothing else.
 			unblock = { "done" },
 		},
 		modes = {
-			all = {
+			all = vim.tbl_filter(function(status)
+				return status ~= false
+			end, {
 				"draft",
 				"maybe",
 				"later 2",
@@ -204,11 +207,11 @@ Output ONLY the branch name, nothing else.
 				"blocked",
 				"review",
 				"merging",
-				"report:done",
+				work("report:done", false),
 				"done",
-				"report:aborted",
+				work("report:aborted", false),
 				"aborted",
-			},
+			}),
 			inbox = { "inbox" },
 			focus = { "explore", "ready", "active" },
 			standup = work({ "export", "ready", "active", "report:done", "report:aborted" }),
