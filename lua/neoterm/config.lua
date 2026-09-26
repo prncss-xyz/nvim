@@ -92,7 +92,31 @@ return {
 			message,
 		}, { detach = true })
 	end,
-	panel = { width = personal(40, 60) },
+	term_panel = {
+		width = personal(40, 60),
+		keybindings = {
+			["<CR>"] = "focus",
+			r = "restart",
+			x = "kill",
+			n = "create",
+			q = "close",
+			h = "help",
+		},
+	},
+	task_panel = {
+		width = personal(40, 60),
+		keybindings = {
+			["é"] = "filter",
+			c = "create",
+			f = "cycle_mode",
+			r = "set_root",
+			u = "up_root",
+			["<CR>"] = "open",
+			x = "delete",
+			q = "close",
+			h = "help",
+		},
+	},
 	git_status_icons = {
 		ahead = "⇡",
 		behind = "⇣",

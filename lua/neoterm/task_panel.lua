@@ -438,7 +438,7 @@ function M.toggle()
 		return
 	end
 	local config = require("neoterm.config")
-	local width = config.panel.width
+	local width = config.task_panel.width
 	local artifacts = config.dirs.artifacts
 	local root = default_root(artifacts)
 	local modes = vim.tbl_keys(config.tasks.modes)
@@ -476,14 +476,26 @@ function M.toggle()
 	vim.wo[win].signcolumn = "no"
 	vim.wo[win].winfixwidth = true
 	vim.wo[win].wrap = false
-	vim.keymap.set("n", "é", filter_panel, { buffer = buf, silent = true, nowait = true })
-	vim.keymap.set("n", "c", create_task, { buffer = buf, silent = true, nowait = true })
-	vim.keymap.set("n", "f", cycle_mode, { buffer = buf, silent = true, nowait = true })
-	vim.keymap.set("n", "r", set_root, { buffer = buf, silent = true, nowait = true })
-	vim.keymap.set("n", "u", up_root, { buffer = buf, silent = true, nowait = true })
-	vim.keymap.set("n", "<cr>", open_selected, { buffer = buf, silent = true, nowait = true })
-	vim.keymap.set("n", "x", delete_selected, { buffer = buf, silent = true, nowait = true })
-	vim.keymap.set("n", "q", close, { buffer = buf, silent = true, nowait = true })
+	local operations = {
+		filter = filter_panel,
+		create = create_task,
+		cycle_mode = cycle_mode,
+		set_root = set_root,
+		up_root = up_root,
+		open = open_selected,
+		delete = delete_selected,
+		close = close,
+		help = function()
+			require("neoterm.helpers.panel_help").show(config.task_panel.keybindings)
+		end,
+	}
+	for binding, operation in pairs(config.task_panel.keybindings) do
+		vim.keymap.set("n", binding, assert(operations[operation], "Unknown task panel operation: " .. operation), {
+			buffer = buf,
+			silent = true,
+			nowait = true,
+		})
+	end
 	vim.api.nvim_create_autocmd("BufWipeout", {
 		group = events,
 		buffer = buf,

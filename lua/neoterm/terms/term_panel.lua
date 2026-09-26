@@ -1,7 +1,7 @@
 local M = {}
 
 local neoterm_config = require("neoterm.config")
-local config = neoterm_config.panel
+local config = neoterm_config.term_panel
 local ensure_dir = require("neoterm.helpers.ensure_dir").ensure_dir
 local format_item = require("neoterm.terms.format_item").format_item(false, false)
 local get_query_fn = require("neoterm.terms.get_query_fn").get_query_fn
@@ -515,21 +515,22 @@ local function open(query, history, subscribe, create_in_dir)
 	}
 	states[tab] = state
 
-	vim.keymap.set("n", "<CR>", function()
-		focus_selected(state)
-	end, { buffer = buf, silent = true, nowait = true })
-	vim.keymap.set("n", "r", function()
-		restart_selected(state)
-	end, { buffer = buf, silent = true, nowait = true })
-	vim.keymap.set("n", "x", function()
-		kill_selected(state)
-	end, { buffer = buf, silent = true, nowait = true })
-	vim.keymap.set("n", "n", function()
-		create_in_selected_dir(state)
-	end, { buffer = buf, silent = true, nowait = true })
-	vim.keymap.set("n", "q", function()
-		close(state)
-	end, { buffer = buf, silent = true, nowait = true })
+	local operations = {
+		focus = focus_selected,
+		restart = restart_selected,
+		kill = kill_selected,
+		create = create_in_selected_dir,
+		close = close,
+		help = function()
+			require("neoterm.helpers.panel_help").show(config.keybindings)
+		end,
+	}
+	for binding, operation in pairs(config.keybindings) do
+		local handler = assert(operations[operation], "Unknown terminal panel operation: " .. operation)
+		vim.keymap.set("n", binding, function()
+			handler(state)
+		end, { buffer = buf, silent = true, nowait = true })
+	end
 	vim.api.nvim_create_autocmd("BufWipeout", {
 		buffer = buf,
 		once = true,
