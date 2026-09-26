@@ -224,6 +224,7 @@ Output ONLY the branch name, nothing else.
 		"make",
 		"mise",
 		"npm",
+		"scripts",
 	},
 	prompts = {
 		["artifacts"] = "{artifacts}/",
