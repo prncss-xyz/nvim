@@ -6,7 +6,7 @@ local notify = require("my.notify")
 local prompt_utils = require("neoterm.helpers.prompt")
 
 return {
-	agent = {
+	agents = {
 		list = { "pi", "codex", "agy", "claude", "fx" },
 		query = personal(
 			"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",

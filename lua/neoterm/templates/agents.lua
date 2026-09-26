@@ -21,7 +21,7 @@ return function(opts, callback)
 						name = agent,
 						agent = agent,
 						tag = "agent",
-						priority = agent == opts.default_agent and 100 or #agents - index + 1,
+						priority = agent == #agents - index + 1,
 					})
 				end
 				pending = pending - 1

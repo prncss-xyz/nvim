@@ -2,8 +2,8 @@ return function(opts)
 	if opts.tag ~= "agent" then
 		return opts
 	end
-	local settings = require("neoterm.config").agent
-	local agent = opts.agent or settings.default
+	local settings = require("neoterm.config").agents
+	local agent = opts.agent or settings.list[1]
 	local config = require("neoterm.agents." .. agent)
 	local alias = opts.alias and assert(settings.alias[opts.alias], "Unknown agent alias: " .. opts.alias)
 	local resolved = vim.tbl_extend(

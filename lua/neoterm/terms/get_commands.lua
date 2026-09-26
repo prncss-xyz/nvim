@@ -7,8 +7,7 @@ function M.get_commands(filter, cwd, callback)
 	cwd = cwd or vim.fn.getcwd()
 	local commands = vim.deepcopy(config.commands)
 	templates.add_commands(commands, config.templates or {}, {
-		agents = config.agent.list,
-		default_agent = config.agent.default,
+		agents = config.agents.list,
 		cwd = cwd,
 		file = vim.api.nvim_buf_get_name(0),
 		filetype = vim.bo.filetype,
