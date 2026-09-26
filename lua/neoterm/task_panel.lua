@@ -135,6 +135,9 @@ local function active_task_line()
 end
 
 local function render()
+	if not state or not vim.api.nvim_buf_is_valid(state.buf) then
+		return
+	end
 	local config = require("neoterm.config")
 	state.tasks = require("neoterm.terms.artifacts.tasks").get()
 	local relative_root = assert(vim.fs.relpath(state.artifacts, state.root))
@@ -481,6 +484,19 @@ function M.toggle()
 	vim.keymap.set("n", "<cr>", open_selected, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "x", delete_selected, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "q", close, { buffer = buf, silent = true, nowait = true })
+	vim.api.nvim_create_autocmd("BufWipeout", {
+		group = events,
+		buffer = buf,
+		callback = function()
+			if state == panel then
+				vim.api.nvim_clear_autocmds({ group = events })
+				if panel.unsubscribe then
+					panel.unsubscribe()
+				end
+				state = nil
+			end
+		end,
+	})
 	vim.api.nvim_create_autocmd("BufEnter", {
 		group = events,
 		buffer = buf,

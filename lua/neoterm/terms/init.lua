@@ -125,6 +125,21 @@ local function notify(event, item)
 	end
 end
 
+vim.api.nvim_create_autocmd("FocusGained", {
+	callback = function()
+		for _, item in
+			ipairs(history.filter(function(candidate)
+				return candidate.changed
+					and candidate.term
+					and candidate.term.is_in_view
+					and candidate.term:is_in_view()
+			end))
+		do
+			notify({ type = "focus" }, item)
+		end
+	end,
+})
+
 local function prepare()
 	-- act as noop, but also used as a flag
 end
