@@ -248,7 +248,7 @@ Output ONLY the branch name, nothing else.
 		"agents",
 		"sandbox",
 	},
-  default_command = "pi",
+	default_command = "pi",
 	commands = {
 		pi = {
 			tag = "agent",

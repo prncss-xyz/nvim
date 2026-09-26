@@ -189,6 +189,12 @@ local function finish_rebuild(id, directories, next_files, candidates)
 				end
 			end
 		end
+		local config = require("neoterm.config").tasks
+		local blocking = config.blocking
+		local order = {}
+		for index, status in ipairs(config.modes.all) do
+			order[status] = index
+		end
 		local visited, stack, positions = {}, {}, {}
 		local function visit(task)
 			if positions[task] then
@@ -202,9 +208,35 @@ local function finish_rebuild(id, directories, next_files, candidates)
 			end
 			positions[task] = #stack + 1
 			table.insert(stack, task)
+			local dependencies = {}
 			for _, name in ipairs(task.dependencies) do
 				for _, dependency in ipairs(resolve(task, name)) do
 					visit(dependency)
+					table.insert(dependencies, dependency)
+				end
+			end
+			if not vim.startswith(task.logical_status, "ERROR:") then
+				local status = task.status or config.default_status
+				local blocked, indirect_error = false, false
+				for _, dependency in ipairs(dependencies) do
+					local dependency_status = dependency.logical_status
+					if vim.startswith(dependency_status, "ERROR:") then
+						indirect_error = true
+					else
+						if order[dependency_status] and (not order[status] or order[dependency_status] < order[status]) then
+							status = dependency_status
+						end
+						if blocking and not vim.tbl_contains(blocking.unblock, dependency_status) then
+							blocked = true
+						end
+					end
+				end
+				if indirect_error then
+					task.logical_status = "ERROR:INDIRECT"
+				elseif blocked and order[status] and order[status] > order[blocking.status] then
+					task.logical_status = blocking.status
+				else
+					task.logical_status = status
 				end
 			end
 			table.remove(stack)
@@ -213,28 +245,6 @@ local function finish_rebuild(id, directories, next_files, candidates)
 		end
 		for _, task in ipairs(next_tasks) do
 			visit(task)
-		end
-		local blocking = require("neoterm.config").tasks.blocking
-		if blocking then
-			for _, task in ipairs(next_tasks) do
-				if not vim.startswith(task.logical_status, "ERROR:") then
-					local blocked = false
-					for _, name in ipairs(task.dependencies) do
-						for _, dependency in ipairs(resolve(task, name)) do
-							if not vim.tbl_contains(blocking.unblock, dependency.status) then
-								blocked = true
-								break
-							end
-						end
-						if blocked then
-							break
-						end
-					end
-					if blocked then
-						task.logical_status = blocking.status
-					end
-				end
-			end
 		end
 		tasks = next_tasks
 		files = next_files
