@@ -1,6 +1,7 @@
 local writable_dirs = {
 	"~/.local/share/pnpm",
 	"~/.local/state/pnpm",
+	vim.fs.joinpath(vim.env.XDG_STATE_HOME or vim.fs.joinpath(vim.env.HOME, ".local/state"), "nvim"),
 	"~/.cache/pnpm",
 }
 
