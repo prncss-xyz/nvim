@@ -1,5 +1,5 @@
 local M = {}
-local filter = require("neoterm.helpers.filter")
+local panel_utils = require("neoterm.helpers.panel")
 
 local neoterm_config = require("neoterm.config")
 local config = neoterm_config.term_panel
@@ -380,7 +380,7 @@ local function render(state)
 			update_git_status(state, row.cwd)
 		end
 	end
-	rows = filter.rows(rows, state.filter)
+	rows = panel_utils.filter_rows(rows, state.filter)
 	local lines = vim.tbl_map(function(row)
 		return row.text
 	end, rows)
@@ -409,7 +409,7 @@ local function render(state)
 	state.rows = rows
 	state.selected_instance = instance_count
 
-	if filter.highlight(state, highlight_namespace) then
+	if panel_utils.highlight_filter(state, highlight_namespace) then
 		return
 	end
 	if not valid_win(state.win) then
@@ -522,7 +522,7 @@ local function open(query, history, subscribe, create_in_dir)
 
 	local operations = {
 		filter = function(panel)
-			filter.open(panel, {
+			panel_utils.open_filter(panel, {
 				render = function()
 					render(panel)
 				end,
@@ -545,16 +545,8 @@ local function open(query, history, subscribe, create_in_dir)
 		kill = kill_selected,
 		create = create_in_selected_dir,
 		close = close,
-		help = function()
-			require("neoterm.helpers.panel_help").show(config.keybindings)
-		end,
 	}
-	for binding, operation in pairs(config.keybindings) do
-		local handler = assert(operations[operation], "Unknown terminal panel operation: " .. operation)
-		vim.keymap.set("n", binding, function()
-			handler(state)
-		end, { buffer = buf, silent = true, nowait = true })
-	end
+	panel_utils.bind(state, config.keybindings, operations)
 	vim.api.nvim_create_autocmd("BufWipeout", {
 		buffer = buf,
 		once = true,

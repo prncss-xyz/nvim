@@ -1,7 +1,7 @@
 local M = {}
 
 -- Case-insensitive literal words must all occur in the displayed row.
-function M.rows(rows, query)
+function M.filter_rows(rows, query)
 	if query and query ~= "" then
 		local words = vim.split(vim.fn.tolower(query), "%s+", { trimempty = true })
 		return vim.tbl_filter(function(row)
@@ -17,7 +17,7 @@ function M.rows(rows, query)
 	return rows
 end
 
-function M.highlight(panel, namespace)
+function M.highlight_filter(panel, namespace)
 	if panel.filter == nil then
 		return false
 	end
@@ -30,7 +30,7 @@ end
 
 -- panel owns win, buf, rows and transient filter/filter_index fields.
 -- options supplies render(), valid(), same(row, selected), and accept().
-function M.open(panel, options)
+function M.open_filter(panel, options)
 	local render = options.render
 	local original_cursor = vim.api.nvim_win_get_cursor(panel.win)
 	local input = vim.api.nvim_create_buf(false, true)
@@ -153,6 +153,55 @@ function M.open(panel, options)
 	panel.filter_index = 1
 	render()
 	vim.cmd.startinsert()
+end
+
+function M.show_help(bindings)
+	local keys = vim.tbl_keys(bindings)
+	table.sort(keys)
+	local width = 0
+	for _, key in ipairs(keys) do
+		width = math.max(width, vim.fn.strdisplaywidth(key))
+	end
+	local lines = {}
+	for _, key in ipairs(keys) do
+		table.insert(lines, key .. string.rep(" ", width - vim.fn.strdisplaywidth(key) + 2) .. bindings[key])
+	end
+	local content_width = 0
+	for _, line in ipairs(lines) do
+		content_width = math.max(content_width, vim.fn.strdisplaywidth(line))
+	end
+	local buf = vim.api.nvim_create_buf(false, true)
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+	vim.bo[buf].modifiable = false
+	local win = vim.api.nvim_open_win(buf, true, {
+		relative = "editor",
+		row = math.max(0, math.floor((vim.o.lines - #lines) / 2) - 1),
+		col = math.max(0, math.floor((vim.o.columns - content_width) / 2)),
+		width = content_width,
+		height = #lines,
+		style = "minimal",
+		border = "single",
+	})
+	for _, key in ipairs({ "q", "<Esc>", "h" }) do
+		vim.keymap.set("n", key, function()
+			vim.api.nvim_win_close(win, true)
+		end, { buffer = buf, silent = true, nowait = true })
+	end
+end
+
+-- Operations receive the panel state; help always describes its configured bindings.
+function M.bind(panel, bindings, operations)
+	local handlers = vim.tbl_extend("force", operations, {
+		help = function()
+			M.show_help(bindings)
+		end,
+	})
+	for binding, operation in pairs(bindings) do
+		local handler = assert(handlers[operation], "Unknown panel operation: " .. operation)
+		vim.keymap.set("n", binding, function()
+			handler(panel)
+		end, { buffer = panel.buf, silent = true, nowait = true })
+	end
 end
 
 return M

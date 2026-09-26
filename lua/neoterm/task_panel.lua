@@ -1,5 +1,5 @@
 local M = {}
-local filter = require("neoterm.helpers.filter")
+local panel_utils = require("neoterm.helpers.panel")
 
 local get_last_file_win = require("neoterm.helpers.win_history").get_last_file_win
 
@@ -156,7 +156,7 @@ local function render()
 	if #state.rows == 1 then
 		table.insert(state.rows, { text = "No artifact tasks" })
 	end
-	state.rows = filter.rows(state.rows, state.filter)
+	state.rows = panel_utils.filter_rows(state.rows, state.filter)
 	local lines = vim.tbl_map(function(row)
 		return row.text
 	end, state.rows)
@@ -173,7 +173,7 @@ local function render()
 				or "NeoTreeDirectoryName",
 		})
 	end
-	if not filter.highlight(state, namespace) then
+	if not panel_utils.highlight_filter(state, namespace) then
 		local line = active_task_line()
 		if line then
 			vim.api.nvim_buf_set_extmark(state.buf, namespace, line - 1, 0, {
@@ -329,7 +329,7 @@ end
 
 local function filter_panel()
 	local panel = state
-	filter.open(panel, {
+	panel_utils.open_filter(panel, {
 		render = render,
 		valid = function()
 			return state == panel
@@ -394,17 +394,8 @@ function M.toggle()
 		open = open_selected,
 		delete = delete_selected,
 		close = close,
-		help = function()
-			require("neoterm.helpers.panel_help").show(config.task_panel.keybindings)
-		end,
 	}
-	for binding, operation in pairs(config.task_panel.keybindings) do
-		vim.keymap.set("n", binding, assert(operations[operation], "Unknown task panel operation: " .. operation), {
-			buffer = buf,
-			silent = true,
-			nowait = true,
-		})
-	end
+	panel_utils.bind(panel, config.task_panel.keybindings, operations)
 	vim.api.nvim_create_autocmd("BufWipeout", {
 		group = events,
 		buffer = buf,
