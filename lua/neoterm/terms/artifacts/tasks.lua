@@ -38,6 +38,45 @@ local function explicit_status(text)
 	return value
 end
 
+local function explicit_dependencies(text)
+	local frontmatter = text:match("^%-%-%-%s*\n(.-)\n[%.-][%.-][%.-]%s*\n")
+	local result = {}
+	if not frontmatter then
+		return result
+	end
+	local value = frontmatter:match("\n?dependencies?:[ \t]*([^\n]*)")
+	if not value then
+		return result
+	end
+	local function add(item)
+		item = vim.trim(item:gsub("%s+#.*$", ""))
+		local quote = item:sub(1, 1)
+		if (quote == '"' or quote == "'") and item:sub(-1) == quote then
+			item = item:sub(2, -2)
+		end
+		if item ~= "" then
+			table.insert(result, item)
+		end
+	end
+	if value:match("^%s*%[") then
+		for item in value:gmatch("[^%[%],]+") do
+			add(item)
+		end
+	elseif vim.trim(value) ~= "" then
+		add(value)
+	else
+		local tail = frontmatter:match("\n?dependencies?:[^\n]*\n(.*)") or ""
+		for line in tail:gmatch("[^\n]+") do
+			local item = line:match("^%s+%-%s+(.+)$") or line:match("^%-%s+(.+)$")
+			if not item then
+				break
+			end
+			add(item)
+		end
+	end
+	return result
+end
+
 local function read_file(path, callback)
 	vim.uv.fs_open(
 		path,
@@ -121,7 +160,80 @@ local function finish_rebuild(id, directories, next_files, candidates)
 		for _, task in ipairs(next_tasks) do
 			local key = table.concat(task.parts, "/")
 			if flat_parts[key] and directory_parts[key] then
-				task.status = "ERROR:DUPLICATE"
+				task.logical_status = "ERROR:DUPLICATE"
+			end
+		end
+		local project_root = vim.fs.root(root, ".git") or root
+		local by_path = {}
+		for _, task in ipairs(next_tasks) do
+			by_path[vim.fs.normalize(task.path)] = task
+		end
+		local function resolve(task, name)
+			local path
+			if name:match("^%./") and not vim.tbl_contains(vim.split(name, "/", { plain = true }), "..") then
+				path = vim.fs.joinpath(task.cwd, name)
+			elseif name:match("^~/") then
+				path = vim.fs.joinpath(vim.uv.os_homedir(), name:sub(3))
+			elseif name:match("^/") then
+				path = name
+			elseif not name:match("^%.") then
+				path = vim.fs.joinpath(project_root, name)
+			end
+			local dependency = path and by_path[vim.fs.normalize(path)]
+			return dependency and { dependency } or {}
+		end
+		for _, task in ipairs(next_tasks) do
+			for _, name in ipairs(task.dependencies) do
+				for _, dependency in ipairs(resolve(task, name)) do
+					table.insert(dependency.dependents, table.concat(task.parts, "/"))
+				end
+			end
+		end
+		local visited, stack, positions = {}, {}, {}
+		local function visit(task)
+			if positions[task] then
+				for index = positions[task], #stack do
+					stack[index].logical_status = "ERROR:CIRCULAR DEPENENCIES"
+				end
+				return
+			end
+			if visited[task] then
+				return
+			end
+			positions[task] = #stack + 1
+			table.insert(stack, task)
+			for _, name in ipairs(task.dependencies) do
+				for _, dependency in ipairs(resolve(task, name)) do
+					visit(dependency)
+				end
+			end
+			table.remove(stack)
+			positions[task] = nil
+			visited[task] = true
+		end
+		for _, task in ipairs(next_tasks) do
+			visit(task)
+		end
+		local blocking = require("neoterm.config").tasks.blocking
+		if blocking then
+			for _, task in ipairs(next_tasks) do
+				if not vim.startswith(task.logical_status, "ERROR:") then
+					local blocked = false
+					for _, name in ipairs(task.dependencies) do
+						for _, dependency in ipairs(resolve(task, name)) do
+							if not vim.tbl_contains(blocking.unblock, dependency.status) then
+								blocked = true
+								break
+							end
+						end
+						if blocked then
+							break
+						end
+					end
+					if blocked then
+						task.logical_status = blocking.status
+					end
+				end
 			end
 		end
 		tasks = next_tasks
@@ -146,6 +258,9 @@ local function finish_rebuild(id, directories, next_files, candidates)
 				return
 			end
 			candidate.status = explicit_status(text) or require("neoterm.config").tasks.default_status
+			candidate.logical_status = candidate.status
+			candidate.dependencies = explicit_dependencies(text)
+			candidate.dependents = {}
 			table.insert(next_tasks, candidate)
 			complete()
 		end)

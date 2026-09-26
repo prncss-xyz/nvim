@@ -46,6 +46,12 @@ local function unknown_status(status, status_names)
 	return not status_names[status] and not vim.startswith(status, "ERROR:")
 end
 
+local function logical_status(task, status_names)
+	return vim.startswith(task.logical_status, "ERROR:") and task.logical_status
+		or unknown_status(task.status, status_names) and "ERROR:UNKNOWN TAG"
+		or task.logical_status
+end
+
 local function create_rows(tasks, statuses, status_names, root_parts)
 	local result = {}
 	local mode_statuses = {}
@@ -53,9 +59,9 @@ local function create_rows(tasks, statuses, status_names, root_parts)
 		mode_statuses[status] = true
 	end
 	local error_groups = { { name = "ERROR:UNKNOWN TAG", broken = true } }
-	local seen_errors = {}
+	local seen_errors = { ["ERROR:UNKNOWN TAG"] = true }
 	for _, task in ipairs(tasks) do
-		local status = task.status
+		local status = logical_status(task, status_names)
 		if vim.startswith(status, "ERROR:") and not seen_errors[status] and not mode_statuses[status] then
 			seen_errors[status] = true
 			table.insert(error_groups, { name = status })
@@ -71,8 +77,7 @@ local function create_rows(tasks, statuses, status_names, root_parts)
 	for _, group in ipairs(groups) do
 		local root = { children = {} }
 		for _, task in ipairs(tasks) do
-			local matches = group.broken and unknown_status(task.status, status_names)
-				or not group.broken and task.status == group.name
+			local matches = logical_status(task, status_names) == group.name
 			if matches and #task.parts > #root_parts and has_prefix(task.parts, root_parts) then
 				local node = root
 				for index = #root_parts + 1, #task.parts do
@@ -201,11 +206,7 @@ local function open_selected()
 		return
 	end
 	local latest = require("neoterm.terms.artifacts.tasks").latest(state.tasks, function(task)
-		if selected.broken then
-			if not unknown_status(task.status, state.status_names) then
-				return false
-			end
-		elseif task.status ~= selected.status then
+		if logical_status(task, state.status_names) ~= selected.status then
 			return false
 		end
 		for index, part in ipairs(selected.parts) do

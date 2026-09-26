@@ -2,6 +2,9 @@ local M = {}
 
 function M.add_dependency()
 	local tasks = require("neoterm.task_panel").list_tasks()
+	local source = vim.api.nvim_buf_get_name(0)
+	local artifacts = require("neoterm.config").dirs.artifacts
+	local project_root = vim.fs.root(artifacts, ".git") or artifacts
 	local function dependency_name(task)
 		return table.concat(task.parts, "/")
 	end
@@ -13,7 +16,20 @@ function M.add_dependency()
 			return
 		end
 
-		local dependency = dependency_name(task)
+		local source_dir = vim.fs.dirname(source)
+		local relative = vim.fs.relpath(source_dir, task.path)
+		local project_relative = vim.fs.relpath(project_root, task.path)
+		local home_relative = vim.fs.relpath(vim.uv.os_homedir(), task.path)
+		local dependency
+		if relative and relative ~= ".." and not vim.startswith(relative, "../") then
+			dependency = "./" .. relative
+		elseif project_relative then
+			dependency = project_relative
+		elseif home_relative then
+			dependency = "~/" .. home_relative
+		else
+			dependency = task.path
+		end
 		local yaml = require("neoterm.yaml")
 		local frontmatter = yaml.read(0)
 		local dependencies = frontmatter.dependencies
