@@ -213,7 +213,7 @@ Output ONLY the branch name, nothing else.
 				"aborted",
 			}),
 			inbox = { "inbox" },
-			focus = { "explore", "blocked", "ready", "active" },
+			focus = { "blocked", "explore", "ready", "active" },
 			standup = work({ "export", "ready", "active", "report:done", "report:aborted" }),
 		},
 	},

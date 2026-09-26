@@ -4,6 +4,8 @@ local panel_utils = require("neoterm.helpers.panel")
 local get_last_file_win = require("neoterm.helpers.win_history").get_last_file_win
 
 local state
+local last_mode
+local last_root
 local namespace = vim.api.nvim_create_namespace("toggleterm-task-panel")
 local events = vim.api.nvim_create_augroup("toggleterm-task-panel-focus", { clear = true })
 
@@ -272,6 +274,7 @@ local function set_root()
 		return
 	end
 	state.root = vim.fs.joinpath(state.artifacts, unpack(selected.parts))
+	last_root = state.root
 	render()
 end
 
@@ -280,6 +283,7 @@ local function up_root()
 		return
 	end
 	state.root = vim.fs.dirname(state.root)
+	last_root = state.root
 	render()
 end
 
@@ -287,6 +291,7 @@ local function change_mode(delta)
 	local index = vim.fn.index(state.modes, state.mode)
 	assert(index >= 0, "Unknown task panel mode: " .. state.mode)
 	state.mode = state.modes[(index + delta) % #state.modes + 1]
+	last_mode = state.mode
 	render()
 end
 
@@ -351,7 +356,8 @@ function M.toggle()
 	local config = require("neoterm.config")
 	local width = config.task_panel.width
 	local artifacts = config.dirs.artifacts
-	local root = default_root(artifacts)
+	local root = last_root and vim.fs.relpath(artifacts, last_root) and vim.fn.isdirectory(last_root) == 1 and last_root
+		or default_root(artifacts)
 	local modes = vim.tbl_keys(config.tasks.modes)
 	table.sort(modes)
 	vim.cmd(string.format("topleft %dvsplit", width))
@@ -363,7 +369,7 @@ function M.toggle()
 		buf = buf,
 		rows = {},
 		tasks = {},
-		mode = config.tasks.default_mode or modes[1],
+		mode = (last_mode and config.tasks.modes[last_mode] and last_mode) or config.tasks.default_mode or modes[1],
 		modes = modes,
 		artifacts = artifacts,
 		root = root,
