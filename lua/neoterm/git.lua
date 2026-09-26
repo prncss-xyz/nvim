@@ -14,15 +14,18 @@ local function run(command, callback)
 	)
 end
 
-local function add_worktree(repo_root, worktree_path, branch, callback)
+local function add_worktree(repo_root, worktree_path, branch, default_branch, callback)
 	run({ "git", "-C", repo_root, "fetch", "origin", branch }, function()
 		run({ "git", "-C", repo_root, "rev-parse", "--verify", "origin/" .. branch }, function(remote_exists)
 			local function add(branch_exists)
 				local command = { "git", "-C", repo_root, "worktree", "add", worktree_path }
 				if not branch_exists then
 					command[#command + 1] = "-b"
+					command[#command + 1] = branch
+					command[#command + 1] = default_branch
+				else
+					command[#command + 1] = branch
 				end
-				command[#command + 1] = branch
 				run(command, function(ok, output)
 					if not ok then
 						vim.notify("Failed to create worktree: " .. output, vim.log.levels.ERROR)
@@ -67,7 +70,7 @@ function M.ensure_worktree(dir, callback)
 		return callback(true)
 	end
 
-	add_worktree(repo_root, dir, parts[2], callback)
+	add_worktree(repo_root, dir, parts[2], vim.fs.basename(repo_root), callback)
 end
 
 --- Get the best file to open in a git repository.
@@ -192,7 +195,19 @@ function M.create_worktree(branch, on_success)
 		return
 	end
 
-	add_worktree(toplevel, worktree_path, branch, function(ok)
+	local default_branch
+	for _, candidate in ipairs(config.default_branches) do
+		if vim.uv.fs_stat(parent .. "/" .. candidate) then
+			default_branch = candidate
+			break
+		end
+	end
+	if not default_branch then
+		vim.notify("Default branch worktree not found in " .. parent, vim.log.levels.ERROR)
+		return
+	end
+
+	add_worktree(toplevel, worktree_path, branch, default_branch, function(ok)
 		if ok then
 			on_success(get_default_file(worktree_path, rel_path), worktree_path)
 		end
