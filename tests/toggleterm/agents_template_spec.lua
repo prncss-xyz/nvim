@@ -9,7 +9,7 @@ local T = MiniTest.new_set({
 	},
 })
 
-T["agents template adds installed agents and prioritizes the default"] = function()
+T["agents template adds installed agents in order"] = function()
 	child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 		package.loaded["neoterm.helpers.term_templates"] = {
 			executable = function(name, callback)
@@ -24,10 +24,8 @@ T["agents template adds installed agents and prioritizes the default"] = functio
 		vim.wait(1000, function() return definitions ~= nil end)
 		assert(#definitions == 2, "expected only installed agents")
 		assert(definitions[1].name == "first", "expected first agent")
-		assert(definitions[1].priority == 100, "expected default agent priority")
 		assert(definitions[1].tag == "agent", "expected agent tag")
 		assert(definitions[2].name == "third", "expected third agent")
-		assert(definitions[2].priority == 1, "expected last agent priority")
 	]])
 end
 

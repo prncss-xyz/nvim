@@ -3,16 +3,10 @@ local M = {}
 local config = require("neoterm.config")
 local templates = require("neoterm.term_templates")
 
-function M.get_commands(filter, cwd, callback)
+function M.get_commands(filter, cwd, callback, prefer_direct)
 	cwd = cwd or vim.fn.getcwd()
 	local commands = vim.deepcopy(config.commands)
-	templates.add_commands(commands, config.templates or {}, {
-		agents = config.agents.list,
-		cwd = cwd,
-		file = vim.api.nvim_buf_get_name(0),
-		filetype = vim.bo.filetype,
-		steps = config.steps,
-	}, function(all_commands)
+	local function matching(all_commands)
 		local res = {}
 		for k, v in pairs(all_commands) do
 			if type(v) == "table" then
@@ -35,7 +29,22 @@ function M.get_commands(filter, cwd, callback)
 				end
 			end
 		end
-		callback(res)
+		return res
+	end
+	if prefer_direct then
+		local direct = matching(commands)
+		if next(direct) then
+			return callback(direct)
+		end
+	end
+	templates.add_commands(commands, config.templates or {}, {
+		agents = config.agents.list,
+		cwd = cwd,
+		file = vim.api.nvim_buf_get_name(0),
+		filetype = vim.bo.filetype,
+		steps = config.steps,
+	}, function(all_commands)
+		callback(matching(all_commands))
 	end)
 end
 

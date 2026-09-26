@@ -209,12 +209,10 @@ end
 local lt_item =
 	utils.compose_gt(utils.lt_field("cwd", ""), utils.lt_field("key", ""), utils.lt_field("instance_count", 0))
 
-local gt_item = utils.compose_gt(
-	utils.gt_field("priority", 0),
-	utils.gt_field("cwd", ""),
-	utils.gt_field("key", ""),
-	utils.gt_field("instance_count", 0)
-)
+local function any_command(commands)
+	local _, item = next(commands)
+	return item
+end
 
 local function normalize_query(query)
 	query = vim.tbl_extend("keep", query or {}, {})
@@ -250,9 +248,9 @@ local function without_query_options(query)
 	return item
 end
 
-local function get_query_commands(query, filter, callback)
+local function get_query_commands(query, filter, callback, prefer_direct)
 	local cwd = type(query.cwd) == "string" and query.cwd or nil
-	get_commands(filter, cwd, callback)
+	get_commands(filter, cwd, callback, prefer_direct)
 end
 
 local function with_query(query, cb)
@@ -297,7 +295,7 @@ local function with_query(query, cb)
 		return cb(item)
 	end
 	get_query_commands(query, filter, function(commands)
-		item = utils.max_of(commands, gt_item)
+		item = any_command(commands)
 		local function created(instance)
 			cb(instance, true)
 		end
@@ -306,7 +304,7 @@ local function with_query(query, cb)
 		else
 			make_item(without_query_options(query), created, query.instance_count)
 		end
-	end)
+	end, true)
 end
 
 local local_format_item = format_item(false)
@@ -454,11 +452,11 @@ function M.put(query, arg, opts)
 	if opts and opts.new then
 		query = normalize_query(query)
 		return get_query_commands(query, get_filter(query), function(commands)
-			local item = utils.max_of(commands, gt_item) or without_query_options(query)
+			local item = any_command(commands) or without_query_options(query)
 			make_item(item, function(instance)
 				put(instance, invocation, arg)
 			end, query.instance_count)
-		end)
+		end, true)
 	end
 	with_query(query, function(instance)
 		put(instance, invocation, arg)
@@ -512,11 +510,11 @@ function M.start(query)
 		return
 	end
 	get_query_commands(query, get_filter(query), function(commands)
-		local item = utils.max_of(commands, gt_item) or without_query_options(query)
+		local item = any_command(commands) or without_query_options(query)
 		make_item(item, function(instance)
 			instance.term:focus()
 		end, query.instance_count)
-	end)
+	end, true)
 end
 
 function M.restart(query)

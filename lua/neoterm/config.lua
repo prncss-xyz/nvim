@@ -262,9 +262,7 @@ Output ONLY the branch name, nothing else.
 		["run current"] = function()
 			return { cwd = vim.fn.expand("%:p:h") }
 		end,
-		shell = {
-			priority = 1,
-		},
+		shell = {},
 		["home shell"] = {
 			cwd = vim.env.HOME,
 		},

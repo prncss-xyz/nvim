@@ -328,7 +328,6 @@ T["create_term"]["passes only explicitly supported options to toggleterm"] = fun
 			on_exit = "keep",
 			key = "test",
 			display_name = "Test",
-			priority = 2,
 			tag = "test",
 		}, function() end)
 
@@ -344,7 +343,6 @@ T["create_term"]["passes only explicitly supported options to toggleterm"] = fun
 				key = terminal_options.key,
 				display_name = terminal_options.display_name,
 				instance_count = terminal_options.instance_count,
-				priority = terminal_options.priority,
 				tag = terminal_options.tag,
 			},
 		}
