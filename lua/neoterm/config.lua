@@ -195,16 +195,15 @@ Output ONLY the branch name, nothing else.
 			all = vim.tbl_filter(function(status)
 				return status ~= false
 			end, {
-				"draft",
 				"maybe",
 				"later 2",
 				"later 1",
 				"later 0",
-				"inbox",
 				"explore",
+				"blocked",
+				"inbox",
 				"ready",
 				"active",
-				"blocked",
 				"review",
 				"merging",
 				work("report:done", false),
