@@ -1,4 +1,5 @@
 local M = {}
+local filter = require("neoterm.helpers.filter")
 
 local get_last_file_win = require("neoterm.helpers.win_history").get_last_file_win
 
@@ -155,17 +156,7 @@ local function render()
 	if #state.rows == 1 then
 		table.insert(state.rows, { text = "No artifact tasks" })
 	end
-	if state.filter and state.filter ~= "" then
-		local words = vim.split(state.filter, "%s+", { trimempty = true })
-		state.rows = vim.tbl_filter(function(row)
-			for _, word in ipairs(words) do
-				if not row.text:find(word, 1, true) then
-					return false
-				end
-			end
-			return true
-		end, state.rows)
-	end
+	state.rows = filter.rows(state.rows, state.filter)
 	local lines = vim.tbl_map(function(row)
 		return row.text
 	end, state.rows)
@@ -182,16 +173,11 @@ local function render()
 				or "NeoTreeDirectoryName",
 		})
 	end
-	if state.filter ~= nil and #state.rows > 0 then
-		state.filter_index = math.min(state.filter_index or 1, #state.rows)
-		vim.api.nvim_buf_set_extmark(state.buf, namespace, state.filter_index - 1, 0, {
-			line_hl_group = "Visual",
-		})
-	elseif state.filter == nil then
+	if not filter.highlight(state, namespace) then
 		local line = active_task_line()
 		if line then
 			vim.api.nvim_buf_set_extmark(state.buf, namespace, line - 1, 0, {
-			line_hl_group = "Visual",
+				line_hl_group = "Visual",
 			})
 		end
 	end
@@ -343,93 +329,16 @@ end
 
 local function filter_panel()
 	local panel = state
-	local original_cursor = vim.api.nvim_win_get_cursor(panel.win)
-	local input = vim.api.nvim_create_buf(false, true)
-	local width = vim.api.nvim_win_get_width(panel.win)
-	local popup = vim.api.nvim_open_win(input, true, {
-		relative = "win",
-		win = panel.win,
-		row = vim.api.nvim_win_get_height(panel.win) - 1,
-		col = 0,
-		width = width,
-		height = 1,
-		style = "minimal",
-		border = "single",
-	})
-	vim.wo[popup].winblend = 0
-	vim.bo[input].buftype = "prompt"
-	vim.fn.prompt_setprompt(input, "")
-	local timer = assert(vim.uv.new_timer())
-	local pending = false
-	local function apply_filter()
-		pending = false
-		panel.filter = vim.api.nvim_buf_get_lines(input, -2, -1, false)[1]
-		panel.filter_index = 1
-		render()
-	end
-	local function finish(accept)
-		timer:stop()
-		timer:close()
-		if accept and pending then
-			apply_filter()
-		end
-		local selected = panel.rows[panel.filter_index or 1]
-		panel.filter = nil
-		panel.filter_index = nil
-		vim.cmd.stopinsert()
-		vim.api.nvim_win_close(popup, true)
-		vim.api.nvim_set_current_win(panel.win)
-		render()
-		if accept and selected then
-			for line, row in ipairs(panel.rows) do
-				if row.text == selected.text then
-					vim.api.nvim_win_set_cursor(panel.win, { line, #(row.text:match("^%s*") or "") })
-					open_selected()
-					break
-				end
-			end
-		else
-			vim.api.nvim_win_set_cursor(panel.win, original_cursor)
-		end
-	end
-	vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
-		buffer = input,
-		callback = function()
-			if state ~= panel then
-				return
-			end
-			pending = true
-			timer:stop()
-			timer:start(100, 0, vim.schedule_wrap(function()
-				if state == panel and vim.api.nvim_buf_is_valid(input) then
-					apply_filter()
-				end
-			end))
+	filter.open(panel, {
+		render = render,
+		valid = function()
+			return state == panel
 		end,
+		same = function(row, selected)
+			return row.text == selected.text and row.status == selected.status
+		end,
+		accept = open_selected,
 	})
-	vim.keymap.set({ "n", "i" }, "<Esc>", function()
-		finish(false)
-	end, { buffer = input })
-	vim.keymap.set({ "n", "i" }, "<CR>", function()
-		finish(true)
-	end, { buffer = input })
-	local function move(delta)
-		if #panel.rows == 0 then
-			return
-		end
-		panel.filter_index = ((panel.filter_index or 1) - 1 + delta) % #panel.rows + 1
-		render()
-	end
-	vim.keymap.set({ "n", "i" }, "<C-n>", function()
-		move(1)
-	end, { buffer = input })
-	vim.keymap.set({ "n", "i" }, "<C-p>", function()
-		move(-1)
-	end, { buffer = input })
-	panel.filter = ""
-	panel.filter_index = 1
-	render()
-	vim.cmd.startinsert()
 end
 
 function M.toggle()

@@ -1,4 +1,5 @@
 local M = {}
+local filter = require("neoterm.helpers.filter")
 
 local neoterm_config = require("neoterm.config")
 local config = neoterm_config.term_panel
@@ -379,6 +380,7 @@ local function render(state)
 			update_git_status(state, row.cwd)
 		end
 	end
+	rows = filter.rows(rows, state.filter)
 	local lines = vim.tbl_map(function(row)
 		return row.text
 	end, rows)
@@ -407,6 +409,9 @@ local function render(state)
 	state.rows = rows
 	state.selected_instance = instance_count
 
+	if filter.highlight(state, highlight_namespace) then
+		return
+	end
 	if not valid_win(state.win) then
 		return
 	end
@@ -516,6 +521,25 @@ local function open(query, history, subscribe, create_in_dir)
 	states[tab] = state
 
 	local operations = {
+		filter = function(panel)
+			filter.open(panel, {
+				render = function()
+					render(panel)
+				end,
+				valid = function()
+					return states[panel.tab] == panel
+				end,
+				same = function(row, selected)
+					return row.instance_count == selected.instance_count
+						and row.cwd == selected.cwd
+						and row.title == selected.title
+						and row.url == selected.url
+				end,
+				accept = function()
+					focus_selected(panel)
+				end,
+			})
+		end,
 		focus = focus_selected,
 		restart = restart_selected,
 		kill = kill_selected,

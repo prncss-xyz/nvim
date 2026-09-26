@@ -95,6 +95,7 @@ return {
 	term_panel = {
 		width = personal(40, 60),
 		keybindings = {
+			["é"] = "filter",
 			["<CR>"] = "focus",
 			r = "restart",
 			x = "kill",
