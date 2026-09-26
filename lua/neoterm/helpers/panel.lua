@@ -133,9 +133,6 @@ function M.open_filter(panel, options)
 	vim.keymap.set({ "n", "i" }, "<Esc>", function()
 		finish(false)
 	end, { buffer = input })
-	vim.keymap.set({ "n", "i" }, "<CR>", function()
-		finish(true)
-	end, { buffer = input })
 	local function move(delta)
 		if #panel.rows == 0 then
 			return
@@ -143,12 +140,27 @@ function M.open_filter(panel, options)
 		panel.filter_index = ((panel.filter_index or 1) - 1 + delta) % #panel.rows + 1
 		render()
 	end
-	vim.keymap.set({ "n", "i" }, "<C-n>", function()
-		move(1)
-	end, { buffer = input })
-	vim.keymap.set({ "n", "i" }, "<C-p>", function()
-		move(-1)
-	end, { buffer = input })
+	local operations = {
+		next = function()
+			move(1)
+		end,
+		previous = function()
+			move(-1)
+		end,
+		accept = function()
+			finish(true)
+		end,
+	}
+	for binding, operation in pairs(require("neoterm.config").filter.keybindings) do
+		vim.keymap.set(
+			{ "n", "i" },
+			binding,
+			assert(operations[operation], "Unknown filter operation: " .. operation),
+			{
+				buffer = input,
+			}
+		)
+	end
 	panel.filter = ""
 	panel.filter_index = 1
 	render()

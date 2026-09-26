@@ -92,6 +92,15 @@ return {
 			message,
 		}, { detach = true })
 	end,
+	filter = {
+		keybindings = {
+			["<C-n>"] = "next",
+			["<Down>"] = "next",
+			["<C-p>"] = "previous",
+			["<Up>"] = "previous",
+			["<CR>"] = "accept",
+		},
+	},
 	term_panel = {
 		width = personal(40, 60),
 		keybindings = {

@@ -3,7 +3,12 @@ local T = MiniTest.new_set({
 	hooks = {
 		pre_case = function()
 			child.restart({ "-u", "NONE" })
-			child.lua([=[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. package.path]=])
+			child.lua([=[
+				package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. package.path
+				package.loaded["neoterm.config"] = {
+					filter = { keybindings = { ["<C-n>"] = "next", ["<C-p>"] = "previous", ["<CR>"] = "accept" } },
+				}
+			]=])
 		end,
 		post_once = child.stop,
 	},
@@ -69,6 +74,29 @@ T["debounces, wraps selection, and accepts by identity"] = function()
 		press("<CR>")
 		assert(accepted == 2 and panel.filter == nil and #panel.rows == 3)
 		assert(not vim.api.nvim_buf_is_valid(input))
+	]=])
+end
+
+T["uses configured filter bindings in normal and insert mode"] = function()
+	child.lua([=[
+		require("neoterm.config").filter.keybindings = {
+			["<Down>"] = "next", ["<Up>"] = "previous", ["<C-y>"] = "accept",
+		}
+	]=])
+	setup()
+	child.lua([=[
+		for _, mode in ipairs({ "n", "i" }) do
+			local keys = {}
+			for _, map in ipairs(vim.api.nvim_buf_get_keymap(input, mode)) do keys[map.lhs] = true end
+			assert(keys["<Down>"] and keys["<Up>"] and keys["<C-Y>"])
+			assert(not keys["<C-N>"] and not keys["<C-P>"] and not keys["<CR>"])
+		end
+		press("<Down>")
+		assert(panel.filter_index == 2)
+		press("<Up>")
+		assert(panel.filter_index == 1)
+		press("<C-y>")
+		assert(accepted == 1)
 	]=])
 end
 
