@@ -249,7 +249,12 @@ Output ONLY the branch name, nothing else.
 		"agents",
 		"sandbox",
 	},
+  default_command = "pi",
 	commands = {
+		pi = {
+			tag = "agent",
+			agent = "pi",
+		},
 		yazi = { cmd = "yazi" },
 		ddgr = {
 			cmd = "ddgr",

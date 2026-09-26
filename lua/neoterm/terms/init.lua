@@ -364,6 +364,15 @@ function M.toggle(query)
 	end)
 end
 
+function M.toggle_or_default()
+	local query = normalize_query()
+	local instance = history.find(get_filter(query))
+	if instance then
+		return instance.term:toggle()
+	end
+	return M.start({ key = config.default_command, instance_count = query.instance_count })
+end
+
 function M.has_changed()
 	return history.find(function(item)
 		return item.changed ~= nil

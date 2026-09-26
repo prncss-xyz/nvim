@@ -117,7 +117,7 @@ return {
 			{
 				ai_insert.toggle,
 				function()
-					require("neoterm.terms").toggle()
+					require("neoterm.terms").toggle_or_default()
 				end,
 				desc = "Toggle Last Terminal",
 				mode = { "n", "x", "i", "t" },
