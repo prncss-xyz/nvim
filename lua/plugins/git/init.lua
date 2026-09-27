@@ -1,6 +1,8 @@
 local not_vscode = require("my.conds").not_vscode
 local conflict = require("my.parameters").domain.conflict
 local git = require("my.parameters").domain.git
+local win = require("my.parameters").domain.win
+local theme = require("my.parameters").theme
 
 return {
 	{
@@ -42,6 +44,7 @@ return {
 			},
 			keymaps = {
 				view = {
+					close_on_open_in_prev_tab = true,
 					next_hunk = ",n",
 					prev_hunk = ",p",
 					next_file = ",N",
@@ -70,22 +73,19 @@ return {
 				})
 			end
 		end,
-		init = function()
-			vim.keymap.set("n", git .. "l", function()
-				if _G._codediff_last_args then
-					vim.cmd("CodeDiff " .. _G._codediff_last_args)
-				else
-					vim.notify("No previous CodeDiff invocation", vim.log.levels.WARN)
-				end
-			end, { desc = "Git CodeDiff last" })
-		end,
 		keys = {
-			{ git .. "d", "<cmd>CodeDiff<cr>", desc = "Git CodeDiff" },
+			{
+				git .. "d",
+				function()
+					vim.cmd("CodeDiff")
+				end,
+				desc = "CodeDiff changes",
+			},
 			{
 				git .. "m",
 				function()
 					local branch
-					for _, candidate in ipairs(require("my.parameters").default_branches) do
+					for _, candidate in ipairs({ "main", "master" }) do
 						vim.fn.system({ "git", "rev-parse", "--verify", candidate })
 						if vim.v.shell_error == 0 then
 							branch = candidate
@@ -97,7 +97,11 @@ return {
 				end,
 				desc = "Git CodeDiff default branch",
 			},
-			{ git .. "l", "<cmd>CodeDiffLast<cr>", desc = "Git CodeDiffLast" },
+			{
+				git .. "l",
+				"<cmd>CodeDiff HEAD~1 HEAD<cr>",
+				desc = "CodeDiff latest commit against its parent",
+			},
 		},
 		cond = not_vscode,
 	},
@@ -113,6 +117,7 @@ return {
 			"DiffviewRefresh",
 			"DiffviewFileHistory",
 		},
+		enable = false,
 	},
 	{
 		"akinsho/git-conflict.nvim",

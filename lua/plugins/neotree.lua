@@ -199,15 +199,6 @@ return {
 				end,
 				desc = "Neotree files",
 			},
-			{
-				win .. theme.hunk,
-				function()
-					require("my.ui_toggle").activate("neotree", function()
-						vim.cmd("Neotree git_status dir=" .. vim.fn.fnameescape(vim.fn.getcwd()))
-					end)
-				end,
-				desc = "Neotree git_status",
-			},
 		},
 	},
 	{

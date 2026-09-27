@@ -161,6 +161,31 @@ local prompts = {
 	plan = pi_prompt("implement"),
 }
 
+local function artifact_branch_task(relative)
+	local directory, filename = relative:match("^(.+)/([^/]+)%.md$")
+	if not directory then
+		return nil
+	end
+	local parts = vim.split(directory, "/", { plain = true })
+	if #parts < 2 then
+		return nil
+	end
+	local project = table.remove(parts, 1)
+	local task = filename:match("%.([^.]+)$") or filename
+	if not prompts[task] then
+		return nil
+	end
+	local name = filename:match("^(.*)%." .. vim.pesc(task) .. "$")
+	if name then
+		table.insert(parts, name)
+	end
+	local branch = table.concat(parts, "-"):lower():gsub("[^%w]+", "-"):gsub("^-+", ""):gsub("-+$", "")
+	if branch == "" then
+		return nil
+	end
+	return project, branch, task
+end
+
 local function with_worktree(path)
 	local project_dir = artifact_cwd.resolve(path)
 	local artifact_root = project_dir and artifact_cwd.for_project(project_dir) or nil
@@ -170,9 +195,9 @@ local function with_worktree(path)
 		return
 	end
 
-	local branch, task = relative_path:match("^([^/]+)/([^/]+)%.md$")
-	if not branch or not task then
-		vim.notify("Artifact filename must match {artifacts}/{branch}/{task}.md", vim.log.levels.ERROR)
+	local _, branch, task = artifact_branch_task(relative_path)
+	if not branch then
+		vim.notify("Artifact filename must match {artifacts}/{project}/{path}/{name}.{step}.md or {path}/{step}.md", vim.log.levels.ERROR)
 		return
 	end
 	local prompt = prompts[task]
@@ -210,8 +235,8 @@ function M.pick_with_worktree(include_dirty)
 		if relative == nil then
 			return false
 		end
-		local project, branch, task = relative:match("^([^/]+)/([^/]+)/([^/]+)%.md$")
-		if task == nil or prompts[task] == nil then
+		local project, branch = artifact_branch_task(relative)
+		if branch == nil then
 			return false
 		end
 		return include_dirty or vim.fn.isdirectory(vim.fs.joinpath(dirs.projects, project, branch)) == 0

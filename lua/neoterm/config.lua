@@ -210,7 +210,6 @@ Output ONLY the branch name, nothing else.
 	},
 	templates = {
 		"agents",
-		"steps",
 		"chezmoi",
 		"git_sync",
 		"make",
