@@ -124,24 +124,18 @@ return {
 		"e-ink-colorscheme/e-ink.nvim",
 		commit = "c90bf52",
 	}),
+  -- dark-only
 	colorscheme("luna", {
 		"WTFox/luna.nvim",
 		commit = "b6f25f10012df3f29ca56e78d40e53a392e7f98f",
 	}),
-	colorscheme("matrix", {
-		"iruzo/matrix-nvim",
-		commit = "5fafe6b",
-	}),
+  -- dark-only
 	colorscheme("selenized", {
 		"calind/selenized.nvim",
 		commit = "a43e34d",
 	}),
 	colorscheme({ dark = "kanagawa", light = "kanagawa-lotus" }, {
 		"rebelot/kanagawa.nvim",
-	}),
-	colorscheme({ dark = "rose-pine", light = "rose-pine-dawn" }, {
-		name = "rose-pine",
-		"rose-pine/neovim",
 	}),
 	colorscheme("gruvbox", {
 		"ellisonleao/gruvbox.nvim",
