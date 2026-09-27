@@ -48,6 +48,17 @@ return {
 			end
 			local khutulun = require("khutulun")
 			local events = require("neo-tree.events")
+			local neo_git = require("neo-tree.git")
+			local original_status = neo_git.status
+			-- Neo-tree's unchanged-porcelain cache returns only the working-tree status,
+			-- dropping the base diff when the git_status source refreshes on refocus.
+			neo_git.status = function(path, base_lookup, skip_bubbling, status_opts)
+				local status, root, base_status = original_status(path, base_lookup, skip_bubbling, status_opts)
+				if root and base_lookup and base_lookup[root] and not base_status then
+					base_status = require("neo-tree.git.diff").diff_name_status(root, base_lookup[root], skip_bubbling)
+				end
+				return status, root, base_status
+			end
 			local function on_move(data)
 				Snacks.rename.on_rename_file(data.source, data.destination)
 			end

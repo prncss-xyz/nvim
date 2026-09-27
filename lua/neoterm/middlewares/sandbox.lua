@@ -15,6 +15,22 @@ local function command(cmd)
 	return { vim.o.shell, vim.o.shellcmdflag, cmd }
 end
 
+local function git_metadata_dirs(cwd)
+	local dirs = {}
+	local seen = {}
+	for _, flag in ipairs({ "--git-common-dir", "--git-dir" }) do
+		local result = vim.fn.systemlist({ "git", "-C", cwd, "rev-parse", "--path-format=absolute", flag })
+		if vim.v.shell_error == 0 then
+			local path = vim.fs.abspath(result[1])
+			if not seen[path] then
+				seen[path] = true
+				table.insert(dirs, path)
+			end
+		end
+	end
+	return dirs
+end
+
 local builders = {
 	bwrap = function(opts)
 		local cwd = vim.fs.abspath(opts.cwd)
@@ -48,6 +64,11 @@ local builders = {
 		for _, path in ipairs(vim.list_extend(vim.deepcopy(writable_dirs), opts.writable_dirs or {})) do
 			path = vim.fs.abspath(path)
 			vim.fn.mkdir(path, "p")
+			vim.list_extend(cmd, { "--bind", path, path })
+		end
+		-- Linked worktrees keep their index and refs outside cwd. Bind existing Git
+		-- metadata separately; unlike writable_dirs, never create these paths.
+		for _, path in ipairs(git_metadata_dirs(cwd)) do
 			vim.list_extend(cmd, { "--bind", path, path })
 		end
 		for _, path in ipairs(opts.writable_files or {}) do

@@ -74,12 +74,13 @@ local function act(value)
 end
 
 local last_key
+local last_neotree_action
 
 -- TODO: skip if already in focus
 function M.raise()
 	if last_key then
 		local opts = config.keys[last_key] or {}
-		local action = opts.raise
+		local action = last_key == "neotree" and last_neotree_action or opts.raise
 		if action then
 			M.activate(last_key, action)
 		end
@@ -105,6 +106,9 @@ end
 
 function M.activate(key, action)
 	action = action or config.keys[key].raise
+	if key == "neotree" then
+		last_neotree_action = action
+	end
 	clear(key)
 	act(action)
 end
