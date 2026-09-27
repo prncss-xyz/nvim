@@ -9,7 +9,7 @@ local function run(command, callback)
 		command,
 		{ text = true },
 		vim.schedule_wrap(function(result)
-			callback(result.code == 0, result.stdout or result.stderr or "")
+			callback(result.code == 0, result.code == 0 and result.stdout or result.stderr or result.stdout or "")
 		end)
 	)
 end
@@ -214,9 +214,9 @@ function M.create_worktree(branch, on_success)
 	end)
 end
 
---- Remove the worktree containing the current buffer, after confirmation.
+--- Remove the wohktree containing the current buffer, after confirmation.
 --- Tracked changes and untracked files are protected by git worktree remove.
-function M.remove_current_worktree(on_success)
+function M.remove_current_worktree(on_success, skip_confirmation)
 	local current_file = vim.fn.expand("%:p")
 	if current_file == "" then
 		vim.notify("No file open", vim.log.levels.WARN)
@@ -229,7 +229,7 @@ function M.remove_current_worktree(on_success)
 			return
 		end
 		local worktree_path = vim.fs.normalize(vim.trim(output))
-		require("neoterm.helpers.confirm")("Remove worktree " .. worktree_path .. "?", function(confirmed)
+		local function remove(confirmed)
 			if not confirmed then
 				return
 			end
@@ -248,7 +248,66 @@ function M.remove_current_worktree(on_success)
 					on_success(worktree_path)
 				end
 			end)
-		end)
+		end
+		if skip_confirmation then
+			remove(true)
+		else
+			require("neoterm.helpers.confirm")("Remove worktree " .. worktree_path .. "?", remove)
+		end
+	end)
+end
+
+function M.merge_to_default()
+	local current_file = vim.fn.expand("%:p")
+	if current_file == "" then
+		vim.notify("No file open", vim.log.levels.WARN)
+		return
+	end
+
+	run({ "git", "-C", vim.fs.dirname(current_file), "rev-parse", "--show-toplevel" }, function(ok, output)
+		if not ok then
+			vim.notify("Current file is not in a git worktree", vim.log.levels.ERROR)
+			return
+		end
+		local worktree_path = vim.fs.normalize(vim.trim(output))
+		local branch = vim.trim(vim.fn.system({ "git", "-C", worktree_path, "branch", "--show-current" }))
+		if vim.v.shell_error ~= 0 or branch == "" or vim.tbl_contains(config.default_branches, branch) then
+			vim.notify("Current worktree must be on a non-default branch", vim.log.levels.ERROR)
+			return
+		end
+		local default_path
+		for _, candidate in ipairs(config.default_branches) do
+			local path = vim.fs.joinpath(vim.fs.dirname(worktree_path), candidate)
+			if vim.uv.fs_stat(path) then
+				default_path = path
+				break
+			end
+		end
+		if not default_path then
+			vim.notify("Default branch worktree not found", vim.log.levels.ERROR)
+			return
+		end
+		require("neoterm.helpers.confirm")(
+			"Merge " .. branch .. " into " .. vim.fs.basename(default_path) .. "?",
+			function(confirmed)
+				if not confirmed then
+					return
+				end
+				run({ "git", "-C", worktree_path, "rebase", vim.fs.basename(default_path) }, function(rebased, result)
+					if not rebased then
+						vim.notify("Rebase failed; resolve conflicts before merging: " .. result, vim.log.levels.ERROR)
+						return
+					end
+					run({ "git", "-C", default_path, "merge", "--ff-only", branch }, function(merged, merge_result)
+						if not merged then
+							vim.notify("Failed to merge into default branch: " .. merge_result, vim.log.levels.ERROR)
+							return
+						end
+						M.remove_current_worktree(nil, true)
+					end)
+				end)
+			end
+		)
 	end)
 end
 

@@ -4,6 +4,7 @@ local file = domain.file
 local reverse = require("my.parameters").reverse
 local theme = require("my.parameters").theme
 local ai_insert = require("my.parameters").ai_insert
+local git = require("my.parameters").domain.git
 
 return {
 	{
@@ -97,20 +98,27 @@ return {
 				desc = "Clone or Create Github Repo",
 			},
 			{
-				file .. reverse("w"),
+				git .. reverse("w"),
 				function()
 					require("neoterm.git").remove_current_worktree()
 				end,
 				desc = "Delete Worktree",
 			},
 			{
-				file .. "w",
+				git .. "w",
 				function()
 					require("neoterm.git").create_worktree_from_input(function(default_file)
 						require("my.create").create(vim.fn.fnameescape(default_file))
 					end)
 				end,
 				desc = "Create Worktree",
+			},
+			{
+				git .. "m",
+				function()
+					require("neoterm.git").merge_to_default()
+				end,
+				desc = "Merge to default",
 			},
 			{
 				"<c-j>",
