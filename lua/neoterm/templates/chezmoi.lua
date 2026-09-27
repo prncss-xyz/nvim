@@ -40,7 +40,7 @@ return function(opts, callback)
 					local definitions = {
 						{
 							name = "chezmoi apply",
-							cmd = { "chezmoi", "apply" },
+							cmd = { "chezmoi", "apply", "--purge" },
 							cwd = source_path,
 							close_on_exit = false,
 						},
