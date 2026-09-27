@@ -35,10 +35,12 @@ return {
 			end
 			return {
 				window = { width = personal(40, 60) },
+				git_compare = { base_ref = "HEAD" },
 				sources = {
 					"filesystem",
 					"buffers",
 					"git_status",
+					"git_compare",
 					"document_symbols",
 				},
 				open_files_do_not_replace_types = require("neoterm.config").open_files_do_not_replace_types,
@@ -198,6 +200,46 @@ return {
 					require("my.ui_toggle").activate("neotree", "Neotree filesystem")
 				end,
 				desc = "Neotree files",
+    },
+    {
+				win .. theme.hunk .. theme.hunk,
+				function()
+					require("my.ui_toggle").activate("neotree", function()
+						vim.cmd("Neotree git_status git_base=HEAD")
+						require("gitsigns").reset_base(true)
+					end)
+				end,
+				desc = "Neotree git_status current",
+			},
+			{
+				win .. theme.hunk .. "l",
+				function()
+					require("my.ui_toggle").activate("neotree", function()
+						vim.cmd("Neotree git_status git_base=HEAD~1")
+						require("gitsigns").change_base("HEAD~1", true)
+					end)
+				end,
+				desc = "Neotree git_status previous",
+			},
+			{
+				win .. theme.hunk .. "m",
+				function()
+					require("my.ui_toggle").activate("neotree", function()
+						local cwd = vim.fn.getcwd()
+						local base
+						for _, branch in ipairs({ "main", "master" }) do
+							vim.fn.system({ "git", "-C", cwd, "rev-parse", "--verify", "refs/heads/" .. branch })
+							if vim.v.shell_error == 0 then
+								base = branch
+								break
+							end
+						end
+						assert(base, "No local main or master branch found")
+						vim.cmd("Neotree git_status git_base=" .. base)
+						require("gitsigns").change_base(base, true)
+					end)
+				end,
+				desc = "Neotree git_status default",
 			},
 		},
 	},
