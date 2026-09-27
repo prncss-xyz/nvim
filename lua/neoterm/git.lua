@@ -298,12 +298,18 @@ function M.merge_to_default()
 						vim.notify("Rebase failed; resolve conflicts before merging: " .. result, vim.log.levels.ERROR)
 						return
 					end
-					run({ "git", "-C", default_path, "merge", "--ff-only", branch }, function(merged, merge_result)
+					run({ "git", "-C", default_path, "merge", "--squash", branch }, function(merged, merge_result)
 						if not merged then
-							vim.notify("Failed to merge into default branch: " .. merge_result, vim.log.levels.ERROR)
+							vim.notify("Failed to squash branch into default: " .. merge_result, vim.log.levels.ERROR)
 							return
 						end
-						M.remove_current_worktree(nil, true)
+						run({ "git", "-C", default_path, "commit", "-m", "Merge " .. branch }, function(committed, commit_result)
+							if not committed then
+								vim.notify("Failed to commit squash merge: " .. commit_result, vim.log.levels.ERROR)
+								return
+							end
+							M.remove_current_worktree(nil, true)
+						end)
 					end)
 				end)
 			end
