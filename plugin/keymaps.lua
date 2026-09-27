@@ -125,10 +125,6 @@ vim.keymap.set("n", domain.appearance .. "h", function()
 	require("my.hints").toggle()
 end, { desc = "Toggle Inlay Hints" })
 
-vim.keymap.set("n", domain.appearance .. "g", function()
-	vim.o.background = vim.o.background == "light" and "dark" or "light"
-end, { desc = "Toggle Light" })
-
 vim.keymap.set("n", domain.appearance .. "l", function()
 	vim.o.conceallevel = vim.o.conceallevel == 0 and 2 or 0
 end, { desc = "Toggle Conceal Level" })
