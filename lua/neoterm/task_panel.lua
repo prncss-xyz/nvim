@@ -218,25 +218,12 @@ local function open_selected()
 		end
 		return true
 	end)
-	local target_win = get_last_file_win()
-	if not target_win or not vim.api.nvim_win_is_valid(target_win) then
-		return
-	end
+	local file_windows = require("neoterm.helpers.file_windows")
 	if latest then
-		if latest.bufnr then
-			vim.api.nvim_win_set_buf(target_win, latest.bufnr)
-		else
-			vim.api.nvim_win_call(target_win, function()
-				require("neoterm.config").create(vim.fn.fnameescape(latest.path))
-			end)
-		end
-		vim.api.nvim_set_current_win(target_win)
+		file_windows.open(latest.path, latest.bufnr)
 	elseif selected.task then
 		local task = assert(selected_task(selected), "Selected artifact task not found")
-		vim.api.nvim_win_call(target_win, function()
-			require("neoterm.config").create(vim.fn.fnameescape(vim.fs.joinpath(task.cwd, "index.md")))
-		end)
-		vim.api.nvim_set_current_win(target_win)
+		file_windows.open(vim.fs.joinpath(task.cwd, "index.md"))
 	end
 end
 

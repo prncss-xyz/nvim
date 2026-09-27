@@ -22,4 +22,20 @@ function M.can_replace(win)
 	return M.can_focus(win) and not vim.wo[win].winfixbuf
 end
 
+function M.open(path, bufnr)
+	local win = require("neoterm.helpers.win_history").get_last_file_win()
+	if not win then
+		return false
+	end
+	if bufnr then
+		vim.api.nvim_win_set_buf(win, bufnr)
+	else
+		vim.api.nvim_win_call(win, function()
+			require("neoterm.config").create(vim.fn.fnameescape(path))
+		end)
+	end
+	vim.api.nvim_set_current_win(win)
+	return true
+end
+
 return M

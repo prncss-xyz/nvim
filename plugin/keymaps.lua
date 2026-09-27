@@ -48,126 +48,6 @@ vim.keymap.set("n", edit .. "<cr>", function()
 end, { desc = "Blank Line Below" })
 
 vim.keymap.set({ "n" }, file .. "j", "<cmd>edit package.json<cr>", { desc = "Edit package.json" })
-
-local function toggle_index_file()
-	local source = vim.api.nvim_buf_get_name(0)
-	if source == "" then
-		vim.notify("Current buffer has no file", vim.log.levels.WARN)
-		return
-	end
-
-	if vim.bo.modified then
-		vim.cmd.write()
-	end
-
-	local directory = vim.fs.dirname(source)
-	local filename = vim.fs.basename(source)
-	local name, extension = filename:match("^(.*)(%.[^.]+)$")
-	if not name then
-		vim.notify("Current file has no extension", vim.log.levels.WARN)
-		return
-	end
-
-	local target
-	local remove_directory = false
-	local create_directory = false
-	local branch, branch_name = name:match("^([^.]+)%.(.+)$")
-	if extension == ".lua" and name == "init" then
-		for entry in vim.fs.dir(directory) do
-			if entry ~= filename then
-				vim.notify("Directory contains other files: " .. directory, vim.log.levels.WARN)
-				return
-			end
-		end
-
-		target = vim.fs.joinpath(vim.fs.dirname(directory), vim.fs.basename(directory) .. extension)
-		remove_directory = true
-	elseif extension == ".lua" and not branch then
-		target = vim.fs.joinpath(directory, name, "init" .. extension)
-		create_directory = true
-	elseif branch then
-		target = vim.fs.joinpath(directory, branch, branch_name .. extension)
-	else
-		for entry in vim.fs.dir(directory) do
-			if entry ~= filename then
-				vim.notify("Directory contains other files: " .. directory, vim.log.levels.WARN)
-				return
-			end
-		end
-
-		local flattened_name = vim.fs.basename(directory)
-		if name ~= "index" then
-			flattened_name = flattened_name .. "." .. name
-		end
-		target = vim.fs.joinpath(vim.fs.dirname(directory), flattened_name .. extension)
-		remove_directory = true
-	end
-
-	if vim.uv.fs_stat(target) then
-		vim.notify("Target already exists: " .. target, vim.log.levels.WARN)
-		return
-	end
-
-	local target_directory = vim.fs.dirname(target)
-	local directory_created = create_directory and not vim.uv.fs_stat(target_directory)
-	if directory_created and vim.fn.mkdir(target_directory, "p") == 0 then
-		vim.notify("Failed to create directory: " .. target_directory, vim.log.levels.ERROR)
-		return
-	end
-
-	Snacks.rename.rename_file({
-		from = source,
-		to = target,
-		on_rename = function(_, _, ok)
-			if remove_directory and ok then
-				local removed, error = vim.uv.fs_rmdir(directory)
-				if not removed then
-					vim.notify("Failed to remove directory: " .. error, vim.log.levels.ERROR)
-				end
-			elseif directory_created and not ok then
-				vim.uv.fs_rmdir(target_directory)
-			end
-		end,
-	})
-end
-
-vim.keymap.set("n", "hf", toggle_index_file, { desc = "Toggle Index File" })
-
-vim.keymap.set({ "n" }, file .. "g", function()
-	require("neoterm.git").clone_github()
-end, { desc = "Clone or Create Github Repo" })
-vim.keymap.set({ "n" }, file .. "w", function()
-	require("neoterm.git").create_worktree_from_input(function(default_file)
-		require("my.create").create(vim.fn.fnameescape(default_file))
-	end)
-end, { desc = "Create Worktree" })
-vim.keymap.set({ "n" }, file .. reverse("w"), function()
-	require("neoterm.git").remove_current_worktree()
-end, { desc = "Delete Worktree" })
-vim.keymap.set({ "n" }, file .. "o", function()
-	local name = vim.fn.expand("<cWORD>")
-	if name == "" then
-		name = vim.fn.expand("<cfile>")
-	end
-	name = name:gsub("^['\"`({<[]+", "")
-	name = name:gsub("['\"`)}>%],.;]+$", "")
-
-	local path, line, col = name:match("^(.+):(%d+):(%d+)$")
-	if path then
-		require("my.create").create(vim.fn.fnameescape(path))
-		vim.cmd(line)
-		vim.cmd("normal! " .. col .. "|")
-		return
-	end
-	path, line = name:match("^(.+):(%d+)$")
-	if path then
-		require("my.create").create(vim.fn.fnameescape(path))
-		vim.cmd(line)
-		return
-	end
-	require("my.create").create(vim.fn.fnameescape(name))
-end, { desc = "Edit File Under Cursor" })
-
 vim.keymap.set({ "n", "x" }, edit .. "t", "=", { desc = "Reindent" })
 vim.keymap.set({ "n", "x", "i" }, "<c-c>", function()
 	require("my.lsp").format()
@@ -185,9 +65,6 @@ end, {
 	nowait = true,
 	desc = "Close Window",
 })
-vim.keymap.set({ "n", "x", "i", "t" }, "<c-j>", function()
-	require("neoterm.helpers.win_history").focus_last_win()
-end, { desc = "Window Toggle File" })
 vim.keymap.set("n", win .. "k", function()
 	require("my.windows").close_all_but_current()
 end, { desc = "Keep Window (Close Other)" })
@@ -196,19 +73,6 @@ vim.keymap.set("n", win .. directions.down, "<cmd>split<cr>", { desc = "Window S
 vim.keymap.set("n", win .. "e", function()
 	require("my.zoom").zoom(0)
 end, { desc = "Window Zoom" })
-
-vim.keymap.set("n", "bf", function()
-	local cfile = vim.fn.expand("<cfile>")
-	if cfile == "" then
-		vim.notify("No file under cursor", vim.log.levels.WARN)
-		return
-	end
-	local target_win = require("neoterm.helpers.win_history").get_last_file_win()
-	if target_win then
-		vim.api.nvim_set_current_win(target_win)
-	end
-	vim.cmd("edit " .. vim.fn.fnameescape(cfile))
-end, { desc = "open file in last visited file window" })
 
 vim.keymap.set("n", "ov", "gv", { desc = "reselect" })
 
@@ -317,14 +181,6 @@ end, { desc = "Compare diff, master" })
 vim.keymap.set({ "n", "x" }, "ocb", function()
 	require("my.diff").variant()
 end, { desc = "Compare diff, variant" })
-vim.keymap.set({ "n", "x" }, "ocw", function()
-	require("neoterm.terms").restart({
-		key = "word count",
-		cmd = string.format("wc %q", vim.fn.expand("%")),
-		on_exit = "keep",
-	})
-end, { desc = "Word Count" })
-
 for _, key in pairs({ "j", "k", "l", ";" }) do
 	vim.keymap.set("n", move .. key, function()
 		require("my.targets").recover(key)

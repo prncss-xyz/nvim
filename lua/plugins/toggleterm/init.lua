@@ -1,5 +1,6 @@
 local not_vscode = require("my.conds").not_vscode
 local domain = require("my.parameters").domain
+local file = domain.file
 local reverse = require("my.parameters").reverse
 local theme = require("my.parameters").theme
 local ai_insert = require("my.parameters").ai_insert
@@ -81,6 +82,79 @@ return {
 			"ToggleTermSetName",
 		},
 		keys = {
+			{
+				file .. "o",
+				function()
+					require("neoterm.helpers.edit_file_under_cursor")()
+				end,
+				desc = "Edit File Under Cursor",
+			},
+			{
+				file .. "g",
+				function()
+					require("neoterm.git").clone_github()
+				end,
+				desc = "Clone or Create Github Repo",
+			},
+			{
+				file .. "w",
+				function()
+					require("neoterm.git").create_worktree_from_input(function(default_file)
+						require("my.create").create(vim.fn.fnameescape(default_file))
+					end)
+				end,
+				desc = "Create Worktree",
+			},
+			{
+				file .. reverse("w"),
+				function()
+					require("neoterm.git").remove_current_worktree()
+				end,
+				desc = "Delete Worktree",
+			},
+			{
+				"<c-j>",
+				function()
+					require("neoterm.helpers.win_history").focus_last_win()
+				end,
+				desc = "Window Toggle File",
+				mode = { "n", "x", "i", "t" },
+			},
+			{
+				"bf",
+				function()
+					local cfile = vim.fn.expand("<cfile>")
+					if cfile == "" then
+						vim.notify("No file under cursor", vim.log.levels.WARN)
+						return
+					end
+					local target_win = require("neoterm.helpers.win_history").get_last_file_win()
+					if target_win then
+						vim.api.nvim_set_current_win(target_win)
+					end
+					require("neoterm.config").create(vim.fn.fnameescape(cfile))
+				end,
+				desc = "open file in last visited file window",
+			},
+			{
+				"ocw",
+				function()
+					require("neoterm.terms").restart({
+						key = "word count",
+						cmd = string.format("wc %q", vim.fn.expand("%")),
+						on_exit = "keep",
+					})
+				end,
+				desc = "Word Count",
+				mode = { "n", "x" },
+			},
+			{
+				"hf",
+				function()
+					require("neoterm.helpers.toggle_index_file")()
+				end,
+				desc = "Toggle Index File",
+			},
 			{
 				domain.move .. "a",
 				function()
