@@ -243,33 +243,6 @@ return {
 				desc = "Pick Colorscheme",
 			},
 			{
-				pick .. theme.hunk,
-				function()
-					Snacks.picker.pick({
-						---@diagnostic disable-next-line: unused-local
-						finder = function(opts, ctx)
-							return require("snacks.picker.source.proc").proc(
-								ctx:opts({
-									cmd = "git",
-									args = { "ls-files", "-mo", "--exclude-standard" },
-									transform = require("plugins.snacks.transform").hunk(),
-								}),
-								ctx
-							)
-						end,
-						format = "file",
-						title = "Diff Files",
-						matcher = {
-							cwd_bonus = true,
-							frecency = true,
-							sort_empty = true,
-						},
-						transform = require("plugins.snacks.transform").modified(),
-					})
-				end,
-				desc = "Pick Diff Files",
-			},
-			{
 				pick .. "i",
 				function()
 					Snacks.picker.notifications()
