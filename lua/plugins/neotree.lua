@@ -247,14 +247,14 @@ return {
 				function()
 					open_git_status("HEAD")
 				end,
-				desc = "Neotree git_status current",
+				desc = "Neotree git_status HEAD",
 			},
 			{
 				win .. theme.hunk .. "l",
 				function()
 					open_git_status("HEAD~1")
 				end,
-				desc = "Neotree git_status previous",
+				desc = "Neotree git_status HEAD~1",
 			},
 			{
 				win .. theme.hunk .. "m",
