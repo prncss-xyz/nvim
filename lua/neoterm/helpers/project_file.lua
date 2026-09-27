@@ -15,7 +15,7 @@ local function get_test(dir, exclude)
 		if path == "" then
 			return false
 		end
-		path = vim.fs.normalize(vim.fn.expand(path))
+		path = vim.fs.normalize(path)
 		if not is_inside(path, dir) or vim.fn.filereadable(path) ~= 1 then
 			return false
 		end
