@@ -136,10 +136,10 @@ return {
 		"calind/selenized.nvim",
 		commit = "a43e34d",
 	}),
-	colorscheme({ "kanagawa", "kanagawa-lotus", "kanagawa-dragon", "kanagawa-wave" }, {
+	colorscheme({ dark = "kanagawa", light = "kanagawa-lotus" }, {
 		"rebelot/kanagawa.nvim",
 	}),
-	colorscheme({ "rose-pine", "rose-pine-dawn", "rose-pine-main", "rose-pine-moon" }, {
+	colorscheme({ dark = "rose-pine", light = "rose-pine-dawn" }, {
 		name = "rose-pine",
 		"rose-pine/neovim",
 	}),
