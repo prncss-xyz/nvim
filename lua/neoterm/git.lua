@@ -214,6 +214,44 @@ function M.create_worktree(branch, on_success)
 	end)
 end
 
+--- Remove the worktree containing the current buffer, after confirmation.
+--- Tracked changes and untracked files are protected by git worktree remove.
+function M.remove_current_worktree(on_success)
+	local current_file = vim.fn.expand("%:p")
+	if current_file == "" then
+		vim.notify("No file open", vim.log.levels.WARN)
+		return
+	end
+
+	run({ "git", "-C", vim.fs.dirname(current_file), "rev-parse", "--show-toplevel" }, function(ok, output)
+		if not ok then
+			vim.notify("Current file is not in a git worktree", vim.log.levels.ERROR)
+			return
+		end
+		local worktree_path = vim.fs.normalize(vim.trim(output))
+		require("neoterm.helpers.confirm")("Remove worktree " .. worktree_path .. "?", function(confirmed)
+			if not confirmed then
+				return
+			end
+			for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+				local path = vim.api.nvim_buf_get_name(bufnr)
+				if path ~= "" and vim.startswith(vim.fs.normalize(path), worktree_path .. "/") then
+					config.bdelete(bufnr)
+				end
+			end
+			run({ "git", "-C", worktree_path, "worktree", "remove", worktree_path }, function(removed, result)
+				if not removed then
+					vim.notify("Failed to remove worktree: " .. result, vim.log.levels.ERROR)
+					return
+				end
+				if on_success then
+					on_success(worktree_path)
+				end
+			end)
+		end)
+	end)
+end
+
 function M.create_worktree_from_input(cb)
 	vim.ui.input({ prompt = "Branch name: " }, function(branch)
 		if not branch or branch == "" then

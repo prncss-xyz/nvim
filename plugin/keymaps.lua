@@ -134,13 +134,16 @@ end
 vim.keymap.set("n", "hf", toggle_index_file, { desc = "Toggle Index File" })
 
 vim.keymap.set({ "n" }, file .. "g", function()
-	require("neoterm.terms.git").clone_github()
+	require("neoterm.git").clone_github()
 end, { desc = "Clone or Create Github Repo" })
 vim.keymap.set({ "n" }, file .. "w", function()
-	require("neoterm.terms.git").create_worktree_from_input(function(default_file)
+	require("neoterm.git").create_worktree_from_input(function(default_file)
 		require("my.create").create(vim.fn.fnameescape(default_file))
 	end)
 end, { desc = "Create Worktree" })
+vim.keymap.set({ "n" }, file .. reverse("w"), function()
+	require("neoterm.git").remove_current_worktree()
+end, { desc = "Delete Worktree" })
 vim.keymap.set({ "n" }, file .. "o", function()
 	local name = vim.fn.expand("<cWORD>")
 	if name == "" then

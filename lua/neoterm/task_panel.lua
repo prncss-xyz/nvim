@@ -320,10 +320,8 @@ local function delete_selected()
 	if not task then
 		return
 	end
-	vim.ui.select({ "Delete", "Cancel" }, {
-		prompt = string.format("Delete task %s?", table.concat(task.parts, "/")),
-	}, function(choice)
-		if choice ~= "Delete" then
+	require("neoterm.helpers.confirm")(string.format("Delete task %s?", table.concat(task.parts, "/")), function(confirmed)
+		if not confirmed then
 			return
 		end
 		delete_task_buffers(task)

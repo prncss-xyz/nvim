@@ -53,25 +53,7 @@ return {
 	},
 	min_runtime = 10000,
 	open_files_do_not_replace_types = do_not_replace_types,
-	browser = (function()
-		local value
-		return function()
-			if value then
-				return value
-			end
-
-			local uname = vim.loop.os_uname()
-			local os = uname.sysname
-			if os == "Darwin" then
-				value = "open"
-			elseif os:find("Windows") or (os == "Linux" and uname.release:lower():find("microsoft")) then
-				value = 'cmd.exe /c start ""'
-			else
-				value = "xdg-open"
-			end
-			return value
-		end
-	end)(),
+	browser = require("my.browser").visit,
 	create = require("my.create").create,
 	bdelete = function(bufnr)
 		Snacks.bufdelete.delete(bufnr)
@@ -150,6 +132,16 @@ return {
 				prompt = "do this @{source}",
 			},
 			fork = false,
+		},
+		{
+			name = "do-fork",
+			source = "task.md",
+			command = {
+				tag = "agent",
+				title = "{step}",
+				prompt = "do this @{source}",
+			},
+			fork = true,
 		},
 		{
 			name = "task",

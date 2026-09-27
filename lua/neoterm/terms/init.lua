@@ -503,7 +503,7 @@ function M.browse()
 		end,
 	}, function(choice)
 		if choice then
-			vim.system({ config.browser(), choice.url }, { detach = true })
+			config.browser(choice.url)
 		end
 	end)
 end
@@ -518,12 +518,23 @@ function M.start(query)
 		vim.notify(string.format("Terminal instance %d already exists", query.instance_count), vim.log.levels.ERROR)
 		return
 	end
-	get_query_commands(query, get_filter(query), function(commands)
-		local item = any_command(commands) or without_query_options(query)
-		make_item(item, function(instance)
-			instance.term:focus()
-		end, query.instance_count)
-	end, true)
+	local function start_command()
+		get_query_commands(query, get_filter(query), function(commands)
+			local item = any_command(commands) or without_query_options(query)
+			make_item(item, function(instance)
+				instance.term:focus()
+			end, query.instance_count)
+		end, true)
+	end
+	if type(query.cwd) == "string" then
+		require("neoterm.git").ensure_worktree(query.cwd, function(ok)
+			if ok then
+				start_command()
+			end
+		end)
+	else
+		start_command()
+	end
 end
 
 function M.restart(query)

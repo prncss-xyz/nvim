@@ -5,12 +5,12 @@ local function get_open_cmd()
 	local uname = vim.loop.os_uname()
 	local os = uname.sysname
 	if os == "Darwin" then
-		return "open"
+		return { "open" }
 	end
 	if os:find("Windows") or (os == "Linux" and uname.release:lower():find("microsoft")) then
-		return 'cmd.exe /c start ""'
+		return { "cmd.exe", "/c", "start", '""' }
 	end
-	return "xdg-open"
+	return { "xdg-open" }
 end
 
 -- http://lua-users.org/wiki/StringRecipes
@@ -44,7 +44,9 @@ end
 ---@param base string
 ---@param query {[string]: string}?
 function M.visit(base, query)
-	vim.system({ get_open_cmd(), get_url(base, query) }, { detach = true }):wait()
+	local cmd = get_open_cmd()
+	table.insert(cmd, get_url(base, query))
+	vim.system(cmd, { detach = true }):wait()
 end
 
 function M.link()

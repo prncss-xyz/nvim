@@ -170,6 +170,28 @@ function M.for_file(opts)
 	return definitions
 end
 
+function M.select_for_current_file()
+	local definitions = M.for_file({
+		cwd = require("neoterm.terms.artifacts.cwd").context_dir() or vim.fn.getcwd(),
+		file = vim.api.nvim_buf_get_name(0),
+		steps = config.steps,
+	})
+	vim.ui.select(definitions, {
+		prompt = "Select Buffer Step: ",
+		format_item = function(definition)
+			return definition.name
+		end,
+	}, function(definition)
+		if definition == nil then
+			return
+		end
+		definition.key = definition.name
+		definition.display_name = definition.name
+		definition.exit_policy = definition.exit_policy or "close"
+		require("neoterm.terms").start(definition)
+	end)
+end
+
 function M.generator(opts, callback)
 	local definitions = {}
 	local cwd = opts.cwd or opts.dir or vim.fn.getcwd()

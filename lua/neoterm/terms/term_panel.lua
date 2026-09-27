@@ -444,7 +444,7 @@ local function focus_selected(state)
 	end
 	state.selected_instance = selected.instance_count
 	if selected.url then
-		vim.system({ neoterm_config.browser(), selected.url }, { detach = true })
+		neoterm_config.browser(selected.url)
 	elseif selected.item then
 		selected.item.term:focus()
 	else

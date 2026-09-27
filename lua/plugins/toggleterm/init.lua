@@ -194,29 +194,7 @@ return {
 			},
 			{
 				"oz",
-				function()
-					local definitions = require("neoterm.terms.artifacts.commands").for_file({
-						cwd = require("neoterm.terms.artifacts.cwd").context_dir() or vim.fn.getcwd(),
-						file = vim.api.nvim_buf_get_name(0),
-						steps = require("neoterm.config").steps,
-					})
-					vim.ui.select(definitions, {
-						prompt = "Select Buffer Step: ",
-						format_item = function(definition)
-							return definition.name
-						end,
-					}, function(definition)
-						if definition == nil then
-							return
-						end
-						local task = definition.builder({})
-						task.key = definition.name
-						task.display_name = definition.name
-						task.tag = definition.name
-						task.exit_policy = task.exit_policy or "close"
-						require("neoterm.terms").start(task)
-					end)
-				end,
+				require("neoterm.terms.artifacts.commands").select_for_current_file,
 				desc = "Run Buffer Step",
 			},
 			{
