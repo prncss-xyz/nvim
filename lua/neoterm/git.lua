@@ -287,33 +287,74 @@ function M.merge_to_default()
 			vim.notify("Default branch worktree not found", vim.log.levels.ERROR)
 			return
 		end
-		require("neoterm.helpers.confirm")(
-			"Merge " .. branch .. " into " .. vim.fs.basename(default_path) .. "?",
-			function(confirmed)
-				if not confirmed then
-					return
-				end
-				run({ "git", "-C", worktree_path, "rebase", vim.fs.basename(default_path) }, function(rebased, result)
-					if not rebased then
-						vim.notify("Rebase failed; resolve conflicts before merging: " .. result, vim.log.levels.ERROR)
+		local target = vim.fs.basename(default_path)
+		require("neoterm.helpers.confirm")("Merge " .. branch .. " into " .. target .. "?", function(confirmed)
+			if not confirmed then
+				return
+			end
+			local function check_clean(path, callback)
+				run({ "git", "-C", path, "status", "--porcelain" }, function(clean, status)
+					if not clean or status ~= "" then
+						vim.notify("Worktree must be clean before merging: " .. path, vim.log.levels.ERROR)
 						return
 					end
-					run({ "git", "-C", default_path, "merge", "--squash", branch }, function(merged, merge_result)
-						if not merged then
-							vim.notify("Failed to squash branch into default: " .. merge_result, vim.log.levels.ERROR)
+					callback()
+				end)
+			end
+			check_clean(worktree_path, function()
+				check_clean(default_path, function()
+					run({ "git", "-C", worktree_path, "rebase", target }, function(rebased, result)
+						if not rebased then
+							vim.notify("Rebase failed; resolve conflicts before merging: " .. result, vim.log.levels.ERROR)
 							return
 						end
-						run({ "git", "-C", default_path, "commit", "-m", "Merge " .. branch }, function(committed, commit_result)
-							if not committed then
-								vim.notify("Failed to commit squash merge: " .. commit_result, vim.log.levels.ERROR)
+						run({ "git", "-C", worktree_path, "rev-list", "--count", target .. "..HEAD" }, function(counted, count_output)
+							if not counted then
+								vim.notify("Failed to count branch commits: " .. count_output, vim.log.levels.ERROR)
 								return
 							end
-							M.remove_current_worktree(nil, true)
+							local count = tonumber(vim.trim(count_output))
+							assert(count)
+							local function fast_forward()
+								run({ "git", "-C", default_path, "merge", "--ff-only", branch }, function(merged, merge_result)
+									if not merged then
+										vim.notify("Failed to fast-forward default branch: " .. merge_result, vim.log.levels.ERROR)
+										return
+									end
+									M.remove_current_worktree(nil, true)
+								end)
+							end
+							if count <= 1 then
+								fast_forward()
+								return
+							end
+							run({ "git", "-C", worktree_path, "rev-parse", "HEAD" }, function(saved, original_head)
+								if not saved then
+									vim.notify("Failed to save branch tip: " .. original_head, vim.log.levels.ERROR)
+									return
+								end
+								local original = vim.trim(original_head)
+								run({ "git", "-C", worktree_path, "reset", "--soft", target }, function(reset, reset_result)
+									if not reset then
+										vim.notify("Failed to prepare squash: " .. reset_result, vim.log.levels.ERROR)
+										return
+									end
+									run({ "git", "-C", worktree_path, "commit", "-m", "Merge " .. branch }, function(committed, commit_result)
+										if not committed then
+											run({ "git", "-C", worktree_path, "reset", "--hard", original }, function(restored, restore_result)
+												vim.notify("Failed to commit squash: " .. commit_result .. (restored and "" or "; restoration failed: " .. restore_result), vim.log.levels.ERROR)
+											end)
+											return
+										end
+										fast_forward()
+									end)
+								end)
+							end)
 						end)
 					end)
 				end)
-			end
-		)
+			end)
+		end)
 	end)
 end
 

@@ -30,6 +30,37 @@ function M.attach_term(term, send, screen_manifest, osc)
 	local last_status = nil
 	local pending_idle = nil
 
+	local function scan_urls(bufnr, first_line, new_last_line)
+		local line_count = vim.api.nvim_buf_line_count(bufnr)
+		local width = term.window and vim.api.nvim_win_is_valid(term.window)
+			and vim.api.nvim_win_get_width(term.window) or vim.o.columns
+		local lines = vim.api.nvim_buf_get_lines(bufnr, 0, line_count, false)
+		local start = math.min(line_count, first_line + 1)
+		while start > 1 and vim.fn.strdisplaywidth(lines[start - 1]) >= width do
+			start = start - 1
+		end
+		local finish = math.min(line_count, math.max(new_last_line, first_line + 1))
+		while finish < line_count and vim.fn.strdisplaywidth(lines[finish]) >= width do
+			finish = finish + 1
+		end
+		local index = start
+		while index <= finish do
+			local joined = lines[index]
+			local last = index
+			while last < line_count and vim.fn.strdisplaywidth(lines[last]) >= width do
+				last = last + 1
+				joined = joined .. lines[last]
+			end
+			-- A full final line may still receive the rest of its URL.
+			if vim.fn.strdisplaywidth(lines[last]) < width then
+				for _, url in ipairs(get_local_urls(joined)) do
+					send({ type = "url", value = url })
+				end
+			end
+			index = last + 1
+		end
+	end
+
 	local function clear_timer()
 		if handle then
 			vim.fn.timer_stop(handle)
@@ -138,12 +169,7 @@ function M.attach_term(term, send, screen_manifest, osc)
 			send({ type = "detach" })
 		end,
 		on_lines = function(_, bufnr, _, first_line, _, new_last_line)
-			local changed_lines = vim.api.nvim_buf_get_lines(bufnr, first_line, new_last_line, false)
-			for _, line in ipairs(changed_lines) do
-				for _, url in ipairs(get_local_urls(line)) do
-					send({ type = "url", value = url })
-				end
-			end
+			scan_urls(bufnr, first_line, new_last_line)
 			schedule_status_update(bufnr)
 		end,
 	})

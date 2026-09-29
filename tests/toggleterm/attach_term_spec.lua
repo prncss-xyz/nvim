@@ -258,4 +258,30 @@ T["attach terminal"]["emits every local URL match"] = function()
 	}, child.lua_get("result"))
 end
 
+T["attach terminal"]["joins a URL wrapped by terminal width"] = function()
+	child.lua([[local events = {}
+		local callbacks
+		vim.api.nvim_buf_attach = function(_, _, opts)
+			callbacks = opts
+			return true
+		end
+		package.loaded["neoterm.terms.window"] = { is_in_view = function() return false end }
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+		vim.o.columns = 40
+		local bufnr = vim.api.nvim_create_buf(false, true)
+		require("neoterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
+			table.insert(events, event)
+		end)
+		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "http://localhost:3000/abcdefghijklmnopqr" })
+		callbacks.on_lines(nil, bufnr, 0, 0, 1, 1)
+		local before = vim.deepcopy(events)
+		vim.api.nvim_buf_set_lines(bufnr, 1, 1, false, { "stuvwxyz?key=value" })
+		callbacks.on_lines(nil, bufnr, 0, 1, 1, 2)
+		result = { before = before, after = events }
+	]])
+	assert.same({ before = {}, after = {
+		{ type = "url", value = "http://localhost:3000/abcdefghijklmnopqrstuvwxyz?key=value" },
+	} }, child.lua_get("result"))
+end
+
 return T

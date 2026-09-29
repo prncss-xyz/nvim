@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+"""Print whether a named Codex session exists for a working directory."""
+
+import argparse
+import os
+from pathlib import Path
+import sqlite3
+import sys
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("title", help="Exact Codex session name")
+    parser.add_argument("path", help="Session working directory")
+    args = parser.parse_args()
+
+    codex_home = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
+    databases = sorted(codex_home.glob("state_*.sqlite"))
+    if not databases:
+        print("no")
+        return 0
+
+    cwd = os.path.abspath(os.path.expanduser(args.path))
+    try:
+        for database in databases:
+            # Read only: do not create a database or alter Codex's state.
+            with sqlite3.connect(database.as_uri() + "?mode=ro", uri=True) as connection:
+                found = connection.execute(
+                    "SELECT 1 FROM threads WHERE name = ? AND cwd = ? LIMIT 1",
+                    (args.title, cwd),
+                ).fetchone()
+                if found:
+                    print("yes")
+                    return 0
+    except sqlite3.Error as error:
+        print(f"Could not read Codex sessions: {error}", file=sys.stderr)
+        return 1
+
+    print("no")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

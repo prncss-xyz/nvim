@@ -250,6 +250,14 @@ end
 
 local function get_query_commands(query, filter, callback, prefer_direct)
 	local cwd = type(query.cwd) == "string" and query.cwd or nil
+	if prefer_direct and query.tag == "agent" and not query.key then
+		local agent = config.agents.list[1]
+		assert(agent, "No agents configured")
+		local item = { agent = agent, key = agent, name = agent, display_name = agent, tag = "agent", cwd = cwd or vim.fn.getcwd() }
+		if filter(item) then
+			return callback({ [agent] = item })
+		end
+	end
 	get_commands(filter, cwd, callback, prefer_direct)
 end
 

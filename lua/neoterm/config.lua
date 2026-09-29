@@ -7,7 +7,7 @@ local prompt_utils = require("neoterm.helpers.prompt")
 
 return {
 	agents = {
-		list = personal({ "pi", "codex", "agy", "claude", "fx" }, { "claude" }),
+		list = personal({ "pi", "codex", "agy", "fx" }, { "claude" }),
 		query = personal(
 			--"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
 			"codex exec --model gpt-6-luna --sandbox read-only -",
