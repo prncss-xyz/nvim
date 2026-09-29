@@ -1,6 +1,8 @@
 local not_vscode = require("my.conds").not_vscode
 local conflict = require("my.parameters").domain.conflict
 local git = require("my.parameters").domain.git
+local win = require("my.parameters").domain.win
+local theme = require("my.parameters").theme
 
 return {
 	{
@@ -56,7 +58,11 @@ return {
 		cond = not_vscode,
 		cmd = "GitConflictListQf",
 		keys = {
-			{ conflict .. "l", "<cmd>GitConflictListQf<cr>", desc = "Git List Conflicts" },
+			{
+				win .. theme.hunk .. "s",
+				"<cmd>GitConflictListQf<cr>",
+				desc = "Git Conflicts Quickfix",
+			},
 		},
 	},
 }
