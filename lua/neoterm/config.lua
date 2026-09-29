@@ -7,9 +7,10 @@ local prompt_utils = require("neoterm.helpers.prompt")
 
 return {
 	agents = {
-		list = { "pi", "codex", "agy", "claude", "fx" },
+		list = personal({ "pi", "codex", "agy", "claude", "fx" }, { "claude" }),
 		query = personal(
-			"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
+			--"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
+			"codex exec --model gpt-6-luna --sandbox read-only -",
 			"claude -p --model haiku --disable-slash-commands --tools="
 		),
 		alias = {
@@ -240,7 +241,7 @@ Output ONLY the branch name, nothing else.
 		"agents",
 		"sandbox",
 	},
-	default_command = "pi",
+	default_command = personal("pi", "claude"),
 	commands = {
 		yazi = { cmd = "yazi" },
 		ddgr = {
