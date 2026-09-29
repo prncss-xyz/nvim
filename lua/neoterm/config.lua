@@ -20,7 +20,7 @@ return {
 				},
 				pi = {
 					provider = "openai-codex",
-					model = "gpt-sol-6",
+					model = "gpt-6-sol",
 					effort = "low",
 				},
 				claude = {
@@ -242,10 +242,6 @@ Output ONLY the branch name, nothing else.
 	},
 	default_command = "pi",
 	commands = {
-		pi = {
-			tag = "agent",
-			agent = "pi",
-		},
 		yazi = { cmd = "yazi" },
 		ddgr = {
 			cmd = "ddgr",

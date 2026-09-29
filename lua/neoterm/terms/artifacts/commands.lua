@@ -170,25 +170,46 @@ function M.for_file(opts)
 	return definitions
 end
 
-function M.select_for_current_file()
+function M.select_for_current_file(resume)
+	local steps = config.steps
+	if resume then
+		steps = vim.tbl_filter(function(step)
+			return type(step.command) == "table" and step.command.tag == "agent"
+		end, steps)
+	end
 	local definitions = M.for_file({
 		cwd = require("neoterm.terms.artifacts.cwd").context_dir() or vim.fn.getcwd(),
 		file = vim.api.nvim_buf_get_name(0),
-		steps = config.steps,
+		steps = steps,
 	})
+	if resume then
+		definitions = vim.tbl_filter(function(item)
+			return item.tag == "agent"
+		end, definitions)
+		for index, item in ipairs(definitions) do
+			definitions[index] = {
+				tag = item.tag,
+				title = item.title,
+				agent = item.agent,
+				resume = true,
+				name = item.name,
+				cwd = item.cwd,
+			}
+		end
+	end
 	vim.ui.select(definitions, {
-		prompt = "Select Buffer Step: ",
-		format_item = function(definition)
-			return definition.name
+		prompt = resume and "Resume Buffer Step: " or "Start Buffer Step: ",
+		format_item = function(definition_)
+			return definition_.name
 		end,
-	}, function(definition)
-		if definition == nil then
+	}, function(definition_)
+		if definition_ == nil then
 			return
 		end
-		definition.key = definition.name
-		definition.display_name = definition.name
-		definition.exit_policy = definition.exit_policy or "close"
-		require("neoterm.terms").start(definition)
+		definition_.key = definition_.name
+		definition_.display_name = definition_.name
+		definition_.exit_policy = definition_.exit_policy or "close"
+		require("neoterm.terms").start(definition_)
 	end)
 end
 

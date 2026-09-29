@@ -103,6 +103,9 @@ return {
 	},
 	builder = function(opts)
 		local cmd = { "codex" }
+		if opts.resume then
+			table.insert(cmd, "resume")
+		end
 		if opts.sandbox then
 			table.insert(cmd, "--dangerously-bypass-approvals-and-sandbox")
 		end
@@ -114,6 +117,9 @@ return {
 		end
 		if opts.effort then
 			vim.list_extend(cmd, { "--config", "model_reasoning_effort=" .. opts.effort })
+		end
+		if opts.resume then
+			table.insert(cmd, opts.title or "--last")
 		end
 		if opts.prompt then
 			table.insert(cmd, opts.prompt)

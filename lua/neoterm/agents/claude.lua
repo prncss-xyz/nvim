@@ -68,7 +68,13 @@ return {
 		if opts.sandbox then
 			table.insert(cmd, "--dangerously-skip-permissions")
 		end
-		if opts.title then
+		if opts.resume then
+			if opts.title then
+				vim.list_extend(cmd, { "--resume", opts.title })
+			else
+				table.insert(cmd, "--continue")
+			end
+		elseif opts.title then
 			vim.list_extend(cmd, { "--name", opts.title })
 		end
 		if opts.model then

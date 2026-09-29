@@ -225,6 +225,7 @@ function M.with_worktree()
 	with_worktree(vim.api.nvim_buf_get_name(0))
 end
 
+-- TODO: bind
 function M.pick_with_worktree(include_dirty)
 	local dirs = config.dirs
 	local files = vim.fs.find(function(name, path)

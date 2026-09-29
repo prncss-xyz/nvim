@@ -277,13 +277,15 @@ return {
 			{
 				"o" .. reverse("z"),
 				function()
-					require("neoterm.harness").pick_with_worktree()
+					require("neoterm.terms.artifacts.commands").select_for_current_file(true)
 				end,
 				desc = "Pick With Worktree",
 			},
 			{
 				"oz",
-				require("neoterm.terms.artifacts.commands").select_for_current_file,
+				function()
+					require("neoterm.terms.artifacts.commands").select_for_current_file()
+				end,
 				desc = "Run Buffer Step",
 			},
 			{

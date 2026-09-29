@@ -12,6 +12,12 @@ return function(opts)
 		alias and alias[agent] or {},
 		opts
 	)
+	if resolved.resume then
+		assert(resolved.title == nil or type(resolved.title) == "string" and resolved.title ~= "", "Invalid agent title")
+		resolved.provider = nil
+		resolved.model = nil
+		resolved.effort = nil
+	end
 	return vim.tbl_extend("force", {
 		cmd = config.builder(resolved),
 		auto_scroll = false,

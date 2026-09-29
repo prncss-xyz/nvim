@@ -33,6 +33,9 @@ return {
 	},
 	builder = function(opts)
 		local cmd = { "fx" }
+		if opts.resume then
+			vim.list_extend(cmd, { "--resume", opts.title or "last" })
+		end
 		if opts.provider then
 			vim.list_extend(cmd, { "--provider", opts.provider })
 		end
