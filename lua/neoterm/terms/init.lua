@@ -217,7 +217,11 @@ end
 local function normalize_query(query)
 	query = vim.tbl_extend("keep", query or {}, {})
 	query.instance_count = vim.v.count > 0 and vim.v.count or query.instance_count
-	query.cwd = query.cwd or require("neoterm.terms.artifacts.cwd").context_dir() or { vim.fn.getcwd(), vim.env.HOME }
+	if query.cwd == nil then
+		query.cwd = { vim.fn.getcwd(), vim.env.HOME, require("neoterm.terms.artifacts.cwd").context_dir() }
+	elseif type(query.cwd) == "string" then
+		query.cwd = { query.cwd }
+	end
 	return query
 end
 
@@ -249,11 +253,18 @@ local function without_query_options(query)
 end
 
 local function get_query_commands(query, filter, callback, prefer_direct)
-	local cwd = type(query.cwd) == "string" and query.cwd or nil
+	local cwd = type(query.cwd) == "table" and query.cwd[1] or nil
 	if prefer_direct and query.tag == "agent" and not query.key then
 		local agent = config.agents.list[1]
 		assert(agent, "No agents configured")
-		local item = { agent = agent, key = agent, name = agent, display_name = agent, tag = "agent", cwd = cwd or vim.fn.getcwd() }
+		local item = {
+			agent = agent,
+			key = agent,
+			name = agent,
+			display_name = agent,
+			tag = "agent",
+			cwd = cwd or vim.fn.getcwd(),
+		}
 		if filter(item) then
 			return callback({ [agent] = item })
 		end
@@ -310,7 +321,11 @@ local function with_query(query, cb)
 		if item then
 			make_item(item, created, query.instance_count)
 		else
-			make_item(without_query_options(query), created, query.instance_count)
+			make_item(
+				vim.tbl_extend("force", without_query_options(query), { cwd = query.cwd[1] }),
+				created,
+				query.instance_count
+			)
 		end
 	end, true)
 end
@@ -469,7 +484,8 @@ function M.put(query, arg, opts)
 	if opts and opts.new then
 		query = normalize_query(query)
 		return get_query_commands(query, get_filter(query), function(commands)
-			local item = any_command(commands) or without_query_options(query)
+			local item = any_command(commands)
+				or vim.tbl_extend("force", without_query_options(query), { cwd = query.cwd[1] })
 			make_item(item, function(instance)
 				put(instance, invocation, arg)
 			end, query.instance_count)
@@ -528,14 +544,15 @@ function M.start(query)
 	end
 	local function start_command()
 		get_query_commands(query, get_filter(query), function(commands)
-			local item = any_command(commands) or without_query_options(query)
+			local item = any_command(commands)
+				or vim.tbl_extend("force", without_query_options(query), { cwd = query.cwd[1] })
 			make_item(item, function(instance)
 				instance.term:focus()
 			end, query.instance_count)
 		end, true)
 	end
-	if type(query.cwd) == "string" then
-		require("neoterm.git").ensure_worktree(query.cwd, function(ok)
+	if query.cwd[1] then
+		require("neoterm.git").ensure_worktree(query.cwd[1], function(ok)
 			if ok then
 				start_command()
 			end
