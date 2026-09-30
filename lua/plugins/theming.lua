@@ -124,12 +124,12 @@ return {
 		"e-ink-colorscheme/e-ink.nvim",
 		commit = "c90bf52",
 	}),
-  -- dark-only
+	-- dark-only
 	colorscheme("luna", {
 		"WTFox/luna.nvim",
 		commit = "b6f25f10012df3f29ca56e78d40e53a392e7f98f",
 	}),
-  -- dark-only
+	-- dark-only
 	colorscheme("selenized", {
 		"calind/selenized.nvim",
 		commit = "a43e34d",
@@ -140,7 +140,7 @@ return {
 	colorscheme("gruvbox", {
 		"ellisonleao/gruvbox.nvim",
 	}),
-	colorscheme({ "solarized", "solarized-flat", "solarized-high", "solarized-low" }, {
+	colorscheme({ "solarized" }, {
 		"ishan9299/nvim-solarized-lua",
 		commit = "d69a263",
 	}),

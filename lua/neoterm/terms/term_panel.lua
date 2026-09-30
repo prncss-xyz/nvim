@@ -165,7 +165,7 @@ local function create_rows(items, format, git_statuses, width)
 	end
 
 	local rows = {}
-	local function append_items(node, depth)
+	local function append_items(node)
 		table.sort(node.items, function(a, b)
 			local a_key = a.key or ""
 			local b_key = b.key or ""
@@ -181,11 +181,10 @@ local function create_rows(items, format, git_statuses, width)
 			elseif item.changed then
 				highlight = "DiagnosticWarn"
 			end
-			local indent = string.rep("  ", depth)
 			table.insert(rows, {
 				instance_count = item.instance_count,
 				item = item,
-				text = indent .. format(item),
+				text = format(item),
 				status = item.status,
 				highlight = highlight,
 			})
@@ -193,7 +192,7 @@ local function create_rows(items, format, git_statuses, width)
 				table.insert(rows, {
 					instance_count = item.instance_count,
 					item = item,
-					text = indent .. item.title,
+					text = item.title,
 					highlight = "Comment",
 					title = true,
 				})
@@ -202,7 +201,7 @@ local function create_rows(items, format, git_statuses, width)
 				table.insert(rows, {
 					instance_count = item.instance_count,
 					item = item,
-					text = "  " .. url_icon(url) .. url,
+					text = url_icon(url) .. url,
 					highlight = "Comment",
 					url = url,
 				})
@@ -234,7 +233,7 @@ local function create_rows(items, format, git_statuses, width)
 			local child = node.children[name]
 			append_directory(child, depth, child.name)
 			append(child, depth + 1)
-			append_items(child, depth)
+			append_items(child)
 		end
 	end
 
@@ -252,11 +251,11 @@ local function create_rows(items, format, git_statuses, width)
 		local parent = vim.fs.dirname(common.cwd)
 		append_directory({ cwd = parent }, 0, display_path(parent))
 		append_directory(common, 1, common.name)
-		append_items(common, 1)
+		append_items(common)
 	elseif common ~= root then
 		append_directory(common, 0, display_path(common.cwd))
 		append(common, 1)
-		append_items(common, 0)
+		append_items(common)
 	else
 		append(root, 0)
 	end
@@ -367,7 +366,8 @@ local function render(state)
 		return
 	end
 
-	local instance_count = selected_instance(state)
+	local instance_count = state.focused_instance or selected_instance(state)
+	state.focused_instance = nil
 	local items = state.deps.items(state.query)
 	local git_statuses = {}
 	for dir, cached in pairs(state.git_statuses) do
@@ -422,7 +422,10 @@ local function render(state)
 			break
 		end
 	end
-	vim.api.nvim_win_set_cursor(state.win, { math.min(target, #lines), 0 })
+	target = math.min(target, #lines)
+	if vim.api.nvim_win_get_cursor(state.win)[1] ~= target then
+		vim.api.nvim_win_set_cursor(state.win, { target, 0 })
+	end
 end
 
 refresh = function(state)
@@ -564,7 +567,10 @@ local function open(query, history, subscribe, create_in_dir)
 		end)
 	)
 
-	state.unsubscribe = deps.subscribe(function(event)
+	state.unsubscribe = deps.subscribe(function(event, item)
+		if event.type == "focus" and item then
+			state.focused_instance = item.instance_count
+		end
 		if
 			event.type == "create"
 			or event.type == "focus"
