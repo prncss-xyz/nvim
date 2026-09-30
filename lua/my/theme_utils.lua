@@ -1,4 +1,5 @@
 local M = {}
+local configured_schemes = {}
 
 local theme_file = vim.fn.stdpath("state") .. "theme.json"
 local function file_exists(path)
@@ -35,6 +36,36 @@ function M.save_theme()
 	else
 		print("error!")
 	end
+end
+
+function M.register_colorschemes(names)
+	if type(names) == "string" then
+		configured_schemes[names] = true
+	elseif names.dark then
+		local dark = type(names.dark) == "string" and { names.dark } or names.dark
+		local light = type(names.light) == "string" and { names.light } or names.light
+		for index, name in ipairs(dark) do
+			configured_schemes[name] = "dark"
+			configured_schemes[light[index]] = "light"
+		end
+	else
+		for _, name in ipairs(names) do
+			configured_schemes[name] = true
+		end
+	end
+end
+
+function M.pick_colorscheme()
+	local background = vim.o.background
+	Snacks.picker.colorschemes({
+		finder = function()
+			local items = require("snacks.picker.source.vim").colorschemes()
+			return vim.tbl_filter(function(item)
+				local variant = configured_schemes[item.text]
+				return variant == true or variant == background
+			end, items)
+		end,
+	})
 end
 
 return M

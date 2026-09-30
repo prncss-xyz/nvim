@@ -268,11 +268,18 @@ return {
 				desc = "Browse Terminal",
 			},
 			{
+				"o" .. reverse("w"),
+				function()
+					require("neoterm.terms").run_or_raise(false)
+				end,
+				desc = "Run Command",
+			},
+			{
 				"ow",
 				function()
-					require("neoterm.terms").run_or_raise()
+					require("neoterm.terms").run_or_raise(true)
 				end,
-				desc = "Select Command",
+				desc = "Run or Raise Command",
 			},
 			{
 				"o" .. reverse("z"),

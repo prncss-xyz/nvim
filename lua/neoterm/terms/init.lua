@@ -332,9 +332,13 @@ end
 
 local local_format_item = format_item(false)
 
-function M.run_or_raise(query)
+function M.run_or_raise(raise, query)
+	if type(raise) ~= "boolean" then
+		query = raise
+		raise = true
+	end
 	query = normalize_query(query)
-	if query.instance_count then
+	if raise and query.instance_count then
 		local instance = history.find(get_filter({ instance_count = query.instance_count }))
 		if instance then
 			return instance.term:focus()
@@ -342,18 +346,27 @@ function M.run_or_raise(query)
 	end
 	local filter = get_filter(query)
 	local selected = history.find(filter)
-	if selected and selected.artifact then
+	if raise and selected and selected.artifact then
 		return selected.term:focus()
 	end
 	get_query_commands(query, filter, function(items)
-		local choices = history.filter(filter)
-		local instance_count = available_instance(query.instance_count)
+		local running = history.filter(filter)
+		local choices = raise and running or {}
+		local requested_instance = query.instance_count
+		if not raise and requested_instance and instance_owners[requested_instance] then
+			requested_instance = nil
+		end
+		local instance_count = available_instance(requested_instance)
 		for _, item in pairs(items) do
 			item.instance_count = instance_count
-			local res = history.find(function(i)
-				return i.instance_count == item.instance_count and i.key == item.key
-			end)
-			if not res then
+			local already_running = false
+			for _, instance in ipairs(running) do
+				if instance.key == item.key and instance.cwd == item.cwd then
+					already_running = true
+					break
+				end
+			end
+			if not raise or not already_running then
 				table.insert(choices, item)
 			end
 		end
@@ -370,7 +383,7 @@ function M.run_or_raise(query)
 			end
 			make_item(item, function(instance)
 				instance.term:focus()
-			end, query.instance_count)
+			end, requested_instance)
 		end)
 	end)
 end

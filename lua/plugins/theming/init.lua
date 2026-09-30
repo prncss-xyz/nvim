@@ -2,6 +2,7 @@ local not_vscode = require("my.conds").not_vscode
 local domain = require("my.parameters").domain
 
 local theme = require("my.theme_utils").load_theme()
+local theme_utils = require("my.theme_utils")
 local paired_schemes = {}
 local switching = false
 
@@ -47,6 +48,7 @@ local function find(value, tbl)
 end
 
 local function colorscheme(names, config)
+	theme_utils.register_colorschemes(names)
 	if names.dark then
 		local dark = as_list(names.dark)
 		local light = as_list(names.light)
@@ -82,33 +84,6 @@ local function colorscheme(names, config)
 		end
 	end
 	return config
-end
-
-local builtin_colorschemes = {
-	"habamax",
-	"lunaperche",
-	"quiet",
-	"vim",
-	"blue",
-	"darkblue",
-	"delek",
-	"desert",
-	"elflord",
-	"evening",
-	"industry",
-	"koehler",
-	"morning",
-	"murphy",
-	"pelf",
-	"ron",
-	"shine",
-	"slate",
-	"torte",
-	"zellner",
-}
-
-if find(theme.colors_name, builtin_colorschemes) then
-	vim.cmd.colorscheme(theme.colors_name)
 end
 
 return {

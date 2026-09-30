@@ -238,7 +238,7 @@ return {
 			{
 				domain.appearance .. pick,
 				function()
-					Snacks.picker.colorschemes()
+					require("my.theme_utils").pick_colorscheme()
 				end,
 				desc = "Pick Colorscheme",
 			},
