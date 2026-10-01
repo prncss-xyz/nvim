@@ -253,6 +253,7 @@ Output ONLY the branch name, nothing else.
 	middlewares = {
 		"agents",
 		"sandbox",
+		"varlock",
 	},
 	default_command = agent_list[1],
 	commands = {

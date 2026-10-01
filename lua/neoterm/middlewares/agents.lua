@@ -6,9 +6,10 @@ return function(opts)
 	local agent = opts.agent or settings.list[1]
 	local config = require("neoterm.agents." .. agent)
 	local alias = opts.alias and assert(settings.alias[opts.alias], "Unknown agent alias: " .. opts.alias)
+	local sandbox = require("my.conds").personal("bwrap")
 	local resolved = vim.tbl_extend(
 		"force",
-		{ agent = agent, sandbox = require("my.conds").personal("bwrap") },
+		{ agent = agent, sandbox = sandbox, varlock = sandbox ~= nil },
 		alias and alias[agent] or {},
 		opts
 	)
