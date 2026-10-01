@@ -56,7 +56,8 @@ return {
 	},
 	min_runtime = 10000,
 	open_files_do_not_replace_types = do_not_replace_types,
-	browser = require("my.browser").visit,
+	browser = vim.ui.open,
+	-- browser = require("my.browser").visit,
 	create = require("my.create").create,
 	bdelete = function(bufnr)
 		Snacks.bufdelete.delete(bufnr)

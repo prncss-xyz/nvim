@@ -218,7 +218,11 @@ local function normalize_query(query)
 	query = vim.tbl_extend("keep", query or {}, {})
 	query.instance_count = vim.v.count > 0 and vim.v.count or query.instance_count
 	if query.cwd == nil then
-		query.cwd = { vim.fn.getcwd(), vim.env.HOME, require("neoterm.terms.artifacts.cwd").context_dir() }
+		query.cwd = { vim.fn.getcwd(), vim.env.HOME }
+		local context_dir = require("neoterm.terms.artifacts.cwd").context_dir()
+		if context_dir then
+			table.insert(query.cwd, 1, context_dir)
+		end
 	elseif type(query.cwd) == "string" then
 		query.cwd = { query.cwd }
 	end
