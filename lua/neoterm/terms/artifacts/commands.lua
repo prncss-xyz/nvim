@@ -44,11 +44,12 @@ local function quoted_path(path)
 	return '"' .. path .. '"'
 end
 
-local function resolve_command(command, source, target, step)
+local function resolve_command(command, source, target, step, variant)
 	local vars = {
 		source = quoted_path(source),
 		target = target and quoted_path(target) or nil,
 		step = step,
+		variant = variant,
 	}
 	local function resolve(value)
 		if type(value) == "function" then
@@ -72,9 +73,10 @@ local function resolve_command(command, source, target, step)
 	return resolve(command)
 end
 
-local function build_step(step, source, target, project, branch, current_cwd, name)
+local function build_step(step, source, target, project, branch, current_cwd, name, variant)
 	local cwd = step.fork == true and vim.fs.joinpath(dirs.projects, project, branch) or current_cwd
-	local result = resolve_command(step.command, vim.fs.abspath(source), target and vim.fs.abspath(target) or nil, name)
+	local result =
+		resolve_command(step.command, vim.fs.abspath(source), target and vim.fs.abspath(target) or nil, name, variant)
 	if type(result) == "string" then
 		result = { cmd = result }
 	end
@@ -93,6 +95,13 @@ local function validate_step(step)
 		type(step.command) == "string" or type(step.command) == "table" or type(step.command) == "function",
 		string.format("Step %s command must be a string, table, or function", step.name)
 	)
+	assert(
+		step.variants == nil or type(step.variants) == "table",
+		string.format("Step %s variants must be a table", step.name)
+	)
+	for _, variant in ipairs(step.variants or {}) do
+		assert(type(variant) == "string", string.format("Step %s variants must be strings", step.name))
+	end
 end
 
 local function source_details(source, step)
@@ -112,15 +121,19 @@ local function source_details(source, step)
 	return project, branch, identifier
 end
 
-local function definition(step, source, cwd)
+local function definition(step, source, cwd, variant)
 	local project, branch, identifier = source_details(source, step)
 	local target = step.target and vim.fs.joinpath(vim.fs.dirname(source), step.target) or nil
-	local name_parts = { step.name, branch }
+	local name_parts = { step.name }
+	if variant then
+		table.insert(name_parts, variant)
+	end
+	table.insert(name_parts, branch)
 	if vim.fs.basename(source) == step.source or identifier ~= branch then
 		table.insert(name_parts, identifier)
 	end
 	local name = table.concat(name_parts, ":")
-	local task = build_step(step, source, target, project, branch, cwd, name)
+	local task = build_step(step, source, target, project, branch, cwd, name, variant)
 	task.name = name
 	return task
 end
@@ -173,7 +186,13 @@ function M.for_file(opts)
 	for _, step in ipairs(opts.steps or {}) do
 		validate_step(step)
 		if step_matches_source(step, source) and is_available(step, source, checkout_branch) then
-			table.insert(definitions, definition(step, source, cwd))
+			if step.variants then
+				for _, variant in ipairs(step.variants) do
+					table.insert(definitions, definition(step, source, cwd, variant))
+				end
+			else
+				table.insert(definitions, definition(step, source, cwd))
+			end
 		end
 	end
 	add_task_executables(
