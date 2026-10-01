@@ -3,6 +3,17 @@ local dirs = config.dirs
 
 local M = {}
 
+local function apply_template(t, vars)
+	if type(t) == "function" then
+		return t(vars)
+	end
+	return (
+		string.gsub(t, "{(.-)}", function(key)
+			return assert(vars[key], "unknown template variable: " .. key)
+		end)
+	)
+end
+
 local function current_branch(cwd)
 	local branch = vim.trim(vim.fn.system({ "git", "-C", cwd, "branch", "--show-current" }))
 	if vim.v.shell_error == 0 and branch ~= "" then
@@ -34,9 +45,15 @@ local function quoted_path(path)
 end
 
 local function resolve_command(command, source, target, step)
-	local resolved_source = quoted_path(source)
-	local resolved_target = target and quoted_path(target) or nil
+	local vars = {
+		source = quoted_path(source),
+		target = target and quoted_path(target) or nil,
+		step = step,
+	}
 	local function resolve(value)
+		if type(value) == "function" then
+			return resolve(apply_template(value, vars))
+		end
 		if type(value) == "table" then
 			local result = {}
 			for key, item in pairs(value) do
@@ -49,9 +66,8 @@ local function resolve_command(command, source, target, step)
 		end
 		if target == nil then
 			assert(not value:find("{target}", 1, true), "Step command references {target} without defining target")
-			return (value:gsub("{source}", resolved_source):gsub("{step}", step))
 		end
-		return (value:gsub("{source}", resolved_source):gsub("{target}", resolved_target):gsub("{step}", step))
+		return apply_template(value, vars)
 	end
 	return resolve(command)
 end
@@ -74,8 +90,8 @@ local function validate_step(step)
 		string.format("Step %s target must be a string", step.name)
 	)
 	assert(
-		type(step.command) == "string" or type(step.command) == "table",
-		string.format("Step %s command must be a string or table", step.name)
+		type(step.command) == "string" or type(step.command) == "table" or type(step.command) == "function",
+		string.format("Step %s command must be a string, table, or function", step.name)
 	)
 end
 

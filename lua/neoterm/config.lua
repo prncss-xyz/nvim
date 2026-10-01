@@ -127,6 +127,16 @@ return {
 	},
 	steps = {
 		{
+			name = "var",
+			source = "task.md",
+			variants = { "a", "b" },
+			command = {
+				cmd = "echo {variant}",
+				exit_policy = "keep",
+			},
+			fork = false,
+		},
+		{
 			name = "do",
 			source = "task.md",
 			command = {
