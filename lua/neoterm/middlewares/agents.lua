@@ -13,7 +13,10 @@ return function(opts)
 		opts
 	)
 	if resolved.resume then
-		assert(resolved.title == nil or type(resolved.title) == "string" and resolved.title ~= "", "Invalid agent title")
+		assert(
+			resolved.title == nil or type(resolved.title) == "string" and resolved.title ~= "",
+			"Invalid agent title"
+		)
 		resolved.provider = nil
 		resolved.model = nil
 		resolved.effort = nil
@@ -24,5 +27,6 @@ return function(opts)
 		writable_dirs = config.writable_dirs,
 		writable_files = config.writable_files,
 		screen_manifest = config.screen_manifest,
+		exit_policy = "keep",
 	}, resolved)
 end
