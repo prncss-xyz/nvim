@@ -3,11 +3,16 @@ local original_jobstart = vim.fn.jobstart
 local original_jobwait = vim.fn.jobwait
 local original_proxy_schema = package.loaded["neoterm.proxy_schema"]
 local proxy_starts = 0
+local status_lookups = 0
 local proxy_dir = vim.fs.joinpath(vim.fn.stdpath("cache"), "neoterm")
 local proxy_schema = vim.fs.joinpath(proxy_dir, "env.agent.schema")
+local cert_dir = vim.fn.tempname()
+local cert_file = vim.fs.joinpath(cert_dir, "ca-cert.pem")
 local T = MiniTest.new_set({
 	hooks = {
 		pre_once = function()
+			vim.fn.mkdir(cert_dir, "p")
+			vim.fn.writefile({ "test certificate" }, cert_file)
 			package.loaded["neoterm.proxy_schema"] = {
 				ensure = function(_, target)
 					return target
@@ -15,6 +20,7 @@ local T = MiniTest.new_set({
 			}
 			vim.system = function(cmd, opts)
 				if cmd[1] == "varlock" then
+					status_lookups = status_lookups + 1
 					return {
 						wait = function()
 							return {
@@ -22,9 +28,10 @@ local T = MiniTest.new_set({
 								stdout = proxy_starts == 0 and "[]" or vim.json.encode({
 									{
 										id = "agent-proxy",
+										ownerPid = vim.fn.getpid(),
 										cwd = proxy_dir,
 										entryPaths = { proxy_schema },
-										env = { NODE_EXTRA_CA_CERTS = "/tmp/varlock-proxy-certs-test/ca-cert.pem" },
+										env = { NODE_EXTRA_CA_CERTS = cert_file },
 									},
 								}),
 							}
@@ -49,6 +56,7 @@ local T = MiniTest.new_set({
 			end
 		end,
 		post_once = function()
+			vim.fn.delete(cert_dir, "rf")
 			package.loaded["neoterm.proxy_schema"] = original_proxy_schema
 			vim.system = original_system
 			vim.fn.jobstart = original_jobstart
@@ -94,10 +102,10 @@ T["bwrap sandbox"] = function()
 		"--tmpfs",
 		"/tmp",
 		"--dir",
-		"/tmp/varlock-proxy-certs-test",
+		cert_dir,
 		"--ro-bind",
-		"/tmp/varlock-proxy-certs-test",
-		"/tmp/varlock-proxy-certs-test",
+		cert_dir,
+		cert_dir,
 		"--bind",
 		"/tmp/artifacts",
 		"/tmp/artifacts",
@@ -165,6 +173,31 @@ T["pi attaches to the shared proxy"] = function()
 		vim.list_slice(item.cmd, 1, 9)
 	)
 	assert.same(starts, proxy_starts)
+	local after_first = status_lookups
+	item = require("neoterm.middlewares.sandbox")({
+		sandbox = "bwrap",
+		agent = "pi",
+		cwd = "/tmp/project",
+		artifacts_dir = "/tmp/artifacts",
+		cmd = { "pi" },
+	})
+	assert.same(after_first, status_lookups)
+end
+
+T["missing proxy certificate refreshes the cached session"] = function()
+	local sandbox = require("neoterm.middlewares.sandbox")
+	local opts = {
+		sandbox = "bwrap",
+		cwd = "/tmp/project",
+		artifacts_dir = "/tmp/artifacts",
+		cmd = { "true" },
+	}
+	sandbox(vim.deepcopy(opts))
+	local lookups = status_lookups
+	vim.fn.delete(cert_file)
+	sandbox(vim.deepcopy(opts))
+	assert.same(lookups + 1, status_lookups)
+	vim.fn.writefile({ "test certificate" }, cert_file)
 end
 
 T["bwrap sandbox binds linked worktree metadata"] = function()

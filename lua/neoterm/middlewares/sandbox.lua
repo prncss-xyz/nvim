@@ -9,6 +9,15 @@ local source_schema = vim.fs.joinpath(vim.env.HOME, ".config/varlock/env.agent.s
 local proxy_schema = vim.fs.joinpath(vim.fn.stdpath("cache"), "neoterm", "env.agent.schema")
 local proxy_dir = vim.fs.dirname(proxy_schema)
 local proxy_job
+local cached_session
+
+local function session_alive(session)
+	local cert = session.env and session.env.NODE_EXTRA_CA_CERTS
+	return type(session.ownerPid) == "number"
+		and vim.uv.kill(session.ownerPid, 0) ~= nil
+		and cert ~= nil
+		and vim.uv.fs_stat(cert) ~= nil
+end
 
 local function find_proxy_session()
 	local result = vim.system({ "varlock", "proxy", "status", "--format", "json" }, { text = true }):wait()
@@ -28,8 +37,13 @@ end
 
 local function ensure_proxy()
 	require("neoterm.proxy_schema").ensure(source_schema, proxy_schema)
+	if cached_session and session_alive(cached_session) then
+		return cached_session
+	end
+	cached_session = nil
 	local session = find_proxy_session()
 	if session then
+		cached_session = session
 		return session
 	end
 	if not proxy_job or vim.fn.jobwait({ proxy_job }, 0)[1] ~= -1 then
@@ -40,7 +54,8 @@ local function ensure_proxy()
 		session = find_proxy_session()
 		return session ~= nil or vim.fn.jobwait({ proxy_job }, 0)[1] ~= -1
 	end, 100)
-	return assert(session, "Shared varlock proxy did not start")
+	cached_session = assert(session, "Shared varlock proxy did not start")
+	return cached_session
 end
 
 vim.api.nvim_create_autocmd("ExitPre", {
