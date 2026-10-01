@@ -5,9 +5,11 @@ local do_not_replace_types = require("my.parameters").open_files_do_not_replace_
 local notify = require("my.notify")
 local prompt_utils = require("neoterm.helpers.prompt")
 
+local agent_list = personal({ "codex", "pi", "agy", "fx" }, { "claude" })
+
 return {
 	agents = {
-		list = personal({ "codex", "pi", "agy", "fx" }, { "claude" }),
+		list = agent_list,
 		query = personal(
 			--"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
 			"codex exec --model gpt-6-luna --sandbox read-only -",
@@ -241,7 +243,7 @@ Output ONLY the branch name, nothing else.
 		"agents",
 		"sandbox",
 	},
-	default_command = personal("pi", "claude"),
+	default_command = agent_list[1],
 	commands = {
 		yazi = { cmd = "yazi" },
 		ddgr = {

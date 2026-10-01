@@ -27,6 +27,5 @@ return function(opts)
 		writable_dirs = config.writable_dirs,
 		writable_files = config.writable_files,
 		screen_manifest = config.screen_manifest,
-		exit_policy = "keep",
 	}, resolved)
 end
