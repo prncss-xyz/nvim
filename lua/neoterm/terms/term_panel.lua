@@ -103,17 +103,6 @@ local function close(state)
 	end
 end
 
-local function display_path(dir)
-	local home = vim.env.HOME
-	if dir == home then
-		return "~"
-	end
-	if home and dir:sub(1, #home + 1) == home .. "/" then
-		return "~/" .. dir:sub(#home + 2)
-	end
-	return dir
-end
-
 local function path_steps(dir)
 	local home = vim.env.HOME
 	local root = dir:sub(1, 1) == "/" and "/" or nil
@@ -208,10 +197,9 @@ local function create_rows(items, format, git_statuses, width)
 			end
 		end
 	end
-	local function append_directory(node, depth, name)
-		local indent = string.rep("  ", depth)
+	local function append_directory(node)
 		local icon = "󰉋 "
-		local text = indent .. icon .. name
+		local text = icon .. node.cwd
 		local git_status = git_statuses[node.cwd]
 		if git_status and git_status ~= "" then
 			local padding = math.max(1, width - vim.fn.strdisplaywidth(text) - vim.fn.strdisplaywidth(git_status))
@@ -221,44 +209,24 @@ local function create_rows(items, format, git_statuses, width)
 			cwd = node.cwd,
 			text = text,
 			highlights = {
-				{ start_col = #indent, end_col = #indent + #icon, group = "NeoTreeDirectoryIcon" },
-				{ start_col = #indent + #icon, end_col = -1, group = "NeoTreeDirectoryName" },
+				{ start_col = 0, end_col = #icon, group = "NeoTreeDirectoryIcon" },
+				{ start_col = #icon, end_col = -1, group = "NeoTreeDirectoryName" },
 			},
 		})
 	end
-	local function append(node, depth)
+	local function append(node)
+		if #node.items > 0 then
+			append_directory(node)
+			append_items(node)
+		end
 		local names = vim.tbl_keys(node.children)
 		table.sort(names)
 		for _, name in ipairs(names) do
 			local child = node.children[name]
-			append_directory(child, depth, child.name)
-			append(child, depth + 1)
-			append_items(child)
+			append(child)
 		end
 	end
-
-	local common = root
-	while #common.items == 0 do
-		local names = vim.tbl_keys(common.children)
-		if #names ~= 1 then
-			break
-		end
-		common = common.children[names[1]]
-	end
-	local only_directory = common ~= root and #common.items == #items and vim.tbl_isempty(common.children)
-	local home = vim.env.HOME and vim.fs.normalize(vim.env.HOME) or nil
-	if only_directory and common.cwd ~= home and common.cwd ~= "/" then
-		local parent = vim.fs.dirname(common.cwd)
-		append_directory({ cwd = parent }, 0, display_path(parent))
-		append_directory(common, 1, common.name)
-		append_items(common)
-	elseif common ~= root then
-		append_directory(common, 0, display_path(common.cwd))
-		append(common, 1)
-		append_items(common)
-	else
-		append(root, 0)
-	end
+	append(root)
 
 	local status_column = 0
 	for _, row in ipairs(rows) do

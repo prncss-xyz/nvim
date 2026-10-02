@@ -30,4 +30,15 @@ T["proxy schema routes OpenCode and preserves other key behavior"] = function()
 	vim.fn.delete(root, "rf")
 end
 
+T["proxy schema accepts schemas without OpenCode"] = function()
+	local root = vim.fn.tempname()
+	local source = root .. "/source.env.schema"
+	local target = root .. "/state/proxy.env.schema"
+	vim.fn.mkdir(root, "p")
+	vim.fn.writefile({ "# @sensitive", 'OTHER_KEY="value"' }, source)
+	require("neoterm.proxy_schema").ensure(source, target)
+	assert.same({ "# @sensitive @proxy=passthrough", 'OTHER_KEY="value"' }, vim.fn.readfile(target))
+	vim.fn.delete(root, "rf")
+end
+
 return T

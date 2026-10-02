@@ -2,54 +2,61 @@ local original_system = vim.system
 local original_jobstart = vim.fn.jobstart
 local original_jobwait = vim.fn.jobwait
 local original_proxy_schema = package.loaded["neoterm.proxy_schema"]
-local proxy_starts = 0
-local status_lookups = 0
-local proxy_dir = vim.fs.joinpath(vim.fn.stdpath("cache"), "neoterm")
-local proxy_schema = vim.fs.joinpath(proxy_dir, "env.agent.schema")
 local cert_dir = vim.fn.tempname()
 local cert_file = vim.fs.joinpath(cert_dir, "ca-cert.pem")
+local sources = { "/tmp/agent.env.schema", "/tmp/other.env.schema" }
+local starts = {}
+local lookups = 0
+local ensured = {}
+local function proxy_paths(source)
+	local dir = vim.fs.joinpath(vim.fn.stdpath("cache"), "neoterm", "varlock", vim.fn.sha256(source))
+	return dir, vim.fs.joinpath(dir, vim.fs.basename(source))
+end
 local T = MiniTest.new_set({
 	hooks = {
 		pre_once = function()
 			vim.fn.mkdir(cert_dir, "p")
 			vim.fn.writefile({ "test certificate" }, cert_file)
 			package.loaded["neoterm.proxy_schema"] = {
-				ensure = function(_, target)
+				ensure = function(source, target)
+					ensured[source] = target
 					return target
 				end,
 			}
 			vim.system = function(cmd, opts)
 				if cmd[1] == "varlock" then
-					status_lookups = status_lookups + 1
-					return {
-						wait = function()
-							return {
-								code = 0,
-								stdout = proxy_starts == 0 and "[]" or vim.json.encode({
-									{
-										id = "agent-proxy",
-										ownerPid = vim.fn.getpid(),
-										cwd = proxy_dir,
-										entryPaths = { proxy_schema },
-										env = { NODE_EXTRA_CA_CERTS = cert_file },
-									},
-								}),
-							}
-						end,
-					}
+					lookups = lookups + 1
+					local sessions = {}
+					for source, id in pairs(starts) do
+						local dir, path = proxy_paths(source)
+						table.insert(sessions, {
+							id = id,
+							ownerPid = vim.fn.getpid(),
+							cwd = dir,
+							entryPaths = { path },
+							env = { NODE_EXTRA_CA_CERTS = cert_file },
+						})
+					end
+					return { wait = function() return { code = 0, stdout = vim.json.encode(sessions) } end }
 				end
 				return original_system(cmd, opts)
 			end
 			vim.fn.jobstart = function(cmd, opts)
 				if cmd[1] == "varlock" then
-					assert.same(proxy_dir, opts.cwd)
-					proxy_starts = proxy_starts + 1
-					return 123456
+					for _, source in ipairs(sources) do
+						local dir, path = proxy_paths(source)
+						if cmd[5] == path then
+							assert.same(dir, opts.cwd)
+							starts[source] = "proxy-" .. vim.fn.sha256(source):sub(1, 8)
+							return 123456 + vim.tbl_count(starts)
+						end
+					end
+					error("Unexpected proxy schema: " .. tostring(cmd[5]))
 				end
 				return original_jobstart(cmd, opts)
 			end
 			vim.fn.jobwait = function(jobs, timeout)
-				if jobs[1] == 123456 then
+				if jobs[1] >= 123457 and jobs[1] <= 123458 then
 					return { -1 }
 				end
 				return original_jobwait(jobs, timeout)
@@ -65,139 +72,47 @@ local T = MiniTest.new_set({
 	},
 })
 
-T["bwrap sandbox"] = function()
-	local sandbox = require("neoterm.middlewares.sandbox")
-	local writable_file = vim.fn.tempname()
-	local item = sandbox({
+local function wrapped(source)
+	local item = {
 		sandbox = "bwrap",
-		agent = "codex",
+		varlock = source,
 		cwd = "/tmp/project",
 		artifacts_dir = "/tmp/artifacts",
-		writable_dirs = { "/tmp/pi-agent" },
-		writable_files = { writable_file },
 		cmd = { "printf", "%s", "hello world" },
-	})
-
-	assert.same({
-		"varlock",
-		"proxy",
-		"run",
-		"--session",
-		"agent-proxy",
-		"--inject",
-		"vars",
-		"--",
-		"bwrap",
-		"--die-with-parent",
-		"--new-session",
-		"--unshare-all",
-		"--share-net",
-		"--ro-bind",
-		"/",
-		"/",
-		"--dev",
-		"/dev",
-		"--proc",
-		"/proc",
-		"--tmpfs",
-		"/tmp",
-		"--dir",
-		cert_dir,
-		"--ro-bind",
-		cert_dir,
-		cert_dir,
-		"--bind",
-		"/tmp/artifacts",
-		"/tmp/artifacts",
-		"--bind",
-		vim.fs.abspath("~/.local/share/pnpm"),
-		vim.fs.abspath("~/.local/share/pnpm"),
-		"--bind",
-		vim.fs.abspath("~/.local/state/pnpm"),
-		vim.fs.abspath("~/.local/state/pnpm"),
-		"--bind",
-		vim.fs.abspath(vim.env.XDG_STATE_HOME or vim.fs.joinpath(vim.env.HOME, ".local/state")) .. "/nvim",
-		vim.fs.abspath(vim.env.XDG_STATE_HOME or vim.fs.joinpath(vim.env.HOME, ".local/state")) .. "/nvim",
-		"--bind",
-		vim.fs.abspath("~/.cache/pnpm"),
-		vim.fs.abspath("~/.cache/pnpm"),
-		"--bind",
-		"/tmp/pi-agent",
-		"/tmp/pi-agent",
-		"--bind-try",
-		writable_file,
-		writable_file,
-		"--bind",
-		"/tmp/project",
-		"/tmp/project",
-		"--chdir",
-		"/tmp/project",
-		"--",
-		"printf",
-		"%s",
-		"hello world",
-	}, item.cmd)
-	assert.same(1, proxy_starts)
-	assert(vim.fn.isdirectory(writable_file) == 0)
-	assert(item.sandbox == nil)
-end
-
-T["bwrap sandbox preserves shell commands"] = function()
-	local sandbox = require("neoterm.middlewares.sandbox")
-	local item = sandbox({
-		sandbox = "bwrap",
-		agent = "codex",
-		cwd = "/tmp/project",
-		artifacts_dir = "/tmp/artifacts",
-		writable_dirs = { "/tmp/pi-agent" },
-		cmd = "printf 'hello world'",
-	})
-
-	assert.same(
-		{ vim.o.shell, vim.o.shellcmdflag, "printf 'hello world'" },
-		vim.list_slice(item.cmd, #item.cmd - 2, #item.cmd)
-	)
-end
-
-T["pi attaches to the shared proxy"] = function()
-	local starts = proxy_starts
-	local item = require("neoterm.middlewares.sandbox")({
-		sandbox = "bwrap",
-		agent = "pi",
-		cwd = "/tmp/project",
-		artifacts_dir = "/tmp/artifacts",
-		cmd = { "pi", "--provider", "opencode-go" },
-	})
-	assert.same(
-		{ "varlock", "proxy", "run", "--session", "agent-proxy", "--inject", "vars", "--", "bwrap" },
-		vim.list_slice(item.cmd, 1, 9)
-	)
-	assert.same(starts, proxy_starts)
-	local after_first = status_lookups
-	item = require("neoterm.middlewares.sandbox")({
-		sandbox = "bwrap",
-		agent = "pi",
-		cwd = "/tmp/project",
-		artifacts_dir = "/tmp/artifacts",
-		cmd = { "pi" },
-	})
-	assert.same(after_first, status_lookups)
-end
-
-T["missing proxy certificate refreshes the cached session"] = function()
-	local sandbox = require("neoterm.middlewares.sandbox")
-	local opts = {
-		sandbox = "bwrap",
-		cwd = "/tmp/project",
-		artifacts_dir = "/tmp/artifacts",
-		cmd = { "true" },
 	}
-	sandbox(vim.deepcopy(opts))
-	local lookups = status_lookups
-	vim.fn.delete(cert_file)
-	sandbox(vim.deepcopy(opts))
-	assert.same(lookups + 1, status_lookups)
-	vim.fn.writefile({ "test certificate" }, cert_file)
+	item = require("neoterm.middlewares.sandbox")(item)
+	return require("neoterm.middlewares.varlock")(item)
+end
+
+T["varlock wraps sandbox and binds certificate"] = function()
+	local item = wrapped(sources[1])
+	assert.same({ "varlock", "proxy", "run", "--session", starts[sources[1]], "--inject", "vars", "--", "bwrap" },
+		vim.list_slice(item.cmd, 1, 9))
+	local function contains(sequence)
+		for i = 1, #item.cmd - #sequence + 1 do
+			if vim.deep_equal(vim.list_slice(item.cmd, i, i + #sequence - 1), sequence) then return true end
+		end
+		return false
+	end
+	assert(contains({ "--dir", cert_dir, "--ro-bind", cert_dir, cert_dir }))
+	assert.same({ "printf", "%s", "hello world" }, vim.list_slice(item.cmd, #item.cmd - 2, #item.cmd))
+	assert(item.sandbox == nil and item.varlock == nil)
+end
+
+T["one proxy per schema path, reused on demand"] = function()
+	wrapped(sources[1])
+	local first_lookups = lookups
+	wrapped(sources[1])
+	assert.same(first_lookups, lookups)
+	wrapped(sources[2])
+	assert.same(2, vim.tbl_count(starts))
+	assert(ensured[sources[1]] ~= ensured[sources[2]])
+	assert.same(starts[sources[2]], wrapped(sources[2]).cmd[5])
+end
+
+T["invalid varlock path is rejected"] = function()
+	local ok = pcall(require("neoterm.middlewares.varlock"), { varlock = true, cmd = { "true" } })
+	assert(not ok)
 end
 
 T["bwrap sandbox binds linked worktree metadata"] = function()

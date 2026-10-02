@@ -4,6 +4,8 @@ local T = MiniTest.new_set({
 	hooks = {
 		pre_case = function()
 			child.restart({ "-u", "NONE" })
+			child.lua([[package.loaded["neoterm.terms.window"] = {}]])
+			child.lua([[vim.system = function(_, _, callback) callback({ code = 1, stdout = "" }) end]])
 			child.lua(
 				[[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path]]
 			)
@@ -24,7 +26,7 @@ T["terminal panel"]["toggles a filtered side panel and focuses the selected term
 				key = "agent",
 				instance_count = 1,
 				display_name = "Agent one",
-				dir = "/tmp/one",
+				cwd = "/tmp/one",
 				status = "working",
 				title = "Development server",
 				term = {
@@ -37,7 +39,7 @@ T["terminal panel"]["toggles a filtered side panel and focuses the selected term
 				key = "shell",
 				instance_count = 1,
 				display_name = "Shell",
-				dir = "/tmp/one",
+				cwd = "/tmp/one",
 				status = "idle",
 				term = { focus = function() table.insert(focused, "shell:one") end },
 			},
@@ -52,7 +54,7 @@ T["terminal panel"]["toggles a filtered side panel and focuses the selected term
 			listener = cb
 			return function() listener = nil end
 		end
-		package.loaded["neoterm.config"] = { panel = { width = 24 } }
+		package.loaded["neoterm.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
 		package.loaded["my.browser"] = { visit = function(url) table.insert(visited, url) end }
 		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function(item) return item.status .. " " .. item.display_name end end,
@@ -90,24 +92,24 @@ T["terminal panel"]["toggles a filtered side panel and focuses the selected term
 			filetype = "toggleterm-panel",
 			lines = {
 				"󰉋 /tmp/one",
-				"  working Agent one (working)",
-				"  Development server",
-				"  http://localhost:3000",
-				"  http://127.0.0.1:3001/docs",
+				"working Agent one (working)",
+				"Development server",
+				"󰖟 http://localhost:3000",
+				"󰖟 http://127.0.0.1:3001/docs",
 			},
 			winfixwidth = true,
 			width = 24,
 		},
 		focused = { "agent:one" },
-		visited = { "http://localhost:3000" },
+		visited = {},
 		closed = true,
 		unsubscribed = true,
 		reopened_lines = {
 			"󰉋 /tmp/one",
-			"  working Agent one (working)",
-			"  Development server",
-			"  http://localhost:3000",
-			"  http://127.0.0.1:3001/docs",
+			"working Agent one (working)",
+			"Development server",
+			"󰖟 http://localhost:3000",
+			"󰖟 http://127.0.0.1:3001/docs",
 		},
 	}, child.lua_get("result"))
 end
@@ -115,8 +117,8 @@ end
 T["terminal panel"]["refreshes from events and preserves selection by hash"] = function()
 	child.lua([[
 		local items = {
-			{ hash = "one", key = "agent", instance_count = 1, display_name = "One", dir = "/tmp", status = "idle", term = { focus = function() end } },
-			{ hash = "two", key = "agent", instance_count = 2, display_name = "Two", dir = "/tmp", status = "working", term = { focus = function() end } },
+			{ hash = "one", key = "agent", instance_count = 1, display_name = "One", cwd = "/tmp", status = "idle", term = { focus = function() end } },
+			{ hash = "two", key = "agent", instance_count = 2, display_name = "Two", cwd = "/tmp", status = "working", term = { focus = function() end } },
 		}
 		local listener
 		local history = {
@@ -126,7 +128,7 @@ T["terminal panel"]["refreshes from events and preserves selection by hash"] = f
 			listener = cb
 			return function() listener = nil end
 		end
-		package.loaded["neoterm.config"] = { panel = { width = 24 } }
+		package.loaded["neoterm.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
 		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function(item) return item.hash .. ":" .. item.status end end,
 		}
@@ -147,20 +149,20 @@ T["terminal panel"]["refreshes from events and preserves selection by hash"] = f
 	]])
 
 	assert.same({
-		lines = { "󰉋 /tmp", "  one:idle    (idle)", "  two:blocked (blocked)" },
+		lines = { "󰉋 /tmp", "one:idle    (idle)", "two:blocked (blocked)" },
 		cursor = { 3, 0 },
 	}, child.lua_get("result"))
 end
 
-T["terminal panel"]["aligns statuses across different indentation depths"] = function()
+T["terminal panel"]["shows full cwd paths while keeping nested cwd grouped"] = function()
 	child.lua([[
 		local items = {
-			{ hash = "parent", dir = "/tmp/a", label = "long", status = "idle", term = { focus = function() end } },
-			{ hash = "child", dir = "/tmp/a/b", label = "x", status = "working", term = { focus = function() end } },
+			{ hash = "parent", cwd = "/tmp/a", label = "long", status = "idle", term = { focus = function() end } },
+			{ hash = "child", cwd = "/tmp/a/b", label = "x", status = "working", term = { focus = function() end } },
 		}
 		local history = { filter = function() return items end }
 		local function subscribe() return function() end end
-		package.loaded["neoterm.config"] = { panel = { width = 24 } }
+		package.loaded["neoterm.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
 		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function(item) return item.label end end,
 		}
@@ -171,22 +173,22 @@ T["terminal panel"]["aligns statuses across different indentation depths"] = fun
 
 	assert.same({
 		"󰉋 /tmp/a",
-		"  󰉋 b",
-		"    x  (working)",
-		"  long (idle)",
+		"long (idle)",
+		"󰉋 /tmp/a/b",
+		"x    (working)",
 	}, child.lua_get("result"))
 end
 
 T["terminal panel"]["highlights directories and terminal states"] = function()
 	child.lua([[
 		local items = {
-			{ hash = "default", dir = "/tmp", status = "idle", term = { focus = function() end } },
-			{ hash = "unseen", dir = "/tmp", status = "working", changed = 1, term = { focus = function() end } },
-			{ hash = "failure", dir = "/tmp", status = "failure", changed = 2, term = { focus = function() end } },
+			{ hash = "default", cwd = "/tmp", status = "idle", term = { focus = function() end } },
+			{ hash = "unseen", cwd = "/tmp", status = "working", changed = 1, term = { focus = function() end } },
+			{ hash = "failure", cwd = "/tmp", status = "failure", changed = 2, term = { focus = function() end } },
 		}
 		local history = { filter = function() return items end }
 		local function subscribe() return function() end end
-		package.loaded["neoterm.config"] = { panel = { width = 24 } }
+		package.loaded["neoterm.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
 		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function(item) return item.hash end end,
 		}
@@ -213,7 +215,7 @@ T["terminal panel"]["renders an empty state and enter is a no-op"] = function()
 			filter = function() return {} end,
 		}
 		local function subscribe() return function() end end
-		package.loaded["neoterm.config"] = { panel = { width = 24 } }
+		package.loaded["neoterm.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
 		package.loaded["neoterm.terms.format_item"] = {
 			format_item = function() return function() error("must not format") end end,
 		}

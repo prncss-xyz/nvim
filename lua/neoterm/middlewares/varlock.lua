@@ -1,8 +1,13 @@
-local source_schema = vim.fs.joinpath(vim.env.HOME, ".config/varlock/env.agent.schema")
-local proxy_schema = vim.fs.joinpath(vim.fn.stdpath("cache"), "neoterm", "env.agent.schema")
-local proxy_dir = vim.fs.dirname(proxy_schema)
-local proxy_job
-local cached_session
+local proxies = {}
+
+local function proxy_for(source_schema)
+	local proxy_dir = vim.fs.joinpath(vim.fn.stdpath("cache"), "neoterm", "varlock", vim.fn.sha256(source_schema))
+	return {
+		source_schema = source_schema,
+		proxy_dir = proxy_dir,
+		proxy_schema = vim.fs.joinpath(proxy_dir, vim.fs.basename(source_schema)),
+	}
+end
 
 local function session_alive(session)
 	local cert = session.env and session.env.NODE_EXTRA_CA_CERTS
@@ -12,7 +17,7 @@ local function session_alive(session)
 		and vim.uv.fs_stat(cert) ~= nil
 end
 
-local function find_proxy_session()
+local function find_proxy_session(proxy)
 	local result = vim.system({ "varlock", "proxy", "status", "--format", "json" }, { text = true }):wait()
 	if result.code ~= 0 then
 		return nil
@@ -22,39 +27,46 @@ local function find_proxy_session()
 		return nil
 	end
 	for _, session in ipairs(sessions) do
-		if session.cwd == proxy_dir and vim.tbl_contains(session.entryPaths or {}, proxy_schema) then
+		if session.cwd == proxy.proxy_dir and vim.tbl_contains(session.entryPaths or {}, proxy.proxy_schema) then
 			return session
 		end
 	end
 end
 
-local function ensure_proxy()
-	require("neoterm.proxy_schema").ensure(source_schema, proxy_schema)
-	if cached_session and session_alive(cached_session) then
-		return cached_session
+local function ensure_proxy(source_schema)
+	local proxy = proxies[source_schema]
+	if not proxy then
+		proxy = proxy_for(source_schema)
+		proxies[source_schema] = proxy
 	end
-	cached_session = nil
-	local session = find_proxy_session()
+	require("neoterm.proxy_schema").ensure(proxy.source_schema, proxy.proxy_schema)
+	if proxy.session and session_alive(proxy.session) then
+		return proxy.session
+	end
+	proxy.session = nil
+	local session = find_proxy_session(proxy)
 	if session then
-		cached_session = session
+		proxy.session = session
 		return session
 	end
-	if not proxy_job or vim.fn.jobwait({ proxy_job }, 0)[1] ~= -1 then
-		proxy_job = vim.fn.jobstart({ "varlock", "proxy", "start", "--path", proxy_schema }, { cwd = proxy_dir })
-		assert(proxy_job > 0, "Failed to start the shared varlock proxy")
+	if not proxy.job or vim.fn.jobwait({ proxy.job }, 0)[1] ~= -1 then
+		proxy.job = vim.fn.jobstart({ "varlock", "proxy", "start", "--path", proxy.proxy_schema }, { cwd = proxy.proxy_dir })
+		assert(proxy.job > 0, "Failed to start the varlock proxy for " .. source_schema)
 	end
 	vim.wait(10000, function()
-		session = find_proxy_session()
-		return session ~= nil or vim.fn.jobwait({ proxy_job }, 0)[1] ~= -1
+		session = find_proxy_session(proxy)
+		return session ~= nil or vim.fn.jobwait({ proxy.job }, 0)[1] ~= -1
 	end, 100)
-	cached_session = assert(session, "Shared varlock proxy did not start")
-	return cached_session
+	proxy.session = assert(session, "Varlock proxy did not start for " .. source_schema)
+	return proxy.session
 end
 
 vim.api.nvim_create_autocmd("ExitPre", {
 	callback = function()
-		if proxy_job and vim.fn.jobwait({ proxy_job }, 0)[1] == -1 then
-			vim.fn.jobstop(proxy_job)
+		for _, proxy in pairs(proxies) do
+			if proxy.job and vim.fn.jobwait({ proxy.job }, 0)[1] == -1 then
+				vim.fn.jobstop(proxy.job)
+			end
 		end
 	end,
 })
@@ -88,10 +100,11 @@ local function bind_certificate(cmd, cert_file)
 end
 
 return function(opts)
-	if opts.varlock ~= true then
+	if opts.varlock == nil or opts.varlock == false then
 		return opts
 	end
-	local session = ensure_proxy()
+	assert(type(opts.varlock) == "string" and opts.varlock ~= "", "varlock must be a schema path")
+	local session = ensure_proxy(vim.fs.abspath(opts.varlock))
 	local inner_cmd = command(opts.cmd)
 	local cert_file = assert(session.env and session.env.NODE_EXTRA_CA_CERTS, "Varlock proxy has no CA certificate")
 	bind_certificate(inner_cmd, cert_file)

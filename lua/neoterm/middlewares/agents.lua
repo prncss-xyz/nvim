@@ -9,7 +9,11 @@ return function(opts)
 	local sandbox = require("my.conds").personal("bwrap")
 	local resolved = vim.tbl_extend(
 		"force",
-		{ agent = agent, sandbox = sandbox, varlock = sandbox ~= nil },
+		{
+			agent = agent,
+			sandbox = sandbox,
+			varlock = sandbox and vim.fs.joinpath(vim.env.HOME, ".config/varlock/env.agent.schema") or nil,
+		},
 		alias and alias[agent] or {},
 		opts
 	)
