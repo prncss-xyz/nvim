@@ -233,6 +233,7 @@ function M.remove_current_worktree(on_success, skip_confirmation)
 			if not confirmed then
 				return
 			end
+			require("neoterm.terms").kill_in_dir(worktree_path)
 			for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
 				local path = vim.api.nvim_buf_get_name(bufnr)
 				if path ~= "" and vim.startswith(vim.fs.normalize(path), worktree_path .. "/") then

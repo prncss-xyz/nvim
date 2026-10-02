@@ -36,10 +36,10 @@ local agents = personal({
 
 return {
 	llm_query = personal(
-			--"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
-			"codex exec --model gpt-6-luna --sandbox read-only -",
-			"claude -p --model haiku --disable-slash-commands --tools="
-		),
+		--"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
+		"codex exec --model gpt-6-luna --sandbox read-only -",
+		"claude -p --model haiku --disable-slash-commands --tools="
+	),
 	agents = agents,
 	rooter_patterns = { ".git", ".hg", ".svn" },
 	default_branches = { "main", "master" },
@@ -209,6 +209,7 @@ Output ONLY the branch name, nothing else.
 				"done",
 				work("report:aborted", false),
 				"aborted",
+				personal("failed", false),
 			}),
 			inbox = { "inbox" },
 			focus = { "blocked", "explore", "ready", "active" },

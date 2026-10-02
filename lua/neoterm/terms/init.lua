@@ -453,6 +453,16 @@ local panel_history = {
 	end,
 }
 
+function M.kill_in_dir(dir)
+	dir = vim.fs.normalize(dir)
+	for _, item in ipairs(history.filter(function(candidate)
+		local cwd = candidate.cwd and vim.fs.normalize(candidate.cwd)
+		return not candidate.artifact and cwd and (cwd == dir or vim.startswith(cwd, dir .. "/"))
+	end)) do
+		item.term:kill()
+	end
+end
+
 function M.toggle_panel(query)
 	query = normalize_query(query)
 	local selected = history.find(get_filter(query))

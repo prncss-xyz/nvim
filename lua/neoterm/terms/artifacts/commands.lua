@@ -206,6 +206,8 @@ function M.for_file(opts)
 end
 
 function M.select_for_current_file(resume)
+	local file = vim.api.nvim_buf_get_name(0)
+	local cwd = require("neoterm.terms.artifacts.cwd").context_dir() or vim.fn.getcwd()
 	local steps = config.steps
 	if resume then
 		steps = vim.tbl_filter(function(step)
@@ -213,10 +215,13 @@ function M.select_for_current_file(resume)
 		end, steps)
 	end
 	local definitions = M.for_file({
-		cwd = require("neoterm.terms.artifacts.cwd").context_dir() or vim.fn.getcwd(),
-		file = vim.api.nvim_buf_get_name(0),
+		cwd = cwd,
+		file = file,
 		steps = steps,
 	})
+	if not resume and vim.fn.filereadable(file) == 1 and vim.fn.executable(file) == 1 then
+		table.insert(definitions, { name = "exec", cmd = { vim.fs.abspath(file) }, cwd = cwd })
+	end
 	if resume then
 		definitions = vim.tbl_filter(function(item)
 			return item.tag == "agent"

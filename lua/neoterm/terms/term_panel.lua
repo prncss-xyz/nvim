@@ -432,7 +432,16 @@ end
 
 local function kill_selected(state)
 	local selected = state.rows[vim.api.nvim_win_get_cursor(state.win)[1]]
-	if selected and selected.item then
+	if selected and selected.url then
+		local urls = selected.item.term.url
+		for index, url in ipairs(urls) do
+			if url == selected.url then
+				table.remove(urls, index)
+				break
+			end
+		end
+		render(state)
+	elseif selected and selected.item then
 		selected.item.term:kill()
 	end
 end
