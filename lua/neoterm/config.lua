@@ -5,49 +5,42 @@ local do_not_replace_types = require("my.parameters").open_files_do_not_replace_
 local notify = require("my.notify")
 local prompt_utils = require("neoterm.helpers.prompt")
 
-local agent_list = personal({ "codex", "pi", "agy", "fx" }, { "claude" })
+local agents = personal({
+	{
+		name = "codex",
+		alias = {
+			deep = { model = "sol-6", effort = "low" },
+			fast = { model = "luna-6", effort = "low" },
+		},
+		command = { sandbox = "bwrap", varlock = "~/.config/varlock/env.agent.schema" },
+	},
+	{
+		name = "pi",
+		alias = {
+			deep = { provider = "openai-codex", model = "gpt-6-sol", effort = "low" },
+			fast = { provider = "opencode-go", model = "glm-5.3-flash", effort = "low" },
+		},
+		command = { sandbox = "bwrap", varlock = "~/.config/varlock/env.agent.schema" },
+	},
+	{ name = "agy", command = { sandbox = "bwrap", varlock = "~/.config/varlock/env.agent.schema" } },
+	{ name = "fx", command = { sandbox = "bwrap", varlock = "~/.config/varlock/env.agent.schema" } },
+}, {
+	{
+		name = "claude",
+		alias = {
+			deep = { model = "opus", effort = "low" },
+			fast = { model = "haiku", effort = "low" },
+		},
+	},
+})
 
 return {
-	agents = {
-		list = agent_list,
-		query = personal(
+	llm_query = personal(
 			--"p --no-tools --no-extensions --no-skills --no-context-files --model opencode-go/deepseek-v4-flash:off -p",
 			"codex exec --model gpt-6-luna --sandbox read-only -",
 			"claude -p --model haiku --disable-slash-commands --tools="
 		),
-		alias = {
-			deep = {
-				codex = {
-					model = "sol-6",
-					effort = "low",
-				},
-				pi = {
-					provider = "openai-codex",
-					model = "gpt-6-sol",
-					effort = "low",
-				},
-				claude = {
-					model = "opus",
-					effort = "low",
-				},
-			},
-			fast = {
-				codex = {
-					model = "luna-6",
-					effort = "low",
-				},
-				pi = {
-					provider = "opencode-go",
-					model = "glm-5.3-flash",
-					effort = "low",
-				},
-				claude = {
-					model = "haiku",
-					effort = "low",
-				},
-			},
-		},
-	},
+	agents = agents,
 	rooter_patterns = { ".git", ".hg", ".svn" },
 	default_branches = { "main", "master" },
 	dirs = {
@@ -255,7 +248,7 @@ Output ONLY the branch name, nothing else.
 		"sandbox",
 		"varlock",
 	},
-	default_command = agent_list[1],
+	default_command = agents[1].name,
 	commands = {
 		yazi = { cmd = "yazi" },
 		ddgr = {

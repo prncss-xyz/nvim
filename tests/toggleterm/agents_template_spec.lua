@@ -18,14 +18,14 @@ T["agents template adds installed agents in order"] = function()
 		}
 		local definitions
 		require("neoterm.templates.agents")({
-			agents = { "first", "missing", "third" },
+			agents = { { name = "first" }, { name = "missing" }, { name = "third" } },
 			default_agent = "first",
 		}, function(result) definitions = result end)
 		vim.wait(1000, function() return definitions ~= nil end)
-		assert(#definitions == 2, "expected only installed agents")
+		assert(#definitions == 4, "expected installed agents and resume commands")
 		assert(definitions[1].name == "first", "expected first agent")
 		assert(definitions[1].tag == "agent", "expected agent tag")
-		assert(definitions[2].name == "third", "expected third agent")
+		assert(definitions[3].name == "third", "expected third agent")
 	]])
 end
 
@@ -36,7 +36,7 @@ T["templates add asynchronous agent definitions"] = function()
 		}
 		local commands
 		require("neoterm.term_templates").add_commands({}, { "agents" }, {
-			agents = { "p" },
+			agents = { { name = "p" } },
 		}, function(result) commands = result end)
 		vim.wait(1000, function() return commands ~= nil end)
 		assert(commands.p.tag == "agent", "expected task tag to be preserved")

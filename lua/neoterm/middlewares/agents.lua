@@ -3,18 +3,22 @@ return function(opts)
 		return opts
 	end
 	local settings = require("neoterm.config").agents
-	local agent = opts.agent or settings.list[1]
-	local config = require("neoterm.agents." .. agent)
-	local alias = opts.alias and assert(settings.alias[opts.alias], "Unknown agent alias: " .. opts.alias)
-	local sandbox = require("my.conds").personal("bwrap")
+	local name = opts.agent or settings[1].name
+	local agent
+	for _, entry in ipairs(settings) do
+		if entry.name == name then
+			agent = entry
+			break
+		end
+	end
+	assert(agent, "Unknown agent: " .. name)
+	local config = require("neoterm.agents." .. name)
+	local alias = opts.alias and assert(agent.alias and agent.alias[opts.alias], "Unknown agent alias: " .. opts.alias)
 	local resolved = vim.tbl_extend(
 		"force",
-		{
-			agent = agent,
-			sandbox = sandbox,
-			varlock = sandbox and vim.fs.joinpath(vim.env.HOME, ".config/varlock/env.agent.schema") or nil,
-		},
-		alias and alias[agent] or {},
+		{ agent = name },
+		agent.command or {},
+		alias or {},
 		opts
 	)
 	if resolved.resume then

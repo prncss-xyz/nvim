@@ -38,8 +38,7 @@ function M.get_commands(filter, cwd, callback, prefer_direct)
 		end
 	end
 	templates.add_commands(commands, config.templates or {}, {
-		agents = config.agents.list,
-		agent_aliases = config.agents.alias,
+		agents = config.agents,
 		cwd = cwd,
 		file = vim.api.nvim_buf_get_name(0),
 		filetype = vim.bo.filetype,

@@ -7,7 +7,6 @@ end
 
 return function(opts, callback)
 	local agents = opts.agents or {}
-	local aliases = opts.agent_aliases or {}
 	local pending = #agents
 	local definitions = {}
 	if pending == 0 then
@@ -15,33 +14,32 @@ return function(opts, callback)
 	end
 
 	for index, agent in ipairs(agents) do
-		async.executable(executable(agent), function(installed)
+		local name = agent.name
+		async.executable(executable(name), function(installed)
 			if installed then
 				table.insert(definitions, {
 					index = index,
-					name = agent,
-					agent = agent,
+					name = name,
+					agent = name,
 					tag = "agent",
 				})
-				if agent ~= "agy" then
+				if name ~= "agy" then
 					table.insert(definitions, {
 						index = index,
-						name = agent .. ":resume",
-						agent = agent,
+						name = name .. ":resume",
+						agent = name,
 						resume = true,
 						tag = "agent",
 					})
 				end
-				for alias, settings in pairs(aliases) do
-					if settings[agent] then
-						table.insert(definitions, {
-							index = index,
-							name = agent .. ":" .. alias,
-							agent = agent,
-							alias = alias,
-							tag = "agent",
-						})
-					end
+				for alias in pairs(agent.alias or {}) do
+					table.insert(definitions, {
+						index = index,
+						name = name .. ":" .. alias,
+						agent = name,
+						alias = alias,
+						tag = "agent",
+					})
 				end
 			end
 			pending = pending - 1

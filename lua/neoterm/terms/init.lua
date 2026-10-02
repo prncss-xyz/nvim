@@ -259,7 +259,7 @@ end
 local function get_query_commands(query, filter, callback, prefer_direct)
 	local cwd = type(query.cwd) == "table" and query.cwd[1] or nil
 	if prefer_direct and query.tag == "agent" and not query.key then
-		local agent = config.agents.list[1]
+		local agent = config.agents[1] and config.agents[1].name
 		assert(agent, "No agents configured")
 		local item = {
 			agent = agent,
