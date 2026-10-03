@@ -126,6 +126,14 @@ local function path_steps(dir)
 	return steps
 end
 
+local function display_dir(dir)
+	local home = vim.env.HOME
+	if home and home ~= "" and (dir == home or dir:sub(1, #home + 1) == home .. "/") then
+		return "~" .. dir:sub(#home + 1)
+	end
+	return dir
+end
+
 local function status_age(term)
 	if not term.status_changed_at then
 		return nil
@@ -199,7 +207,7 @@ local function create_rows(items, format, git_statuses, width)
 	end
 	local function append_directory(node)
 		local icon = "󰉋 "
-		local text = icon .. node.cwd
+		local text = icon .. display_dir(node.cwd)
 		local git_status = git_statuses[node.cwd]
 		if git_status and git_status ~= "" then
 			local padding = math.max(1, width - vim.fn.strdisplaywidth(text) - vim.fn.strdisplaywidth(git_status))

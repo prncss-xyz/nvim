@@ -179,6 +179,33 @@ T["terminal panel"]["shows full cwd paths while keeping nested cwd grouped"] = f
 	}, child.lua_get("result"))
 end
 
+T["terminal panel"]["shortens home directories without shortening sibling paths"] = function()
+	child.lua([[
+		vim.env.HOME = "/tmp/panel-home"
+		local items = {
+			{ cwd = "/tmp/panel-home", term = {} },
+			{ cwd = "/tmp/panel-home/project", term = {} },
+			{ cwd = "/tmp/panel-home-other", term = {} },
+		}
+		local history = { filter = function() return items end }
+		package.loaded["neoterm.config"] = { term_panel = { width = 24, keybindings = {} } }
+		package.loaded["neoterm.terms.format_item"] = {
+			format_item = function() return function() return "terminal" end end,
+		}
+		require("neoterm.terms.term_panel").toggle({}, history, function() return function() end end)
+		result = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, -1, false)
+	]])
+
+	assert.same({
+		"󰉋 /tmp/panel-home-other",
+		"terminal",
+		"󰉋 ~",
+		"terminal",
+		"󰉋 ~/project",
+		"terminal",
+	}, child.lua_get("result"))
+end
+
 T["terminal panel"]["highlights directories and terminal states"] = function()
 	child.lua([[
 		local items = {

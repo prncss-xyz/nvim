@@ -10,8 +10,22 @@ local is_visible = window.is_visible
 local ensure_dir = require("neoterm.helpers.ensure_dir").ensure_dir
 local project_dir = require("neoterm.rooter").project_dir
 
-local function ensure_dir_without_focus(dir)
-	if not vim.uv.fs_stat(dir) then
+local function has_open_buffer(dir)
+	local artifact_cwd = require("neoterm.terms.artifacts.cwd")
+	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+		local path = vim.api.nvim_buf_get_name(bufnr)
+		if vim.bo[bufnr].buflisted and vim.bo[bufnr].buftype == "" and path ~= "" then
+			local artifact_dir = artifact_cwd.resolve(path)
+			if artifact_dir == dir or (not artifact_dir and vim.fs.relpath(dir, path) ~= nil) then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+local function ensure_dir_without_focus(dir, require_open_buffer)
+	if not vim.uv.fs_stat(dir) or (require_open_buffer and not has_open_buffer(dir)) then
 		return
 	end
 	local current_win = vim.api.nvim_get_current_win()
@@ -201,7 +215,7 @@ function Term:handle_osc(generation, sequence)
 		if generation ~= self.attachment_generation or self.cwd ~= resolved_dir then
 			return
 		end
-		ensure_dir_without_focus(resolved_dir)
+		ensure_dir_without_focus(resolved_dir, true)
 	end)
 end
 
