@@ -87,17 +87,10 @@ local function colorscheme(names, config)
 end
 
 return {
-	colorscheme({ "catppuccin-nvim", "catppuccin-latte", "catppuccin-mocha", "catppuccin-frappe" }, {
+	colorscheme({ "catppuccin-nvim" }, {
 		"catppuccin/nvim",
 		name = "catppuccin",
 		commit = "0303a7208dba448c459767486a38a6ec05c4216b",
-	}),
-	colorscheme({ dark = "cyberdream", light = "cyberdream-light" }, {
-		"scottmckendry/cyberdream.nvim",
-	}),
-	colorscheme("e-ink", {
-		"e-ink-colorscheme/e-ink.nvim",
-		commit = "c90bf52",
 	}),
 	-- dark-only
 	colorscheme("luna", {
@@ -118,6 +111,13 @@ return {
 	colorscheme({ "solarized" }, {
 		"ishan9299/nvim-solarized-lua",
 		commit = "d69a263",
+	}),
+	colorscheme({ dark = "cyberdream", light = "cyberdream-light" }, {
+		"scottmckendry/cyberdream.nvim",
+	}),
+	colorscheme("e-ink", {
+		"e-ink-colorscheme/e-ink.nvim",
+		commit = "c90bf52",
 	}),
 	{
 		"xiyaowong/transparent.nvim",

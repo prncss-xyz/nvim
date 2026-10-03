@@ -4,6 +4,8 @@
 vim.api.nvim_create_autocmd({ "ColorScheme" }, {
 	pattern = "*",
 	callback = function()
-		require("my.theme_utils").save_theme()
+		local themes = require("my.theme_utils")
+		themes.save_theme()
+		themes.remember_current_theme(vim.g.colors_name)
 	end,
 })

@@ -44,6 +44,9 @@ return {
 	),
 	agents = agents,
 	rooter_patterns = { ".git", ".hg", ".svn" },
+	on_zone = function(zone)
+		require("my.theme_utils").set_zone_theme(zone)
+	end,
 	default_branches = { "main", "master" },
 	dirs = {
 		projects = dirs.projects,
