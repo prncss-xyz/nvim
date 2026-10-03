@@ -157,9 +157,14 @@ local function normalize_cmd(cmd)
 end
 
 local function create_and_notify(item, cb)
-	item.cmd = normalize_cmd(item.cmd)
+	local ctx = require("neoterm.terms.window").get_ctx() or {}
+	ctx = vim.tbl_extend("force", ctx, { cwd = item.cwd, path = ctx.path or item.cwd })
+	local expand = require("neoterm.put.init").expand_values
+	item.cmd = normalize_cmd(expand(item.cmd, ctx))
+	local env = expand(item.env, ctx)
 	item.term = Term:new({
 		cmd = item.cmd,
+		env = env,
 		cwd = item.cwd,
 		instance_count = item.instance_count,
 		exit_policy = item.exit_policy,

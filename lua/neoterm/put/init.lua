@@ -4,7 +4,7 @@ local path_utils = require("neoterm.put.path")
 local vars = {
 	artifacts = function(ctx)
 		local artifact_cwd = require("neoterm.terms.artifacts.cwd")
-		local path = vim.fs.abspath(vim.fn.expand(ctx.path))
+		local path = vim.fs.abspath(vim.fn.expand(ctx.cwd or ctx.path))
 		local project_dir = artifact_cwd.resolve(path) or vim.fs.root(path, ".git")
 		return path_utils.home_relative(artifact_cwd.for_checkout(assert(project_dir, "Artifact project not found")))
 	end,
@@ -58,13 +58,29 @@ function M.capture(str)
 	return invocation
 end
 
+function M.expand(str, ctx, instance)
+	return (
+		string.gsub(str, "{(.-)}", function(key)
+			return assert(vars[key], "unknown template variable: " .. key)(ctx, instance)
+		end)
+	)
+end
+
+function M.expand_values(value, ctx)
+	if type(value) == "string" then
+		return M.expand(value, ctx)
+	end
+	if type(value) == "table" then
+		return vim.tbl_map(function(item)
+			return M.expand_values(item, ctx)
+		end, value)
+	end
+	return value
+end
+
 function M.template(str)
 	return function(query, instance)
-		return (
-			string.gsub(str, "{(.-)}", function(key)
-				return assert(vars[key], "unknown template variable: " .. key)(query, instance)
-			end)
-		)
+		return M.expand(str, query, instance)
 	end
 end
 
