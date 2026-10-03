@@ -5,6 +5,8 @@ local do_not_replace_types = require("my.parameters").open_files_do_not_replace_
 local notify = require("my.notify")
 local prompt_utils = require("neoterm.helpers.prompt")
 
+local agent_command = { sandbox = "bwrap", varlock = "~/.config/varlock/env.agent.schema" }
+
 local agents = personal({
 	{
 		name = "codex",
@@ -12,7 +14,7 @@ local agents = personal({
 			deep = { model = "sol-6", effort = "low" },
 			fast = { model = "luna-6", effort = "low" },
 		},
-		command = { sandbox = "bwrap", varlock = "~/.config/varlock/env.agent.schema" },
+		command = agent_command,
 	},
 	{
 		name = "pi",
@@ -20,10 +22,10 @@ local agents = personal({
 			deep = { provider = "openai-codex", model = "gpt-6-sol", effort = "low" },
 			fast = { provider = "opencode-go", model = "glm-5.3-flash", effort = "low" },
 		},
-		command = { sandbox = "bwrap", varlock = "~/.config/varlock/env.agent.schema" },
+		command = agent_command,
 	},
-	{ name = "agy", command = { sandbox = "bwrap", varlock = "~/.config/varlock/env.agent.schema" } },
-	{ name = "fx", command = { sandbox = "bwrap", varlock = "~/.config/varlock/env.agent.schema" } },
+	{ name = "agy", command = agent_command },
+	{ name = "fx", command = agent_command },
 }, {
 	{
 		name = "claude",
