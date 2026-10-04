@@ -9,7 +9,7 @@ return {
 		"folke/trouble.nvim",
 		opts = {
 			win = {
-				size = 60,
+				size = require("my.parameters").pane_width,
 				position = "left",
 			},
 			use_diagnostic_signs = true,
@@ -55,12 +55,12 @@ return {
 				domain.move .. reverse("t"),
 				function()
 					require("flies.actions.move_again").recompose2(function()
-						require("trouble").previous({
+						require("trouble")._action("prev")({
 							skip_groups = true,
 							jump = true,
 						})
 					end, function()
-						require("trouble").next({
+						require("trouble")._action("next")({
 							skip_groups = true,
 							jump = true,
 						})
@@ -72,12 +72,12 @@ return {
 				domain.move .. "t",
 				function()
 					require("flies.actions.move_again").recompose2(function()
-						require("trouble").previous({
+						require("trouble")._action("prev")({
 							skip_groups = true,
 							jump = true,
 						})
 					end, function()
-						require("trouble").next({
+						require("trouble")._action("next")({
 							skip_groups = true,
 							jump = true,
 						})

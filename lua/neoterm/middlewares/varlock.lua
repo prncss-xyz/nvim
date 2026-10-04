@@ -50,14 +50,32 @@ local function ensure_proxy(source_schema)
 		return session
 	end
 	if not proxy.job or vim.fn.jobwait({ proxy.job }, 0)[1] ~= -1 then
-		proxy.job = vim.fn.jobstart({ "varlock", "proxy", "start", "--path", proxy.proxy_schema }, { cwd = proxy.proxy_dir })
+		proxy.output = {}
+		local function capture(_, lines)
+			vim.list_extend(proxy.output, lines)
+		end
+		proxy.job = vim.fn.jobstart({ "varlock", "proxy", "start", "--path", proxy.proxy_schema }, {
+			cwd = proxy.proxy_dir,
+			on_stdout = capture,
+			on_stderr = capture,
+		})
 		assert(proxy.job > 0, "Failed to start the varlock proxy for " .. source_schema)
 	end
 	vim.wait(10000, function()
 		session = find_proxy_session(proxy)
 		return session ~= nil or vim.fn.jobwait({ proxy.job }, 0)[1] ~= -1
 	end, 100)
-	proxy.session = assert(session, "Varlock proxy did not start for " .. source_schema)
+	if not session then
+		local output = table.concat(proxy.output or {}, "\n")
+		if output:find("GPG decryption failed", 1, true) then
+			error("Varlock could not decrypt the secrets in " .. source_schema
+			.. ". Check that your GPG key and agent are available, then retry."
+			.. " Run `gpg --list-secret-keys` and `gpgconf --launch gpg-agent` if needed.", 0)
+		end
+		error("Varlock proxy did not start for " .. source_schema .. ". Run `varlock proxy start --path "
+			.. proxy.proxy_schema .. "` for details.", 0)
+	end
+	proxy.session = session
 	return proxy.session
 end
 

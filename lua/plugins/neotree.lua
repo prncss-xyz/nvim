@@ -74,7 +74,7 @@ return {
 				end
 			end
 			return {
-				window = { width = personal(40, 60) },
+				window = { width = require("my.parameters").pane_width },
 				sources = {
 					"filesystem",
 					"buffers",

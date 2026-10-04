@@ -9,6 +9,8 @@ end
 local projects = vim.env.HOME .. "/projects"
 local notes = projects .. "/notes/main"
 
+M.pane_width = personal(40, 60)
+
 -- Shared with Neo-tree so both openers preserve utility panels.
 M.open_files_do_not_replace_types = {
 	"terminal",

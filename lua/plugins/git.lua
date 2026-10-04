@@ -37,6 +37,7 @@ return {
 	{
 		"akinsho/git-conflict.nvim",
 		version = "*",
+		lazy = false,
 		opts = {
 			default_mappings = {
 				ours = conflict .. "o",
@@ -49,7 +50,9 @@ return {
 			default_commands = true,
 			disable_diagnostics = false,
 			list_opener = function()
-				require("trouble").open({ mode = "quickfix" })
+				require("my.ui_toggle").activate("trouble", function()
+					require("trouble").open({ mode = "quickfix" })
+				end)
 			end,
 			highlights = {
 				incoming = "DiffAdd",
@@ -60,7 +63,7 @@ return {
 		cmd = "GitConflictListQf",
 		keys = {
 			{
-				win .. theme.hunk .. "s",
+				win .. theme.hunk .. "k",
 				"<cmd>GitConflictListQf<cr>",
 				desc = "Git Conflicts Quickfix",
 			},
