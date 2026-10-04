@@ -1,11 +1,9 @@
--- Persist last colorscheme
--- see lua/plugins/theming.lua
+-- Persist the colorscheme selected for each zone.
 
 vim.api.nvim_create_autocmd({ "ColorScheme" }, {
 	pattern = "*",
 	callback = function()
 		local themes = require("my.theme_utils")
-		themes.save_theme()
 		themes.remember_current_theme(vim.g.colors_name)
 	end,
 })

@@ -1,8 +1,8 @@
 local not_vscode = require("my.conds").not_vscode
 local domain = require("my.parameters").domain
 
-local theme = require("my.theme_utils").load_theme()
 local theme_utils = require("my.theme_utils")
+local theme = theme_utils.theme_for_zone(vim.fn.getcwd())
 local paired_schemes = {}
 local switching = false
 
@@ -62,7 +62,7 @@ local function colorscheme(names, config)
 		names = vim.list_extend(vim.deepcopy(dark), light)
 	end
 	config.cond = not_vscode
-	if find(theme.colors_name, names) then
+	if theme and find(theme, names) then
 		config.priority = 1000
 		config.lazy = false
 		config.dependencies = {
@@ -79,7 +79,7 @@ local function colorscheme(names, config)
 			},
 		}
 		function config.config()
-			vim.cmd.colorscheme(theme.colors_name)
+			vim.cmd.colorscheme(theme)
 			switch_background()
 		end
 	end

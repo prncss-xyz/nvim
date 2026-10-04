@@ -10,7 +10,7 @@ local function add_scheme(dark, light)
 	table.insert(rotating_schemes, { dark = dark, light = light })
 end
 
-local theme_file = vim.fn.stdpath("state") .. "theme.json"
+local theme_file = vim.fn.stdpath("state") .. "/theme.json"
 local function file_exists(path)
 	local f = io.open(path, "r")
 	if f ~= nil then
@@ -31,20 +31,24 @@ function M.load_theme()
 	end
 	local ok, data = pcall(vim.json.decode, file:read("*a"))
 	file:close()
-	return ok and data or {}
+	return ok and type(data) == "table" and data or {}
 end
 
 function M.save_theme()
 	local file = io.open(theme_file, "w")
 	if file then
-		local colors_name = vim.g.colors_name
-		file:write(vim.json.encode({
-			colors_name = colors_name,
-		}))
+		file:write(vim.json.encode(zone_schemes))
 		file:close()
 	else
 		print("error!")
 	end
+end
+
+zone_schemes = M.load_theme()
+
+function M.theme_for_zone(zone)
+	local scheme = zone_schemes[zone]
+	return scheme and scheme[vim.o.background]
 end
 
 function M.register_colorschemes(names)
@@ -77,6 +81,7 @@ function M.set_zone_theme(zone)
 		scheme = rotating_schemes[next_scheme]
 		zone_schemes[zone] = scheme
 		next_scheme = next_scheme % #rotating_schemes + 1
+		M.save_theme()
 	end
 	local background = vim.o.background
 	local name = scheme[background]
@@ -96,10 +101,12 @@ function M.remember_current_theme(name)
 	for _, scheme in ipairs(rotating_schemes) do
 		if scheme.dark == name or scheme.light == name then
 			zone_schemes[active_zone] = scheme
+			M.save_theme()
 			return
 		end
 	end
 	zone_schemes[active_zone] = { dark = name, light = name }
+	M.save_theme()
 end
 
 function M.pick_colorscheme()

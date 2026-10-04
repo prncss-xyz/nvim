@@ -5,6 +5,12 @@ T["zones rotate themes and retain their dark or light variant"] = function()
 	local original_theme = package.loaded["my.theme_utils"]
 	local original_background = vim.o.background
 	local original_scheme = vim.g.colors_name
+	local original_stdpath = vim.fn.stdpath
+	local state_dir = vim.fn.tempname()
+	vim.fn.mkdir(state_dir, "p")
+	vim.fn.stdpath = function(kind)
+		return kind == "state" and state_dir or original_stdpath(kind)
+	end
 	package.loaded["my.theme_utils"] = nil
 	local themes = require("my.theme_utils")
 	local ok, err = pcall(function()
@@ -27,8 +33,16 @@ T["zones rotate themes and retain their dark or light variant"] = function()
 		themes.set_zone_theme("/three")
 		themes.set_zone_theme("/one")
 		assert.same("peachpuff", vim.g.colors_name)
+		assert.same({ dark = "evening", light = "peachpuff" }, themes.load_theme()["/one"])
+		package.loaded["my.theme_utils"] = nil
+		local restored = require("my.theme_utils")
+		assert.same("peachpuff", restored.theme_for_zone("/one"))
+		vim.o.background = "dark"
+		assert.same("evening", restored.theme_for_zone("/one"))
 	end)
 	package.loaded["my.theme_utils"] = original_theme
+	vim.fn.stdpath = original_stdpath
+	vim.fn.delete(state_dir, "rf")
 	vim.o.background = original_background
 	if original_scheme then
 		vim.cmd.colorscheme(original_scheme)
