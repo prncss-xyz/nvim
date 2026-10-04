@@ -51,6 +51,7 @@ return {
 			local khutulun = require("khutulun")
 			local events = require("neo-tree.events")
 			local manager = require("neo-tree.sources.manager")
+			local filter_command = require("plugins.neotree.filter").command
 			local neo_git = require("neo-tree.git")
 			local original_status = neo_git.status
 			-- Neo-tree's unchanged-porcelain cache returns only the working-tree status,
@@ -143,6 +144,12 @@ return {
 						},
 					},
 					commands = {
+						filter_as_you_type = filter_command("filter_as_you_type"),
+						filter_on_submit = filter_command("filter_on_submit"),
+						fuzzy_finder = filter_command("fuzzy_finder"),
+						fuzzy_finder_directory = filter_command("fuzzy_finder_directory"),
+						fuzzy_sorter = filter_command("fuzzy_sorter"),
+						fuzzy_sorter_directory = filter_command("fuzzy_sorter_directory"),
 						grug_far_replace = function(state)
 							local node = state.tree:get_node()
 							local prefills = {
