@@ -470,7 +470,7 @@ return {
 			{
 				"b,",
 				function()
-					projects.open_project(vim.fn.stdpath("config"))
+					projects.open_project(vim.uv.fs_realpath(vim.fn.stdpath("config")))
 				end,
 				desc = "Open Notes Dir",
 			},

@@ -10,6 +10,7 @@ return {
 		event = "VeryLazy",
 		dependencies = { "nvim-lua/plenary.nvim" },
 		opts = {
+			on_attach = require("my.git_base").on_attach,
 			watch_gitdir = {
 				interval = 100,
 			},

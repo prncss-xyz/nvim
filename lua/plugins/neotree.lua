@@ -17,13 +17,15 @@ end
 
 local function open_git_status(base)
 	require("my.ui_toggle").activate("neotree", function()
-		vim.cmd("Neotree git_status git_base=" .. base)
-		if base == "HEAD" then
-			require("gitsigns").reset_base(true)
-		else
-			require("gitsigns").change_base(base, true)
+		local cwd = vim.fn.getcwd()
+		local selected_base = base
+		vim.fn.system({ "git", "-C", cwd, "rev-parse", "--verify", base .. "^{commit}" })
+		if vim.v.shell_error ~= 0 then
+			selected_base = "HEAD"
 		end
-		git_status_base = base
+		require("neo-tree.command").execute({ source = "git_status", dir = cwd, git_base = selected_base })
+		require("my.git_base").set(cwd, selected_base)
+		git_status_base = selected_base
 	end)
 end
 
@@ -48,6 +50,7 @@ return {
 			end
 			local khutulun = require("khutulun")
 			local events = require("neo-tree.events")
+			local manager = require("neo-tree.sources.manager")
 			local neo_git = require("neo-tree.git")
 			local original_status = neo_git.status
 			-- Neo-tree's unchanged-porcelain cache returns only the working-tree status,
@@ -216,6 +219,17 @@ return {
 				event_handlers = {
 					{ event = events.FILE_MOVED, handler = on_move },
 					{ event = events.FILE_RENAMED, handler = on_move },
+					{
+						event = events.VIM_DIR_CHANGED,
+						handler = function()
+							local state = manager.get_state("git_status")
+							local cwd = manager.get_cwd(state)
+							if state.path and state.path ~= cwd then
+								state.path = cwd
+								require("neo-tree.sources.git_status").refresh()
+							end
+						end,
+					},
 				},
 			}
 		end,
