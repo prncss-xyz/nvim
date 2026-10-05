@@ -3,7 +3,14 @@ local writable_dirs = {
 	"~/.local/state/pnpm",
 	vim.fs.joinpath(vim.env.XDG_STATE_HOME or vim.fs.joinpath(vim.env.HOME, ".local/state"), "nvim"),
 	"~/.cache/pnpm",
+	vim.fs.joinpath(vim.env.BUN_INSTALL or "~/.bun", "install"),
+	vim.env.UV_CACHE_DIR or vim.fs.joinpath(vim.env.XDG_CACHE_HOME or "~/.cache", "uv"),
+	vim.env.UV_TOOL_DIR or vim.fs.joinpath(vim.env.XDG_DATA_HOME or "~/.local/share", "uv/tools"),
 }
+
+if vim.env.BUN_INSTALL_CACHE_DIR then
+	table.insert(writable_dirs, vim.env.BUN_INSTALL_CACHE_DIR)
+end
 
 local function command(cmd)
 	if cmd == nil then
