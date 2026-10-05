@@ -85,8 +85,10 @@ for _, lang in ipairs({
 	"tsx",
 	"json",
 	"svg",
-  "md",
+	"md",
 	"mermaid",
+	"html",
+	"css",
 	"fish",
 }) do
 	table.insert(
