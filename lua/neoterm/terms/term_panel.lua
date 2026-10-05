@@ -162,6 +162,7 @@ local function create_rows(items, format, git_statuses, width)
 	end
 
 	local rows = {}
+	local seen_urls = {}
 	local function append_items(node)
 		table.sort(node.items, function(a, b)
 			local a_key = a.key or ""
@@ -195,13 +196,16 @@ local function create_rows(items, format, git_statuses, width)
 				})
 			end
 			for _, url in ipairs(item.term.url or {}) do
-				table.insert(rows, {
-					instance_count = item.instance_count,
-					item = item,
-					text = url_icon(url) .. url,
-					highlight = "Comment",
-					url = url,
-				})
+				if not seen_urls[url] then
+					seen_urls[url] = true
+					table.insert(rows, {
+						instance_count = item.instance_count,
+						item = item,
+						text = url_icon(url) .. url,
+						highlight = "Comment",
+						url = url,
+					})
+				end
 			end
 		end
 	end
