@@ -106,7 +106,7 @@ function M.clone_github()
 			return
 		end
 
-		local repo_dir = projects .. "/" .. input
+		local repo_dir = projects .. "/" .. vim.fs.basename(input)
 		vim.fn.mkdir(repo_dir, "p")
 
 		local gh_out = vim.trim(

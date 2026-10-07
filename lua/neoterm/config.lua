@@ -5,13 +5,15 @@ local do_not_replace_types = require("my.parameters").open_files_do_not_replace_
 local notify = require("my.notify")
 local prompt_utils = require("neoterm.helpers.prompt")
 
+local env = {
+	NEOMUX_CTX = [[artifacts, such as plans, reports, screenshots, scripts related to the current tasks goes in {artifacts}
+]],
+}
+
 local agent_command = {
 	sandbox = "bwrap",
 	varlock = "~/.config/varlock/env.agent.schema",
-	env = {
-		NEOMUX_CTX = [[artifacts, such as plans, reports, screenshots, scripts related to the current tasks goes in {artifacts}
-]],
-	},
+	env = env,
 }
 
 local agents = personal({
@@ -36,6 +38,7 @@ local agents = personal({
 }, {
 	{
 		name = "claude",
+		command = { env = env },
 		alias = {
 			deep = { model = "opus", effort = "low" },
 			fast = { model = "haiku", effort = "low" },
