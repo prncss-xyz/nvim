@@ -13,33 +13,34 @@ local function is_mise_path(name, kind)
 end
 
 return function(opts, callback)
-		async.find_up_match(opts.cwd or opts.dir, is_mise_path, function(mise_file)
-			if not mise_file then
-				return callback("No mise file or directory found")
-			end
+	async.find_up_match(opts.cwd or opts.dir, is_mise_path, function(mise_file)
+		if not mise_file then
+			return callback("No mise file or directory found")
+		end
 
-			local cwd = vim.fs.dirname(mise_file)
-			vim.system(
-				{ "mise", "tasks", "--json" },
-				{ cwd = cwd, text = true },
-				vim.schedule_wrap(function(out)
-					local ok, data = pcall(vim.json.decode, out.stdout or "", { luanil = { object = true } })
-					if not ok then
-						return callback(data)
-					end
+		local cwd = vim.fs.dirname(mise_file)
+		vim.system(
+			{ "mise", "tasks", "--json" },
+			{ cwd = cwd, text = true },
+			vim.schedule_wrap(function(out)
+				local ok, data = pcall(vim.json.decode, out.stdout or "", { luanil = { object = true } })
+				if not ok then
+					return callback(data)
+				end
 
-					local definitions = {}
-					for _, value in pairs(data) do
-						local name = value.name
-						table.insert(definitions, {
-							name = string.format("mise %s", name),
-							desc = value.description ~= "" and value.description or nil,
-							cmd = { "mise", "run", name },
-							cwd = cwd,
-						})
-					end
-					callback(definitions)
-				end)
-			)
-		end)
+				local definitions = {}
+				for _, value in pairs(data) do
+					local name = value.name
+					table.insert(definitions, {
+						name = string.format("mise %s", name),
+						desc = value.description ~= "" and value.description or nil,
+						cmd = { "mise", "run", name },
+						cwd = cwd,
+            exit_policy = "keep",
+					})
+				end
+				callback(definitions)
+			end)
+		)
+	end)
 end

@@ -71,84 +71,85 @@ local function add_scripts(definitions, data, manager, cwd, workspace)
 end
 
 return function(opts, callback)
-		local cwd = opts.cwd or opts.dir
-		async.find_up("package.json", cwd, 2, function(candidates)
-			local function use_candidates(package_files)
-				find_package(package_files, function(package_file, manager, package_data)
-					if not package_file then
-						return callback("No package.json file found")
+	local cwd = opts.cwd or opts.dir
+	async.find_up("package.json", cwd, 2, function(candidates)
+		local function use_candidates(package_files)
+			find_package(package_files, function(package_file, manager, package_data)
+				if not package_file then
+					return callback("No package.json file found")
+				end
+				async.executable(manager, function(installed)
+					if not installed then
+						return callback(string.format("Could not find command '%s'", manager))
 					end
-					async.executable(manager, function(installed)
-						if not installed then
-							return callback(string.format("Could not find command '%s'", manager))
-						end
-						local root = vim.fs.dirname(package_file)
-						local function finish(data)
-							local definitions = {}
-							add_scripts(definitions, data, manager, root)
-							async.walk_files(root, 2, {
-								match = function(name)
-									return name == "package.json"
-								end,
-								skip_dir = function(name)
-									return name == "node_modules" or vim.startswith(name, ".")
-								end,
-							}, function(package_files)
-								local workspaces = {}
-								for _, path in ipairs(package_files) do
-									if path ~= package_file then
-										table.insert(workspaces, path)
+					local root = vim.fs.dirname(package_file)
+					local function finish(data)
+						local definitions = {}
+						add_scripts(definitions, data, manager, root)
+						async.walk_files(root, 2, {
+							match = function(name)
+								return name == "package.json"
+							end,
+							skip_dir = function(name)
+								return name == "node_modules" or vim.startswith(name, ".")
+							end,
+						}, function(package_files)
+							local workspaces = {}
+							for _, path in ipairs(package_files) do
+								if path ~= package_file then
+									table.insert(workspaces, path)
+								end
+							end
+							local pending = #workspaces
+							local function complete()
+								table.insert(definitions, {
+									name = manager .. " install",
+									cmd = { manager, "install" },
+									cwd = root,
+									exit_policy = "keep",
+								})
+								callback(definitions)
+							end
+							if pending == 0 then
+								return complete()
+							end
+							for _, path in ipairs(workspaces) do
+								async.read_json(path, function(workspace_data)
+									if workspace_data then
+										add_scripts(
+											definitions,
+											workspace_data,
+											manager,
+											vim.fs.dirname(path),
+											assert(vim.fs.relpath(root, vim.fs.dirname(path)))
+										)
 									end
-								end
-								local pending = #workspaces
-								local function complete()
-									table.insert(definitions, {
-										name = manager .. " install",
-										cmd = { manager, "install" },
-										cwd = root,
-									})
-									callback(definitions)
-								end
-								if pending == 0 then
-									return complete()
-								end
-								for _, path in ipairs(workspaces) do
-									async.read_json(path, function(workspace_data)
-										if workspace_data then
-											add_scripts(
-												definitions,
-												workspace_data,
-												manager,
-												vim.fs.dirname(path),
-												assert(vim.fs.relpath(root, vim.fs.dirname(path)))
-											)
-										end
-										pending = pending - 1
-										if pending == 0 then
-											complete()
-										end
-									end)
-								end
-							end)
-						end
-						if package_data then
-							finish(package_data)
-						else
-							async.read_json(package_file, finish)
-						end
-					end)
+									pending = pending - 1
+									if pending == 0 then
+										complete()
+									end
+								end)
+							end
+						end)
+					end
+					if package_data then
+						finish(package_data)
+					else
+						async.read_json(package_file, finish)
+					end
 				end)
-			end
-			if #candidates > 0 then
-				return use_candidates(candidates)
-			end
-			async.walk_files(cwd, 2, {
-				match = function(name)
-					return name == "package.json"
-				end,
-				skip_dir = function(name)
-					return name == "node_modules" or vim.startswith(name, ".")
-				end,
-			}, use_candidates)
-		end)
+			end)
+		end
+		if #candidates > 0 then
+			return use_candidates(candidates)
+		end
+		async.walk_files(cwd, 2, {
+			match = function(name)
+				return name == "package.json"
+			end,
+			skip_dir = function(name)
+				return name == "node_modules" or vim.startswith(name, ".")
+			end,
+		}, use_candidates)
+	end)
 end

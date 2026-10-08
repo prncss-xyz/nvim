@@ -42,7 +42,7 @@ return function(opts, callback)
 						name = "chezmoi apply",
 						cmd = { "chezmoi", "apply", "--purge" },
 						cwd = source_path,
-						close_on_exit = false,
+						exit_policy = "keep",
 					},
 				}
 
@@ -68,7 +68,7 @@ return function(opts, callback)
 								vim.fs.joinpath(vim.fs.dirname(opts.file), "remove_" .. vim.fs.basename(opts.file)),
 							},
 							cwd = source_path,
-							close_on_exit = false,
+							exit_policy = "keep",
 						})
 					end
 					callback(definitions)

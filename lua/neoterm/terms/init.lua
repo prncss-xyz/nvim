@@ -187,11 +187,28 @@ local function make_item(item, cb, requested_instance)
 	assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
 	item.cwd = type(item.cwd) == "string" and item.cwd or vim.fn.getcwd()
 	local function spawn()
-		for _, name in ipairs(config.middlewares) do
-			item = require("neoterm.middlewares." .. name)(item)
+		local function apply(index)
+			local name = config.middlewares[index]
+			if not name then
+				instance_owners[item.instance_count] = item
+				create_and_notify(item, cb)
+				return
+			end
+			local function continue(next_item, err)
+				if err then
+					release_instance(item)
+					vim.notify(err, vim.log.levels.ERROR)
+					return
+				end
+				item = next_item
+				apply(index + 1)
+			end
+			local next_item = require("neoterm.middlewares." .. name)(item, continue)
+			if next_item then
+				continue(next_item)
+			end
 		end
-		instance_owners[item.instance_count] = item
-		create_and_notify(item, cb)
+		apply(1)
 	end
 	local function create()
 		if type(item.cmd) == "function" then
@@ -460,10 +477,12 @@ local panel_history = {
 
 function M.kill_in_dir(dir)
 	dir = vim.fs.normalize(dir)
-	for _, item in ipairs(history.filter(function(candidate)
-		local cwd = candidate.cwd and vim.fs.normalize(candidate.cwd)
-		return not candidate.artifact and cwd and (cwd == dir or vim.startswith(cwd, dir .. "/"))
-	end)) do
+	for _, item in
+		ipairs(history.filter(function(candidate)
+			local cwd = candidate.cwd and vim.fs.normalize(candidate.cwd)
+			return not candidate.artifact and cwd and (cwd == dir or vim.startswith(cwd, dir .. "/"))
+		end))
+	do
 		item.term:kill()
 	end
 end

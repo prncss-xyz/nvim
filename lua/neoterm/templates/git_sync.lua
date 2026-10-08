@@ -29,17 +29,18 @@ local function is_enabled(cwd, callback)
 end
 
 return function(opts, callback)
-		is_enabled(opts.cwd, function(enabled)
-			if not enabled then
-				return callback(nil)
-			end
+	is_enabled(opts.cwd, function(enabled)
+		if not enabled then
+			return callback(nil)
+		end
 
-			callback({
-				{
-					name = "git-sync",
-					cmd = "git-sync",
-					cwd = opts.cwd,
-				},
-			})
-		end)
+		callback({
+			{
+				name = "git-sync",
+				cmd = "git-sync",
+				cwd = opts.cwd,
+				exit_policy = "keep",
+			},
+		})
+	end)
 end

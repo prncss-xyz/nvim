@@ -17,66 +17,108 @@ local function session_alive(session)
 		and vim.uv.fs_stat(cert) ~= nil
 end
 
-local function find_proxy_session(proxy)
-	local result = vim.system({ "varlock", "proxy", "status", "--format", "json" }, { text = true }):wait()
-	if result.code ~= 0 then
-		return nil
-	end
-	local ok, sessions = pcall(vim.json.decode, result.stdout)
-	if not ok or type(sessions) ~= "table" then
-		return nil
-	end
-	for _, session in ipairs(sessions) do
-		if session.cwd == proxy.proxy_dir and vim.tbl_contains(session.entryPaths or {}, proxy.proxy_schema) then
-			return session
-		end
-	end
+local function find_proxy_session(proxy, callback)
+	vim.system(
+		{ "varlock", "proxy", "status", "--format", "json" },
+		{ text = true },
+		vim.schedule_wrap(function(result)
+			local ok, sessions = pcall(vim.json.decode, result.stdout or "")
+			if result.code == 0 and ok and type(sessions) == "table" then
+				for _, session in ipairs(sessions) do
+					if
+						session.cwd == proxy.proxy_dir
+						and vim.tbl_contains(session.entryPaths or {}, proxy.proxy_schema)
+					then
+						callback(session)
+						return
+					end
+				end
+			end
+			callback(nil)
+		end)
+	)
 end
 
-local function ensure_proxy(source_schema)
+local function ensure_proxy(source_schema, callback)
 	local proxy = proxies[source_schema]
 	if not proxy then
 		proxy = proxy_for(source_schema)
 		proxies[source_schema] = proxy
 	end
+	if proxy.pending then
+		table.insert(proxy.pending, callback)
+		return
+	end
 	require("neoterm.proxy_schema").ensure(proxy.source_schema, proxy.proxy_schema)
 	if proxy.session and session_alive(proxy.session) then
-		return proxy.session
+		callback(proxy.session)
+		return
 	end
 	proxy.session = nil
-	local session = find_proxy_session(proxy)
-	if session then
+	proxy.pending = { callback }
+	local function finish(session, err)
 		proxy.session = session
-		return session
-	end
-	if not proxy.job or vim.fn.jobwait({ proxy.job }, 0)[1] ~= -1 then
-		proxy.output = {}
-		local function capture(_, lines)
-			vim.list_extend(proxy.output, lines)
+		local pending = proxy.pending
+		proxy.pending = nil
+		for _, cb in ipairs(pending) do
+			cb(session, err)
 		end
-		proxy.job = vim.fn.jobstart({ "varlock", "proxy", "start", "--path", proxy.proxy_schema }, {
-			cwd = proxy.proxy_dir,
-			on_stdout = capture,
-			on_stderr = capture,
-		})
-		assert(proxy.job > 0, "Failed to start the varlock proxy for " .. source_schema)
 	end
-	vim.wait(10000, function()
-		session = find_proxy_session(proxy)
-		return session ~= nil or vim.fn.jobwait({ proxy.job }, 0)[1] ~= -1
-	end, 100)
-	if not session then
+	local function failed()
 		local output = table.concat(proxy.output or {}, "\n")
 		if output:find("GPG decryption failed", 1, true) then
-			error("Varlock could not decrypt the secrets in " .. source_schema
-			.. ". Check that your GPG key and agent are available, then retry."
-			.. " Run `gpg --list-secret-keys` and `gpgconf --launch gpg-agent` if needed.", 0)
+			finish(
+				nil,
+				"Varlock could not decrypt the secrets in "
+					.. source_schema
+					.. ". Check that your GPG key and agent are available, then retry."
+					.. " Run `gpg --list-secret-keys` and `gpgconf --launch gpg-agent` if needed."
+			)
+		else
+			finish(
+				nil,
+				"Varlock proxy did not start for "
+					.. source_schema
+					.. ". Run `varlock proxy start --path "
+					.. proxy.proxy_schema
+					.. "` for details."
+			)
 		end
-		error("Varlock proxy did not start for " .. source_schema .. ". Run `varlock proxy start --path "
-			.. proxy.proxy_schema .. "` for details.", 0)
 	end
-	proxy.session = session
-	return proxy.session
+	find_proxy_session(proxy, function(session)
+		if session then
+			finish(session)
+			return
+		end
+		if not proxy.job or vim.fn.jobwait({ proxy.job }, 0)[1] ~= -1 then
+			proxy.output = {}
+			local function capture(_, lines)
+				vim.list_extend(proxy.output, lines)
+			end
+			proxy.job = vim.fn.jobstart({ "varlock", "proxy", "start", "--path", proxy.proxy_schema }, {
+				cwd = proxy.proxy_dir,
+				on_stdout = capture,
+				on_stderr = capture,
+			})
+			if proxy.job <= 0 then
+				finish(nil, "Failed to start the varlock proxy for " .. source_schema)
+				return
+			end
+		end
+		local deadline = vim.uv.hrtime() + 10000 * 1000000
+		local function poll()
+			find_proxy_session(proxy, function(found)
+				if found then
+					finish(found)
+				elseif vim.uv.hrtime() >= deadline or vim.fn.jobwait({ proxy.job }, 0)[1] ~= -1 then
+					failed()
+				else
+					vim.defer_fn(poll, 100)
+				end
+			end)
+		end
+		poll()
+	end)
 end
 
 vim.api.nvim_create_autocmd("ExitPre", {
@@ -117,18 +159,32 @@ local function bind_certificate(cmd, cert_file)
 	error("Sandbox command has no separator")
 end
 
-return function(opts)
+return function(opts, callback)
 	if opts.varlock == nil or opts.varlock == false then
 		return opts
 	end
 	assert(type(opts.varlock) == "string" and opts.varlock ~= "", "varlock must be a schema path")
-	local session = ensure_proxy(vim.fs.abspath(opts.varlock))
-	local inner_cmd = command(opts.cmd)
-	local cert_file = assert(session.env and session.env.NODE_EXTRA_CA_CERTS, "Varlock proxy has no CA certificate")
-	bind_certificate(inner_cmd, cert_file)
-	local cmd = { "varlock", "proxy", "run", "--session", session.id, "--inject", "vars", "--" }
-	vim.list_extend(cmd, inner_cmd)
-	opts.cmd = cmd
-	opts.varlock = nil
-	return opts
+	assert(type(callback) == "function", "Varlock middleware requires a continuation")
+	ensure_proxy(vim.fs.abspath(opts.varlock), function(session, err)
+		if err then
+			callback(nil, err)
+			return
+		end
+		local ok, result = pcall(function()
+			local inner_cmd = command(opts.cmd)
+			local cert_file =
+				assert(session.env and session.env.NODE_EXTRA_CA_CERTS, "Varlock proxy has no CA certificate")
+			bind_certificate(inner_cmd, cert_file)
+			local cmd = { "varlock", "proxy", "run", "--session", session.id, "--inject", "vars", "--" }
+			vim.list_extend(cmd, inner_cmd)
+			opts.cmd = cmd
+			opts.varlock = nil
+			return opts
+		end)
+		if ok then
+			callback(result)
+		else
+			callback(nil, result)
+		end
+	end)
 end
