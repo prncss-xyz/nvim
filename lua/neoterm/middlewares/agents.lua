@@ -14,13 +14,7 @@ return function(opts)
 	assert(agent, "Unknown agent: " .. name)
 	local config = require("neoterm.agents." .. name)
 	local alias = opts.alias and assert(agent.alias and agent.alias[opts.alias], "Unknown agent alias: " .. opts.alias)
-	local resolved = vim.tbl_extend(
-		"force",
-		{ agent = name },
-		agent.command or {},
-		alias or {},
-		opts
-	)
+	local resolved = vim.tbl_extend("force", { agent = name }, agent.command or {}, alias or {}, opts)
 	if resolved.resume then
 		assert(
 			resolved.title == nil or type(resolved.title) == "string" and resolved.title ~= "",
@@ -36,5 +30,6 @@ return function(opts)
 		writable_dirs = config.writable_dirs,
 		writable_files = config.writable_files,
 		screen_manifest = config.screen_manifest,
+		exit_policy = "keep",
 	}, resolved)
 end
