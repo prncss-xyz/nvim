@@ -1,6 +1,21 @@
 local M = {}
 
 local SOURCE = "github-comments"
+local THREAD_QUERY = [[
+query($owner: String!, $name: String!, $number: Int!, $endCursor: String) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      reviewThreads(first: 100, after: $endCursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          isResolved isOutdated
+          comments(first: 1) { nodes { id } }
+        }
+      }
+    }
+  }
+}
+]]
 
 local cache_by_root = {}
 
@@ -136,6 +151,61 @@ local function cached_diagnostics(root)
 	return build_diagnostics(root, cache.comments)
 end
 
+local function filter_active_comments(root, pr_number, comments, done)
+	run(
+		{
+			"gh",
+			"api",
+			"graphql",
+			"--paginate",
+			"--slurp",
+			"-F",
+			"owner={owner}",
+			"-F",
+			"name={repo}",
+			"-F",
+			"number=" .. pr_number,
+			"-f",
+			"query=" .. THREAD_QUERY,
+		},
+		root,
+		function(result)
+			local pages = result.code == 0 and decode_json(result.stdout) or nil
+			if type(pages) ~= "table" then
+				return done(nil)
+			end
+
+			local active = {}
+			for _, page in ipairs(pages) do
+				local repository = page.data and page.data.repository
+				local pr = repository and repository.pullRequest
+				local threads = pr and pr.reviewThreads
+				if page.errors or not threads or type(threads.nodes) ~= "table" then
+					return done(nil)
+				end
+				for _, thread in ipairs(threads.nodes) do
+					if thread.isResolved == false and thread.isOutdated == false then
+						local comment = thread.comments.nodes[1]
+						if comment then
+							active[comment.id] = true
+						end
+					end
+				end
+			end
+
+			local active_roots = {}
+			for _, comment in ipairs(comments) do
+				if active[comment.node_id] then
+					active_roots[comment.id] = true
+				end
+			end
+			done(vim.tbl_filter(function(comment)
+				return active_roots[comment.in_reply_to_id or comment.id] == true
+			end, comments))
+		end
+	)
+end
+
 local function fetch_comments(params, done)
 	local root = root_dir(params)
 	if vim.fn.executable("gh") ~= 1 then
@@ -167,15 +237,20 @@ local function fetch_comments(params, done)
 					return done(cached_diagnostics(root) or {})
 				end
 
-				local comments = flatten_pages(decoded)
-				cache_by_root[root] = {
-					comments = comments,
-					fetched_at = os.time(),
-					pr_number = pr_number,
-					root = root,
-				}
+				filter_active_comments(root, pr_number, flatten_pages(decoded), function(comments)
+					if not comments then
+						cache_by_root[root] = nil
+						return done({})
+					end
+					cache_by_root[root] = {
+						comments = comments,
+						fetched_at = os.time(),
+						pr_number = pr_number,
+						root = root,
+					}
 
-				return done(build_diagnostics(root, comments))
+					return done(build_diagnostics(root, comments))
+				end)
 			end
 		)
 	end)
