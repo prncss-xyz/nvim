@@ -5,6 +5,7 @@ return {
 		"~/.antigravitycli",
 		"~/.cache/antigravity",
 	},
+	osc_status = true,
 	builder = function(opts)
 		assert(not opts.resume, "agy does not support resuming a session by title")
 		local cmd = { "agy" }

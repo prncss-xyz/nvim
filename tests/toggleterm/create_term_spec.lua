@@ -442,4 +442,77 @@ T["create_term"]["does not restart successful or short-lived processes"] = funct
 	assert.same(1, child.lua_get("result"))
 end
 
+T["create_term"]["handles OSC 7501 queries and root status reports"] = function()
+	child.lua([[
+		local events, replies = {}, {}
+		local visible = false
+		local terminal = { bufnr = vim.api.nvim_create_buf(false, true), job_id = 7 }
+		package.loaded["toggleterm.terminal"] = { Terminal = { new = function() return terminal end } }
+		package.loaded["neoterm.terms.window"] = {
+			is_visible = function() return false end,
+			is_in_view = function() return visible end,
+		}
+		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+		vim.api.nvim_chan_send = function(channel, bytes)
+			table.insert(replies, { channel, bytes })
+		end
+		local Term = require("neoterm.terms.create_term")
+		local instance = Term:new({ osc_status = true }, function(event)
+			table.insert(events, event)
+		end)
+		vim.wait(10)
+		local generation = instance.attachment_generation
+		local function report(payload, terminator)
+			vim.api.nvim_exec_autocmds("TermRequest", {
+				buffer = terminal.bufnr,
+				data = { sequence = "\27]7501;" .. payload .. (terminator or "\27\\") },
+			})
+		end
+		report("?")
+		report("app=claude-code:state=working:msg=V29ya2luZw==", "\7")
+		-- Screen and title hints must not override a reported status.
+		vim.api.nvim_buf_set_lines(terminal.bufnr, 0, -1, false, { "❯", "Do you want to proceed?" })
+		instance:handle_osc(generation, "\27]2;✳ Claude\7")
+		instance:handle_osc(generation, "\27]9;4;0\7")
+		vim.wait(200)
+		visible = true
+		report("state=blocked:kind=permission")
+		report("state=done")
+		report("state=error")
+		report("state=idle")
+		report("state=working:state=clear")
+		local status_count = #vim.tbl_filter(function(event) return event.type == "status" end, events)
+		for _, payload in ipairs({
+			"state=unknown", "app=claude-code", "state=working:id=child",
+			"state=working:msg=A", "state=working:msg=Cg==",
+			"state=working:title=" .. string.rep("A", 257),
+			"state=working:" .. string.rep("x", 4096),
+		}) do
+			report(payload)
+		end
+		instance:handle_osc(generation - 1, "\27]7501;state=working\7")
+		instance.osc_status = false
+		report("?")
+		report("state=working")
+		result = {
+			replies = replies,
+			statuses = vim.tbl_filter(function(event) return event.type == "status" end, events),
+			status_count = status_count,
+		}
+	]])
+	assert.same({
+		replies = { { 7, "\27]7501;?\27\\" } },
+		statuses = {
+			{ type = "status", value = "working", visible = false },
+			{ type = "status", value = "blocked", visible = true },
+			{ type = "status", value = "idle", visible = true },
+			{ type = "status", value = "failure", visible = true },
+			{ type = "status", value = "idle", visible = true },
+			{ type = "status", value = "idle", visible = true },
+		},
+		status_count = 6,
+	}, child.lua_get("result"))
+end
+
 return T

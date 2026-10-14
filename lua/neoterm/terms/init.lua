@@ -90,7 +90,12 @@ local function apply_event(event, item)
 			item.changed = true
 			config.on_status(item)
 		end
-	elseif event.type == "url" and not vim.tbl_contains(item.term.url, event.value) then
+	elseif event.type == "url" then
+		for _, url in ipairs(item.term.url) do
+			if vim.startswith(url, event.value) then
+				return
+			end
+		end
 		table.insert(item.term.url, event.value)
 	elseif event.type == "title" then
 		item.title = event.value ~= "" and event.value or nil
@@ -169,6 +174,7 @@ local function create_and_notify(item, cb)
 		instance_count = item.instance_count,
 		exit_policy = item.exit_policy,
 		screen_manifest = item.screen_manifest,
+		osc_status = item.osc_status,
 		auto_scroll = item.auto_scroll,
 	}, function(event)
 		if event.type == "cwd" then

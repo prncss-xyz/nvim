@@ -39,6 +39,49 @@ local function parse_osc(sequence)
 	return sequence:match("^\27%](%d+);([^\7\27]*)")
 end
 
+local program_states = {
+	idle = "idle",
+	working = "working",
+	blocked = "blocked",
+	done = "idle",
+	error = "failure",
+	clear = "idle",
+}
+
+local function osc_status(payload)
+	local fields = {}
+	for pair in payload:gmatch("[^:]+") do
+		local key, value = pair:match("^%s*([a-z]+)%s*=%s*([A-Za-z0-9_.,+/=%-]*)%s*$")
+		if key then
+			if #key > 16 or (key == "app" and #value > 32) or (key == "id" and #value > 128) then
+				return nil
+			end
+			if key == "msg" or key == "title" then
+				local encoded_limit = key == "msg" and 2732 or 256
+				local decoded_limit = key == "msg" and 2048 or 192
+				if #value > encoded_limit then
+					return nil
+				end
+				local ok, decoded = pcall(vim.base64.decode, value)
+				if
+					not ok
+					or #decoded > decoded_limit
+					or decoded:find("[%z\1-\31\127]")
+					or decoded:find("\194[\128-\159]")
+				then
+					return nil
+				end
+			end
+			fields[key] = value
+		end
+	end
+	-- The panel represents the program itself, rather than individual child tasks.
+	if fields.id ~= nil then
+		return nil
+	end
+	return program_states[fields.state]
+end
+
 local function osc_dir(payload)
 	local path = payload:match("^file://[^/]*(/.*)$")
 	if not path then
@@ -99,6 +142,7 @@ function Term:new(opts, send, prepare, min_runtime, notify)
 		exit_policy = opts.exit_policy,
 		cwd = opts.cwd or vim.fn.getcwd(),
 		screen_manifest = opts.screen_manifest,
+		osc_status = opts.osc_status,
 		min_runtime = min_runtime or 0,
 		restart_scheduled = false,
 		restart_requested = false,
@@ -159,6 +203,20 @@ function Term:handle_osc(generation, sequence)
 	end
 	local command, payload = parse_osc(sequence)
 	if not command then
+		return
+	end
+	if command == "7501" then
+		if not self.osc_status then
+			return
+		end
+		if payload == "?" then
+			vim.api.nvim_chan_send(self.terminal.job_id, "\27]7501;?\27\\")
+		elseif #sequence <= 4096 then
+			local status = osc_status(payload)
+			if status then
+				self.send({ type = "status", value = status, visible = self:is_in_view() == true })
+			end
+		end
 		return
 	end
 	if command == "777" then

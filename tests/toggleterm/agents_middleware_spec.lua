@@ -4,7 +4,9 @@ local T = MiniTest.new_set({
 	hooks = {
 		pre_case = function()
 			child.restart({ "-u", "NONE" })
-			child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path]])
+			child.lua(
+				[[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path]]
+			)
 		end,
 		post_once = child.stop,
 	},
@@ -29,6 +31,15 @@ T["agent command and alias settings resolve with caller overrides"] = function()
 		{ agent = "pi", model = "deep-model", sandbox = "bwrap", varlock = "schema" },
 		{ agent = "pi", model = "custom", sandbox = false, varlock = "schema" },
 	}, child.lua_get("result"))
+end
+
+T["claude enables OSC status without screen heuristics"] = function()
+	child.lua([[
+		package.loaded["neoterm.config"] = { agents = { { name = "claude" } } }
+		local opts = require("neoterm.middlewares.agents")({ tag = "agent" })
+		result = { opts.osc_status, opts.screen_manifest == nil, opts.cmd }
+	]])
+	assert.same({ true, true, { "claude" } }, child.lua_get("result"))
 end
 
 return T
