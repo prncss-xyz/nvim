@@ -127,7 +127,16 @@ return {
 			filetypes = {
 				markdown = false,
 			},
-			suggestion = { enabled = completion == "copilot" },
+			suggestion = {
+				enabled = completion == "copilot",
+				auto_trigger = true,
+				keymap = {
+					accept = ai_insert.accept,
+					next = ai_insert.next,
+					prev = ai_insert.prev,
+					dismiss = ai_insert.clear,
+				},
+			},
 			panel = { enabled = false },
 			nes = {
 				enabled = completion == "copilot",

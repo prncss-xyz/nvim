@@ -31,6 +31,5 @@ return function(opts)
 		writable_files = config.writable_files,
 		screen_manifest = config.screen_manifest,
 		osc_status = config.osc_status,
-		exit_policy = "keep",
 	}, resolved)
 end
