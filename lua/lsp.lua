@@ -21,7 +21,13 @@ vim.lsp.config("tsc", {
 	cmd = { "tsc", "--lsp", "--stdio" },
 	filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
 	root_markers = { "tsconfig.json", "jsconfig.json", "package.json", ".git" },
-	capabilities = require("plugins.lsp.utils").cmp_capabilities,
+	capabilities = require("plugins.lsp.utils").get_cmp_capabilities({
+		workspace = {
+			didChangeWatchedFiles = {
+				dynamicRegistration = true,
+			},
+		},
+	}),
 	settings = {
 		typescript = {
 			updateImportsOnFileMove = { enabled = "always" },
