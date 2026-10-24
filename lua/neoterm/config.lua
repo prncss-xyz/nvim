@@ -176,6 +176,29 @@ return {
 			},
 			fork = false,
 		},
+		{
+			name = "plannify",
+			source = "task.md",
+			target = "plan.md",
+			command = {
+				tag = "agent",
+				agent = "pi",
+				title = "{step}",
+				prompt = [[/planify @{source}]],
+			},
+			fork = true,
+		},
+		{
+			name = "implement",
+			source = "plan.md",
+			command = {
+				tag = "agent",
+				agent = "pi",
+				title = "{step}",
+				prompt = [[/implement @{source}]],
+			},
+			fork = true,
+		},
 	},
 	tasks = {
 		create_task_name = [==[
@@ -291,8 +314,16 @@ Output ONLY the branch name, nothing else.
 			cmd = "gac",
 			exit_policy = "keep",
 		},
+		['gac --retry'] = {
+			cmd = "gac --retry",
+			exit_policy = "keep",
+		},
 		gacp = {
 			cmd = "gacp",
+			exit_policy = "keep",
+		},
+		['gacp --retry'] = {
+			cmd = "gac; --retry",
 			exit_policy = "keep",
 		},
 		["git push"] = { cmd = "git push", exit_policy = "keep" },
