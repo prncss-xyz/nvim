@@ -85,21 +85,8 @@ return {
 	bdelete = function(bufnr)
 		Snacks.bufdelete.delete(bufnr)
 	end,
-	notify = personal() and function(title, message)
-		vim.system({ "notify-send", title, message }, { detach = true })
-	end or function(title, message)
-		vim.system({
-			"osascript",
-			"-e",
-			"on run argv",
-			"-e",
-			"display notification (item 2 of argv) with title (item 1 of argv)",
-			"-e",
-			"end run",
-			"--",
-			title,
-			message,
-		}, { detach = true })
+	notify = function(title, message)
+		notify.notify(message, { title = title })
 	end,
 	filter = {
 		keybindings = {
