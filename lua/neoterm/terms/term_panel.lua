@@ -346,8 +346,13 @@ local function render(state)
 		return
 	end
 
-	local instance_count = state.focused_instance or selected_instance(state)
+	local focused = state.focused_instance
+	local instance_count = focused or selected_instance(state)
 	state.focused_instance = nil
+	local previous_row
+	if not focused and valid_win(state.win) then
+		previous_row = state.rows[vim.api.nvim_win_get_cursor(state.win)[1]]
+	end
 	local items = state.deps.items(state.query)
 	local git_statuses = {}
 	for dir, cached in pairs(state.git_statuses) do
@@ -395,11 +400,27 @@ local function render(state)
 	if not valid_win(state.win) then
 		return
 	end
-	local target = 1
-	for index, row in ipairs(rows) do
-		if (instance_count and row.instance_count == instance_count) or (not instance_count and row.item) then
-			target = index
-			break
+	local target
+	if previous_row then
+		for index, row in ipairs(rows) do
+			if
+				row.instance_count == previous_row.instance_count
+				and row.cwd == previous_row.cwd
+				and row.title == previous_row.title
+				and row.url == previous_row.url
+			then
+				target = index
+				break
+			end
+		end
+	end
+	if not target then
+		target = 1
+		for index, row in ipairs(rows) do
+			if (instance_count and row.instance_count == instance_count) or (not instance_count and row.item) then
+				target = index
+				break
+			end
 		end
 	end
 	target = math.min(target, #lines)

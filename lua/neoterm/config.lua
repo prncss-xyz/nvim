@@ -19,22 +19,37 @@ local agent_command = {
 local agents = personal({
 	{
 		name = "codex",
+		command = agent_command,
 		alias = {
-			deep = { model = "sol-6", effort = "low" },
+			deep = { model = "sol-6.1", effort = "low" },
 			fast = { model = "luna-6", effort = "low" },
 		},
-		command = agent_command,
 	},
 	{
 		name = "pi",
-		alias = {
-			deep = { provider = "openai-codex", model = "gpt-6-sol", effort = "low" },
-			fast = { provider = "opencode-go", model = "glm-5.3-flash", effort = "low" },
-		},
 		command = agent_command,
+		alias = {
+			deep = { provider = "openai-codex", model = "gpt-6.1-sol", effort = "low" },
+			fast = { provider = "openai-codex", model = "gpt-6-luna", effort = "low" },
+		},
 	},
 	{ name = "agy", command = agent_command },
-	{ name = "fx", command = agent_command },
+	{
+		name = "fx",
+		command = agent_command,
+		alias = {
+			deep = { provider = "openai-codex", model = "gpt-6.1-sol", effort = "low" },
+			fast = { provider = "openai-codex", model = "gpt-6-luna", effort = "low" },
+		},
+	},
+	{
+		name = "claude",
+		command = agent_command,
+		alias = {
+			deep = { model = "opus", effort = "low" },
+			fast = { model = "haiku", effort = "low" },
+		},
+	},
 }, {
 	{
 		name = "claude",
@@ -314,7 +329,7 @@ Output ONLY the branch name, nothing else.
 			cmd = "gac",
 			exit_policy = "keep",
 		},
-		['gac --retry'] = {
+		["gac --retry"] = {
 			cmd = "gac --retry",
 			exit_policy = "keep",
 		},
@@ -322,7 +337,7 @@ Output ONLY the branch name, nothing else.
 			cmd = "gacp",
 			exit_policy = "keep",
 		},
-		['gacp --retry'] = {
+		["gacp --retry"] = {
 			cmd = "gac; --retry",
 			exit_policy = "keep",
 		},

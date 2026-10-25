@@ -322,7 +322,9 @@ function M.merge_to_default()
 										vim.notify("Failed to fast-forward default branch: " .. merge_result, vim.log.levels.ERROR)
 										return
 									end
-									M.remove_current_worktree(nil, true)
+									M.remove_current_worktree(function()
+										require("neoterm.helpers.ensure_dir").ensure_dir(default_path)
+									end, true)
 								end)
 							end
 							if count <= 1 then
