@@ -270,8 +270,9 @@ Output ONLY the branch name, nothing else.
 		["nvim message"] = "{nvim_messages}",
 		["do"] = "do this: {position}",
 		["explain"] = "explain this: {position}",
-		["curry"] = "curry this: {position}",
-		["where in the codebase "] = prompt_utils.sender(),
+		["todo"] = "Implement this TODO comment: {position}",
+		["Find where that thing is implemented. Answer with preferable just one file path and line citations."] = prompt_utils.sender(),
+		["debrief"] = "Tell me the decisions you made during this session based on your own.",
 		["anchor"] = [[We are developing the contents of an artifact file. When I ask you a question or give you an enquiry, update this file instead of answering me in the conversation. Add the bare minimum amount of text to answer the question while quoting your sources. The file is {path}.
 
 ]],
