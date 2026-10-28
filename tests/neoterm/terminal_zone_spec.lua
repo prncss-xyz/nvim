@@ -23,7 +23,7 @@ T["terminal directory change only visits a directory with an open file buffer"] 
 	package.loaded["neoterm.terms.window"] = { is_visible = function() return false end }
 	package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() ensured = ensured + 1 end }
 	package.loaded["neoterm.rooter"] = { project_dir = function(path) return path end }
-	package.loaded["neoterm.terms.artifacts.cwd"] = { resolve = function() return nil end }
+	package.loaded["neoterm.terms.artifacts.cwd"] = { resolve_all = function() return {} end }
 	package.loaded["neoterm.terms.create_term"] = nil
 	local ok, err = pcall(function()
 		local term = require("neoterm.terms.create_term"):new({}, function() end)

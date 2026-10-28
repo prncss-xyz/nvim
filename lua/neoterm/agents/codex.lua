@@ -2,6 +2,7 @@ return {
 	executable = "codex",
 	writable_dirs = { vim.env.CODEX_HOME or "~/.codex" },
 	osc_status = true,
+	skill = "$%s",
 	builder = function(opts)
 		local cmd = { "codex" }
 		if opts.resume then

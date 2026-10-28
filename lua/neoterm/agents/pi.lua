@@ -1,6 +1,7 @@
 return {
 	writable_dirs = { vim.env.PI_CODING_AGENT_DIR or "~/.pi/agent" },
 	osc_status = true,
+	skill = "/skill:%s",
 	builder = function(opts)
 		local cmd = { "pi" }
 		if opts.resume and not opts.title then

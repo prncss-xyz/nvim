@@ -7,6 +7,7 @@ return {
 		"~/.claude.json.lock",
 	},
 	osc_status = true,
+	skill = "/%s",
 	builder = function(opts)
 		local cmd = { "claude" }
 		if opts.sandbox then

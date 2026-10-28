@@ -261,9 +261,10 @@ return {
 				function()
 					local artifact_cwd = require("neoterm.terms.artifacts.cwd")
 					local project_dir = artifact_cwd.context_dir() or vim.fn.getcwd()
-					local target_dir = artifact_cwd.for_checkout(project_dir)
-					vim.fn.mkdir(target_dir, "p")
-					Snacks.picker.files({ cwd = target_dir })
+					artifact_cwd.select_artifacts(project_dir, function(target_dir)
+						vim.fn.mkdir(target_dir, "p")
+						Snacks.picker.files({ cwd = target_dir })
+					end)
 				end,
 				desc = "Pick Branch Artifact File",
 			},
@@ -450,10 +451,12 @@ return {
 			{
 				"bn",
 				function()
-					local project_dir =
-						require("neoterm.terms.artifacts.cwd").resolve(vim.api.nvim_buf_get_name(0))
-					if project_dir then
-						require("neoterm.helpers.ensure_dir").open_dir(project_dir, 0, false)
+					local artifacts = require("neoterm.terms.artifacts.cwd")
+					local file = vim.api.nvim_buf_get_name(0)
+					if #artifacts.resolve_all(file) > 0 then
+						artifacts.select_checkout(file, function(project_dir)
+							require("neoterm.helpers.ensure_dir").open_dir(project_dir, 0, false)
+						end)
 					else
 						projects.open_project(require("my.parameters").dirs.notes)
 					end

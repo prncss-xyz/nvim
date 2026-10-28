@@ -1,5 +1,6 @@
 local config = require("neoterm.config")
 local dirs = config.dirs
+local paths = require("neoterm.terms.artifacts.paths")
 
 local M = {}
 
@@ -7,30 +8,9 @@ local function apply_template(t, vars)
 	if type(t) == "function" then
 		return t(vars)
 	end
-	return (
-		string.gsub(t, "{(.-)}", function(key)
-			return assert(vars[key], "unknown template variable: " .. key)
-		end)
-	)
-end
-
-local function current_branch(cwd)
-	local branch = vim.trim(vim.fn.system({ "git", "-C", cwd, "branch", "--show-current" }))
-	if vim.v.shell_error == 0 and branch ~= "" then
-		return branch
-	end
-end
-
-local function is_default_branch(branch)
-	return branch == nil or vim.tbl_contains(config.default_branches, branch)
-end
-
-local function current_project(cwd)
-	local relative = vim.fs.relpath(dirs.projects, vim.fs.abspath(cwd))
-	if relative == nil then
-		return nil
-	end
-	return vim.split(relative, "/", { plain = true, trimempty = true })[1]
+	return (string.gsub(t, "{(.-)}", function(key)
+		return vars[key] or "{" .. key .. "}"
+	end))
 end
 
 local function quoted_path(path)
@@ -73,14 +53,30 @@ local function resolve_command(command, source, target, step, variant)
 	return resolve(command)
 end
 
-local function build_step(step, source, target, project, branch, current_cwd, name, variant)
-	local cwd = step.fork == true and vim.fs.joinpath(dirs.projects, project, branch) or current_cwd
-	local result =
-		resolve_command(step.command, vim.fs.abspath(source), target and vim.fs.abspath(target) or nil, name, variant)
+local function build_step(step, source, target, current_cwd, name, variant)
+	source = vim.fs.abspath(source)
+	target = target and vim.fs.abspath(target) or nil
+	local cwd = current_cwd
+	if step.fork == true or type(step.fork) == "string" then
+		local identity = paths.source(source, step.source)
+		local branch = paths.branch(identity, step.fork, { variant = variant, step = name })
+		cwd = paths.checkout(identity.project, branch)
+	end
+	local result = resolve_command(step.command, source, target, name, variant)
 	if type(result) == "string" then
 		result = { cmd = result }
 	end
+	assert(result.open == nil, "Use tag = 'open' instead of open")
+	assert(result.tag == nil or result.tag == "open" or result.tag == "agent", "Unknown step command tag")
+	assert(result.tag == nil or result.cmd == nil, "Tagged step commands cannot define cmd")
+	if result.tag == "open" then
+		assert(result.agent == nil and result.prompt == nil and result.skill == nil, "Open steps cannot define agent options")
+	end
 	result.cwd = result.cwd or cwd
+	if step.fork == true or type(step.fork) == "string" then
+		result.artifact_dir = vim.fs.dirname(source)
+		result.artifact_source = source
+	end
 	return result
 end
 
@@ -104,36 +100,11 @@ local function validate_step(step)
 	end
 end
 
-local function source_details(source, step)
-	local relative = assert(vim.fs.relpath(dirs.artifacts, source))
-	local parts = vim.split(relative, "/", { plain = true, trimempty = true })
-	local project, branch = parts[1], parts[2]
-	assert(project and branch, "Artifact step must be inside a project branch")
-	if #parts == 2 then
-		branch = branch:match("^(.*)%." .. vim.pesc(step.source) .. "$")
-			or (branch == step.source and (config.default_branches)[1])
-		assert(branch, "Project-level artifact must be a step source or encode its branch")
-	end
-
-	local filename = vim.fs.basename(source)
-	local identifier = filename == step.source and vim.fs.basename(vim.fs.dirname(source))
-		or assert(filename:match("^(.*)%." .. vim.pesc(step.source) .. "$"))
-	return project, branch, identifier
-end
-
 local function definition(step, source, cwd, variant)
-	local project, branch, identifier = source_details(source, step)
-	local target = step.target and vim.fs.joinpath(vim.fs.dirname(source), step.target) or nil
-	local name_parts = { step.name }
-	if variant then
-		table.insert(name_parts, variant)
-	end
-	table.insert(name_parts, branch)
-	if vim.fs.basename(source) == step.source or identifier ~= branch then
-		table.insert(name_parts, identifier)
-	end
-	local name = table.concat(name_parts, ":")
-	local task = build_step(step, source, target, project, branch, cwd, name, variant)
+	local identity = paths.source(source, step.source)
+	local target = step.target and vim.fs.joinpath(identity.folder, step.target) or nil
+	local name = paths.step_name(identity, step, variant)
+	local task = build_step(step, source, target, cwd, name, variant)
 	task.name = name
 	return task
 end
@@ -144,12 +115,15 @@ local function executable_definition(path, cwd)
 	return { name = name, cmd = { path }, cwd = cwd, exit_policy = "keep" }
 end
 
-local function add_task_executables(definitions, task_source, cwd, checkout_branch, executables)
+local function add_task_executables(definitions, task_source, cwd, checkout_branch, related, executables)
 	if vim.fs.basename(task_source) ~= "task.md" then
 		return
 	end
-	local _, branch = source_details(task_source, { source = "task.md" })
-	if not is_default_branch(checkout_branch) and branch ~= checkout_branch then
+	if
+		not related
+		and not paths.is_default(checkout_branch)
+		and not vim.tbl_contains(paths.branches(paths.source(task_source, "task.md")), checkout_branch)
+	then
 		return
 	end
 	local task_dir = vim.fs.dirname(task_source)
@@ -165,27 +139,32 @@ local function step_matches_source(step, source)
 	return filename == step.source or (step.target == nil and vim.endswith(filename, "." .. step.source))
 end
 
-local function is_available(step, source, checkout_branch)
-	local _, branch = source_details(source, step)
+local function is_available(step, source, checkout_branch, related)
+	local identity = paths.source(source, step.source)
 	local target = step.target and vim.fs.joinpath(vim.fs.dirname(source), step.target) or nil
-	return (is_default_branch(checkout_branch) or branch == checkout_branch)
-		and (target == nil or vim.fn.filereadable(target) == 0)
+	return (
+		paths.is_default(checkout_branch)
+		or vim.tbl_contains(paths.branches(identity, { step }), checkout_branch)
+		or related
+	) and (target == nil or vim.fn.filereadable(target) == 0)
 end
 
 function M.for_file(opts)
 	local definitions = {}
 	local cwd = opts.cwd or vim.fn.getcwd()
-	local project = current_project(cwd)
+	local relative = vim.fs.relpath(dirs.projects, vim.fs.abspath(cwd))
+	local project = relative and paths.project(cwd) or nil
 	local source = vim.fs.abspath(opts.file)
 	local artifact_dir = project and vim.fs.joinpath(dirs.artifacts, project) or nil
 	if artifact_dir == nil or vim.fs.relpath(artifact_dir, source) == nil or vim.fn.filereadable(source) == 0 then
 		return definitions
 	end
 
-	local checkout_branch = current_branch(cwd)
+	local checkout_branch = paths.current_branch(cwd)
+	local related = vim.tbl_contains(paths.checkouts(source), cwd)
 	for _, step in ipairs(opts.steps or {}) do
 		validate_step(step)
-		if step_matches_source(step, source) and is_available(step, source, checkout_branch) then
+		if step_matches_source(step, source) and is_available(step, source, checkout_branch, related) then
 			if step.variants then
 				for _, variant in ipairs(step.variants) do
 					table.insert(definitions, definition(step, source, cwd, variant))
@@ -200,6 +179,7 @@ function M.for_file(opts)
 		source,
 		cwd,
 		checkout_branch,
+		related,
 		require("neoterm.terms.artifacts.tasks").executables(vim.fs.dirname(source))
 	)
 	return definitions
@@ -234,6 +214,8 @@ function M.select_for_current_file(resume)
 				resume = true,
 				name = item.name,
 				cwd = item.cwd,
+				artifact_dir = item.artifact_dir,
+				artifact_source = item.artifact_source,
 			}
 		end
 	end
@@ -245,6 +227,22 @@ function M.select_for_current_file(resume)
 	}, function(definition_)
 		if definition_ == nil then
 			return
+		end
+		if definition_.tag == "open" then
+			return require("neoterm.git").ensure_worktree(definition_.cwd, function(ok)
+				if ok then
+					if definition_.artifact_dir then
+						require("neoterm.terms.artifacts.cwd").link(
+							definition_.cwd,
+							definition_.artifact_dir,
+							definition_.artifact_source
+						)
+					end
+					local path = require("neoterm.helpers.project_file").get_project_file(definition_.cwd)
+						or vim.fs.joinpath(definition_.cwd, "README.md")
+					config.create(vim.fn.fnameescape(path))
+				end
+			end)
 		end
 		definition_.key = definition_.name
 		definition_.display_name = definition_.name

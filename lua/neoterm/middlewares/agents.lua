@@ -24,6 +24,11 @@ return function(opts)
 		resolved.model = nil
 		resolved.effort = nil
 	end
+	if resolved.skill then
+		assert(type(resolved.skill) == "string" and resolved.skill ~= "", "Invalid skill name")
+		local skill = string.format(config.skill or "use the skill %s", resolved.skill)
+		resolved.prompt = resolved.prompt and skill .. " " .. resolved.prompt or skill
+	end
 	return vim.tbl_extend("force", {
 		cmd = config.builder(resolved),
 		auto_scroll = false,

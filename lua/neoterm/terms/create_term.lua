@@ -15,8 +15,8 @@ local function has_open_buffer(dir)
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
 		local path = vim.api.nvim_buf_get_name(bufnr)
 		if vim.bo[bufnr].buflisted and vim.bo[bufnr].buftype == "" and path ~= "" then
-			local artifact_dir = artifact_cwd.resolve(path)
-			if artifact_dir == dir or (not artifact_dir and vim.fs.relpath(dir, path) ~= nil) then
+			local checkouts = artifact_cwd.resolve_all(path)
+			if vim.tbl_contains(checkouts, dir) or (#checkouts == 0 and vim.fs.relpath(dir, path) ~= nil) then
 				return true
 			end
 		end

@@ -16,6 +16,8 @@ local agent_command = {
 	env = env,
 }
 
+local agent_variants = { "claude", "codex" }
+
 local agents = personal({
 	{
 		name = "codex",
@@ -138,14 +140,10 @@ return {
 	},
 	steps = {
 		{
-			name = "var",
+			name = "fork",
 			source = "task.md",
-			variants = { "a", "b" },
-			command = {
-				cmd = "echo {variant}",
-				exit_policy = "keep",
-			},
-			fork = false,
+			command = { tag = "open" },
+			fork = true,
 		},
 		{
 			name = "do",
@@ -168,36 +166,44 @@ return {
 			fork = true,
 		},
 		{
-			name = "task",
-			source = "task.md",
-			target = "design.md",
-			command = {
-				tag = "agent",
-				title = "{step}",
-				prompt = [[create the file {target} and write a broad design to implement @{source}]],
-			},
-			fork = false,
-		},
-		{
 			name = "plannify",
 			source = "task.md",
 			target = "plan.md",
+			variants = agent_variants,
 			command = {
 				tag = "agent",
-				agent = "pi",
+				agent = "{variant}",
 				title = "{step}",
-				prompt = [[/planify @{source}]],
+				skill = "plannify",
+				prompt = "@{source}",
 			},
 			fork = true,
 		},
 		{
-			name = "implement",
-			source = "plan.md",
+			name = "implement-task",
+			source = "task.md",
+			target = "walkthrough.md",
+			variants = agent_variants,
 			command = {
 				tag = "agent",
-				agent = "pi",
+				agent = "{variant}",
 				title = "{step}",
-				prompt = [[/implement @{source}]],
+				skill = "implement",
+				prompt = "@{source}",
+			},
+			fork = true,
+		},
+		{
+			name = "implement-plan",
+			source = "plan.md",
+			target = "walkthrough.md",
+			variants = agent_variants,
+			command = {
+				tag = "agent",
+				agent = "{variant}",
+				title = "{step}",
+				skill = "implement",
+				prompt = "@{source}",
 			},
 			fork = true,
 		},

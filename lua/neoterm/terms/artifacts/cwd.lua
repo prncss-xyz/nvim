@@ -1,27 +1,8 @@
 local M = {}
-
 local config = require("neoterm.config")
-local dirs = config.dirs
+local paths = require("neoterm.terms.artifacts.paths")
 
-local function is_directory(path)
-	local stat = vim.uv.fs_stat(path)
-	return stat ~= nil and stat.type == "directory"
-end
-
-local function project_name(project_dir)
-	local project_path = assert(
-		vim.fs.relpath(dirs.projects, vim.fs.abspath(project_dir)),
-		"Project is outside projects directory"
-	)
-	return assert(vim.split(project_path, "/", { plain = true, trimempty = true })[1], "Project name not found")
-end
-
-local function branch_name(project_dir)
-	local branch = vim.trim(vim.fn.system({ "git", "-C", project_dir, "branch", "--show-current" }))
-	if vim.v.shell_error == 0 and branch ~= "" then
-		return branch
-	end
-end
+M.link = paths.link
 
 ---@param paths table<string, boolean>
 ---@return table|nil
@@ -50,51 +31,58 @@ function M.latest_in(dir)
 	return M.latest_file(paths)
 end
 
----@param filename string
----@return boolean
 function M.contains(filename)
-	return vim.fs.relpath(dirs.artifacts, vim.fs.abspath(filename)) ~= nil
+	return vim.fs.relpath(config.dirs.artifacts, vim.fs.abspath(filename)) ~= nil
 end
 
---- Resolve the project checkout for a file in the shared artifact directory.
---- Artifact paths are <project>/<branch>/....
---- Prefer an existing branch checkout, then main, then master, then <project>.
----@param filename string
----@return string|nil
+function M.resolve_all(filename)
+	return paths.checkouts(filename)
+end
+
 function M.resolve(filename)
-	local relative = vim.fs.relpath(dirs.artifacts, vim.fs.abspath(filename))
-	if relative == nil then
-		return nil
+	local checkouts = M.resolve_all(filename)
+	if #checkouts == 1 then
+		return checkouts[1]
 	end
-
-	local parts = vim.split(relative, "/", { plain = true, trimempty = true })
-	local project = parts[1]
-	if project == nil then
-		return nil
-	end
-
-	local project_dir = vim.fs.joinpath(dirs.projects, project)
-	local branch_dir = parts[2] and vim.fs.joinpath(project_dir, parts[2]) or nil
-	if branch_dir and is_directory(branch_dir) then
-		return branch_dir
-	end
-
-	for _, branch in ipairs(config.default_branches) do
-		local default_dir = vim.fs.joinpath(project_dir, branch)
-		if is_directory(default_dir) then
-			return default_dir
+	local current = vim.fn.getcwd()
+	for _, checkout in ipairs(checkouts) do
+		if vim.fs.relpath(checkout, current) ~= nil then
+			return checkout
 		end
 	end
-	if is_directory(project_dir) then
-		return project_dir
+	local latest, selected
+	for _, checkout in ipairs(checkouts) do
+		local candidate = M.latest_in(checkout)
+		if candidate and (latest == nil or candidate.lastused > latest.lastused) then
+			latest, selected = candidate, checkout
+		elseif candidate and candidate.lastused == latest.lastused then
+			selected = nil
+		end
 	end
+	return selected
 end
 
----@return string|nil
+function M.select_checkout(filename, callback)
+	local checkouts = M.resolve_all(filename)
+	if #checkouts == 1 then
+		return callback(checkouts[1])
+	end
+	vim.ui.select(checkouts, { prompt = "Select artifact checkout: " }, function(checkout)
+		if checkout then
+			callback(checkout)
+		end
+	end)
+end
+
 function M.context_dir()
-	local dir = M.resolve(vim.api.nvim_buf_get_name(0))
+	local file = vim.api.nvim_buf_get_name(0)
+	local dir = M.resolve(file)
 	if dir then
 		return dir
+	end
+	if M.contains(file) then
+		local project = paths.artifact_project(file)
+		return project and paths.default_checkout(project) or nil
 	end
 	if vim.bo.buftype == "terminal" then
 		local _, term = require("toggleterm.terminal").identify()
@@ -102,29 +90,65 @@ function M.context_dir()
 	end
 end
 
---- Resolve the shared artifact directory for a project checkout.
---- Default branches and checkouts without an identifiable branch use the
---- project-level directory; other branches use a branch-specific directory.
----@param project_dir string
----@return string
-function M.for_checkout(project_dir)
-	local project = project_name(project_dir)
-	local branch = branch_name(project_dir)
-	if branch and not vim.tbl_contains(config.default_branches, branch) then
-		return vim.fs.joinpath(dirs.artifacts, project, (branch:gsub("/", "-")))
+function M.artifact_folders(project_dir)
+	return paths.artifact_folders(project_dir)
+end
+
+function M.select_artifacts(project_dir, callback)
+	local folder, available = paths.preferred_folder(project_dir)
+	if not available then
+		vim.fn.mkdir(folder, "p")
+		local index = vim.fs.joinpath(folder, "index.md")
+		if vim.fn.filereadable(index) == 0 then
+			assert(vim.fn.writefile({}, index) == 0, "Failed to create repo artifact")
+		end
 	end
-	return vim.fs.joinpath(dirs.artifacts, project)
+	return callback(folder)
 end
 
----@param project_dir string
----@return string
+function M.for_checkout(project_dir)
+	return (paths.preferred_folder(project_dir))
+end
+
+function M.latest_for_checkout(project_dir, folder)
+	local files = {}
+	for _, file in ipairs(paths.artifact_files(project_dir)) do
+		if folder == nil or vim.fs.relpath(folder, file) ~= nil then
+			files[file] = true
+		end
+	end
+	return M.latest_file(files)
+end
+
+function M.select_artifact_file(project_dir, folder, callback)
+	local files = {}
+	for _, file in ipairs(paths.artifact_files(project_dir)) do
+		if vim.fs.relpath(folder, file) ~= nil then
+			table.insert(files, file)
+		end
+	end
+	if #files == 0 then
+		return callback(vim.fs.joinpath(folder, "index.md"))
+	end
+	if #files == 1 then
+		return callback(files[1])
+	end
+	vim.ui.select(files, {
+		prompt = "Select artifact file: ",
+		format_item = function(file)
+			return assert(vim.fs.relpath(folder, file))
+		end,
+	}, function(file)
+		if file then
+			callback(file)
+		end
+	end)
+end
+
 function M.for_project(project_dir)
-	local project = project_name(project_dir)
-	return vim.fs.joinpath(dirs.artifacts, project)
+	return paths.project_artifacts(paths.project(project_dir))
 end
 
----@param path string
----@return string|nil
 function M.project_file(path)
 	local project_dir = M.resolve(path)
 	if project_dir == nil then

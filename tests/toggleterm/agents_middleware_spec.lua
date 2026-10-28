@@ -33,6 +33,27 @@ T["agent command and alias settings resolve with caller overrides"] = function()
 	}, child.lua_get("result"))
 end
 
+T["skill prefixes the prompt using the harness skill format"] = function()
+	child.lua([[
+		package.loaded["neoterm.config"] = {
+			agents = { { name = "codex" }, { name = "pi" }, { name = "claude" } },
+		}
+		local middleware = require("neoterm.middlewares.agents")
+		result = {
+			middleware({ tag = "agent", agent = "codex", skill = "deploy" }).cmd,
+			middleware({ tag = "agent", agent = "codex", skill = "deploy", prompt = "now" }).cmd,
+			middleware({ tag = "agent", agent = "pi", skill = "deploy", prompt = "now" }).cmd,
+			middleware({ tag = "agent", agent = "claude", skill = "deploy", prompt = "now" }).cmd,
+		}
+	]])
+	assert.same({
+		{ "codex", "$deploy" },
+		{ "codex", "$deploy now" },
+		{ "pi", "/skill:deploy now" },
+		{ "claude", "use the skill deploy now" },
+	}, child.lua_get("result"))
+end
+
 T["claude enables OSC status without screen heuristics"] = function()
 	child.lua([[
 		package.loaded["neoterm.config"] = { agents = { { name = "claude" } } }

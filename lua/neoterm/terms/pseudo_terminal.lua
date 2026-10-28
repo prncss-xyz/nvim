@@ -21,7 +21,7 @@ local function latest_artifact(dir)
 		return nil
 	end
 	local artifact_cwd = require("neoterm.terms.artifacts.cwd")
-	return artifact_cwd.latest_in(artifact_cwd.for_checkout(dir))
+	return artifact_cwd.latest_for_checkout(dir)
 end
 
 local function source_context(dir, invocation)
@@ -37,8 +37,10 @@ local function source_context(dir, invocation)
 	if path == "" or artifact_cwd.contains(path) or vim.fs.relpath(dir, path) == nil then
 		return
 	end
+	local artifact = latest_artifact(dir)
 	return vim.tbl_extend("force", ctx, {
 		path = vim.fs.relpath(dir, path) or path,
+		artifact_dir = artifact and vim.fs.dirname(artifact.path) or nil,
 	})
 end
 
@@ -79,31 +81,34 @@ function M.create(touch)
 		local current = vim.fs.normalize(vim.api.nvim_buf_get_name(0))
 		local artifact_cwd = require("neoterm.terms.artifacts.cwd")
 		local from_artifact = artifact_cwd.contains(current)
+		if from_artifact then
+			return artifact_cwd.select_checkout(current, function(dir)
+				local target = require("neoterm.helpers.project_file").get_project_file(
+					dir,
+					{ require("neoterm.config").dirs.artifacts }
+				) or vim.fs.joinpath(dir, "README.md")
+				require("neoterm.config").create(vim.fn.fnameescape(target))
+				touch()
+			end)
+		end
 		local dir = project_dir()
 		if dir == nil then
 			vim.notify("Project is outside projects directory", vim.log.levels.WARN)
 			return
 		end
-
-		if from_artifact then
-			local target = require("neoterm.helpers.project_file").get_project_file(dir, { require("neoterm.config").dirs.artifacts })
-			if target == nil then
-				target = vim.fs.joinpath(dir, "README.md")
+		artifact_cwd.select_artifacts(dir, function(target_dir)
+			local target = artifact_cwd.latest_for_checkout(dir, target_dir)
+			if target then
+				focus_buffer(target.bufnr)
+			else
+				vim.fn.mkdir(target_dir, "p")
+				return artifact_cwd.select_artifact_file(dir, target_dir, function(file)
+					require("neoterm.config").create(vim.fn.fnameescape(file))
+					touch()
+				end)
 			end
-			require("neoterm.config").create(vim.fn.fnameescape(target))
 			touch()
-			return
-		end
-
-		local target_dir = artifact_cwd.for_checkout(dir)
-		local target = artifact_cwd.latest_in(target_dir)
-		if target then
-			focus_buffer(target.bufnr)
-		else
-			vim.fn.mkdir(target_dir, "p")
-			require("neoterm.config").create(vim.fn.fnameescape(vim.fs.joinpath(target_dir, "index.md")))
-		end
-		touch()
+		end)
 	end
 
 	local function send_to_artifact(str)
@@ -125,7 +130,8 @@ function M.create(touch)
 		vim.fn.bufload(target.bufnr)
 		local target_windows = vim.fn.win_findbuf(target.bufnr)
 		local current_window = vim.api.nvim_get_current_win()
-		local target_window = vim.api.nvim_win_get_buf(current_window) == target.bufnr and current_window or target_windows[1]
+		local target_window = vim.api.nvim_win_get_buf(current_window) == target.bufnr and current_window
+			or target_windows[1]
 		local row, col
 		if target_window then
 			row, col = unpack(vim.api.nvim_win_get_cursor(target_window))

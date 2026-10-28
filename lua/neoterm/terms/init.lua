@@ -163,7 +163,8 @@ end
 
 local function create_and_notify(item, cb)
 	local ctx = require("neoterm.terms.window").get_ctx() or {}
-	ctx = vim.tbl_extend("force", ctx, { cwd = item.cwd, path = ctx.path or item.cwd })
+	ctx =
+		vim.tbl_extend("force", ctx, { cwd = item.cwd, path = ctx.path or item.cwd, artifact_dir = item.artifact_dir })
 	local expand = require("neoterm.put.init").expand_values
 	item.cmd = normalize_cmd(expand(item.cmd, ctx))
 	local env = expand(item.env, ctx)
@@ -227,6 +228,14 @@ local function make_item(item, cb, requested_instance)
 	end
 	require("neoterm.git").ensure_worktree(item.cwd, function(ok)
 		if ok then
+			if item.artifact_dir then
+				require("neoterm.terms.artifacts.cwd").link(item.cwd, item.artifact_dir, item.artifact_source)
+			elseif config.dirs and vim.fs.relpath(config.dirs.projects, item.cwd) ~= nil then
+				return require("neoterm.terms.artifacts.cwd").select_artifacts(item.cwd, function(folder)
+					item.artifact_dir = folder
+					create()
+				end)
+			end
 			create()
 		else
 			release_instance(item)

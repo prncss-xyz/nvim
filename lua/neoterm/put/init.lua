@@ -2,9 +2,17 @@ local M = {}
 local path_utils = require("neoterm.put.path")
 
 local vars = {
-	artifacts = function(ctx)
+	artifacts = function(ctx, instance)
 		local artifact_cwd = require("neoterm.terms.artifacts.cwd")
+		local folder = ctx.artifact_dir or (instance and instance.artifact_dir)
+		if folder then
+			return path_utils.home_relative(folder)
+		end
 		local path = vim.fs.abspath(vim.fn.expand(ctx.cwd or ctx.path))
+		if artifact_cwd.contains(path) then
+			local folder = require("neoterm.terms.artifacts.paths").is_directory(path) and path or vim.fs.dirname(path)
+			return path_utils.home_relative(folder)
+		end
 		local project_dir = artifact_cwd.resolve(path) or vim.fs.root(path, ".git")
 		return path_utils.home_relative(artifact_cwd.for_checkout(assert(project_dir, "Artifact project not found")))
 	end,

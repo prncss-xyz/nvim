@@ -20,8 +20,7 @@ local function default_root(artifacts)
 	if relative == nil or relative == "." then
 		return artifacts
 	end
-	local project = assert(vim.split(relative, "/", { plain = true, trimempty = true })[1])
-	return vim.fs.joinpath(artifacts, project)
+	return require("neoterm.terms.artifacts.cwd").for_project(vim.fn.getcwd())
 end
 
 local function close()

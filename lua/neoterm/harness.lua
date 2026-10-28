@@ -2,6 +2,7 @@ local M = {}
 
 local artifact_cwd = require("neoterm.terms.artifacts.cwd")
 local config = require("neoterm.config")
+local paths = require("neoterm.terms.artifacts.paths")
 local last_created_artifact
 
 local function sanitize_branch(summary)
@@ -72,16 +73,17 @@ function M.select_artifact_directory(root, callback)
 	end
 
 	local project_directory = artifact_cwd.for_project(root)
-	local branch_directory = artifact_cwd.for_checkout(root)
-	if branch_directory ~= project_directory then
-		add_directory(branch_directory)
+	for _, branch_directory in ipairs(artifact_cwd.artifact_folders(root)) do
+		if branch_directory ~= project_directory then
+			add_directory(branch_directory)
+		end
 	end
 	add_directory(project_directory)
 
 	local existing_directories = {}
 	for name, kind in vim.fs.dir(artifacts, { depth = math.huge }) do
 		local path = vim.fs.joinpath(artifacts, name)
-		if kind == "directory" and artifact_cwd.resolve(path) then
+		if kind == "directory" and #artifact_cwd.resolve_all(path) > 0 then
 			table.insert(existing_directories, path)
 		end
 	end
@@ -115,7 +117,15 @@ function M.create_artifact(input, filename, root, directory)
 	end
 
 	if directory then
-		create(directory, root or assert(artifact_cwd.resolve(directory), "Artifact project not found"))
+		create(
+			directory,
+			root
+				or artifact_cwd.resolve(directory)
+				or assert(
+					paths.default_checkout(paths.source(vim.fs.joinpath(directory, filename)).project),
+					"Artifact project not found"
+				)
+		)
 		return
 	end
 
@@ -161,63 +171,33 @@ local prompts = {
 	plan = pi_prompt("implement"),
 }
 
-local function artifact_branch_task(relative)
-	local directory, filename = relative:match("^(.+)/([^/]+)%.md$")
-	if not directory then
+local function artifact_branch_task(path)
+	if vim.fs.relpath(config.dirs.artifacts, vim.fs.abspath(path)) == nil then
 		return nil
 	end
-	local parts = vim.split(directory, "/", { plain = true })
-	if #parts < 2 then
-		return nil
-	end
-	local project = table.remove(parts, 1)
-	local task = filename:match("%.([^.]+)$") or filename
+	local identity = paths.source(path)
+	local task = identity.source:match("^(.*)%.md$")
 	if not prompts[task] then
 		return nil
 	end
-	local name = filename:match("^(.*)%." .. vim.pesc(task) .. "$")
-	if name then
-		table.insert(parts, name)
-	end
-	local branch = table.concat(parts, "-"):lower():gsub("[^%w]+", "-"):gsub("^-+", ""):gsub("-+$", "")
-	if branch == "" then
-		return nil
-	end
-	return project, branch, task
+	return identity, task
 end
 
 local function with_worktree(path)
-	local project_dir = artifact_cwd.resolve(path)
-	local artifact_root = project_dir and artifact_cwd.for_project(project_dir) or nil
-	local relative_path = artifact_root and vim.fs.relpath(artifact_root, path) or nil
-	if not relative_path then
-		vim.notify("Current buffer is not inside the project's artifacts", vim.log.levels.ERROR)
+	local identity, task = artifact_branch_task(path)
+	if not identity then
+		vim.notify("Artifact filename must identify a configured task", vim.log.levels.ERROR)
 		return
 	end
-
-	local _, branch, task = artifact_branch_task(relative_path)
-	if not branch then
-		vim.notify("Artifact filename must match {artifacts}/{project}/{path}/{name}.{step}.md or {path}/{step}.md", vim.log.levels.ERROR)
-		return
-	end
-	local prompt = prompts[task]
-	if not prompt then
-		vim.notify("This task is not configured")
-		return
-	end
-
-	local current_branch = vim.trim(vim.fn.system({ "git", "-C", project_dir, "branch", "--show-current" }))
-	assert(vim.v.shell_error == 0 and current_branch ~= "", "Failed to determine current Git branch")
-
-	local terms = require("neoterm.terms")
-	if branch == current_branch then
-		terms.focus(prompt(path, project_dir))
-		return
-	end
-
-	vim.notify("Creating worktree " .. branch .. "...", vim.log.levels.INFO)
-	require("neoterm.git").create_worktree(branch, function(_, worktree_path)
-		terms.focus(prompt(path, worktree_path))
+	local checkout = paths.checkout(identity.project, paths.branch(identity))
+	require("neoterm.git").ensure_worktree(checkout, function(ok)
+		if ok then
+			paths.link(checkout, identity.folder, identity.file)
+			local command = prompts[task](path, checkout)
+			command.artifact_dir = identity.folder
+			command.artifact_source = identity.file
+			require("neoterm.terms").focus(command)
+		end
 	end)
 end
 
@@ -236,11 +216,11 @@ function M.pick_with_worktree(include_dirty)
 		if relative == nil then
 			return false
 		end
-		local project, branch = artifact_branch_task(relative)
-		if branch == nil then
+		local identity = artifact_branch_task(vim.fs.joinpath(path, name))
+		if identity == nil then
 			return false
 		end
-		return include_dirty or vim.fn.isdirectory(vim.fs.joinpath(dirs.projects, project, branch)) == 0
+		return include_dirty or vim.fn.isdirectory(paths.checkout(identity.project, identity.branch)) == 0
 	end, { path = dirs.artifacts, type = "file", limit = math.huge })
 	table.sort(files)
 
