@@ -58,9 +58,30 @@ T["expands variants in string and function templates"] = function()
 		definitions[#definitions].on_success()
 		assert(callback_vars == template_vars)
 		assert(callback_vars.source == '"' .. source .. '"')
+		assert(template_vars.message == "feat: feature")
+		assert(callback_vars.message == "feat: feature")
 		result = vim.tbl_map(function(item)
 			return { name = item.name, cmd = item.cmd, title = item.title }
 		end, definitions)
+		local calls = 0
+		package.loaded["neoterm.config"].steps = {
+			{ name = "callback", source = "task.md", on_success = function(vars)
+				calls = calls + 1
+				assert(vars.source == '"' .. source .. '"')
+			end },
+			{ name = "noop", source = "task.md" },
+		}
+		vim.api.nvim_buf_set_name(0, source)
+		package.loaded["neoterm.terms.artifacts.cwd"] = { context_dir = function() return cwd end }
+		package.loaded["neoterm.terms"] = { start = function() error("Unexpected terminal") end }
+		for index = 1, 2 do
+			vim.ui.select = function(items, _, callback)
+				assert(calls == index - 1)
+				callback(items[index])
+			end
+			commands.select_for_current_file()
+		end
+		assert(calls == 1)
 	]])
 	assert.same({
 		{ name = "var:a:feature:feature", cmd = "echo a", title = "var:a:feature:feature" },
@@ -125,10 +146,11 @@ T["nested artifact directories form the branch name"] = function()
 			file = source,
 			steps = {
 				{ name = "fork", source = "task.md", fork = true, command = { tag = "open" } },
-				{ name = "variant", source = "task.md", fork = "{variant}", variants = { "a" }, command = "echo {variant}" },
+				{ name = "variant", source = "task.md", fork = "{variant}", variants = { "a" }, command = { cmd = { "git", "commit", "-m", "{message}" } } },
 			},
 		})
 		result = vim.tbl_map(function(item) return vim.fs.relpath(projects, item.cwd) end, definitions)
+		assert(vim.deep_equal(definitions[2].cmd, { "git", "commit", "-m", "fix(stores): provider store" }))
 	]])
 	assert.same({
 		"utils-mono/stores-fix-provider-store",

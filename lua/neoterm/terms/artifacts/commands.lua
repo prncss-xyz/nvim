@@ -30,6 +30,9 @@ local function resolve_command(command, source, target, step, variant, cwd)
 		target = target and quoted_path(target) or nil,
 		step = step,
 		variant = variant,
+		message = vim.fs.basename(source) == "task.md" and vim.fs.dirname(source) ~= paths.project_artifacts(
+			paths.artifact_project(source)
+		) and paths.commit_message(source) or nil,
 	}
 	local function resolve(value)
 		if type(value) == "function" then
@@ -59,10 +62,17 @@ local function resolve_command(command, source, target, step, variant, cwd)
 					break
 				end
 			end
-			assert(vars.source_branch, "Cannot determine default branch")
+			assert(rawget(vars, "source_branch"), "Cannot determine default branch")
 		end
 		return apply_template(value, vars)
 	end
+	setmetatable(vars, {
+		__index = function(_, key)
+			if key == "source_branch" then
+				return resolve("{source_branch}")
+			end
+		end,
+	})
 	return resolve(command), vars
 end
 
@@ -76,6 +86,10 @@ local function build_step(step, source, target, current_cwd, name, variant)
 		cwd = paths.checkout(identity.project, branch)
 	end
 	local result, vars = resolve_command(step.command, source, target, name, variant, current_cwd)
+	vars.cwd = cwd
+	if step.command == nil then
+		result = {}
+	end
 	if type(result) == "string" then
 		result = { cmd = result }
 	end
@@ -117,8 +131,11 @@ local function validate_step(step)
 		end
 	end
 	assert(
-		type(step.command) == "string" or type(step.command) == "table" or type(step.command) == "function",
-		string.format("Step %s command must be a string, table, or function", step.name)
+		step.command == nil
+			or type(step.command) == "string"
+			or type(step.command) == "table"
+			or type(step.command) == "function",
+		string.format("Step %s command must be a string, table, function, or nil", step.name)
 	)
 	assert(
 		step.variants == nil or type(step.variants) == "table",
@@ -277,6 +294,12 @@ function M.select_for_current_file(resume)
 		end,
 	}, function(definition_)
 		if definition_ == nil then
+			return
+		end
+		if definition_.tag == nil and definition_.cmd == nil then
+			if definition_.on_success then
+				definition_.on_success()
+			end
 			return
 		end
 		if definition_.tag == "open" then

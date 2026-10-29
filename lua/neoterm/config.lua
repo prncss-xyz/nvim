@@ -194,11 +194,24 @@ return {
 			fork = true,
 		},
 		{
+			name = "diff",
+			source = { "task.md", "plan.md", "walkthrough.md" },
+			fork = true,
+			on_success = function(vars)
+				require("neoterm.git").ensure_worktree(vars.cwd, function(ok)
+					if ok then
+						require("neoterm.helpers.ensure_dir").ensure_dir(vars.cwd)
+						require("plugins.neotree.git_status").open(vars.source_branch, vars.cwd)
+					end
+				end)
+			end,
+		},
+		{
 			name = "merge",
 			source = "walkthrough.md",
 			command = {
 				confirm = true,
-				cmd = { "merge-from-current", "{source_branch}", "chore: merge from {branch}" },
+				cmd = { "merge-from-current", "{source_branch}", "{commit_message}" },
 				exit_policy = "keep",
 			},
 			on_success = function(vars)

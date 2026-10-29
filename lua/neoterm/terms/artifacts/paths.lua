@@ -115,6 +115,24 @@ function M.source(path, name)
 	}
 end
 
+function M.commit_message(path)
+	assert(vim.fs.basename(path) == "task.md", "Commit messages require a task.md file")
+	local parts = assert(parts_under(dirs.artifacts, path), "Task is outside artifacts directory")
+	assert(#parts >= 3, "Task must be inside a named task directory")
+	local branch = parts[#parts - 1]
+	local prefix, change = branch:match("^(%a+)%-(.+)$")
+	if
+		not vim.tbl_contains(
+			{ "feat", "fix", "build", "chore", "ci", "docs", "style", "refactor", "perf", "test", "revert" },
+			prefix
+		)
+	then
+		prefix, change = "feat", branch
+	end
+	local scope = #parts > 3 and "(" .. parts[#parts - 2]:gsub("-", " ") .. ")" or ""
+	return prefix .. scope .. ": " .. change:gsub("-", " ")
+end
+
 function M.branch(source, fork, vars)
 	local branch = source.branch
 	assert(fork == nil or type(fork) == "boolean" or type(fork) == "string", "Fork must be a boolean or string")
@@ -301,7 +319,7 @@ function M.default_checkout(project)
 	return M.is_directory(root) and root or nil
 end
 
-function M.checkouts(path)
+local function checkouts(path, get_links)
 	path = vim.fs.abspath(path)
 	local parts = parts_under(dirs.artifacts, path)
 	if not parts or not parts[1] then
@@ -321,7 +339,7 @@ function M.checkouts(path)
 		for name, kind in vim.fs.dir(root) do
 			if kind == "directory" then
 				local checkout = vim.fs.joinpath(root, name)
-				local sources, folders = links(checkout)
+				local sources, folders = get_links(checkout)
 				local matches = #sources == 0 and #folders == 0 and vim.tbl_contains(names, name)
 				for _, source in ipairs(sources) do
 					matches = matches
@@ -343,7 +361,7 @@ function M.checkouts(path)
 	for count = #parts - 1, 2, -1 do
 		local checkout = M.checkout(project, table.concat(parts, "-", 2, count))
 		if M.is_directory(checkout) then
-			local sources, folders = links(checkout)
+			local sources, folders = get_links(checkout)
 			if #sources == 0 and #folders == 0 then
 				return { checkout }
 			end
@@ -351,6 +369,22 @@ function M.checkouts(path)
 	end
 	local fallback = M.default_checkout(project)
 	return fallback and { fallback } or {}
+end
+
+function M.checkouts(path)
+	return checkouts(path, links)
+end
+
+function M.checkout_resolver()
+	local cache = {}
+	return function(path)
+		return checkouts(path, function(checkout)
+			if cache[checkout] == nil then
+				cache[checkout] = { links(checkout) }
+			end
+			return unpack(cache[checkout])
+		end)
+	end
 end
 
 return M

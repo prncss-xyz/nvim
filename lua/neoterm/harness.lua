@@ -81,9 +81,10 @@ function M.select_artifact_directory(root, callback)
 	add_directory(project_directory)
 
 	local existing_directories = {}
+	local resolve_checkouts = paths.checkout_resolver()
 	for name, kind in vim.fs.dir(artifacts, { depth = math.huge }) do
 		local path = vim.fs.joinpath(artifacts, name)
-		if kind == "directory" and #artifact_cwd.resolve_all(path) > 0 then
+		if kind == "directory" and #resolve_checkouts(path) > 0 then
 			table.insert(existing_directories, path)
 		end
 	end

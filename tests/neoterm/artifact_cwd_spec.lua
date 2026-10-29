@@ -39,6 +39,26 @@ local T = MiniTest.new_set({
 	},
 })
 
+T["commit messages use the task name and immediate parent scope"] = function()
+	child.lua([[
+		for _, case in ipairs({
+			{ "fix-provider-store/task.md", "fix: provider store" },
+			{ "add-provider-store/task.md", "feat: add provider store" },
+			{ "stores/fix-provider-store/task.md", "fix(stores): provider store" },
+			{ "outer/my-stores/docs-provider-store/task.md", "docs(my stores): provider store" },
+			{ "fixation-provider/task.md", "feat: fixation provider" },
+		}) do
+			assert(paths.commit_message(source(case[1])) == case[2])
+		end
+		for _, prefix in ipairs({ "feat", "fix", "build", "chore", "ci", "docs", "style", "refactor", "perf", "test", "revert" }) do
+			assert(paths.commit_message(source(prefix .. "-change/task.md")) == prefix .. ": change")
+		end
+		for _, path in ipairs({ "fix-provider.task.md", "fix-provider/plan.md", "task.md" }) do
+			assert(not pcall(paths.commit_message, source(path)))
+		end
+	]])
+end
+
 T["nested artifacts and existing forks resolve in both directions"] = function()
 	child.lua([[
 		local repo = checkout("stores-fix-provider-store")
@@ -327,6 +347,36 @@ T["missing artifact folders fall back to a repo level index"] = function()
 		local selected
 		cwd.select_artifact_file(repo, cwd.for_checkout(repo), function(file) selected = file end)
 		assert(selected == vim.fs.joinpath(folder, "index.md"))
+	]])
+end
+
+T["checkout scans reuse git queries and refresh between scans"] = function()
+	child.lua([[
+		local first = source("first/task.md")
+		local second = source("second/task.md")
+		local repo = checkout("shared")
+		paths.link(repo, vim.fs.dirname(first))
+		local expected_second = paths.checkouts(second)
+		local system, systemlist = vim.fn.system, vim.fn.systemlist
+		local calls = 0
+		vim.fn.system = function(...)
+			calls = calls + 1
+			return system(...)
+		end
+		vim.fn.systemlist = function(...)
+			calls = calls + 1
+			return systemlist(...)
+		end
+		local resolve = paths.checkout_resolver()
+		assert(vim.deep_equal(resolve(first), { repo }))
+		local initial_calls = calls
+		assert(initial_calls == 3, tostring(initial_calls))
+		assert(vim.deep_equal(resolve(second), expected_second))
+		assert(vim.deep_equal(resolve(vim.fs.dirname(first)), { repo }))
+		assert(calls == initial_calls)
+		paths.link(repo, vim.fs.dirname(second))
+		assert(vim.deep_equal(paths.checkout_resolver()(second), { repo }))
+		assert(vim.deep_equal(paths.checkouts(second), { repo }))
 	]])
 end
 

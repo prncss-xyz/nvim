@@ -2,7 +2,6 @@ local win = require("my.parameters").domain.win
 local pick = require("my.parameters").domain.pick
 local theme = require("my.parameters").theme
 local personal = require("my.conds").personal
-local git_status_base = "HEAD"
 
 local function get_default_branch()
 	local cwd = vim.fn.getcwd()
@@ -15,19 +14,7 @@ local function get_default_branch()
 	error("No local main or master branch found")
 end
 
-local function open_git_status(base)
-	require("my.ui_toggle").activate("neotree", function()
-		local cwd = vim.fn.getcwd()
-		local selected_base = base
-		vim.fn.system({ "git", "-C", cwd, "rev-parse", "--verify", base .. "^{commit}" })
-		if vim.v.shell_error ~= 0 then
-			selected_base = "HEAD"
-		end
-		require("neo-tree.command").execute({ source = "git_status", dir = cwd, git_base = selected_base })
-		require("my.git_base").set(cwd, selected_base)
-		git_status_base = selected_base
-	end)
-end
+local open_git_status = require("plugins.neotree.git_status").open
 
 return {
 	{
@@ -252,7 +239,7 @@ return {
 			{
 				pick .. theme.hunk,
 				function()
-					require("plugins.snacks.transform").diff_files(git_status_base)
+					require("plugins.snacks.transform").diff_files(require("plugins.neotree.git_status").base)
 				end,
 				desc = "Pick Diff Files",
 			},
