@@ -180,8 +180,8 @@ return {
 			fork = true,
 		},
 		{
-			name = "implement-task",
-			source = "task.md",
+			name = "implement",
+			source = { "task.md", "plan.md" },
 			target = "walkthrough.md",
 			variants = agent_variants,
 			command = {
@@ -194,18 +194,25 @@ return {
 			fork = true,
 		},
 		{
-			name = "implement-plan",
-			source = "plan.md",
-			target = "walkthrough.md",
-			variants = agent_variants,
+			name = "merge",
+			source = "walkthrough.md",
 			command = {
-				tag = "agent",
-				agent = "{variant}",
-				title = "{step}",
-				skill = "implement",
-				prompt = "@{source}",
+				confirm = true,
+				cmd = { "merge-from-current", "{source_branch}", "chore: merge from {branch}" },
+				exit_policy = "keep",
 			},
-			fork = true,
+			on_success = function(vars)
+				local source = vars.source:sub(2, -2):gsub("^~", function()
+					return vim.env.HOME
+				end)
+				local identity = require("neoterm.terms.artifacts.paths").source(source)
+				local prefix = vim.fs.basename(source):sub(1, -#identity.source - 1)
+				local task = vim.fs.joinpath(identity.folder, prefix .. "task.md")
+				local yaml = require("neoterm.yaml")
+				local frontmatter = yaml.read_file(task)
+				frontmatter.status = "done"
+				yaml.write_file(task, frontmatter)
+			end,
 		},
 	},
 	tasks = {

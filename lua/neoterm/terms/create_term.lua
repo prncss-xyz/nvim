@@ -140,6 +140,7 @@ function Term:new(opts, send, prepare, min_runtime, notify)
 		send = send,
 		notify = notify,
 		exit_policy = opts.exit_policy,
+		on_success = opts.on_success,
 		cwd = opts.cwd or vim.fn.getcwd(),
 		screen_manifest = opts.screen_manifest,
 		osc_status = opts.osc_status,
@@ -335,6 +336,9 @@ function Term:on_exit(terminal, _, exit_code)
 		type = "status",
 		value = exit_code == 0 and "success" or "failure",
 	})
+	if exit_code == 0 and self.on_success then
+		self.on_success()
+	end
 	local runtime = self.started_at and (vim.uv.hrtime() - self.started_at) / 1000000 or 0
 	if self.exit_policy ~= "restart" or exit_code == 0 or runtime < self.min_runtime or self.restart_scheduled then
 		return

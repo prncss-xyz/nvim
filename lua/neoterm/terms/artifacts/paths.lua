@@ -76,9 +76,9 @@ local function source_name(path)
 	local filename = vim.fs.basename(path)
 	local names = { "task.md", "plan.md", "design.md", "index.md" }
 	for _, step in ipairs(config.steps or {}) do
-		table.insert(names, step.source)
+		vim.list_extend(names, type(step.source) == "table" and step.source or { step.source })
 		if step.target then
-			table.insert(names, step.target)
+			vim.list_extend(names, type(step.target) == "table" and step.target or { step.target })
 		end
 	end
 	table.sort(names, function(a, b)
@@ -134,7 +134,8 @@ function M.step_name(source, step, variant)
 		table.insert(parts, variant)
 	end
 	table.insert(parts, source.branch)
-	if vim.fs.basename(source.file) == step.source or source.identifier ~= source.branch then
+	local sources = type(step.source) == "table" and step.source or { step.source }
+	if vim.tbl_contains(sources, vim.fs.basename(source.file)) or source.identifier ~= source.branch then
 		table.insert(parts, source.identifier)
 	end
 	return table.concat(parts, ":")
@@ -143,7 +144,8 @@ end
 function M.branches(source, steps)
 	local result = { source.branch }
 	for _, step in ipairs(steps or config.steps or {}) do
-		if step.source == source.source and (step.fork == true or type(step.fork) == "string") then
+		local sources = type(step.source) == "table" and step.source or { step.source }
+		if vim.tbl_contains(sources, source.source) and (step.fork == true or type(step.fork) == "string") then
 			for _, variant in ipairs(step.variants or { false }) do
 				variant = variant or nil
 				table.insert(

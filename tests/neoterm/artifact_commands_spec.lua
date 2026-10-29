@@ -42,16 +42,22 @@ T["expands variants in string and function templates"] = function()
 			})
 			assert(not ok, "Invalid command should fail validation")
 		end
+		local callback_vars, template_vars
 		local definitions = commands.for_file({
 			cwd = cwd,
 			file = source,
 			steps = {
 				{ name = "var", source = "task.md", variants = { "a", "b" }, command = { cmd = "echo {variant}", title = "{step}" } },
 				{ name = "fn", source = "task.md", variants = { "a", "b" }, command = function(vars)
+					template_vars = vars
 					return { cmd = vars.variant .. " " .. vars.step }
-				end },
+				end, on_success = function(vars) callback_vars = vars end },
 			},
 		})
+		assert(callback_vars == nil)
+		definitions[#definitions].on_success()
+		assert(callback_vars == template_vars)
+		assert(callback_vars.source == '"' .. source .. '"')
 		result = vim.tbl_map(function(item)
 			return { name = item.name, cmd = item.cmd, title = item.title }
 		end, definitions)
@@ -93,7 +99,10 @@ T["fork strings append literal and expanded suffixes to the artifact branch"] = 
 			return vim.fs.relpath(projects, item.cwd)
 		end, definitions)
 	]])
-	assert.same({ "sample/feature-review", "sample/feature-a", "sample/feature-b", "sample/feature", "sample/main" }, child.lua_get("result"))
+	assert.same(
+		{ "sample/feature-review", "sample/feature-a", "sample/feature-b", "sample/feature", "sample/main" },
+		child.lua_get("result")
+	)
 end
 
 T["nested artifact directories form the branch name"] = function()
@@ -166,6 +175,58 @@ T["fork opens a project file only after the worktree is ready"] = function()
 		{ "link", "/projects/sample/feature", "/artifacts/sample/feature" },
 		{ "open", "/projects/sample/feature/src/main.lua" },
 	}, child.lua_get("result"))
+end
+
+T["source arrays prefer the last existing file and target arrays block on any file"] = function()
+	child.lua([[
+		local root = vim.fn.tempname()
+		local cwd = vim.fs.joinpath(root, "projects", "sample", "main")
+		local artifacts = vim.fs.joinpath(root, "artifacts")
+		local folder = vim.fs.joinpath(artifacts, "sample", "feature")
+		vim.fn.mkdir(cwd, "p")
+		vim.fn.mkdir(folder, "p")
+		local task = vim.fs.joinpath(folder, "task.md")
+		local plan = vim.fs.joinpath(folder, "plan.md")
+		vim.fn.writefile({ "task" }, task)
+		package.loaded["neoterm.config"] = {
+			dirs = { projects = vim.fs.joinpath(root, "projects"), artifacts = artifacts },
+			default_branches = { "main" },
+		}
+		package.loaded["neoterm.terms.artifacts.tasks"] = { executables = function() return {} end }
+		local commands = require("neoterm.terms.artifacts.commands")
+		local step = {
+			name = "implement",
+			source = { "task.md", "plan.md" },
+			target = { "walkthrough.md", "done.md" },
+			fork = true,
+			command = { cmd = "{source} {target}" },
+		}
+		local function definitions(file)
+			return commands.for_file({ cwd = cwd, file = file, steps = { step } })
+		end
+		local function check(file, expected)
+			local items = definitions(file)
+			assert(#items == 1)
+			assert(items[1].artifact_source == expected)
+			assert(items[1].cmd == '"' .. expected .. '" "' .. folder .. '/walkthrough.md"')
+			assert(items[1].cwd == vim.fs.joinpath(root, "projects", "sample", "feature"))
+		end
+		check(task, task)
+		vim.fn.writefile({ "plan" }, plan)
+		check(task, plan)
+		check(plan, plan)
+		local paths = require("neoterm.terms.artifacts.paths")
+		assert(#paths.branches(paths.source(plan), { step }) == 1)
+		for _, target in ipairs(step.target) do
+			local path = vim.fs.joinpath(folder, target)
+			vim.fn.writefile({ "done" }, path)
+			assert(#definitions(task) == 0)
+			vim.fn.delete(path)
+		end
+		vim.fn.delete(plan)
+		check(task, task)
+		assert(type(step.source) == "table" and type(step.target) == "table")
+	]])
 end
 
 return T

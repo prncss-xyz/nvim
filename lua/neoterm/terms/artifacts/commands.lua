@@ -24,7 +24,7 @@ local function quoted_path(path)
 	return '"' .. path .. '"'
 end
 
-local function resolve_command(command, source, target, step, variant)
+local function resolve_command(command, source, target, step, variant, cwd)
 	local vars = {
 		source = quoted_path(source),
 		target = target and quoted_path(target) or nil,
@@ -48,9 +48,22 @@ local function resolve_command(command, source, target, step, variant)
 		if target == nil then
 			assert(not value:find("{target}", 1, true), "Step command references {target} without defining target")
 		end
+		if value:find("{branch}", 1, true) then
+			vars.branch = assert(paths.current_branch(cwd), "Cannot determine current branch")
+		end
+		if value:find("{source_branch}", 1, true) then
+			for _, branch in ipairs(config.default_branches) do
+				vim.fn.system({ "git", "-C", cwd, "show-ref", "--verify", "--quiet", "refs/heads/" .. branch })
+				if vim.v.shell_error == 0 then
+					vars.source_branch = branch
+					break
+				end
+			end
+			assert(vars.source_branch, "Cannot determine default branch")
+		end
 		return apply_template(value, vars)
 	end
-	return resolve(command)
+	return resolve(command), vars
 end
 
 local function build_step(step, source, target, current_cwd, name, variant)
@@ -62,7 +75,7 @@ local function build_step(step, source, target, current_cwd, name, variant)
 		local branch = paths.branch(identity, step.fork, { variant = variant, step = name })
 		cwd = paths.checkout(identity.project, branch)
 	end
-	local result = resolve_command(step.command, source, target, name, variant)
+	local result, vars = resolve_command(step.command, source, target, name, variant, current_cwd)
 	if type(result) == "string" then
 		result = { cmd = result }
 	end
@@ -70,9 +83,17 @@ local function build_step(step, source, target, current_cwd, name, variant)
 	assert(result.tag == nil or result.tag == "open" or result.tag == "agent", "Unknown step command tag")
 	assert(result.tag == nil or result.cmd == nil, "Tagged step commands cannot define cmd")
 	if result.tag == "open" then
-		assert(result.agent == nil and result.prompt == nil and result.skill == nil, "Open steps cannot define agent options")
+		assert(
+			result.agent == nil and result.prompt == nil and result.skill == nil,
+			"Open steps cannot define agent options"
+		)
 	end
 	result.cwd = result.cwd or cwd
+	if step.on_success then
+		result.on_success = function()
+			step.on_success(vars)
+		end
+	end
 	if step.fork == true or type(step.fork) == "string" then
 		result.artifact_dir = vim.fs.dirname(source)
 		result.artifact_source = source
@@ -82,11 +103,19 @@ end
 
 local function validate_step(step)
 	assert(type(step.name) == "string", "Step name must be a string")
-	assert(type(step.source) == "string", string.format("Step %s source must be a string", step.name))
-	assert(
-		step.target == nil or type(step.target) == "string",
-		string.format("Step %s target must be a string", step.name)
-	)
+	assert(step.on_success == nil or type(step.on_success) == "function", "Step on_success must be a function")
+	for _, key in ipairs({ "source", "target" }) do
+		local value = step[key]
+		if key == "source" or value ~= nil then
+			assert(type(value) == "string" or type(value) == "table", "Step " .. key .. " must be a string or array")
+			if type(value) == "table" then
+				assert(vim.islist(value) and #value > 0, "Step " .. key .. " must be a nonempty array")
+				for _, name in ipairs(value) do
+					assert(type(name) == "string", "Step " .. key .. " values must be strings")
+				end
+			end
+		end
+	end
 	assert(
 		type(step.command) == "string" or type(step.command) == "table" or type(step.command) == "function",
 		string.format("Step %s command must be a string, table, or function", step.name)
@@ -162,18 +191,40 @@ function M.for_file(opts)
 
 	local checkout_branch = paths.current_branch(cwd)
 	local related = vim.tbl_contains(paths.checkouts(source), cwd)
-	for _, step in ipairs(opts.steps or {}) do
-		validate_step(step)
-		if step_matches_source(step, source) and is_available(step, source, checkout_branch, related) then
-			if step.variants then
-				for _, variant in ipairs(step.variants) do
-					table.insert(definitions, definition(step, source, cwd, variant))
+	for _, configured_step in ipairs(opts.steps or {}) do
+		validate_step(configured_step)
+		local sources = type(configured_step.source) == "table" and configured_step.source or { configured_step.source }
+		local matches = false
+		for _, name in ipairs(sources) do
+			matches = matches or step_matches_source({ source = name, target = configured_step.target }, source)
+		end
+		if matches then
+			local step = vim.deepcopy(configured_step)
+			local selected_source
+			for _, name in ipairs(sources) do
+				local candidate = vim.fs.joinpath(vim.fs.dirname(source), name)
+				if step_matches_source({ source = name, target = step.target }, source) then
+					candidate = source
 				end
-			else
-				table.insert(definitions, definition(step, source, cwd))
+				if vim.fn.filereadable(candidate) == 1 then
+					step.source = name
+					selected_source = candidate
+				end
+			end
+			local targets = type(step.target) == "table" and step.target or { step.target }
+			local blocked = false
+			for _, name in ipairs(targets) do
+				blocked = blocked or vim.fn.filereadable(vim.fs.joinpath(vim.fs.dirname(source), name)) == 1
+			end
+			step.target = targets[1]
+			if selected_source and not blocked and is_available(step, selected_source, checkout_branch, related) then
+				for _, variant in ipairs(step.variants or { false }) do
+					table.insert(definitions, definition(step, selected_source, cwd, variant or nil))
+				end
 			end
 		end
 	end
+
 	add_task_executables(
 		definitions,
 		source,

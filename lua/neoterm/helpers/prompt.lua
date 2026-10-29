@@ -20,7 +20,7 @@ function M.create_task(remove, directory, project_root)
 					vim.cmd.normal({ 'gv"_d', bang = true })
 				end
 				harness.create_artifact(contents, "task.md", root, target)
-			end)
+			end, require("neoterm.helpers.scratch_input"))
 		end
 
 		if directory then

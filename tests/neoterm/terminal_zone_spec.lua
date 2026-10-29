@@ -26,7 +26,14 @@ T["terminal directory change only visits a directory with an open file buffer"] 
 	package.loaded["neoterm.terms.artifacts.cwd"] = { resolve_all = function() return {} end }
 	package.loaded["neoterm.terms.create_term"] = nil
 	local ok, err = pcall(function()
-		local term = require("neoterm.terms.create_term"):new({}, function() end)
+		local successes = 0
+		local term = require("neoterm.terms.create_term"):new({
+			on_success = function() successes = successes + 1 end,
+		}, function() end)
+		term:on_exit({}, 0, 1)
+		assert.same(0, successes)
+		term:on_exit({}, 0, 0)
+		assert.same(1, successes)
 		local osc = "\27]7;file://localhost" .. dir .. "\7"
 		term:handle_osc(0, osc)
 		vim.wait(100, function() return term.cwd == dir end)

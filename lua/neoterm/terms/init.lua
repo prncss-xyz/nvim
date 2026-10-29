@@ -177,6 +177,7 @@ local function create_and_notify(item, cb)
 		screen_manifest = item.screen_manifest,
 		osc_status = item.osc_status,
 		auto_scroll = item.auto_scroll,
+		on_success = item.on_success,
 	}, function(event)
 		if event.type == "cwd" then
 			item.cwd = event.value
@@ -188,6 +189,14 @@ local function create_and_notify(item, cb)
 end
 
 local function make_item(item, cb, requested_instance)
+	if item.confirm == true then
+		return require("neoterm.helpers.confirm")("Run " .. (item.name or item.key) .. "?", function(confirmed)
+			if not confirmed then
+				return
+			end
+			make_item(vim.tbl_extend("force", item, { confirm = false }), cb, requested_instance)
+		end)
+	end
 	item.status = item.status or "idle"
 	item.changed = nil
 	reserve_instance(item, requested_instance)

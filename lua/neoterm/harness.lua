@@ -107,9 +107,10 @@ function M.create_artifact(input, filename, root, directory)
 	local artifacts = config.dirs.artifacts
 
 	local function create(target, project_root)
-		vim.fn.mkdir(target, "p")
 		branch_name(input, function(branch)
-			local path = vim.fs.joinpath(target, branch .. "." .. filename)
+			local directory = vim.fs.joinpath(target, branch)
+			vim.fn.mkdir(directory, "p")
+			local path = vim.fs.joinpath(directory, filename)
 			vim.fn.writefile(vim.split(input, "\n", { plain = true }), path)
 			last_created_artifact = path
 			vim.notify("Created " .. assert(vim.fs.relpath(artifacts, path)), vim.log.levels.INFO)

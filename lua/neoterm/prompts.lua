@@ -1,6 +1,10 @@
 local M = {}
 local config = require("neoterm.config")
 
+local function ui_input(prompt, callback)
+	vim.ui.input({ prompt = prompt }, callback)
+end
+
 local function input_for_current_mode()
 	local mode = vim.fn.mode()
 	local selection
@@ -11,12 +15,12 @@ local function input_for_current_mode()
 		end
 	end
 
-	return function(prompt, continuation)
+	return function(prompt, continuation, read)
 		if selection then
 			continuation(selection, true)
 			return
 		end
-		vim.ui.input({ prompt = prompt }, function(input)
+		(read or ui_input)(prompt, function(input)
 			if input ~= nil and vim.trim(input) ~= "" then
 				continuation(input)
 			end
