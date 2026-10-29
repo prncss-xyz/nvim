@@ -30,9 +30,9 @@ local function resolve_command(command, source, target, step, variant, cwd)
 		target = target and quoted_path(target) or nil,
 		step = step,
 		variant = variant,
-		message = vim.fs.basename(source) == "task.md" and vim.fs.dirname(source) ~= paths.project_artifacts(
+		message = vim.fs.dirname(source) ~= paths.project_artifacts(
 			paths.artifact_project(source)
-		) and paths.commit_message(source) or nil,
+		) and paths.commit_message(vim.fs.joinpath(vim.fs.dirname(source), "task.md")) or nil,
 	}
 	local function resolve(value)
 		if type(value) == "function" then

@@ -60,6 +60,14 @@ T["expands variants in string and function templates"] = function()
 		assert(callback_vars.source == '"' .. source .. '"')
 		assert(template_vars.message == "feat: feature")
 		assert(callback_vars.message == "feat: feature")
+		local walkthrough = vim.fs.joinpath(vim.fs.dirname(source), "walkthrough.md")
+		vim.fn.writefile({ "walkthrough" }, walkthrough)
+		local merge = commands.for_file({
+			cwd = cwd,
+			file = walkthrough,
+			steps = { { name = "merge", source = "walkthrough.md", command = { cmd = { "merge-from-current", "{message}" } } } },
+		})
+		assert(vim.deep_equal(merge[1].cmd, { "merge-from-current", "feat: feature" }))
 		result = vim.tbl_map(function(item)
 			return { name = item.name, cmd = item.cmd, title = item.title }
 		end, definitions)
