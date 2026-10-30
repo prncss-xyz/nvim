@@ -42,7 +42,7 @@ T["expands variants in string and function templates"] = function()
 			})
 			assert(not ok, "Invalid command should fail validation")
 		end
-		local callback_vars, template_vars
+		local callback_vars, callback_output, template_vars
 		local definitions = commands.for_file({
 			cwd = cwd,
 			file = source,
@@ -51,11 +51,13 @@ T["expands variants in string and function templates"] = function()
 				{ name = "fn", source = "task.md", variants = { "a", "b" }, command = function(vars)
 					template_vars = vars
 					return { cmd = vars.variant .. " " .. vars.step }
-				end, on_success = function(vars) callback_vars = vars end },
+				end, on_success = function(vars, output) callback_vars, callback_output = vars, output end },
 			},
 		})
 		assert(callback_vars == nil)
-		definitions[#definitions].on_success()
+		local output = {}
+		definitions[#definitions].on_success(output)
+		assert(callback_output == output)
 		assert(callback_vars == template_vars)
 		assert(callback_vars.source == '"' .. source .. '"')
 		assert(template_vars.message == "feat: feature")
@@ -256,6 +258,44 @@ T["source arrays prefer the last existing file and target arrays block on any fi
 		vim.fn.delete(plan)
 		check(task, task)
 		assert(type(step.source) == "table" and type(step.target) == "table")
+	]])
+end
+
+T["steps without a source accept any artifact and respect targets"] = function()
+	child.lua([[
+		local root = vim.fn.tempname()
+		local projects = vim.fs.joinpath(root, "projects")
+		local artifacts = vim.fs.joinpath(root, "artifacts")
+		local cwd = vim.fs.joinpath(projects, "sample", "main")
+		local folder = vim.fs.joinpath(artifacts, "sample", "feature")
+		vim.fn.mkdir(cwd, "p")
+		vim.fn.mkdir(folder, "p")
+		local step = { name = "diff", target = "merge.txt", fork = "review" }
+		package.loaded["neoterm.config"] = {
+			dirs = { projects = projects, artifacts = artifacts },
+			default_branches = { "main" },
+			steps = { step },
+		}
+		package.loaded["neoterm.terms.artifacts.tasks"] = { executables = function() return {} end }
+		local commands = require("neoterm.terms.artifacts.commands")
+		local paths = require("neoterm.terms.artifacts.paths")
+		for _, name in ipairs({ "task.md", "plan.md", "custom.txt" }) do
+			local source = vim.fs.joinpath(folder, name)
+			vim.fn.writefile({ "artifact" }, source)
+			local function definitions()
+				return commands.for_file({ cwd = cwd, file = source, steps = { step } })
+			end
+			local items = definitions()
+			assert(#items == 1)
+			assert(items[1].artifact_source == source)
+			assert(items[1].cwd == vim.fs.joinpath(projects, "sample", "feature-review"))
+			assert(vim.tbl_contains(paths.branches(paths.source(source)), "feature-review"))
+			local target = vim.fs.joinpath(folder, "merge.txt")
+			vim.fn.writefile({ "merged" }, target)
+			assert(#definitions() == 0)
+			vim.fn.delete(target)
+		end
+		assert(step.source == nil)
 	]])
 end
 

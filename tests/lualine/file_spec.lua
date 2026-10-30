@@ -100,4 +100,24 @@ T["displays an unlisted file buffer opened directly by a panel"] = function()
 	child.lua("vim.fn.delete(opened_path)")
 end
 
+T["renders independent global and file diagnostic severities"] = function()
+	child.lua([[
+		local namespace = vim.api.nvim_create_namespace("file-status-diagnostics")
+		local buffer = vim.api.nvim_win_get_buf(editor)
+		local other = vim.api.nvim_create_buf(true, false)
+		vim.diagnostic.config({ virtual_text = false, signs = false, underline = false }, namespace)
+		vim.diagnostic.set(namespace, buffer, {
+			{ lnum = 0, col = 0, severity = vim.diagnostic.severity.WARN, message = "file warning" },
+		})
+		vim.diagnostic.set(namespace, other, {
+			{ lnum = 0, col = 0, severity = vim.diagnostic.severity.ERROR, message = "other error" },
+		})
+		before_reset = file()
+		vim.diagnostic.reset(namespace, other)
+		after_reset = file()
+	]])
+	assert.same(true, child.lua_get("before_reset:find(' ', 1, true) ~= nil"))
+	assert.same(true, child.lua_get("after_reset:find(' ', 1, true) ~= nil"))
+end
+
 return T

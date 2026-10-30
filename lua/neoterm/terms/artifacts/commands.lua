@@ -104,8 +104,8 @@ local function build_step(step, source, target, current_cwd, name, variant)
 	end
 	result.cwd = result.cwd or cwd
 	if step.on_success then
-		result.on_success = function()
-			step.on_success(vars)
+		result.on_success = function(output)
+			step.on_success(vars, output)
 		end
 	end
 	if step.fork == true or type(step.fork) == "string" then
@@ -120,7 +120,7 @@ local function validate_step(step)
 	assert(step.on_success == nil or type(step.on_success) == "function", "Step on_success must be a function")
 	for _, key in ipairs({ "source", "target" }) do
 		local value = step[key]
-		if key == "source" or value ~= nil then
+		if value ~= nil then
 			assert(type(value) == "string" or type(value) == "table", "Step " .. key .. " must be a string or array")
 			if type(value) == "table" then
 				assert(vim.islist(value) and #value > 0, "Step " .. key .. " must be a nonempty array")
@@ -211,13 +211,13 @@ function M.for_file(opts)
 	for _, configured_step in ipairs(opts.steps or {}) do
 		validate_step(configured_step)
 		local sources = type(configured_step.source) == "table" and configured_step.source or { configured_step.source }
-		local matches = false
+		local matches = configured_step.source == nil
 		for _, name in ipairs(sources) do
 			matches = matches or step_matches_source({ source = name, target = configured_step.target }, source)
 		end
 		if matches then
 			local step = vim.deepcopy(configured_step)
-			local selected_source
+			local selected_source = configured_step.source == nil and source or nil
 			for _, name in ipairs(sources) do
 				local candidate = vim.fs.joinpath(vim.fs.dirname(source), name)
 				if step_matches_source({ source = name, target = step.target }, source) then

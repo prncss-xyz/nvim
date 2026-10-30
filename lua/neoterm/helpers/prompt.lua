@@ -16,10 +16,16 @@ function M.create_task(remove, directory, project_root)
 
 		local function get_task(target)
 			input(prompt, function(contents, using_selection)
-				if remove and using_selection then
-					vim.cmd.normal({ 'gv"_d', bang = true })
-				end
-				harness.create_artifact(contents, "task.md", root, target)
+				local frontmatter = require("neoterm.helpers.frontmatter")
+				vim.ui.select(frontmatter.statuses(), { prompt = "Select task status" }, function(status)
+					if status == nil then
+						return
+					end
+					if remove and using_selection then
+						vim.cmd.normal({ 'gv"_d', bang = true })
+					end
+					harness.create_artifact(contents, "task.md", root, target, status)
+				end)
 			end, require("neoterm.helpers.scratch_input"))
 		end
 

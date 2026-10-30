@@ -245,9 +245,6 @@ local function create_task()
 		return
 	end
 	local project_root = require("neoterm.terms.artifacts.cwd").resolve(directory)
-	if not project_root then
-		return
-	end
 	require("neoterm.prompts").run(
 		require("neoterm.helpers.prompt").create_task(false, directory, project_root),
 		"task"

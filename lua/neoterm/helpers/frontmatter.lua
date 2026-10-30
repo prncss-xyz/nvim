@@ -44,9 +44,7 @@ function M.add_dependency()
 	end)
 end
 
-function M.update_status()
-	local yaml = require("neoterm.yaml")
-	local remove = "REMOVE"
+function M.statuses()
 	local modes = require("neoterm.config").tasks.modes
 	local statuses = {}
 	local seen = {}
@@ -60,6 +58,13 @@ function M.update_status()
 			end
 		end
 	end
+	return statuses
+end
+
+function M.update_status()
+	local yaml = require("neoterm.yaml")
+	local remove = "REMOVE"
+	local statuses = M.statuses()
 	table.insert(statuses, remove)
 	vim.ui.select(statuses, { prompt = "Select status" }, function(choice)
 		if choice == nil then

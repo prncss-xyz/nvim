@@ -337,7 +337,7 @@ function Term:on_exit(terminal, _, exit_code)
 		value = exit_code == 0 and "success" or "failure",
 	})
 	if exit_code == 0 and self.on_success then
-		self.on_success()
+		self.on_success(require("neoterm.terms.output").reader(terminal.bufnr))
 	end
 	local runtime = self.started_at and (vim.uv.hrtime() - self.started_at) / 1000000 or 0
 	if self.exit_policy ~= "restart" or exit_code == 0 or runtime < self.min_runtime or self.restart_scheduled then

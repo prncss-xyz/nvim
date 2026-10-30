@@ -23,7 +23,9 @@ local agents = personal({
 		name = "codex",
 		command = agent_command,
 		alias = {
+			extra = { model = "astra-6", effort = "high" },
 			deep = { model = "sol-6.1", effort = "low" },
+			medium = { model = "terra-6.1", effort = "low" },
 			fast = { model = "luna-6", effort = "low" },
 		},
 	},
@@ -49,6 +51,7 @@ local agents = personal({
 		command = agent_command,
 		alias = {
 			deep = { model = "opus", effort = "low" },
+			medium = { model = "sonnet", effort = "low" },
 			fast = { model = "haiku", effort = "low" },
 		},
 	},
@@ -142,6 +145,7 @@ return {
 		{
 			name = "fork",
 			source = "task.md",
+			target = "merge.txt",
 			command = { tag = "open" },
 			fork = true,
 		},
@@ -158,6 +162,7 @@ return {
 		{
 			name = "do-fork",
 			source = "task.md",
+			target = "merge.txt",
 			command = {
 				tag = "agent",
 				title = "{step}",
@@ -168,7 +173,7 @@ return {
 		{
 			name = "plannify",
 			source = "task.md",
-			target = "plan.md",
+			target = { "plan.md", "merge.txt" },
 			variants = agent_variants,
 			command = {
 				tag = "agent",
@@ -182,7 +187,7 @@ return {
 		{
 			name = "implement",
 			source = { "task.md", "plan.md" },
-			target = "walkthrough.md",
+			target = { "walkthrough.md", "merge.txt" },
 			variants = agent_variants,
 			command = {
 				tag = "agent",
@@ -194,8 +199,28 @@ return {
 			fork = true,
 		},
 		{
+			name = "info",
+			target = "merge.txt",
+			fork = true,
+			on_success = function(vars)
+				require("neoterm.git").ensure_worktree(vars.cwd, function(ok)
+					if ok then
+						local branch = assert(
+							require("neoterm.terms.artifacts.paths").current_branch(vars.cwd),
+							"Cannot determine destination branch"
+						)
+						vim.notify(
+							string.format("Source: %s\nDestination: %s\n\n%s", vars.source_branch, branch, vars.message or ""),
+							vim.log.levels.INFO,
+							{ title = "Step info" }
+						)
+					end
+				end)
+			end,
+		},
+		{
 			name = "diff",
-			source = "task.md",
+			target = "merge.txt",
 			fork = true,
 			on_success = function(vars)
 				require("neoterm.git").ensure_worktree(vars.cwd, function(ok)
@@ -214,13 +239,17 @@ return {
 				cmd = { "merge-from-current", "{source_branch}", "{message}" },
 				exit_policy = "keep",
 			},
-			on_success = function(vars)
+			on_success = function(vars, output)
+				local commit = assert(output.last_line(), "Merge command did not output a commit hash")
+				assert(commit:match("^%x+$"), "Merge command output is not a commit hash")
 				local source = vars.source:sub(2, -2):gsub("^~", function()
 					return vim.env.HOME
 				end)
 				local identity = require("neoterm.terms.artifacts.paths").source(source)
 				local prefix = vim.fs.basename(source):sub(1, -#identity.source - 1)
 				local task = vim.fs.joinpath(identity.folder, prefix .. "task.md")
+				local merge = vim.fs.joinpath(identity.folder, prefix .. "merge.txt")
+				assert(vim.fn.writefile({ commit }, merge, "b") == 0, "Could not write merge artifact")
 				local yaml = require("neoterm.yaml")
 				local frontmatter = yaml.read_file(task)
 				frontmatter.status = "done"

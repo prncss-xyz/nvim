@@ -10,8 +10,8 @@ local function sanitize_branch(summary)
 	return branch:gsub("^-+", ""):gsub("-+$", "")
 end
 
-local function existing_branches(callback)
-	vim.system({ "git", "branch", "-a" }, { text = true }, function(result)
+local function existing_branches(root, callback)
+	vim.system({ "git", "branch", "-a" }, { cwd = root, text = true }, function(result)
 		if result.code ~= 0 then
 			callback({})
 			return
@@ -29,20 +29,23 @@ local function existing_branches(callback)
 	end)
 end
 
-local function find_free_branch(branch, seen)
-	if not seen[branch] then
+local function find_free_branch(branch, seen, directory)
+	local function taken(name)
+		return seen[name] or (directory and vim.uv.fs_stat(vim.fs.joinpath(directory, name)) ~= nil)
+	end
+	if not taken(branch) then
 		return branch
 	end
 	for n = 0, 999 do
 		local candidate = string.format("%s-%03d", branch, n)
-		if not seen[candidate] then
+		if not taken(candidate) then
 			return candidate
 		end
 	end
-	return branch
+	error("No available task name for " .. branch)
 end
 
-local function branch_name(input, callback, root)
+local function branch_name(input, callback, root, directory)
 	root = root or vim.fs.root(0, ".git") or vim.uv.cwd()
 	vim.notify("Naming branch...", vim.log.levels.INFO)
 	local command = vim.split(config.llm_query, "%s+", { trimempty = true })
@@ -54,8 +57,8 @@ local function branch_name(input, callback, root)
 			assert(result.code == 0, result.stderr)
 			local branch = sanitize_branch(result.stdout)
 			assert(branch ~= "", "create-branch-name returned an empty name")
-			existing_branches(vim.schedule_wrap(function(seen)
-				callback(find_free_branch(branch, seen), root)
+			existing_branches(root, vim.schedule_wrap(function(seen)
+				callback(find_free_branch(branch, seen, directory), root)
 			end))
 		end)
 	end)
@@ -81,10 +84,9 @@ function M.select_artifact_directory(root, callback)
 	add_directory(project_directory)
 
 	local existing_directories = {}
-	local resolve_checkouts = paths.checkout_resolver()
 	for name, kind in vim.fs.dir(artifacts, { depth = math.huge }) do
 		local path = vim.fs.joinpath(artifacts, name)
-		if kind == "directory" and #resolve_checkouts(path) > 0 then
+		if kind == "directory" then
 			table.insert(existing_directories, path)
 		end
 	end
@@ -104,36 +106,41 @@ function M.select_artifact_directory(root, callback)
 	end)
 end
 
-function M.create_artifact(input, filename, root, directory)
+function M.create_artifact(input, filename, root, directory, status)
 	local artifacts = config.dirs.artifacts
 
 	local function create(target, project_root)
+		vim.fn.mkdir(target, "p")
 		branch_name(input, function(branch)
 			local directory = vim.fs.joinpath(target, branch)
 			vim.fn.mkdir(directory, "p")
 			local path = vim.fs.joinpath(directory, filename)
 			vim.fn.writefile(vim.split(input, "\n", { plain = true }), path)
+			if status then
+				local yaml = require("neoterm.yaml")
+				local frontmatter = yaml.read_file(path)
+				frontmatter.status = status
+				yaml.write_file(path, frontmatter)
+			end
 			last_created_artifact = path
 			vim.notify("Created " .. assert(vim.fs.relpath(artifacts, path)), vim.log.levels.INFO)
-		end, project_root)
+		end, project_root, target)
+	end
+
+	local function create_in(selected)
+		local project = paths.artifact_project(selected)
+		local project_root = artifact_cwd.resolve(selected)
+			or (project and paths.default_checkout(project))
+			or selected
+		create(selected, project_root)
 	end
 
 	if directory then
-		create(
-			directory,
-			root
-				or artifact_cwd.resolve(directory)
-				or assert(
-					paths.default_checkout(paths.source(vim.fs.joinpath(directory, filename)).project),
-					"Artifact project not found"
-				)
-		)
+		create_in(directory)
 		return
 	end
 
-	M.select_artifact_directory(root, function(selected)
-		create(selected, root)
-	end)
+	M.select_artifact_directory(root, create_in)
 end
 
 function M.focus_last_created_artifact()

@@ -34,22 +34,6 @@ local function get_displayed_name(path)
 	return path
 end
 
-local function get_diagnostic(buffer)
-	local result = {}
-	for _, diagnostic in ipairs(vim.diagnostic.get(buffer)) do
-		result[diagnostic.severity] = (result[diagnostic.severity] or 0) + 1
-	end
-	return result
-end
-
-local function get_global_diagnostic()
-	local result = {}
-	for _, diagnostic in ipairs(vim.diagnostic.get()) do
-		result[diagnostic.severity] = (result[diagnostic.severity] or 0) + 1
-	end
-	return result
-end
-
 local function diagnostic_icon(diagnostics)
 	if diagnostics[vim.diagnostic.severity.ERROR] then
 		return ""
@@ -68,8 +52,8 @@ local function get_status_icons(buffer, path)
 	if vim.tbl_contains(skip_lock, vim.bo[buffer].filetype) and vim.bo[buffer].readonly then
 		icons[#icons + 1] = ""
 	end
-	icons[#icons + 1] = diagnostic_icon(get_global_diagnostic())
-	icons[#icons + 1] = diagnostic_icon(get_diagnostic(buffer))
+	icons[#icons + 1] = diagnostic_icon(vim.diagnostic.count())
+	icons[#icons + 1] = diagnostic_icon(vim.diagnostic.count(buffer))
 	return "  " .. table.concat(icons, " ")
 end
 
@@ -111,6 +95,9 @@ local function displayed_buffer()
 end
 
 return function()
+	if vim.v.exiting ~= vim.NIL then
+		return ""
+	end
 	local buffer = displayed_buffer()
 	if not buffer then
 		return ""

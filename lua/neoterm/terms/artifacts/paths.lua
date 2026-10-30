@@ -163,7 +163,10 @@ function M.branches(source, steps)
 	local result = { source.branch }
 	for _, step in ipairs(steps or config.steps or {}) do
 		local sources = type(step.source) == "table" and step.source or { step.source }
-		if vim.tbl_contains(sources, source.source) and (step.fork == true or type(step.fork) == "string") then
+		if
+			(step.source == nil or vim.tbl_contains(sources, source.source))
+			and (step.fork == true or type(step.fork) == "string")
+		then
 			for _, variant in ipairs(step.variants or { false }) do
 				variant = variant or nil
 				table.insert(

@@ -16,7 +16,7 @@ return function(prompt, callback)
 		border = "single",
 		title = " " .. (prompt or "Task") .. " ",
 		title_pos = "center",
-		footer = " :w submit · q cancel ",
+		footer = " Ctrl-Enter submit · Esc (normal) cancel ",
 		footer_pos = "center",
 	})
 	local function close()
@@ -27,18 +27,27 @@ return function(prompt, callback)
 			vim.api.nvim_win_close(win, true)
 		end
 	end
+	local submitted = false
+	local function submit()
+		if submitted then
+			return
+		end
+		submitted = true
+		vim.cmd.stopinsert()
+		local contents = table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), "\n")
+		vim.bo[buf].modified = false
+		vim.schedule(function()
+			close()
+			callback(contents)
+		end)
+	end
 	vim.api.nvim_create_autocmd("BufWriteCmd", {
 		buffer = buf,
 		once = true,
-		callback = function()
-			local contents = table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), "\n")
-			vim.bo[buf].modified = false
-			vim.schedule(function()
-				close()
-				callback(contents)
-			end)
-		end,
+		callback = submit,
 	})
+	vim.keymap.set({ "n", "i", "v", "s", "o", "c" }, "<C-CR>", submit, { buffer = buf, silent = true })
+	vim.keymap.set("n", "<Esc>", close, { buffer = buf, silent = true, nowait = true })
 	vim.keymap.set("n", "q", close, { buffer = buf, silent = true, nowait = true })
 	vim.schedule(function()
 		if vim.api.nvim_win_is_valid(win) then
