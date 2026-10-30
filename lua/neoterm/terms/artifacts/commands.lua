@@ -24,11 +24,12 @@ local function quoted_path(path)
 	return '"' .. path .. '"'
 end
 
-local function resolve_command(command, source, target, step, variant, cwd)
+local function resolve_command(command, source, target, step, name, variant, cwd)
 	local vars = {
 		source = quoted_path(source),
 		target = target and quoted_path(target) or nil,
 		step = step,
+		name = name,
 		variant = variant,
 		message = vim.fs.dirname(source) ~= paths.project_artifacts(
 			paths.artifact_project(source)
@@ -85,7 +86,7 @@ local function build_step(step, source, target, current_cwd, name, variant)
 		local branch = paths.branch(identity, step.fork, { variant = variant, step = name })
 		cwd = paths.checkout(identity.project, branch)
 	end
-	local result, vars = resolve_command(step.command, source, target, name, variant, current_cwd)
+	local result, vars = resolve_command(step.command, source, target, name, step.name, variant, current_cwd)
 	vars.cwd = cwd
 	if step.command == nil then
 		result = {}

@@ -23,10 +23,10 @@ local agents = personal({
 		name = "codex",
 		command = agent_command,
 		alias = {
-			extra = { model = "astra-6", effort = "high" },
-			deep = { model = "sol-6.1", effort = "low" },
-			medium = { model = "terra-6.1", effort = "low" },
-			fast = { model = "luna-6", effort = "low" },
+			extra = { model = "GPT-6-Astra", effort = "high" },
+			deep = { model = "GPT-6.1-Sol", effort = "low" },
+			medium = { model = "GPT-6.1 Terra", effort = "low" },
+			fast = { model = "GPT-6-Luna", effort = "low" },
 		},
 	},
 	{
@@ -171,7 +171,7 @@ return {
 			fork = true,
 		},
 		{
-			name = "plannify",
+			name = "plan",
 			source = "task.md",
 			target = { "plan.md", "merge.txt" },
 			variants = agent_variants,
@@ -185,15 +185,43 @@ return {
 			fork = true,
 		},
 		{
-			name = "implement",
+			name = "api-contract",
 			source = { "task.md", "plan.md" },
-			target = { "walkthrough.md", "merge.txt" },
+			target = { "api-contract.md", "walkthrough.md", "merge.txt" },
 			variants = agent_variants,
 			command = {
 				tag = "agent",
 				agent = "{variant}",
 				title = "{step}",
-				skill = "implement",
+				skill = "{name}",
+				prompt = "@{source}",
+			},
+			fork = true,
+		},
+		{
+			name = "implementation",
+			source = { "task.md", "plan.md" },
+			target = { "implementation.md", "merge.txt" },
+			variants = agent_variants,
+			command = {
+				tag = "agent",
+				agent = "{variant}",
+				title = "{step}",
+				skill = "{name}",
+				prompt = "@{source}",
+			},
+			fork = true,
+		},
+		{
+			name = "retro",
+			source = "implementation.md",
+			target = { "retro.md", "merge.txt" },
+			variants = agent_variants,
+			command = {
+				tag = "agent",
+				agent = "{variant}",
+				title = "{step}",
+				skill = "{name}",
 				prompt = "@{source}",
 			},
 			fork = true,
@@ -210,7 +238,12 @@ return {
 							"Cannot determine destination branch"
 						)
 						vim.notify(
-							string.format("Source: %s\nDestination: %s\n\n%s", vars.source_branch, branch, vars.message or ""),
+							string.format(
+								"Source: %s\nDestination: %s\n\n%s",
+								vars.source_branch,
+								branch,
+								vars.message or ""
+							),
 							vim.log.levels.INFO,
 							{ title = "Step info" }
 						)

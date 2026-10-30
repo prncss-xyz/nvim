@@ -47,7 +47,7 @@ T["expands variants in string and function templates"] = function()
 			cwd = cwd,
 			file = source,
 			steps = {
-				{ name = "var", source = "task.md", variants = { "a", "b" }, command = { cmd = "echo {variant}", title = "{step}" } },
+				{ name = "var", source = "task.md", variants = { "a", "b" }, command = { cmd = "echo {variant}", title = "{step}", skill = "{name}" } },
 				{ name = "fn", source = "task.md", variants = { "a", "b" }, command = function(vars)
 					template_vars = vars
 					return { cmd = vars.variant .. " " .. vars.step }
@@ -59,6 +59,9 @@ T["expands variants in string and function templates"] = function()
 		definitions[#definitions].on_success(output)
 		assert(callback_output == output)
 		assert(callback_vars == template_vars)
+		assert(definitions[1].skill == "var")
+		assert(definitions[2].skill == "var")
+		assert(template_vars.name == "fn")
 		assert(callback_vars.source == '"' .. source .. '"')
 		assert(template_vars.message == "feat: feature")
 		assert(callback_vars.message == "feat: feature")
