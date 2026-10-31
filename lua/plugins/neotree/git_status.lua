@@ -1,6 +1,6 @@
 local M = { base = "HEAD" }
 
-function M.open(base, dir)
+function M.open(base, dir, action)
 	require("my.ui_toggle").activate("neotree", function()
 		local cwd = dir or vim.fn.getcwd()
 		local selected_base = base
@@ -8,7 +8,12 @@ function M.open(base, dir)
 		if vim.v.shell_error ~= 0 then
 			selected_base = "HEAD"
 		end
-		require("neo-tree.command").execute({ source = "git_status", dir = cwd, git_base = selected_base })
+		require("neo-tree.command").execute({
+			action = action,
+			source = "git_status",
+			dir = cwd,
+			git_base = selected_base,
+		})
 		require("my.git_base").set(cwd, selected_base)
 		M.base = selected_base
 	end)

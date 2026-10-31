@@ -23,10 +23,10 @@ local agents = personal({
 		name = "codex",
 		command = agent_command,
 		alias = {
-			extra = { model = "GPT-6-Astra", effort = "high" },
-			deep = { model = "GPT-6.1-Sol", effort = "low" },
-			medium = { model = "GPT-6.1 Terra", effort = "low" },
-			fast = { model = "GPT-6-Luna", effort = "low" },
+			extra = { model = "gpt-6-astra", effort = "high" },
+			deep = { model = "gpt-6.1-sol", effort = "low" },
+			medium = { model = "gpt-6.1-terra", effort = "low" },
+			fast = { model = "gpt-6-luna", effort = "low" },
 		},
 	},
 	{
@@ -244,24 +244,15 @@ return {
 			target = "merge.txt",
 			fork = true,
 			on_success = function(vars)
-				require("neoterm.git").ensure_worktree(vars.cwd, function(ok)
-					if ok then
-						local branch = assert(
-							require("neoterm.terms.artifacts.paths").current_branch(vars.cwd),
-							"Cannot determine destination branch"
-						)
-						vim.notify(
-							string.format(
-								"Source: %s\nDestination: %s\n\n%s",
-								vars.source_branch,
-								branch,
-								vars.message or ""
-							),
-							vim.log.levels.INFO,
-							{ title = "Step info" }
-						)
-					end
-				end)
+				local branch = assert(
+					require("neoterm.terms.artifacts.paths").current_branch(vars.cwd),
+					"Cannot determine destination branch"
+				)
+				vim.notify(
+					string.format("Source: %s\nDestination: %s\n\n%s", vars.source_branch, branch, vars.message or ""),
+					vim.log.levels.INFO,
+					{ title = "Step info" }
+				)
 			end,
 		},
 		{
@@ -269,12 +260,14 @@ return {
 			target = "merge.txt",
 			fork = true,
 			on_success = function(vars)
-				require("neoterm.git").ensure_worktree(vars.cwd, function(ok)
-					if ok then
-						require("neoterm.helpers.ensure_dir").ensure_dir(vars.cwd)
-						require("plugins.neotree.git_status").open(vars.source_branch, vars.cwd)
-					end
-				end)
+				local path = require("neoterm.helpers.project_file").get_diff_file(vars.cwd, vars.source_branch)
+				if not path then
+					vim.notify("No files in the diff to open", vim.log.levels.INFO, { title = "Step diff" })
+					return
+				end
+				if require("neoterm.helpers.file_windows").open(path) then
+					require("plugins.neotree.git_status").open(vars.source_branch, vars.cwd, "show")
+				end
 			end,
 		},
 		{

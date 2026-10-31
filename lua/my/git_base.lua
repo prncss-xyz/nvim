@@ -28,7 +28,8 @@ function M.set(path, base)
 	for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
 		if vim.api.nvim_buf_is_loaded(bufnr) and vim.bo[bufnr].buftype == "" then
 			local name = vim.api.nvim_buf_get_name(bufnr)
-			if name ~= "" and worktree_root(vim.fs.dirname(name)) == root then
+			local status = vim.b[bufnr].gitsigns_status_dict
+			if name ~= "" and worktree_root(vim.fs.dirname(name)) == root and status and status.added ~= nil then
 				apply_to_buffer(bufnr, base)
 			end
 		end
@@ -38,13 +39,23 @@ end
 function M.on_attach(bufnr)
 	local name = vim.api.nvim_buf_get_name(bufnr)
 	local root = name ~= "" and worktree_root(vim.fs.dirname(name))
-	if root and bases[root] then
-		vim.schedule(function()
-			if vim.api.nvim_buf_is_valid(bufnr) and bases[root] then
-				apply_to_buffer(bufnr, bases[root])
-			end
-		end)
+	if not root then
+		return
 	end
+	vim.api.nvim_create_autocmd("User", {
+		pattern = "GitSignsUpdate",
+		callback = function(event)
+			if event.data.buffer ~= bufnr then
+				return
+			end
+			vim.schedule(function()
+				if vim.api.nvim_buf_is_loaded(bufnr) and bases[root] then
+					apply_to_buffer(bufnr, bases[root])
+				end
+			end)
+			return true
+		end,
+	})
 end
 
 return M

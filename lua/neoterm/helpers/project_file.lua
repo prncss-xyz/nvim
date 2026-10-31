@@ -85,4 +85,13 @@ function M.get_project_file(dir, exclude)
 	end
 end
 
+function M.get_diff_file(dir, base)
+	local result = vim.system({ "git", "-C", dir, "diff", "--name-only", "-z", base, "--" }):wait()
+	assert(result.code == 0, result.stderr)
+	local paths = vim.tbl_map(function(path)
+		return vim.fs.joinpath(dir, path)
+	end, vim.split(result.stdout, "\0", { plain = true, trimempty = true }))
+	return first_matching(paths, get_test(vim.fs.normalize(dir)))
+end
+
 return M
