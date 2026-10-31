@@ -188,12 +188,9 @@ end
 
 local function is_available(step, source, checkout_branch, related)
 	local identity = paths.source(source, step.source)
-	local target = step.target and vim.fs.joinpath(vim.fs.dirname(source), step.target) or nil
-	return (
-		paths.is_default(checkout_branch)
+	return paths.is_default(checkout_branch)
 		or vim.tbl_contains(paths.branches(identity, { step }), checkout_branch)
 		or related
-	) and (target == nil or vim.fn.filereadable(target) == 0)
 end
 
 function M.for_file(opts)
@@ -231,8 +228,10 @@ function M.for_file(opts)
 			end
 			local targets = type(step.target) == "table" and step.target or { step.target }
 			local blocked = false
-			for _, name in ipairs(targets) do
-				blocked = blocked or vim.fn.filereadable(vim.fs.joinpath(vim.fs.dirname(source), name)) == 1
+			if not opts.ignore_targets then
+				for _, name in ipairs(targets) do
+					blocked = blocked or vim.fn.filereadable(vim.fs.joinpath(vim.fs.dirname(source), name)) == 1
+				end
 			end
 			step.target = targets[1]
 			if selected_source and not blocked and is_available(step, selected_source, checkout_branch, related) then
@@ -267,6 +266,7 @@ function M.select_for_current_file(resume)
 		cwd = cwd,
 		file = file,
 		steps = steps,
+		ignore_targets = resume,
 	})
 	if not resume and vim.fn.filereadable(file) == 1 and vim.fn.executable(file) == 1 then
 		table.insert(definitions, { name = "exec", cmd = { vim.fs.abspath(file) }, cwd = cwd })

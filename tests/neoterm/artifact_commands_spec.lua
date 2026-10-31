@@ -256,6 +256,21 @@ T["source arrays prefer the last existing file and target arrays block on any fi
 			local path = vim.fs.joinpath(folder, target)
 			vim.fn.writefile({ "done" }, path)
 			assert(#definitions(task) == 0)
+			package.loaded["neoterm.config"].steps = {
+				vim.tbl_extend("force", step, { command = { tag = "agent", prompt = "implement" } }),
+			}
+			package.loaded["neoterm.terms.artifacts.cwd"] = { context_dir = function() return cwd end }
+			vim.api.nvim_buf_set_name(0, task)
+			local selections = 0
+			vim.ui.select = function(items)
+				selections = selections + 1
+				assert(#items == 1)
+				assert(items[1].resume == true)
+				assert(items[1].artifact_source == plan)
+				assert(items[1].prompt == nil)
+			end
+			commands.select_for_current_file(true)
+			assert(selections == 1)
 			vim.fn.delete(path)
 		end
 		vim.fn.delete(plan)

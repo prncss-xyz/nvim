@@ -34,6 +34,7 @@ local agents = personal({
 		command = agent_command,
 		alias = {
 			deep = { provider = "openai-codex", model = "gpt-6.1-sol", effort = "low" },
+			medium = { provider = "openai-codex", model = "gpt-6.1-terra", effort = "low" },
 			fast = { provider = "openai-codex", model = "gpt-6-luna", effort = "low" },
 		},
 	},
@@ -43,6 +44,7 @@ local agents = personal({
 		command = agent_command,
 		alias = {
 			deep = { provider = "openai-codex", model = "gpt-6.1-sol", effort = "low" },
+			medium = { provider = "openai-codex", model = "gpt-6.1-terra", effort = "low" },
 			fast = { provider = "openai-codex", model = "gpt-6-luna", effort = "low" },
 		},
 	},
@@ -60,7 +62,9 @@ local agents = personal({
 		name = "claude",
 		command = { env = env },
 		alias = {
+			extra = { model = "fable", effort = "medium" },
 			deep = { model = "opus", effort = "low" },
+			medium = { model = "sonnet", effort = "low" },
 			fast = { model = "haiku", effort = "low" },
 		},
 	},
@@ -220,20 +224,6 @@ return {
 				tag = "agent",
 				agent = "{variant}",
 				title = "{stsdfep}",
-				skill = "{name}",
-				prompt = "@{source}",
-			},
-			fork = true,
-		},
-		{
-			name = "retro",
-			source = "implementation.md",
-			target = { "retro.md", "merge.txt" },
-			variants = agent_variants,
-			command = {
-				tag = "agent",
-				agent = "{variant}",
-				title = "{step}",
 				skill = "{name}",
 				prompt = "@{source}",
 			},
