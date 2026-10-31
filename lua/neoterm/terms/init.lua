@@ -153,7 +153,7 @@ local function normalize_cmd(cmd)
 	if vim.islist(cmd) then
 		return table.concat(
 			vim.tbl_map(function(value)
-				return string.format("%q", value)
+				return vim.fn.shellescape(value)
 			end, cmd),
 			" "
 		)

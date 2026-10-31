@@ -219,7 +219,7 @@ return {
 			command = {
 				tag = "agent",
 				agent = "{variant}",
-				title = "{step}",
+				title = "{stsdfep}",
 				skill = "{name}",
 				prompt = "@{source}",
 			},
@@ -272,7 +272,7 @@ return {
 		},
 		{
 			name = "merge",
-			source = "walkthrough.md",
+			source = "implementation.md",
 			command = {
 				confirm = true,
 				cmd = { "merge-from-current", "{source_branch}", "{message}" },
