@@ -185,6 +185,19 @@ return {
 			fork = true,
 		},
 		{
+			name = "decompose",
+			source = { "task.md", "plan.md" },
+			variants = agent_variants,
+			command = {
+				tag = "agent",
+				agent = "{variant}",
+				title = "{step}",
+				skill = "{name}",
+				prompt = "@{source}",
+			},
+			fork = true,
+		},
+		{
 			name = "api-contract",
 			source = { "task.md", "plan.md" },
 			target = { "api-contract.md", "walkthrough.md", "merge.txt" },
