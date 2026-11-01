@@ -266,7 +266,6 @@ return {
 			command = {
 				confirm = true,
 				cmd = { "merge-from-current", "{source_branch}", "{message}" },
-				exit_policy = "keep",
 			},
 			on_success = function(vars, output)
 				local commit = assert(output.last_line(), "Merge command did not output a commit hash")
