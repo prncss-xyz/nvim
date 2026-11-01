@@ -223,7 +223,7 @@ return {
 			command = {
 				tag = "agent",
 				agent = "{variant}",
-				title = "{stsdfep}",
+				title = "{step}",
 				skill = "{name}",
 				prompt = "@{source}",
 			},
