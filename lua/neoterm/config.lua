@@ -21,6 +21,15 @@ local agent_variants = { "claude", "codex" }
 
 local agents = personal({
 	{
+		name = "claude",
+		command = agent_command,
+		alias = {
+			deep = { model = "opus", effort = "low" },
+			medium = { model = "sonnet", effort = "low" },
+			fast = { model = "haiku", effort = "low" },
+		},
+	},
+	{
 		name = "codex",
 		command = agent_command,
 		alias = {
@@ -47,15 +56,6 @@ local agents = personal({
 			deep = { provider = "openai-codex", model = "gpt-6.1-sol", effort = "low" },
 			medium = { provider = "openai-codex", model = "gpt-6.1-terra", effort = "low" },
 			fast = { provider = "openai-codex", model = "gpt-6-luna", effort = "low" },
-		},
-	},
-	{
-		name = "claude",
-		command = agent_command,
-		alias = {
-			deep = { model = "opus", effort = "low" },
-			medium = { model = "sonnet", effort = "low" },
-			fast = { model = "haiku", effort = "low" },
 		},
 	},
 }, {
