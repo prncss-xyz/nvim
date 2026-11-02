@@ -264,6 +264,8 @@ return {
 		{
 			name = "merge",
 			source = "implementation.md",
+			auto = { "small-change.txt" },
+			target = "merge.txt",
 			command = {
 				confirm = true,
 				cmd = { "merge-from-current", "{source_branch}", "{message}" },

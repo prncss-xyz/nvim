@@ -119,6 +119,10 @@ end
 local function validate_step(step)
 	assert(type(step.name) == "string", "Step name must be a string")
 	assert(step.on_success == nil or type(step.on_success) == "function", "Step on_success must be a function")
+	assert(step.auto == nil or vim.islist(step.auto), string.format("Step %s auto must be an array", step.name))
+	for _, name in ipairs(step.auto or {}) do
+		assert(type(name) == "string", string.format("Step %s auto values must be strings", step.name))
+	end
 	for _, key in ipairs({ "source", "target" }) do
 		local value = step[key]
 		if value ~= nil then
@@ -242,6 +246,9 @@ function M.for_file(opts)
 		end
 	end
 
+	if opts.executables == false then
+		return definitions
+	end
 	add_task_executables(
 		definitions,
 		source,
@@ -251,6 +258,35 @@ function M.for_file(opts)
 		require("neoterm.terms.artifacts.tasks").executables(vim.fs.dirname(source))
 	)
 	return definitions
+end
+
+function M.run(definition)
+	if definition.tag == nil and definition.cmd == nil then
+		if definition.on_success then
+			definition.on_success()
+		end
+		return
+	end
+	if definition.tag == "open" then
+		return require("neoterm.git").ensure_worktree(definition.cwd, function(ok)
+			if ok then
+				if definition.artifact_dir then
+					require("neoterm.terms.artifacts.cwd").link(
+						definition.cwd,
+						definition.artifact_dir,
+						definition.artifact_source
+					)
+				end
+				local path = require("neoterm.helpers.project_file").get_project_file(definition.cwd)
+					or vim.fs.joinpath(definition.cwd, "README.md")
+				config.create(vim.fn.fnameescape(path))
+			end
+		end)
+	end
+	definition.key = definition.name
+	definition.display_name = definition.name
+	definition.exit_policy = definition.exit_policy or "close"
+	require("neoterm.terms").start(definition)
 end
 
 function M.select_for_current_file(resume)
@@ -297,32 +333,7 @@ function M.select_for_current_file(resume)
 		if definition_ == nil then
 			return
 		end
-		if definition_.tag == nil and definition_.cmd == nil then
-			if definition_.on_success then
-				definition_.on_success()
-			end
-			return
-		end
-		if definition_.tag == "open" then
-			return require("neoterm.git").ensure_worktree(definition_.cwd, function(ok)
-				if ok then
-					if definition_.artifact_dir then
-						require("neoterm.terms.artifacts.cwd").link(
-							definition_.cwd,
-							definition_.artifact_dir,
-							definition_.artifact_source
-						)
-					end
-					local path = require("neoterm.helpers.project_file").get_project_file(definition_.cwd)
-						or vim.fs.joinpath(definition_.cwd, "README.md")
-					config.create(vim.fn.fnameescape(path))
-				end
-			end)
-		end
-		definition_.key = definition_.name
-		definition_.display_name = definition_.name
-		definition_.exit_policy = definition_.exit_policy or "close"
-		require("neoterm.terms").start(definition_)
+		M.run(definition_)
 	end)
 end
 

@@ -14,7 +14,7 @@ return {
 				pattern = "VeryLazy",
 				once = true,
 				callback = function()
-					require("neoterm.terms.artifacts.tasks").start()
+					require("neoterm.terms.artifacts.auto").start()
 				end,
 			})
 		end,
