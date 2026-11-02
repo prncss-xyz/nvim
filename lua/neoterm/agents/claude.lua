@@ -2,10 +2,6 @@ return {
 	writable_dirs = {
 		vim.env.CLAUDE_CONFIG_DIR or "~/.claude",
 	},
-	writable_files = {
-		"~/.claude.json",
-		"~/.claude.json.lock",
-	},
 	osc_status = true,
 	skill = "/%s",
 	builder = function(opts)

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+lines="${1:-80}"
+expr='execute("messages") .. "\n-- notifications --\n" .. luaeval("table.concat(vim.tbl_map(function(n) return os.date(\"%H:%M:%S\", math.floor(n.added)) .. \" \" .. n.level .. \" \" .. n.msg end, package.loaded.snacks and Snacks.notifier.get_history() or {}), \"\\n\")")'
+
+shopt -s nullglob
+for socket in /run/user/"$(id -u)"/nvim.*.0; do
+	echo "== $socket"
+	nvim --server "$socket" --remote-expr "$expr" 2>&1 | tail -n "$lines" || true
+	echo
+done

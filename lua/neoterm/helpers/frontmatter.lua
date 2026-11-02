@@ -45,20 +45,7 @@ function M.add_dependency()
 end
 
 function M.statuses()
-	local modes = require("neoterm.config").tasks.modes
-	local statuses = {}
-	local seen = {}
-	local mode_names = vim.tbl_keys(modes)
-	table.sort(mode_names)
-	for _, mode in ipairs(mode_names) do
-		for _, status in ipairs(modes[mode]) do
-			if not seen[status] then
-				seen[status] = true
-				table.insert(statuses, status)
-			end
-		end
-	end
-	return statuses
+	return require("neoterm.terms.artifacts.statuses").names()
 end
 
 function M.update_status()

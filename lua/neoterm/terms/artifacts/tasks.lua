@@ -191,10 +191,7 @@ local function finish_rebuild(id, directories, next_files, candidates)
 		end
 		local config = require("neoterm.config").tasks
 		local blocking = config.blocking
-		local order = {}
-		for index, status in ipairs(config.modes.all) do
-			order[status] = index
-		end
+		local order = require("neoterm.terms.artifacts.statuses").order()
 		local visited, stack, positions = {}, {}, {}
 		local function visit(task)
 			if positions[task] then
@@ -267,7 +264,10 @@ local function finish_rebuild(id, directories, next_files, candidates)
 			if id ~= generation then
 				return
 			end
-			candidate.status = explicit_status(text) or require("neoterm.config").tasks.default_status
+			candidate.status = require("neoterm.terms.artifacts.statuses").resolve(
+				explicit_status(text) or require("neoterm.config").tasks.default_status,
+				candidate.present
+			)
 			candidate.logical_status = candidate.status
 			candidate.dependencies = explicit_dependencies(text)
 			candidate.dependents = {}
@@ -336,6 +336,10 @@ local function rebuild()
 				end
 
 				local task_file = vim.fs.joinpath(dir, "task.md")
+				local present = {}
+				for path in pairs(directory_files) do
+					present[vim.fs.basename(path)] = true
+				end
 				if directory_files[task_file] then
 					table.insert(candidates, {
 						project = parts[1],
@@ -344,6 +348,7 @@ local function rebuild()
 						cwd = dir,
 						path = task_file,
 						files = directory_files,
+						present = present,
 						flat = false,
 					})
 				end
@@ -352,6 +357,12 @@ local function rebuild()
 					if branch then
 						local task_parts = vim.deepcopy(parts)
 						table.insert(task_parts, branch)
+						local flat_present = {}
+						for name in pairs(present) do
+							if vim.startswith(name, branch .. ".") then
+								flat_present[name:sub(#branch + 2)] = true
+							end
+						end
 						table.insert(candidates, {
 							project = task_parts[1],
 							branch = task_parts[#task_parts],
@@ -359,6 +370,7 @@ local function rebuild()
 							cwd = dir,
 							path = path,
 							files = { [path] = true },
+							present = flat_present,
 							flat = true,
 						})
 					end

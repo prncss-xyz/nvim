@@ -45,7 +45,7 @@ function M.on_attach(bufnr)
 	vim.api.nvim_create_autocmd("User", {
 		pattern = "GitSignsUpdate",
 		callback = function(event)
-			if event.data.buffer ~= bufnr then
+			if not event.data or event.data.buffer ~= bufnr then
 				return
 			end
 			vim.schedule(function()

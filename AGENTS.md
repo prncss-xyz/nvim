@@ -1,0 +1,2 @@
+- Runtime errors and notifications from the user's running nvim instances: `scripts/nvim-messages [lines]`.
+- Specs mirror `lua/` under `tests/` as `*_spec.lua`; run `./scripts/test <path>`. Run the matching spec after changing a module.

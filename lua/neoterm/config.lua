@@ -6,7 +6,8 @@ local notify = require("my.notify")
 local prompt_utils = require("neoterm.helpers.prompt")
 
 local env = {
-	NEOMUX_CTX = [[artifacts, such as plans, reports, screenshots, scripts related to the current tasks goes in {artifacts}
+	NEOMUX_CTX = [[Save deliverables for the user, such as plans, reports, screenshots, and reusable scripts, in `{artifacts}`.
+Save temporary working files, such as logs, scratchpads, and throwaway scripts, in `/tmp`.
 ]],
 }
 
@@ -287,21 +288,22 @@ return {
 	},
 	tasks = {
 		create_task_name = [==[
-Generate a concise git branch name based on the task description.
+Generate a concise task description which can be used as a branch name. This
+can contain spaces as it will be sluged as needed.
 
 Rules:
 - Keep it short: 1-3 words, max 4 if necessary
 - Focus on the core task/feature, not implementation details
-- Non coding tasks should start with "todo-"
+- Non coding tasks should start with "todo "
 - Coding tasks should start with conventional commits prefixes
 
 Examples of good branch names:
-- "Schedule a meeting with Amanda" → todo-meeting-amanda
-- "Add dark mode toggle" → feat-dark-mode
-- "Fix the search results not showing" → fix-search
-- "Refactor the authentication module" → refactor-auth
-- "Add CSV export to reports" → feat-export-csv
-- "Shell completion is broken" → feat-shell-completion
+- "Schedule a meeting with Amanda" → todo meeting amanda
+- "Add dark mode toggle" → feat dark mode
+- "Fix the search results not showing" → fix search
+- "Refactor the authentication module" → refactor auth
+- "Add CSV export to reports" → feat export csv
+- "Shell completion is broken" → feat shell completion
 
 Output ONLY the branch name, nothing else.
 
@@ -313,31 +315,25 @@ Output ONLY the branch name, nothing else.
 			status = "blocked",
 			unblock = { "done" },
 		},
-		modes = {
-			all = vim.tbl_filter(function(status)
-				return status ~= false
-			end, {
-				"maybe",
-				"later 2",
-				"later 1",
-				"later 0",
-				"explore",
-				"blocked",
-				"inbox",
-				"deferred",
-				"ready",
-				"active",
-				"review",
-				"merging",
-				work("report:done", false),
-				"done",
-				work("report:aborted", false),
-				"aborted",
-				personal("failed", false),
-			}),
-			inbox = { "inbox", "deferred" },
-			focus = { "blocked", "explore", "ready", "active" },
-			standup = work({ "export", "ready", "active", "report:done", "report:aborted" }),
+		status = {
+			{ name = "maybe" },
+			{ name = "later 2" },
+			{ name = "later 1" },
+			{ name = "later 0" },
+			{ name = "explore", modes = { "focus" } },
+			{ name = "export", modes = { "standup" }, enabled = work(true, false) },
+			{ name = "blocked", modes = { "focus" } },
+			{ name = "inbox", modes = { "inbox" } },
+			{ name = "deferred", modes = { "inbox" } },
+			{ name = "ready", modes = work({ "focus", "standup" }, { "focus" }) },
+			{ name = "active", modes = work({ "focus", "standup" }, { "focus" }) },
+			{ name = "review" },
+			{ name = "merging" },
+			{ name = "report:done", modes = { "standup" }, enabled = work(true, false) },
+			{ name = "done" },
+			{ name = "report:aborted", modes = { "standup" }, enabled = work(true, false) },
+			{ name = "aborted" },
+			{ name = "failed", enabled = personal(true, false) },
 		},
 	},
 	templates = {

@@ -6,7 +6,7 @@ local paths = require("neoterm.terms.artifacts.paths")
 local last_created_artifact
 
 local function sanitize_branch(summary)
-	local branch = summary:lower():gsub("[^%w._-]", "-")
+	local branch = summary:lower():gsub("[^%w%s._-]", ""):gsub("%s+", "-")
 	return branch:gsub("^-+", ""):gsub("-+$", "")
 end
 

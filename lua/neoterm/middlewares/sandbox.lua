@@ -73,10 +73,6 @@ local builders = {
 		for _, path in ipairs(git_metadata_dirs(cwd)) do
 			vim.list_extend(cmd, { "--bind", path, path })
 		end
-		for _, path in ipairs(opts.writable_files or {}) do
-			path = vim.fs.abspath(path)
-			vim.list_extend(cmd, { "--bind-try", path, path })
-		end
 		vim.list_extend(cmd, {
 			"--bind",
 			cwd,

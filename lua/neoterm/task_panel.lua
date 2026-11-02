@@ -145,19 +145,12 @@ local function render()
 	if not state or not vim.api.nvim_buf_is_valid(state.buf) then
 		return
 	end
-	local config = require("neoterm.config")
 	state.tasks = require("neoterm.terms.artifacts.tasks").get()
 	local relative_root = assert(vim.fs.relpath(state.artifacts, state.root))
 	local root_parts = relative_root == "." and {} or vim.split(relative_root, "/", { plain = true })
-	local statuses = assert(config.tasks.modes[state.mode], "Unknown task panel mode: " .. state.mode)
-	local status_names = {}
-	for _, mode_statuses in pairs(config.tasks.modes) do
-		for _, status in ipairs(mode_statuses) do
-			status_names[status] = true
-		end
-	end
-	state.status_names = status_names
-	state.rows = create_rows(state.tasks, statuses, status_names, root_parts)
+	local statuses = assert(state.mode_statuses[state.mode], "Unknown task panel mode: " .. state.mode)
+	state.status_names = require("neoterm.terms.artifacts.statuses").order()
+	state.rows = create_rows(state.tasks, statuses, state.status_names, root_parts)
 	table.insert(state.rows, 1, { text = string.format("%s [%s]", relative_root, state.mode), root = true })
 	if #state.rows == 1 then
 		table.insert(state.rows, { text = "No artifact tasks" })
@@ -339,7 +332,8 @@ function M.toggle()
 	local artifacts = config.dirs.artifacts
 	local root = last_root and vim.fs.relpath(artifacts, last_root) and vim.fn.isdirectory(last_root) == 1 and last_root
 		or default_root(artifacts)
-	local modes = vim.tbl_keys(config.tasks.modes)
+	local mode_statuses = require("neoterm.terms.artifacts.statuses").modes()
+	local modes = vim.tbl_keys(mode_statuses)
 	table.sort(modes)
 	vim.cmd(string.format("topleft %dvsplit", width))
 	local win = vim.api.nvim_get_current_win()
@@ -350,8 +344,9 @@ function M.toggle()
 		buf = buf,
 		rows = {},
 		tasks = {},
-		mode = (last_mode and config.tasks.modes[last_mode] and last_mode) or config.tasks.default_mode or modes[1],
+		mode = (last_mode and mode_statuses[last_mode] and last_mode) or config.tasks.default_mode or modes[1],
 		modes = modes,
+		mode_statuses = mode_statuses,
 		artifacts = artifacts,
 		root = root,
 	}
