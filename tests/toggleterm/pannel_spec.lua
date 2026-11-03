@@ -206,6 +206,44 @@ T["terminal panel"]["shortens home directories without shortening sibling paths"
 	}, child.lua_get("result"))
 end
 
+T["terminal panel"]["shows the task auto mode is waiting for and refreshes when it changes"] = function()
+	child.lua([[
+		local items = { { cwd = "/tmp", status = "idle", term = { focus = function() end } } }
+		local history = { filter = function() return items end }
+		local waiting
+		local auto_listener
+		package.loaded["neoterm.terms.artifacts.auto"] = {
+			auto_status = function() return waiting end,
+			subscribe_auto = function(callback)
+				auto_listener = callback
+				return function() auto_listener = nil end
+			end,
+		}
+		package.loaded["neoterm.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
+		package.loaded["neoterm.terms.format_item"] = {
+			format_item = function() return function() return "terminal" end end,
+		}
+		local panel = require("neoterm.terms.term_panel")
+		panel.toggle({}, history, function() return function() end end)
+		local buf = vim.api.nvim_get_current_buf()
+		local before = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+		waiting = "waiting for task sample/one"
+		auto_listener()
+		vim.wait(100, function() return vim.api.nvim_buf_line_count(buf) == 3 end)
+		vim.api.nvim_win_set_cursor(0, { 1, 0 })
+		vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)
+		local after = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+		panel.toggle({}, history, function() return function() end end)
+		result = { before = before, after = after, unsubscribed = auto_listener == nil }
+	]])
+
+	assert.same({
+		before = { "󰉋 /tmp", "terminal (idle)" },
+		after = { "waiting for task sample/one", "󰉋 /tmp", "terminal (idle)" },
+		unsubscribed = true,
+	}, child.lua_get("result"))
+end
+
 T["terminal panel"]["highlights directories and terminal states"] = function()
 	child.lua([[
 		local items = {

@@ -83,6 +83,10 @@ local function release(state)
 		state.unsubscribe()
 		state.unsubscribe = nil
 	end
+	if state.unsubscribe_auto then
+		state.unsubscribe_auto()
+		state.unsubscribe_auto = nil
+	end
 	if state.refresh_timer then
 		state.refresh_timer:stop()
 		state.refresh_timer:close()
@@ -366,6 +370,10 @@ local function render(state)
 		end
 	end
 	rows = panel_utils.filter_rows(rows, state.filter)
+	local waiting = require("neoterm.terms.artifacts.auto").auto_status()
+	if waiting then
+		table.insert(rows, 1, { text = waiting, highlight = "DiagnosticInfo" })
+	end
 	local lines = vim.tbl_map(function(row)
 		return row.text
 	end, rows)
@@ -451,7 +459,7 @@ local function focus_selected(state)
 		neoterm_config.browser(selected.url)
 	elseif selected.item then
 		selected.item.term:focus()
-	else
+	elseif selected.cwd then
 		ensure_dir(selected.cwd)
 	end
 end
@@ -592,6 +600,9 @@ local function open(query, history, subscribe, create_in_dir)
 		then
 			refresh(state)
 		end
+	end)
+	state.unsubscribe_auto = require("neoterm.terms.artifacts.auto").subscribe_auto(function()
+		refresh(state)
 	end)
 	render(state)
 end

@@ -494,6 +494,13 @@ return {
 				desc = "Put File Diagnostics Prompt",
 			},
 			{
+				"m" .. reverse("."),
+				function()
+					require("neoterm.terms.artifacts.auto").auto_trigger_next()
+				end,
+				desc = "Toggle auto trigger next",
+			},
+			{
 				"m.",
 				function()
 					require("neoterm.terms.artifacts.auto").trigger_next()

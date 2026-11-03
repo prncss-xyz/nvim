@@ -239,4 +239,99 @@ T["trigger next runs the first task whose auto step is enabled for it"] = functi
 	]])
 end
 
+T["auto mode triggers the next task once the watched task unblocks and keeps it while disabled"] = function()
+	child.lua([[
+		package.loaded["neoterm.config"].tasks = { blocking = { status = "blocked", unblock = { "done" } } }
+		local tasks = package.loaded["neoterm.terms.artifacts.tasks"]
+		local listener
+		tasks.subscribe = function(callback)
+			listener = callback
+		end
+		local statuses = {}
+		tasks.status = function(path)
+			return statuses[path]
+		end
+		local auto = require("neoterm.terms.artifacts.auto")
+		local queue = {
+			{ path = "/one/task.md", parts = { "sample", "one" } },
+			{ path = "/two/task.md", parts = { "sample", "two" } },
+			{ path = "/three/task.md", parts = { "sample", "three" } },
+		}
+		local triggered = {}
+		auto.trigger_next = function()
+			local task = table.remove(queue, 1)
+			table.insert(triggered, task and task.path or "none")
+			return task
+		end
+		local refreshed = 0
+		auto.subscribe_auto(function()
+			refreshed = refreshed + 1
+		end)
+		assert(auto.auto_status() == nil)
+		auto.auto_trigger_next()
+		assert(vim.deep_equal(triggered, { "/one/task.md" }), vim.inspect(triggered))
+		assert(auto.auto_status() == "waiting for task sample/one", auto.auto_status())
+		statuses["/one/task.md"] = "review"
+		listener()
+		assert(#triggered == 1, vim.inspect(triggered))
+		auto.auto_trigger_next()
+		assert(auto.auto_status() == nil)
+		statuses["/one/task.md"] = "done"
+		listener()
+		assert(#triggered == 1, vim.inspect(triggered))
+		auto.auto_trigger_next()
+		assert(vim.deep_equal(triggered, { "/one/task.md", "/two/task.md" }), vim.inspect(triggered))
+		assert(auto.auto_status() == "waiting for task sample/two", auto.auto_status())
+		statuses["/two/task.md"] = "active"
+		listener()
+		assert(#triggered == 2, vim.inspect(triggered))
+		statuses["/two/task.md"] = "done"
+		listener()
+		assert(auto.auto_status() == "waiting for task sample/three", auto.auto_status())
+		listener()
+		assert(vim.deep_equal(triggered, { "/one/task.md", "/two/task.md", "/three/task.md", "none" }), vim.inspect(triggered))
+		assert(notifications[#notifications].message == "Watched task sample/three disappeared", vim.inspect(notifications))
+		assert(auto.auto_status() == nil)
+		listener()
+		assert(#triggered == 4, vim.inspect(triggered))
+		assert(refreshed == 5, refreshed)
+	]])
+end
+
+T["auto mode reports a failed trigger and stops until re-enabled"] = function()
+	child.lua([[
+		package.loaded["neoterm.config"].tasks = { blocking = { status = "blocked", unblock = { "done" } } }
+		local tasks = package.loaded["neoterm.terms.artifacts.tasks"]
+		local listener
+		tasks.subscribe = function(callback)
+			listener = callback
+		end
+		local statuses = { ["/one/task.md"] = "active" }
+		tasks.status = function(path)
+			return statuses[path]
+		end
+		local auto = require("neoterm.terms.artifacts.auto")
+		local failing = false
+		local calls = 0
+		auto.trigger_next = function()
+			calls = calls + 1
+			assert(not failing, "boom")
+			return { path = "/one/task.md", parts = { "sample", "one" } }
+		end
+		auto.auto_trigger_next()
+		failing = true
+		statuses["/one/task.md"] = "done"
+		listener()
+		local last = notifications[#notifications]
+		assert(last.level == vim.log.levels.ERROR and last.message:find("boom", 1, true), vim.inspect(notifications))
+		assert(auto.auto_status() == nil)
+		listener()
+		assert(calls == 2, calls)
+		failing = false
+		auto.auto_trigger_next()
+		assert(calls == 3, calls)
+		assert(auto.auto_status() == "waiting for task sample/one", auto.auto_status())
+	]])
+end
+
 return T

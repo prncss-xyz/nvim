@@ -2,6 +2,10 @@ local M = {}
 
 local started = false
 local fired = {}
+local active = false
+local watched
+local watching = false
+local auto_listeners = {}
 
 local function lock_path()
 	return vim.fs.joinpath(vim.fn.stdpath("state"), "neoterm-auto.lock")
@@ -225,6 +229,67 @@ function M.trigger_next()
 	})
 	assert(#definitions == 1, "Expected one definition for " .. step.name .. " on " .. file)
 	commands.run(definitions[1])
+	return task
+end
+
+local function notify_auto()
+	for listener in pairs(auto_listeners) do
+		listener()
+	end
+end
+
+local function advance()
+	if not active then
+		return
+	end
+	if watched then
+		local status = require("neoterm.terms.artifacts.tasks").status(watched.path)
+		if status == nil then
+			vim.notify("Watched task " .. table.concat(watched.parts, "/") .. " disappeared", vim.log.levels.WARN)
+		elseif not vim.tbl_contains(require("neoterm.config").tasks.blocking.unblock, status) then
+			return
+		end
+	end
+	local ok, result = pcall(M.trigger_next)
+	if ok then
+		watched = result
+	else
+		vim.notify("Auto mode stopped: " .. tostring(result), vim.log.levels.ERROR)
+	end
+	active = ok and watched ~= nil
+	notify_auto()
+end
+
+---Toggle auto mode: trigger the next auto task, then trigger another each time the watched
+---task reaches an unblocking status. The watched task is kept while disabled.
+function M.auto_trigger_next()
+	active = not active
+	if not watching then
+		watching = true
+		require("neoterm.terms.artifacts.tasks").subscribe(advance)
+	end
+	if active then
+		advance()
+	else
+		notify_auto()
+	end
+end
+
+---Message describing the task auto mode is waiting for, or nil when auto mode is disabled.
+---@return string|nil
+function M.auto_status()
+	if active and watched then
+		return "waiting for task " .. table.concat(watched.parts, "/")
+	end
+end
+
+---@param listener fun()
+---@return fun() unsubscribe
+function M.subscribe_auto(listener)
+	auto_listeners[listener] = true
+	return function()
+		auto_listeners[listener] = nil
+	end
 end
 
 return M

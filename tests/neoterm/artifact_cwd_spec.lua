@@ -50,7 +50,7 @@ T["commit messages use the scope and the last step of the task"] = function()
 			{ "stores/fix-provider-store/0.task.md", "fix(stores): provider-store" },
 			{ "stores/fix-provider-store/notes/review.plan.md", "fix(stores): provider-store" },
 			{ "stores/add-provider-store/task.md", "feat(stores): add-provider-store" },
-			{ "stores/01-fix-provider/task.md", "fix(stores): provider" },
+			{ "stores/01 fix-provider/task.md", "fix(stores): provider" },
 			{ "stores/fixation-provider/task.md", "feat(stores): fixation-provider" },
 			{ "outer/my-stores/docs-provider-store/task.md", "docs(outer): provider-store" },
 			{ "misc/fix-provider/task.md", "fix: provider" },
@@ -111,7 +111,7 @@ T["branches hash the path from the scope and slug the last step"] = function()
 			{ "stores/fix-provider-store/plan.md", expected },
 			{ "stores/fix-provider-store/fix.task.md", expected },
 			{ "stores/fix-provider-store/deep/er/0.task.md", expected },
-			{ "outer/inner/02-Fix  the thing!/task.md", hash("outer/inner") .. "-Fix-the-thing" },
+			{ "outer/inner/02 Fix  the thing!/task.md", hash("outer/inner") .. "-Fix-the-thing" },
 		}) do
 			local file = source(case[1])
 			local identity = paths.source(file)
