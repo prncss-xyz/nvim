@@ -31,9 +31,7 @@ local function resolve_command(command, source, target, step, name, variant, cwd
 		step = step,
 		name = name,
 		variant = variant,
-		message = vim.fs.dirname(source) ~= paths.project_artifacts(
-			paths.artifact_project(source)
-		) and paths.commit_message(vim.fs.joinpath(vim.fs.dirname(source), "task.md")) or nil,
+		message = not paths.source(source).default and paths.commit_message(source) or nil,
 	}
 	local function resolve(value)
 		if type(value) == "function" then
@@ -81,10 +79,10 @@ local function build_step(step, source, target, current_cwd, name, variant)
 	source = vim.fs.abspath(source)
 	target = target and vim.fs.abspath(target) or nil
 	local cwd = current_cwd
-	if step.fork == true or type(step.fork) == "string" then
-		local identity = paths.source(source, step.source)
-		local branch = paths.branch(identity, step.fork, { variant = variant, step = name })
-		cwd = paths.checkout(identity.project, branch)
+	local identity = paths.source(source, step.source)
+	local fork = require("neoterm.terms.artifacts.tasks").fork(source)
+	if fork then
+		cwd = paths.checkout(identity.project, paths.branch(identity))
 	end
 	local result, vars = resolve_command(step.command, source, target, name, step.name, variant, current_cwd)
 	vars.cwd = cwd
@@ -109,15 +107,27 @@ local function build_step(step, source, target, current_cwd, name, variant)
 			step.on_success(vars, output)
 		end
 	end
-	if step.fork == true or type(step.fork) == "string" then
+	if fork and not identity.default then
 		result.artifact_dir = vim.fs.dirname(source)
 		result.artifact_source = source
+	end
+	if not fork and step.requires_fork then
+		result.refusal =
+			string.format("Step %s requires a forked task, but %s sets fork: false", step.name, identity.task)
 	end
 	return result
 end
 
 local function validate_step(step)
 	assert(type(step.name) == "string", "Step name must be a string")
+	assert(
+		step.fork == nil,
+		string.format("Step %s must not define fork; set fork: false in task.md instead", step.name)
+	)
+	assert(
+		step.requires_fork == nil or type(step.requires_fork) == "boolean",
+		string.format("Step %s requires_fork must be a boolean", step.name)
+	)
 	assert(step.on_success == nil or type(step.on_success) == "function", "Step on_success must be a function")
 	assert(step.auto == nil or vim.islist(step.auto), string.format("Step %s auto must be an array", step.name))
 	for _, name in ipairs(step.auto or {}) do
@@ -217,9 +227,7 @@ local function is_available(step, source, checkout_branch, related)
 	if not status_reached(step, identity) then
 		return false
 	end
-	return paths.is_default(checkout_branch)
-		or vim.tbl_contains(paths.branches(identity, { step }), checkout_branch)
-		or related
+	return paths.is_default(checkout_branch) or vim.tbl_contains(paths.branches(identity), checkout_branch) or related
 end
 
 local function context(opts)
@@ -318,23 +326,31 @@ function M.is_enabled(opts)
 	return vim.tbl_contains(opts.step.variants or {}, opts.variant)
 end
 
+local function link(definition)
+	if definition.artifact_dir then
+		require("neoterm.terms.artifacts.cwd").link(definition.cwd, definition.artifact_dir, definition.artifact_source)
+	end
+end
+
 function M.run(definition)
+	if definition.refusal then
+		return vim.notify(definition.refusal, vim.log.levels.ERROR)
+	end
 	if definition.tag == nil and definition.cmd == nil then
 		if definition.on_success then
-			definition.on_success()
+			return require("neoterm.git").ensure_worktree(definition.cwd, function(ok)
+				if ok then
+					link(definition)
+					definition.on_success()
+				end
+			end)
 		end
 		return
 	end
 	if definition.tag == "open" then
 		return require("neoterm.git").ensure_worktree(definition.cwd, function(ok)
 			if ok then
-				if definition.artifact_dir then
-					require("neoterm.terms.artifacts.cwd").link(
-						definition.cwd,
-						definition.artifact_dir,
-						definition.artifact_source
-					)
-				end
+				link(definition)
 				local path = require("neoterm.helpers.project_file").get_project_file(definition.cwd)
 					or vim.fs.joinpath(definition.cwd, "README.md")
 				config.create(vim.fn.fnameescape(path))

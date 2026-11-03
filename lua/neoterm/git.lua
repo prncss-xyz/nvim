@@ -44,8 +44,77 @@ local function add_worktree(repo_root, worktree_path, branch, default_branch, ca
 	end)
 end
 
---- Create a missing <projects>/<repo>/<branch> worktree before using it.
---- Other paths are left alone.
+--- Clone `repo` from GitHub into <repo_dir>/<default branch>, creating it upstream when missing.
+--- @param repo string  user/repo or repo, passed as-is to gh
+--- @param repo_dir string
+--- @param callback fun(checkout: string|nil)
+local function obtain(repo, repo_dir, callback)
+	local function clone(branch, created)
+		local clone_dir = vim.fs.joinpath(repo_dir, branch)
+		if vim.uv.fs_stat(clone_dir) then
+			return callback(clone_dir)
+		end
+		vim.fn.mkdir(repo_dir, "p")
+		run({ "gh", "repo", "clone", repo, clone_dir }, function(cloned, output)
+			if not cloned then
+				vim.notify("Failed to clone " .. repo .. ": " .. output, vim.log.levels.ERROR)
+				return callback(nil)
+			end
+			if not created then
+				return callback(clone_dir)
+			end
+			run({ "git", "-C", clone_dir, "symbolic-ref", "HEAD", "refs/heads/" .. branch }, function()
+				run({ "git", "-C", clone_dir, "commit", "--allow-empty", "-m", "chore: initial commit" }, function(ok, result)
+					if not ok then
+						vim.notify("Failed to create initial commit: " .. result, vim.log.levels.ERROR)
+						return callback(nil)
+					end
+					run({ "git", "-C", clone_dir, "push", "-u", "origin", branch }, function(pushed, push_result)
+						if not pushed then
+							vim.notify("Failed to push initial commit: " .. push_result, vim.log.levels.ERROR)
+							return callback(nil)
+						end
+						callback(clone_dir)
+					end)
+				end)
+			end)
+		end)
+	end
+
+	run({ "gh", "repo", "view", repo, "--json", "defaultBranchRef", "-q", ".defaultBranchRef.name" }, function(exists, output)
+		if exists and vim.trim(output) ~= "" then
+			return clone(vim.trim(output), false)
+		end
+		if exists then
+			return clone(config.default_branches[1], true)
+		end
+		run({ "gh", "repo", "create", repo, "--public" }, function(created, result)
+			if not created then
+				vim.notify("Failed to create repo " .. repo .. ": " .. result, vim.log.levels.ERROR)
+				return callback(nil)
+			end
+			clone(config.default_branches[1], true)
+		end)
+	end)
+end
+
+--- Find the default checkout of a project, cloning or creating its repo when missing.
+--- The repo comes from the `github` frontmatter field of the project's artifact index.md.
+--- @param project string
+--- @param callback fun(checkout: string|nil)
+function M.ensure_project(project, callback)
+	local repo_dir = vim.fs.joinpath(projects, project)
+	for _, branch in ipairs(config.default_branches) do
+		local candidate = vim.fs.joinpath(repo_dir, branch)
+		if vim.uv.fs_stat(candidate) then
+			return callback(candidate)
+		end
+	end
+	obtain(require("neoterm.terms.artifacts.paths").github_repo(project), repo_dir, callback)
+end
+
+--- Create a missing <projects>/<repo>/<branch> worktree before using it,
+--- cloning or creating the repo first when needed. Other paths are left alone.
 function M.ensure_worktree(dir, callback)
 	if vim.uv.fs_stat(dir) then
 		return callback(true)
@@ -57,20 +126,15 @@ function M.ensure_worktree(dir, callback)
 		return callback(true)
 	end
 
-	local repo_dir = vim.fs.joinpath(projects, parts[1])
-	local repo_root
-	for _, branch in ipairs(config.default_branches) do
-		local candidate = vim.fs.joinpath(repo_dir, branch)
-		if vim.uv.fs_stat(candidate) then
-			repo_root = candidate
-			break
+	M.ensure_project(parts[1], function(repo_root)
+		if not repo_root then
+			return callback(false)
 		end
-	end
-	if not repo_root then
-		return callback(true)
-	end
-
-	add_worktree(repo_root, dir, parts[2], vim.fs.basename(repo_root), callback)
+		if vim.uv.fs_stat(dir) then
+			return callback(true)
+		end
+		add_worktree(repo_root, dir, parts[2], vim.fs.basename(repo_root), callback)
+	end)
 end
 
 --- Get the best file to open in a git repository.
@@ -106,51 +170,11 @@ function M.clone_github()
 			return
 		end
 
-		local repo_dir = projects .. "/" .. vim.fs.basename(input)
-		vim.fn.mkdir(repo_dir, "p")
-
-		local gh_out = vim.trim(
-			vim.fn.system({ "gh", "repo", "view", input, "--json", "defaultBranchRef", "-q", ".defaultBranchRef.name" })
-		)
-		local has_upstream = vim.v.shell_error == 0
-
-		if has_upstream then
-			local branch = gh_out
-			local clone_dir = repo_dir .. "/" .. branch
-			if vim.fn.isdirectory(clone_dir) == 0 then
-				local result = vim.fn.system({ "gh", "repo", "clone", input, clone_dir })
-				if vim.v.shell_error ~= 0 then
-					vim.notify("Failed to clone: " .. result, vim.log.levels.ERROR)
-					return
-				end
+		obtain(input, vim.fs.joinpath(projects, vim.fs.basename(input)), function(checkout)
+			if checkout then
+				config.create(vim.fn.fnameescape(get_default_file(checkout)))
 			end
-			repo_dir = clone_dir
-		elseif not input:find("/") then
-			-- no upstream and bare repo name: create a new public repo
-			local result = vim.fn.system(
-				"cd "
-					.. vim.fn.shellescape(projects)
-					.. " && gh repo create "
-					.. vim.fn.shellescape(input)
-					.. " --public --clone"
-			)
-			if vim.v.shell_error ~= 0 then
-				vim.notify("Failed to create repo: " .. result, vim.log.levels.ERROR)
-				return
-			end
-			-- gh clones into projects/repo_name; move into repo_dir if needed
-			local repo_basename = input:match("[^/]+$")
-			local cwd_clone = projects .. "/" .. repo_basename
-			if cwd_clone ~= repo_dir and vim.fn.isdirectory(cwd_clone) == 1 then
-				vim.fn.rename(cwd_clone, repo_dir)
-			end
-		else
-			vim.notify("Upstream not found for " .. input, vim.log.levels.ERROR)
-			return
-		end
-
-		local target = get_default_file(repo_dir)
-		config.create(vim.fn.fnameescape(target))
+		end)
 	end)
 end
 
@@ -289,6 +313,22 @@ function M.merge_to_default()
 			return
 		end
 		local target = vim.fs.basename(default_path)
+		local message = "Merge " .. branch
+		local sources = vim.fn.systemlist({
+			"git",
+			"-C",
+			worktree_path,
+			"config",
+			"--local",
+			"--get-all",
+			"branch." .. branch .. ".neoterm-artifact-source",
+		})
+		if vim.v.shell_error == 0 and sources[1] then
+			local paths = require("neoterm.terms.artifacts.paths")
+			if not paths.source(sources[1]).default then
+				message = paths.commit_message(sources[1])
+			end
+		end
 		require("neoterm.helpers.confirm")("Merge " .. branch .. " into " .. target .. "?", function(confirmed)
 			if not confirmed then
 				return
@@ -342,7 +382,7 @@ function M.merge_to_default()
 										vim.notify("Failed to prepare squash: " .. reset_result, vim.log.levels.ERROR)
 										return
 									end
-									run({ "git", "-C", worktree_path, "commit", "-m", "Merge " .. branch }, function(committed, commit_result)
+									run({ "git", "-C", worktree_path, "commit", "-m", message }, function(committed, commit_result)
 										if not committed then
 											run({ "git", "-C", worktree_path, "reset", "--hard", original }, function(restored, restore_result)
 												vim.notify("Failed to commit squash: " .. commit_result .. (restored and "" or "; restoration failed: " .. restore_result), vim.log.levels.ERROR)

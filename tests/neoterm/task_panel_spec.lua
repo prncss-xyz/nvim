@@ -31,6 +31,9 @@ local T = MiniTest.new_set({
 					subscribe = function()
 						return function() end
 					end,
+					fork = function()
+						return true
+					end,
 				}
 				function checkout(project, branch)
 					local path = vim.fs.joinpath(projects, project, branch)

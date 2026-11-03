@@ -152,20 +152,9 @@ return {
 			source = "task.md",
 			target = "merge.txt",
 			command = { tag = "open" },
-			fork = true,
 		},
 		{
 			name = "do",
-			source = "task.md",
-			command = {
-				tag = "agent",
-				title = "{step}",
-				prompt = "do this @{source}",
-			},
-			fork = false,
-		},
-		{
-			name = "do-fork",
 			source = "task.md",
 			target = "merge.txt",
 			command = {
@@ -173,7 +162,6 @@ return {
 				title = "{step}",
 				prompt = "do this @{source}",
 			},
-			fork = true,
 		},
 		{
 			name = "plan",
@@ -187,7 +175,6 @@ return {
 				skill = "plannify",
 				prompt = "@{source}",
 			},
-			fork = true,
 		},
 		{
 			name = "decompose",
@@ -200,7 +187,6 @@ return {
 				skill = "{name}",
 				prompt = "@{source}",
 			},
-			fork = true,
 		},
 		{
 			name = "api-contract",
@@ -214,7 +200,6 @@ return {
 				skill = "{name}",
 				prompt = "@{source}",
 			},
-			fork = true,
 		},
 		{
 			name = "implementation",
@@ -229,12 +214,10 @@ return {
 				skill = "{name}",
 				prompt = "@{source}",
 			},
-			fork = true,
 		},
 		{
 			name = "info",
 			target = "merge.txt",
-			fork = true,
 			on_success = function(vars)
 				local branch = assert(
 					require("neoterm.terms.artifacts.paths").current_branch(vars.cwd),
@@ -250,7 +233,6 @@ return {
 		{
 			name = "diff",
 			target = "merge.txt",
-			fork = true,
 			on_success = function(vars)
 				local path = require("neoterm.helpers.project_file").get_diff_file(vars.cwd, vars.source_branch)
 				if not path then
@@ -265,6 +247,7 @@ return {
 		{
 			name = "merge",
 			source = "implementation.md",
+			requires_fork = true,
 			auto = { "small-change.txt" },
 			target = "merge.txt",
 			command = {

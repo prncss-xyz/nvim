@@ -21,8 +21,12 @@ local function stop_watchers()
 	watchers = {}
 end
 
+local function frontmatter_text(text)
+	return text:match("^%-%-%-%s*\n(.-)\n[%.-][%.-][%.-]%s*\n")
+end
+
 local function explicit_field(text, name)
-	local frontmatter = text:match("^%-%-%-%s*\n(.-)\n[%.-][%.-][%.-]%s*\n")
+	local frontmatter = frontmatter_text(text)
 	if not frontmatter then
 		return nil
 	end
@@ -48,7 +52,7 @@ local function explicit_auto(text)
 end
 
 local function explicit_dependencies(text)
-	local frontmatter = text:match("^%-%-%-%s*\n(.-)\n[%.-][%.-][%.-]%s*\n")
+	local frontmatter = frontmatter_text(text)
 	local result = {}
 	if not frontmatter then
 		return result
@@ -486,6 +490,21 @@ function M.next_auto(predicate)
 		end
 	end
 	return selected
+end
+
+--- Whether the task owning an artifact source runs its steps in a forked checkout.
+--- Reads the `fork` frontmatter field of the owner task.md; defaults to true.
+function M.fork(path)
+	local task = require("neoterm.terms.artifacts.paths").source(path).task
+	if not task or vim.fn.filereadable(task) == 0 then
+		return true
+	end
+	local value = explicit_field(table.concat(vim.fn.readfile(task), "\n") .. "\n", "fork")
+	if value == nil then
+		return true
+	end
+	assert(value == "true" or value == "false", "Task fork must be true or false: " .. task)
+	return value == "true"
 end
 
 function M.subscribe(listener)

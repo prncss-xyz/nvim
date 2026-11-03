@@ -52,6 +52,14 @@ function M.project_artifacts(project)
 	return vim.fs.joinpath(dirs.artifacts, project)
 end
 
+--- GitHub repo of a project: the `github` frontmatter field of its artifact index.md, else the project name.
+function M.github_repo(project)
+	local index = vim.fs.joinpath(M.project_artifacts(project), "index.md")
+	local github = vim.fn.filereadable(index) == 1 and require("neoterm.yaml").read_file(index).github or nil
+	assert(github == nil or (type(github) == "string" and github ~= ""), "index.md github must be a nonempty string")
+	return github or project
+end
+
 function M.artifact_project(path)
 	local parts = parts_under(dirs.artifacts, path)
 	return parts and parts[1] or nil
@@ -92,6 +100,40 @@ local function source_name(path)
 	return filename
 end
 
+function M.default_branch(project)
+	for _, branch in ipairs(config.default_branches) do
+		if M.is_directory(M.checkout(project, branch)) then
+			return branch
+		end
+	end
+	return config.default_branches[1]
+end
+
+local function task_branch(steps)
+	if #steps < 2 then
+		return nil
+	end
+	local last = steps[#steps]:gsub("^%d%d%-", "")
+	return require("neoterm.helpers.hash")(table.concat(steps, "/", 1, #steps - 1))
+		.. "-"
+		.. require("neoterm.helpers.slug")(last)
+end
+
+local function owner_steps(project, steps, prefixed)
+	if not prefixed then
+		return steps
+	end
+	local root = M.project_artifacts(project)
+	for count = #steps, 0, -1 do
+		local folder = vim.fs.joinpath(root, unpack(steps, 1, count))
+		if vim.fn.filereadable(vim.fs.joinpath(folder, "task.md")) == 1 then
+			return vim.list_slice(steps, 1, count)
+		end
+	end
+end
+
+--- Describe an artifact source and the branch of the task that owns it.
+--- `steps` are the owner task's directories below the project, `task` its task.md (nil when there is none).
 function M.source(path, name)
 	path = vim.fs.abspath(path)
 	local parts = assert(parts_under(dirs.artifacts, path), "Source is outside artifacts directory")
@@ -102,12 +144,17 @@ function M.source(path, name)
 	local prefix = filename ~= name
 			and assert(filename:match("^(.*)%." .. vim.pesc(name) .. "$"), "Source name does not match artifact")
 		or nil
-	if prefix then
-		table.insert(parts, prefix)
-	end
+	local steps = owner_steps(project, parts, prefix ~= nil)
+	local branch = steps and task_branch(steps)
 	return {
 		project = project,
-		branch = #parts > 0 and table.concat(parts, "-") or config.default_branches[1],
+		branch = branch or M.default_branch(project),
+		default = branch == nil,
+		steps = steps or {},
+		task = steps and vim.fs.joinpath(
+			M.project_artifacts(project),
+			unpack(vim.list_extend(vim.list_slice(steps), { "task.md" }))
+		) or nil,
 		folder = vim.fs.dirname(path),
 		file = path,
 		source = name,
@@ -116,34 +163,30 @@ function M.source(path, name)
 end
 
 function M.commit_message(path)
-	assert(vim.fs.basename(path) == "task.md", "Commit messages require a task.md file")
-	local parts = assert(parts_under(dirs.artifacts, path), "Task is outside artifacts directory")
-	assert(#parts >= 3, "Task must be inside a named task directory")
-	local branch = parts[#parts - 1]
-	local prefix, change = branch:match("^(%a+)%-(.+)$")
+	local identity = M.source(path)
+	assert(not identity.default, "Commit messages require a task on a non-default branch")
+	local steps = identity.steps
+	local name = steps[#steps]:gsub("^%d%d%-", "")
+	local prefix, change = name:match("^(%a+)%-(.+)$")
 	if
 		not vim.tbl_contains(
 			{ "feat", "fix", "build", "chore", "ci", "docs", "style", "refactor", "perf", "test", "revert" },
 			prefix
 		)
 	then
-		prefix, change = "feat", branch
+		prefix, change = "feat", name
 	end
-	local scope = #parts > 3 and "(" .. parts[#parts - 2]:gsub("-", " ") .. ")" or ""
-	return prefix .. scope .. ": " .. change:gsub("-", " ")
+	local scope = steps[1] ~= "misc" and "(" .. steps[1] .. ")" or ""
+	local subject = prefix .. scope .. ": " .. change
+	local body = vim.fs.joinpath(vim.fs.dirname(identity.task), "implementation.md")
+	if vim.fn.filereadable(body) == 1 then
+		return subject .. "\n\n" .. vim.trim(table.concat(vim.fn.readfile(body), "\n"))
+	end
+	return subject
 end
 
-function M.branch(source, fork, vars)
-	local branch = source.branch
-	assert(fork == nil or type(fork) == "boolean" or type(fork) == "string", "Fork must be a boolean or string")
-	if type(fork) == "string" then
-		local suffix = fork:gsub("{(.-)}", function(key)
-			return assert((vars or {})[key], "Unknown fork template variable: " .. key)
-		end)
-		assert(suffix ~= "", "Fork suffix must not be empty")
-		branch = branch .. "-" .. suffix
-	end
-	return branch
+function M.branch(source)
+	return source.branch
 end
 
 function M.step_name(source, step, variant)
@@ -159,24 +202,8 @@ function M.step_name(source, step, variant)
 	return table.concat(parts, ":")
 end
 
-function M.branches(source, steps)
-	local result = { source.branch }
-	for _, step in ipairs(steps or config.steps or {}) do
-		local sources = type(step.source) == "table" and step.source or { step.source }
-		if
-			(step.source == nil or vim.tbl_contains(sources, source.source))
-			and (step.fork == true or type(step.fork) == "string")
-		then
-			for _, variant in ipairs(step.variants or { false }) do
-				variant = variant or nil
-				table.insert(
-					result,
-					M.branch(source, step.fork, { variant = variant, step = M.step_name(source, step, variant) })
-				)
-			end
-		end
-	end
-	return unique(result)
+function M.branches(source)
+	return require("neoterm.terms.artifacts.tasks").fork(source.file) and { source.branch } or {}
 end
 
 function M.folder_branches(folder)
@@ -235,11 +262,10 @@ function M.folders(project, branch)
 		return { root }
 	end
 	local folders = {}
-	local normalized = branch:gsub("/", "-")
 	if M.is_directory(root) then
 		for path, kind in vim.fs.dir(root, { depth = math.huge }) do
 			local full = vim.fs.joinpath(root, path)
-			if kind == "directory" and path:gsub("/", "-") == normalized then
+			if kind == "directory" and M.source(vim.fs.joinpath(full, "task.md")).branch == branch then
 				table.insert(folders, full)
 			elseif kind == "file" then
 				local source = M.source(full)
@@ -249,7 +275,7 @@ function M.folders(project, branch)
 			end
 		end
 	end
-	return #folders > 0 and unique_locations(folders) or { vim.fs.joinpath(root, normalized) }
+	return unique_locations(folders)
 end
 
 function M.artifact_folders(checkout)
@@ -265,7 +291,7 @@ end
 
 local function same_task(left, right)
 	local a, b = M.source(left), M.source(right)
-	return a.folder == b.folder and a.branch == b.branch
+	return a.folder == b.folder and a.branch == b.branch and a.identifier == b.identifier
 end
 
 function M.preferred_folder(checkout)
@@ -361,12 +387,15 @@ local function checkouts(path, get_links)
 	if #candidates > 0 then
 		return unique_locations(candidates)
 	end
-	for count = #parts - 1, 2, -1 do
-		local checkout = M.checkout(project, table.concat(parts, "-", 2, count))
-		if M.is_directory(checkout) then
-			local sources, folders = get_links(checkout)
-			if #sources == 0 and #folders == 0 then
-				return { checkout }
+	for count = directory and #parts or #parts - 1, 3, -1 do
+		local folder = vim.fs.joinpath(dirs.artifacts, unpack(parts, 1, count))
+		for _, branch in ipairs(M.branches(M.source(vim.fs.joinpath(folder, "task.md")))) do
+			local checkout = M.checkout(project, branch)
+			if M.is_directory(checkout) then
+				local sources, folders = get_links(checkout)
+				if #sources == 0 and #folders == 0 then
+					return { checkout }
+				end
 			end
 		end
 	end
