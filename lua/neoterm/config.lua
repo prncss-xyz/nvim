@@ -220,6 +220,7 @@ return {
 			name = "implementation",
 			source = { "task.md", "plan.md" },
 			target = { "implementation.md", "merge.txt" },
+			status = "ready",
 			variants = agent_variants,
 			command = {
 				tag = "agent",
@@ -311,7 +312,7 @@ Output ONLY the branch name, nothing else.
 
 <task>{input}</task>
 ]==],
-		default_status = "inbox",
+		default_status = "ready",
 		default_mode = "focus",
 		blocking = {
 			status = "blocked",

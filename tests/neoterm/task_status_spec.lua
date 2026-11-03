@@ -114,4 +114,36 @@ T["status follows files created and deleted after startup"] = function()
 	MiniTest.expect.equality(child.lua_get("{ started, created, deleted, flat }"), { true, true, true, true })
 end
 
+T["next auto task prefers the first directory at every level, then the deepest task"] = function()
+	child.lua([[
+		write("b/task.md", { "---", "auto: plan", "---" })
+		write("a/z/task.md", { "---", "auto: plan", "---" })
+		write("a/task.md", { "---", "auto: plan", "---" })
+		write("a/m/task.md", { "---", "status: ready", "auto: implement:fast", "---" })
+		write("a/m/n/task.md", { "---", "status: ready", "---" })
+		write("a/c.task.md", { "---", "status: ready", "---" })
+		tasks = require("neoterm.terms.artifacts.tasks")
+		settled = wait_for("a/c", "ready")
+	]])
+	MiniTest.expect.equality(child.lua_get("settled"), true)
+	MiniTest.expect.equality(
+		child.lua_get("(function() local task = tasks.next_auto() return { task.parts, task.auto } end)()"),
+		{ { "a", "m" }, { step = "implement", variant = "fast" } }
+	)
+	child.lua([[
+		write("a/m/n/task.md", { "---", "auto: review", "---" })
+		vim.wait(3000, function() return tasks.next_auto().parts[3] == "n" end, 20)
+	]])
+	MiniTest.expect.equality(
+		child.lua_get("(function() local task = tasks.next_auto() return { task.parts, task.auto } end)()"),
+		{ { "a", "m", "n" }, { step = "review" } }
+	)
+	MiniTest.expect.equality(
+		child.lua_get(
+			"tasks.next_auto(function(task) return task.auto.step ~= 'review' and task.parts[2] ~= 'm' end).parts"
+		),
+		{ "a", "z" }
+	)
+end
+
 return T

@@ -123,6 +123,12 @@ local function validate_step(step)
 	for _, name in ipairs(step.auto or {}) do
 		assert(type(name) == "string", string.format("Step %s auto values must be strings", step.name))
 	end
+	if step.status ~= nil then
+		assert(
+			require("neoterm.terms.artifacts.statuses").order()[step.status],
+			string.format("Step %s status must be an enabled task status", step.name)
+		)
+	end
 	for _, key in ipairs({ "source", "target" }) do
 		local value = step[key]
 		if value ~= nil then
@@ -190,58 +196,96 @@ local function step_matches_source(step, source)
 	return filename == step.source or (step.target == nil and vim.endswith(filename, "." .. step.source))
 end
 
+local function task_file(identity)
+	if vim.fs.basename(identity.file) == identity.source then
+		return vim.fs.joinpath(identity.folder, "task.md")
+	end
+	return vim.fs.joinpath(identity.folder, identity.identifier .. ".task.md")
+end
+
+local function status_reached(step, identity)
+	if step.status == nil then
+		return true
+	end
+	local order = require("neoterm.terms.artifacts.statuses").order()
+	local status = require("neoterm.terms.artifacts.tasks").status(task_file(identity))
+	return not (status and order[status] and order[status] < order[step.status])
+end
+
 local function is_available(step, source, checkout_branch, related)
 	local identity = paths.source(source, step.source)
+	if not status_reached(step, identity) then
+		return false
+	end
 	return paths.is_default(checkout_branch)
 		or vim.tbl_contains(paths.branches(identity, { step }), checkout_branch)
 		or related
 end
 
-function M.for_file(opts)
-	local definitions = {}
+local function context(opts)
 	local cwd = opts.cwd or vim.fn.getcwd()
 	local relative = vim.fs.relpath(dirs.projects, vim.fs.abspath(cwd))
 	local project = relative and paths.project(cwd) or nil
 	local source = vim.fs.abspath(opts.file)
 	local artifact_dir = project and vim.fs.joinpath(dirs.artifacts, project) or nil
 	if artifact_dir == nil or vim.fs.relpath(artifact_dir, source) == nil or vim.fn.filereadable(source) == 0 then
+		return nil
+	end
+	return {
+		cwd = cwd,
+		source = source,
+		checkout_branch = paths.current_branch(cwd),
+		related = vim.tbl_contains(paths.checkouts(source), cwd),
+	}
+end
+
+local function available_step(configured_step, ctx, ignore_targets)
+	validate_step(configured_step)
+	local source = ctx.source
+	local sources = type(configured_step.source) == "table" and configured_step.source or { configured_step.source }
+	local matches = configured_step.source == nil
+	for _, name in ipairs(sources) do
+		matches = matches or step_matches_source({ source = name, target = configured_step.target }, source)
+	end
+	if not matches then
+		return nil
+	end
+	local step = vim.deepcopy(configured_step)
+	local selected_source = configured_step.source == nil and source or nil
+	for _, name in ipairs(sources) do
+		local candidate = vim.fs.joinpath(vim.fs.dirname(source), name)
+		if step_matches_source({ source = name, target = step.target }, source) then
+			candidate = source
+		end
+		if vim.fn.filereadable(candidate) == 1 then
+			step.source = name
+			selected_source = candidate
+		end
+	end
+	local targets = type(step.target) == "table" and step.target or { step.target }
+	local blocked = false
+	if not ignore_targets then
+		for _, name in ipairs(targets) do
+			blocked = blocked or vim.fn.filereadable(vim.fs.joinpath(vim.fs.dirname(source), name)) == 1
+		end
+	end
+	step.target = targets[1]
+	if selected_source and not blocked and is_available(step, selected_source, ctx.checkout_branch, ctx.related) then
+		return step, selected_source
+	end
+end
+
+function M.for_file(opts)
+	local definitions = {}
+	local ctx = context(opts)
+	if ctx == nil then
 		return definitions
 	end
-
-	local checkout_branch = paths.current_branch(cwd)
-	local related = vim.tbl_contains(paths.checkouts(source), cwd)
 	for _, configured_step in ipairs(opts.steps or {}) do
-		validate_step(configured_step)
-		local sources = type(configured_step.source) == "table" and configured_step.source or { configured_step.source }
-		local matches = configured_step.source == nil
-		for _, name in ipairs(sources) do
-			matches = matches or step_matches_source({ source = name, target = configured_step.target }, source)
-		end
-		if matches then
-			local step = vim.deepcopy(configured_step)
-			local selected_source = configured_step.source == nil and source or nil
-			for _, name in ipairs(sources) do
-				local candidate = vim.fs.joinpath(vim.fs.dirname(source), name)
-				if step_matches_source({ source = name, target = step.target }, source) then
-					candidate = source
-				end
-				if vim.fn.filereadable(candidate) == 1 then
-					step.source = name
-					selected_source = candidate
-				end
-			end
-			local targets = type(step.target) == "table" and step.target or { step.target }
-			local blocked = false
-			if not opts.ignore_targets then
-				for _, name in ipairs(targets) do
-					blocked = blocked or vim.fn.filereadable(vim.fs.joinpath(vim.fs.dirname(source), name)) == 1
-				end
-			end
-			step.target = targets[1]
-			if selected_source and not blocked and is_available(step, selected_source, checkout_branch, related) then
-				for _, variant in ipairs(step.variants or { false }) do
-					table.insert(definitions, definition(step, selected_source, cwd, variant or nil))
-				end
+		local step, selected_source = available_step(configured_step, ctx, opts.ignore_targets)
+		if step then
+			for _, variant in ipairs(step.variants or { false }) do
+				table.insert(definitions, definition(step, selected_source, ctx.cwd, variant or nil))
 			end
 		end
 	end
@@ -251,13 +295,27 @@ function M.for_file(opts)
 	end
 	add_task_executables(
 		definitions,
-		source,
-		cwd,
-		checkout_branch,
-		related,
-		require("neoterm.terms.artifacts.tasks").executables(vim.fs.dirname(source))
+		ctx.source,
+		ctx.cwd,
+		ctx.checkout_branch,
+		ctx.related,
+		require("neoterm.terms.artifacts.tasks").executables(vim.fs.dirname(ctx.source))
 	)
 	return definitions
+end
+
+---Whether `step` with `variant` would be offered for `opts.file` from `opts.cwd`, without building it.
+---@param opts { cwd?: string, file: string, step: table, variant?: string }
+---@return boolean
+function M.is_enabled(opts)
+	local ctx = context(opts)
+	if ctx == nil or available_step(opts.step, ctx) == nil then
+		return false
+	end
+	if opts.variant == nil then
+		return opts.step.variants == nil
+	end
+	return vim.tbl_contains(opts.step.variants or {}, opts.variant)
 end
 
 function M.run(definition)

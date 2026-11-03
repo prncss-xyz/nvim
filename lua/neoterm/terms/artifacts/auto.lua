@@ -167,4 +167,64 @@ function M.start()
 	tasks.start()
 end
 
+local function auto_step(task)
+	return vim.iter(require("neoterm.config").steps or {}):find(function(step)
+		return step.name == task.auto.step
+	end)
+end
+
+local function auto_variant(task, step)
+	return task.auto.variant or (step.variants or {})[1]
+end
+
+local function auto_file(task, step)
+	for _, name in ipairs(list(step.source)) do
+		if task.present[name] then
+			return vim.fs.joinpath(task.cwd, task.flat and task.branch .. "." .. name or name)
+		end
+	end
+	return task.path
+end
+
+local function default_checkout(task)
+	local config = require("neoterm.config")
+	return require("neoterm.terms.artifacts.paths").checkout(task.project, config.default_branches[1])
+end
+
+local function auto_enabled(task)
+	local step = auto_step(task)
+	if step == nil then
+		return false
+	end
+	return require("neoterm.terms.artifacts.commands").is_enabled({
+		cwd = default_checkout(task),
+		file = auto_file(task, step),
+		step = step,
+		variant = auto_variant(task, step),
+	})
+end
+
+function M.trigger_next()
+	local task = require("neoterm.terms.artifacts.tasks").next_auto(auto_enabled)
+	if not task then
+		vim.notify("No auto task")
+		return
+	end
+	local step = vim.deepcopy(assert(auto_step(task)))
+	local variant = auto_variant(task, step)
+	step.variants = variant and { variant } or nil
+	local file = auto_file(task, step)
+	local checkouts = require("neoterm.terms.artifacts.paths").checkouts(file)
+	assert(#checkouts <= 1, "Expected at most one checkout for " .. file .. ", found " .. table.concat(checkouts, ", "))
+	local commands = require("neoterm.terms.artifacts.commands")
+	local definitions = commands.for_file({
+		cwd = checkouts[1] or default_checkout(task),
+		file = file,
+		steps = { step },
+		executables = false,
+	})
+	assert(#definitions == 1, "Expected one definition for " .. step.name .. " on " .. file)
+	commands.run(definitions[1])
+end
+
 return M

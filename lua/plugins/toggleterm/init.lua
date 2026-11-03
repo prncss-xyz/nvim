@@ -493,6 +493,13 @@ return {
 				end,
 				desc = "Put File Diagnostics Prompt",
 			},
+			{
+				"m.",
+				function()
+					require("neoterm.terms.artifacts.auto").trigger_next()
+				end,
+				desc = "Trigger next",
+			},
 		},
 		cond = not_vscode,
 	},

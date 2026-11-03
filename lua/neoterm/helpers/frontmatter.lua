@@ -1,8 +1,18 @@
 local M = {}
 
+function M.is_task_file(path)
+	local name = vim.fs.basename(path)
+	return name == "task.md" or name:match("^.+%.task%.md$") ~= nil
+end
+
+local function assert_task_file(path)
+	assert(M.is_task_file(path), "Not a task file: " .. path)
+end
+
 function M.add_dependency()
-	local tasks = require("neoterm.task_panel").list_tasks()
 	local source = vim.api.nvim_buf_get_name(0)
+	assert_task_file(source)
+	local tasks = require("neoterm.task_panel").list_tasks()
 	local artifacts = require("neoterm.config").dirs.artifacts
 	local project_root = vim.fs.root(artifacts, ".git") or artifacts
 	local function dependency_name(task)
@@ -49,6 +59,7 @@ function M.statuses()
 end
 
 function M.update_status()
+	assert_task_file(vim.api.nvim_buf_get_name(0))
 	local yaml = require("neoterm.yaml")
 	local remove = "REMOVE"
 	local statuses = M.statuses()

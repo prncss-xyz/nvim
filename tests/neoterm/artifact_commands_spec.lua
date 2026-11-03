@@ -317,4 +317,58 @@ T["steps without a source accept any artifact and respect targets"] = function()
 	]])
 end
 
+T["steps with a status are disabled while the task status precedes it"] = function()
+	child.lua([[
+		local root = vim.fn.tempname()
+		local projects = vim.fs.joinpath(root, "projects")
+		local artifacts = vim.fs.joinpath(root, "artifacts")
+		local cwd = vim.fs.joinpath(projects, "sample", "main")
+		local folder = vim.fs.joinpath(artifacts, "sample", "feature")
+		vim.fn.mkdir(cwd, "p")
+		vim.fn.mkdir(folder, "p")
+		local task = vim.fs.joinpath(folder, "task.md")
+		local plan = vim.fs.joinpath(folder, "plan.md")
+		local flat = vim.fs.joinpath(folder, "other.task.md")
+		vim.fn.writefile({ "task" }, task)
+		vim.fn.writefile({ "plan" }, plan)
+		vim.fn.writefile({ "flat" }, flat)
+		package.loaded["neoterm.config"] = {
+			dirs = { projects = projects, artifacts = artifacts },
+			default_branches = { "main" },
+			tasks = { status = { { name = "inbox" }, { name = "ready" }, { name = "done" } } },
+		}
+		local statuses = {}
+		package.loaded["neoterm.terms.artifacts.tasks"] = {
+			executables = function() return {} end,
+			status = function(path) return statuses[path] end,
+		}
+		local commands = require("neoterm.terms.artifacts.commands")
+		local step = { name = "implement", source = { "task.md", "plan.md" }, status = "ready", command = { cmd = "echo" } }
+		local function count(file)
+			return #commands.for_file({ cwd = cwd, file = file, steps = { step } })
+		end
+		assert(count(task) == 1)
+		statuses[task] = "inbox"
+		assert(count(task) == 0)
+		assert(count(plan) == 0)
+		statuses[task] = "ready"
+		assert(count(plan) == 1)
+		statuses[task] = "done"
+		assert(count(plan) == 1)
+		statuses[task] = "ERROR:INDIRECT"
+		assert(count(plan) == 1)
+		local flat_step = { name = "flat", source = "task.md", status = "ready", command = { cmd = "echo" } }
+		statuses[flat] = "inbox"
+		assert(#commands.for_file({ cwd = cwd, file = flat, steps = { flat_step } }) == 0)
+		statuses[flat] = "ready"
+		assert(#commands.for_file({ cwd = cwd, file = flat, steps = { flat_step } }) == 1)
+		local ok = pcall(commands.for_file, {
+			cwd = cwd,
+			file = task,
+			steps = { { name = "invalid", source = "task.md", status = "unknown" } },
+		})
+		assert(not ok, "Unknown step status should fail validation")
+	]])
+end
+
 return T

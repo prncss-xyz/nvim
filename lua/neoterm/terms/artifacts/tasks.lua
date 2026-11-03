@@ -21,12 +21,12 @@ local function stop_watchers()
 	watchers = {}
 end
 
-local function explicit_status(text)
+local function explicit_field(text, name)
 	local frontmatter = text:match("^%-%-%-%s*\n(.-)\n[%.-][%.-][%.-]%s*\n")
 	if not frontmatter then
 		return nil
 	end
-	local value = frontmatter:match("\n?status:%s*([^\n#]+)")
+	local value = ("\n" .. frontmatter):match("\n" .. name .. ":[ \t]*([^\n#]+)")
 	if not value then
 		return nil
 	end
@@ -36,6 +36,15 @@ local function explicit_status(text)
 		value = value:sub(2, -2)
 	end
 	return value
+end
+
+local function explicit_auto(text)
+	local value = explicit_field(text, "auto")
+	if not value then
+		return nil
+	end
+	local step, variant = value:match("^([^:]+):(.+)$")
+	return { step = vim.trim(step or value), variant = variant and vim.trim(variant) }
 end
 
 local function explicit_dependencies(text)
@@ -265,10 +274,11 @@ local function finish_rebuild(id, directories, next_files, candidates)
 				return
 			end
 			candidate.status = require("neoterm.terms.artifacts.statuses").resolve(
-				explicit_status(text) or require("neoterm.config").tasks.default_status,
+				explicit_field(text, "status") or require("neoterm.config").tasks.default_status,
 				candidate.present
 			)
 			candidate.logical_status = candidate.status
+			candidate.auto = explicit_auto(text)
 			candidate.dependencies = explicit_dependencies(text)
 			candidate.dependents = {}
 			table.insert(next_tasks, candidate)
@@ -438,6 +448,44 @@ function M.executables(dir)
 	end
 	table.sort(result)
 	return result
+end
+
+---Logical status of the indexed task at `path`, or nil when it is not indexed.
+---@param path string
+---@return string|nil
+function M.status(path)
+	path = vim.fs.normalize(vim.fs.abspath(path))
+	for _, task in ipairs(M.get()) do
+		if task.path == path then
+			return task.logical_status
+		end
+	end
+end
+
+local function precedes(left, right)
+	for index = 1, math.min(#left, #right) do
+		if left[index] ~= right[index] then
+			return left[index] < right[index]
+		end
+	end
+	return #left > #right
+end
+
+---Task with an `auto` field accepted by `predicate`, preferring the alphabetically first
+---directory at every level, then the most deeply nested task.
+---@param predicate? fun(task: table): boolean
+function M.next_auto(predicate)
+	local selected
+	for _, task in ipairs(M.get()) do
+		if
+			task.auto
+			and (not selected or precedes(task.parts, selected.parts))
+			and (predicate == nil or predicate(task))
+		then
+			selected = task
+		end
+	end
+	return selected
 end
 
 function M.subscribe(listener)

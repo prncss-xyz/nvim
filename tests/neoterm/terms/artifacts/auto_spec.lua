@@ -161,4 +161,76 @@ T["runs fork steps in the forked checkout like a manual trigger"] = function()
 	]])
 end
 
+T["trigger next runs the first task whose auto step is enabled for it"] = function()
+	child.lua([[
+		package.loaded["neoterm.config"].steps = {
+			{ name = "plan", source = "task.md", target = "plan.md", variants = { "fast", "slow" }, fork = "{variant}", command = { cmd = "plan {variant}" } },
+			{ name = "merge", source = "implementation.md", target = "merge.txt", command = { cmd = "merge" } },
+			{ name = "review", source = "implementation.md", command = { cmd = "review {source}" } },
+		}
+		local other = vim.fs.joinpath(artifacts, "sample", "other")
+		vim.fn.mkdir(other, "p")
+		vim.fn.writefile({ "task" }, vim.fs.joinpath(other, "task.md"))
+		vim.fn.writefile({ "implementation" }, vim.fs.joinpath(other, "implementation.md"))
+		vim.fn.writefile({ "flat" }, vim.fs.joinpath(folder, "flat.task.md"))
+		vim.fn.writefile({ "implementation" }, vim.fs.joinpath(folder, "flat.implementation.md"))
+		local function entry(cwd, auto, extra)
+			local present = {}
+			for name in vim.fs.dir(cwd) do
+				present[name] = true
+			end
+			return vim.tbl_extend("force", {
+				project = "sample",
+				cwd = cwd,
+				path = vim.fs.joinpath(cwd, "task.md"),
+				present = present,
+				flat = false,
+				auto = auto,
+			}, extra or {})
+		end
+		local entries
+		package.loaded["neoterm.terms.artifacts.tasks"].next_auto = function(predicate)
+			return vim.iter(entries):find(predicate)
+		end
+		local auto = require("neoterm.terms.artifacts.auto")
+		local main = vim.fs.joinpath(projects, "sample", "main")
+		local function triggered()
+			local count = #started
+			auto.trigger_next()
+			assert(#started == count + 1, vim.inspect(started))
+			return last_definition.cmd, last_cwd
+		end
+		local flat = entry(folder, { step = "review" }, {
+			path = vim.fs.joinpath(folder, "flat.task.md"),
+			present = { ["task.md"] = true, ["implementation.md"] = true },
+			flat = true,
+			branch = "flat",
+		})
+		entries = {
+			entry(folder, { step = "unknown" }),
+			entry(folder, { step = "plan", variant = "other" }),
+			entry(folder, { step = "merge" }),
+			flat,
+			entry(other, { step = "merge" }),
+		}
+		local cmd, cwd = triggered()
+		assert(cmd == 'review "' .. vim.fs.joinpath(folder, "flat.implementation.md") .. '"' and cwd == main, cmd .. " " .. cwd)
+		table.remove(entries, 4)
+		cmd, cwd = triggered()
+		assert(cmd == "merge" and cwd == main, cmd .. " " .. cwd)
+		table.insert(entries, 1, entry(folder, { step = "plan", variant = "slow" }))
+		cmd, cwd = triggered()
+		assert(cmd == "plan slow" and cwd == vim.fs.joinpath(projects, "sample", "feature-slow"), cmd .. " " .. cwd)
+		entries[1] = entry(folder, { step = "plan" })
+		cmd, cwd = triggered()
+		assert(cmd == "plan fast" and cwd == vim.fs.joinpath(projects, "sample", "feature-fast"), cmd .. " " .. cwd)
+		write("plan.md")
+		cmd = triggered()
+		assert(cmd == "merge", cmd)
+		entries = {}
+		auto.trigger_next()
+		assert(notifications[#notifications].message == "No auto task")
+	]])
+end
+
 return T

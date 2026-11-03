@@ -10,17 +10,19 @@ local namespace = vim.api.nvim_create_namespace("toggleterm-task-panel")
 local events = vim.api.nvim_create_augroup("toggleterm-task-panel-focus", { clear = true })
 
 local function default_root(artifacts)
-	local path = vim.api.nvim_buf_get_name(0)
-	if path ~= "" and vim.fs.relpath(artifacts, vim.fs.abspath(path)) then
+	local artifact_cwd = require("neoterm.terms.artifacts.cwd")
+	local dir = artifact_cwd.context_dir()
+	if not dir and artifact_cwd.contains(vim.api.nvim_buf_get_name(0)) then
 		return artifacts
 	end
+	dir = dir or vim.fn.getcwd()
 
 	local projects = require("neoterm.config").dirs.projects
-	local relative = vim.fs.relpath(projects, vim.fs.abspath(vim.fn.getcwd()))
+	local relative = vim.fs.relpath(projects, vim.fs.abspath(dir))
 	if relative == nil or relative == "." then
 		return artifacts
 	end
-	return require("neoterm.terms.artifacts.cwd").for_project(vim.fn.getcwd())
+	return artifact_cwd.for_project(dir)
 end
 
 local function close()
