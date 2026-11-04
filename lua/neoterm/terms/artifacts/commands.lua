@@ -80,10 +80,9 @@ local function build_step(step, source, target, current_cwd, name, variant)
 	target = target and vim.fs.abspath(target) or nil
 	local cwd = current_cwd
 	local identity = paths.source(source, step.source)
-	local fork = require("neoterm.terms.artifacts.tasks").fork(source)
-	if fork then
-		cwd = paths.checkout(identity.project, paths.branch(identity))
-	end
+	local task_forks = require("neoterm.terms.artifacts.tasks").fork(source)
+	local fork = step.fork == true and task_forks and not identity.default
+	cwd = paths.checkout(identity.project, fork and paths.branch(identity) or paths.default_branch(identity.project))
 	local result, vars = resolve_command(step.command, source, target, name, step.name, variant, current_cwd)
 	vars.cwd = cwd
 	if step.command == nil then
@@ -102,8 +101,11 @@ local function build_step(step, source, target, current_cwd, name, variant)
 		)
 	end
 	result.cwd = result.cwd or cwd
+	result.checkout_project = identity.project
+	result.checkout_branch = fork and identity.branch or nil
 	if step.on_success then
 		result.on_success = function(output)
+			vars.cwd = result.cwd
 			step.on_success(vars, output)
 		end
 	end
@@ -111,7 +113,7 @@ local function build_step(step, source, target, current_cwd, name, variant)
 		result.artifact_dir = vim.fs.dirname(source)
 		result.artifact_source = source
 	end
-	if not fork and step.requires_fork then
+	if not task_forks and step.requires_fork then
 		result.refusal =
 			string.format("Step %s requires a forked task, but %s sets fork: false", step.name, identity.task)
 	end
@@ -120,10 +122,7 @@ end
 
 local function validate_step(step)
 	assert(type(step.name) == "string", "Step name must be a string")
-	assert(
-		step.fork == nil,
-		string.format("Step %s must not define fork; set fork: false in task.md instead", step.name)
-	)
+	assert(step.fork == nil or type(step.fork) == "boolean", string.format("Step %s fork must be a boolean", step.name))
 	assert(
 		step.requires_fork == nil or type(step.requires_fork) == "boolean",
 		string.format("Step %s requires_fork must be a boolean", step.name)
@@ -332,7 +331,7 @@ local function link(definition)
 	end
 end
 
-function M.run(definition)
+local function run_ready(definition)
 	if definition.refusal then
 		return vim.notify(definition.refusal, vim.log.levels.ERROR)
 	end
@@ -360,7 +359,31 @@ function M.run(definition)
 	definition.key = definition.name
 	definition.display_name = definition.name
 	definition.exit_policy = definition.exit_policy or "close"
+	definition.cmd_expanded = true
 	require("neoterm.terms").start(definition)
+end
+
+function M.run(definition)
+	if
+		definition.refusal
+		or not definition.checkout_project
+		or (definition.tag == nil and definition.cmd == nil and definition.on_success == nil)
+	then
+		return run_ready(definition)
+	end
+	require("neoterm.git").ensure_project(definition.checkout_project, function(checkout)
+		if not checkout then
+			return
+		end
+		definition.cwd = definition.checkout_branch
+				and paths.checkout(definition.checkout_project, definition.checkout_branch)
+			or checkout
+		require("neoterm.git").ensure_worktree(definition.cwd, function(ok)
+			if ok then
+				run_ready(definition)
+			end
+		end)
+	end)
 end
 
 function M.select_for_current_file(resume)
@@ -393,6 +416,8 @@ function M.select_for_current_file(resume)
 				resume = true,
 				name = item.name,
 				cwd = item.cwd,
+				checkout_project = item.checkout_project,
+				checkout_branch = item.checkout_branch,
 				artifact_dir = item.artifact_dir,
 				artifact_source = item.artifact_source,
 			}

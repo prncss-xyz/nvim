@@ -114,6 +114,82 @@ T["status follows files created and deleted after startup"] = function()
 	MiniTest.expect.equality(child.lua_get("{ started, created, deleted, flat }"), { true, true, true, true })
 end
 
+T["branch directories promote tasks and follow project entries"] = function()
+	child.lua([[
+		local config = package.loaded["neoterm.config"]
+		config.dirs.projects = root .. "/checkouts"
+		config.default_branches = { "main" }
+		tasks_config.forked = "ready"
+		vim.fn.mkdir(config.dirs.projects, "p")
+		write("project/nested/live/task.md", {})
+		write("project/flat.task.md", {})
+		started = wait_for("project/nested/live", "inbox") and wait_for("project/flat", "inbox")
+		local paths = require("neoterm.terms.artifacts.paths")
+		local checkout = paths.checkout("project", paths.source(root .. "/project/nested/live/task.md").branch)
+		vim.fn.mkdir(checkout, "p")
+		created = wait_for("project/nested/live", "ready")
+		local flat_checkout = paths.checkout("project", paths.source(root .. "/project/flat.task.md").branch)
+		vim.fn.mkdir(flat_checkout, "p")
+		flat = wait_for("project/flat", "inbox")
+		write("project/flat.task.md", { "---", "status: review", "---" })
+		write("project/nested/live/implementation.md", {})
+		later = wait_for("project/nested/live", "review") and wait_for("project/flat", "review")
+		vim.fn.delete(root .. "/project/nested/live/implementation.md")
+		restored = wait_for("project/nested/live", "ready")
+		vim.fn.delete(checkout, "rf")
+		deleted = wait_for("project/nested/live", "inbox")
+	]])
+	MiniTest.expect.equality(
+		child.lua_get("{ started, created, flat, later, restored, deleted }"),
+		{ true, true, true, true, true, true }
+	)
+end
+
+T["default branch checkouts do not promote tasks to the forked status"] = function()
+	child.lua([[
+		local config = package.loaded["neoterm.config"]
+		config.dirs.projects = root .. "/checkouts"
+		config.default_branches = { "main", "master" }
+		tasks_config.forked = "ready"
+		vim.fn.mkdir(config.dirs.projects .. "/project/master", "p")
+		write("project/task.md", {})
+		write("project/scope/task.md", {})
+		write("project/scope/implementation.md", {})
+		write("project/scope/feature/task.md", {})
+		local paths = require("neoterm.terms.artifacts.paths")
+		local branch = paths.source(root .. "/project/scope/feature/task.md").branch
+		vim.fn.mkdir(paths.checkout("project", branch), "p")
+		settled = wait_for("project/scope/feature", "ready")
+			and wait_for("project", "inbox")
+			and wait_for("project/scope", "review")
+	]])
+	MiniTest.expect.equality(child.lua_get("settled"), true)
+end
+
+T["dependency blocking competes with task statuses by configuration order"] = function()
+	child.lua([[
+		table.insert(tasks_config.status, 2, { name = "blocked" })
+		tasks_config.blocking = { status = "blocked", unblock = { "done" } }
+		write("project/dependency/task.md", {})
+		for name, status in pairs({ early = "inbox", later = "ready", files = "inbox", unknown = "custom" }) do
+			write("project/" .. name .. "/task.md", {
+				"---", "status: " .. status,
+				"dependencies: project/dependency/task.md", "---",
+			})
+		end
+		write("project/files/implementation.md", {})
+		blocked = wait_for("project/early", "blocked")
+			and wait_for("project/later", "ready")
+			and wait_for("project/files", "review")
+			and wait_for("project/unknown", "custom")
+		write("project/dependency/task.md", { "---", "status: done", "---" })
+		unblocked = wait_for("project/early", "inbox") and wait_for("project/dependency", "done")
+		write("project/dependency/task.md", {})
+		reblocked = wait_for("project/early", "blocked") and wait_for("project/later", "ready")
+	]])
+	MiniTest.expect.equality(child.lua_get("{ blocked, unblocked, reblocked }"), { true, true, true })
+end
+
 T["next auto task prefers the first directory at every level, then the deepest task"] = function()
 	child.lua([[
 		write("b/task.md", { "---", "auto: plan", "---" })
@@ -127,22 +203,26 @@ T["next auto task prefers the first directory at every level, then the deepest t
 	]])
 	MiniTest.expect.equality(child.lua_get("settled"), true)
 	MiniTest.expect.equality(
-		child.lua_get("(function() local task = tasks.next_auto() return { task.parts, task.auto } end)()"),
+		child.lua_get("(function() local task = tasks.auto_tasks()[1] return { task.parts, task.auto } end)()"),
 		{ { "a", "m" }, { step = "implement", variant = "fast" } }
 	)
 	child.lua([[
 		write("a/m/n/task.md", { "---", "auto: review", "---" })
-		vim.wait(3000, function() return tasks.next_auto().parts[3] == "n" end, 20)
+		vim.wait(3000, function() return tasks.auto_tasks()[1].parts[3] == "n" end, 20)
 	]])
 	MiniTest.expect.equality(
-		child.lua_get("(function() local task = tasks.next_auto() return { task.parts, task.auto } end)()"),
+		child.lua_get("(function() local task = tasks.auto_tasks()[1] return { task.parts, task.auto } end)()"),
 		{ { "a", "m", "n" }, { step = "review" } }
 	)
 	MiniTest.expect.equality(
 		child.lua_get(
-			"tasks.next_auto(function(task) return task.auto.step ~= 'review' and task.parts[2] ~= 'm' end).parts"
+			"tasks.auto_tasks(function(task) return task.auto.step ~= 'review' and task.parts[2] ~= 'm' end)[1].parts"
 		),
 		{ "a", "z" }
+	)
+	MiniTest.expect.equality(
+		child.lua_get("vim.tbl_map(function(task) return table.concat(task.parts, '/') end, tasks.auto_tasks())"),
+		{ "a/m/n", "a/m", "a/z", "a", "b" }
 	)
 end
 

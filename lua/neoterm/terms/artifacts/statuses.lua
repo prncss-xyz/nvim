@@ -59,13 +59,16 @@ end
 ---@param status string
 ---@param present table<string, boolean> file names in the task, without the prefix of flat tasks
 ---@return string
-function M.resolve(status, present)
+function M.resolve(status, present, forked)
 	local statuses = M.list()
 	local position = M.order()[status]
 	if not position then
 		return status
 	end
 	for index = #statuses, position + 1, -1 do
+		if forked and statuses[index].name == config().forked then
+			return statuses[index].name
+		end
 		for _, file in ipairs(statuses[index].files or {}) do
 			if present[file] then
 				return statuses[index].name

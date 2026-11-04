@@ -214,6 +214,15 @@ return {
 				desc = "Toggle Tasks Panel",
 			},
 			{
+				"r.",
+				function()
+					require("my.ui_toggle").activate("toggleterm_auto", function()
+						require("neoterm.auto_panel").toggle()
+					end)
+				end,
+				desc = "Toggle Auto Steps Panel",
+			},
+			{
 				"ru",
 				function()
 					require("my.ui_toggle").activate("toggleterm", function()

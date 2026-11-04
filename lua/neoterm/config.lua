@@ -134,6 +134,15 @@ return {
 			h = "help",
 		},
 	},
+	auto_panel = {
+		width = personal(40, 60),
+		keybindings = {
+			["é"] = "filter",
+			["<CR>"] = "open",
+			q = "close",
+			h = "help",
+		},
+	},
 	git_status_icons = {
 		ahead = "⇡",
 		behind = "⇣",
@@ -151,12 +160,24 @@ return {
 			name = "fork",
 			source = "task.md",
 			target = "merge.txt",
+      fork = true,
 			command = { tag = "open" },
 		},
 		{
 			name = "do",
 			source = "task.md",
 			target = "merge.txt",
+			command = {
+				tag = "agent",
+				title = "{step}",
+				prompt = "do this @{source}",
+			},
+		},
+		{
+			name = "do-fork",
+			source = "task.md",
+			target = "merge.txt",
+      fork = true,
 			command = {
 				tag = "agent",
 				title = "{step}",
@@ -192,6 +213,7 @@ return {
 			name = "api-contract",
 			source = { "task.md", "plan.md" },
 			target = { "api-contract.md", "walkthrough.md", "merge.txt" },
+      fork = true,
 			variants = agent_variants,
 			command = {
 				tag = "agent",
@@ -205,6 +227,7 @@ return {
 			name = "implementation",
 			source = { "task.md", "plan.md" },
 			target = { "implementation.md", "merge.txt" },
+      fork = true,
 			status = "ready",
 			variants = agent_variants,
 			command = {
@@ -233,6 +256,7 @@ return {
 		{
 			name = "diff",
 			target = "merge.txt",
+      fork = true,
 			on_success = function(vars)
 				local path = require("neoterm.helpers.project_file").get_diff_file(vars.cwd, vars.source_branch)
 				if not path then
@@ -250,9 +274,11 @@ return {
 			requires_fork = true,
 			auto = { "small-change.txt" },
 			target = "merge.txt",
+      fork = true,
 			command = {
 				confirm = true,
 				cmd = { "merge-from-current", "{source_branch}", "{message}" },
+        exit_policy = "keep",
 			},
 			on_success = function(vars, output)
 				local commit = assert(output.last_line(), "Merge command did not output a commit hash")
@@ -301,6 +327,7 @@ Output ONLY the branch name, nothing else.
 			status = "blocked",
 			unblock = { "done" },
 		},
+    forked = "active",
 		status = {
 			{ name = "maybe" },
 			{ name = "later 2" },

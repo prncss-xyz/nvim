@@ -129,13 +129,19 @@ end
 
 local request_rebuild
 
-local function install_watchers(directories)
+local function install_watchers(directories, project_directories)
 	stop_watchers()
 	local recursive = vim.fn.has("macunix") == 1 or vim.fn.has("win32") == 1
-	local watched = recursive and { root } or directories
+	local watched = {}
+	for _, dir in ipairs(recursive and { root } or directories) do
+		table.insert(watched, { path = dir, recursive = recursive })
+	end
+	for _, dir in ipairs(project_directories) do
+		table.insert(watched, { path = dir, recursive = false })
+	end
 	for _, dir in ipairs(watched) do
 		local watcher = assert(vim.uv.new_fs_event())
-		local ok = watcher:start(dir, { recursive = recursive }, function()
+		local ok = watcher:start(dir.path, { recursive = dir.recursive }, function()
 			if refresh_timer then
 				refresh_timer:stop()
 				refresh_timer:start(100, 0, vim.schedule_wrap(request_rebuild))
@@ -152,6 +158,32 @@ end
 local function finish_rebuild(id, directories, next_files, candidates)
 	if id ~= generation then
 		return
+	end
+	local branches = {}
+	local project_directories = {}
+	local config = require("neoterm.config")
+	if config.tasks.forked then
+		local projects = assert(config.dirs.projects, "Projects directory is not configured")
+		local handle = vim.uv.fs_scandir(projects)
+		if handle then
+			table.insert(project_directories, projects)
+			while true do
+				local project, kind = vim.uv.fs_scandir_next(handle)
+				if not project then
+					break
+				end
+				if kind == "directory" then
+					local directory = vim.fs.joinpath(projects, project)
+					table.insert(project_directories, directory)
+					branches[project] = {}
+					for branch, branch_kind in vim.fs.dir(directory) do
+						if branch_kind == "directory" then
+							branches[project][branch] = true
+						end
+					end
+				end
+			end
+		end
 	end
 	local next_tasks = {}
 	local pending = #candidates
@@ -233,9 +265,6 @@ local function finish_rebuild(id, directories, next_files, candidates)
 					if vim.startswith(dependency_status, "ERROR:") then
 						indirect_error = true
 					else
-						if order[dependency_status] and (not order[status] or order[dependency_status] < order[status]) then
-							status = dependency_status
-						end
 						if blocking and not vim.tbl_contains(blocking.unblock, dependency_status) then
 							blocked = true
 						end
@@ -243,7 +272,7 @@ local function finish_rebuild(id, directories, next_files, candidates)
 				end
 				if indirect_error then
 					task.logical_status = "ERROR:INDIRECT"
-				elseif blocked and order[status] and order[status] > order[blocking.status] then
+				elseif blocked and order[status] and order[status] < order[blocking.status] then
 					task.logical_status = blocking.status
 				else
 					task.logical_status = status
@@ -258,7 +287,7 @@ local function finish_rebuild(id, directories, next_files, candidates)
 		end
 		tasks = next_tasks
 		files = next_files
-		install_watchers(directories)
+		install_watchers(directories, project_directories)
 		rebuilding = false
 		notify_listeners()
 		if rebuild_again then
@@ -277,9 +306,16 @@ local function finish_rebuild(id, directories, next_files, candidates)
 			if id ~= generation then
 				return
 			end
+			local forked = false
+			if branches[candidate.project] then
+				local paths = require("neoterm.terms.artifacts.paths")
+				local branch = paths.source(candidate.path).branch
+				forked = not paths.is_default(branch) and branches[candidate.project][branch] == true
+			end
 			candidate.status = require("neoterm.terms.artifacts.statuses").resolve(
 				explicit_field(text, "status") or require("neoterm.config").tasks.default_status,
-				candidate.present
+				candidate.present,
+				forked
 			)
 			candidate.logical_status = candidate.status
 			candidate.auto = explicit_auto(text)
@@ -475,21 +511,18 @@ local function precedes(left, right)
 	return #left > #right
 end
 
----Task with an `auto` field accepted by `predicate`, preferring the alphabetically first
+---Tasks with an `auto` field accepted by `predicate`, preferring the alphabetically first
 ---directory at every level, then the most deeply nested task.
 ---@param predicate? fun(task: table): boolean
-function M.next_auto(predicate)
-	local selected
-	for _, task in ipairs(M.get()) do
-		if
-			task.auto
-			and (not selected or precedes(task.parts, selected.parts))
-			and (predicate == nil or predicate(task))
-		then
-			selected = task
-		end
-	end
-	return selected
+---@return table[]
+function M.auto_tasks(predicate)
+	local result = vim.tbl_filter(function(task)
+		return task.auto ~= nil and (predicate == nil or predicate(task))
+	end, M.get())
+	table.sort(result, function(left, right)
+		return precedes(left.parts, right.parts)
+	end)
+	return result
 end
 
 --- Whether the task owning an artifact source runs its steps in a forked checkout.

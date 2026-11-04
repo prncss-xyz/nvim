@@ -195,9 +195,15 @@ local function default_checkout(task)
 	return require("neoterm.terms.artifacts.paths").checkout(task.project, config.default_branches[1])
 end
 
+local function settled(task)
+	local blocking = require("neoterm.config").tasks.blocking
+	return blocking ~= nil
+		and (task.logical_status == blocking.status or vim.tbl_contains(blocking.unblock, task.logical_status))
+end
+
 local function auto_enabled(task)
 	local step = auto_step(task)
-	if step == nil then
+	if step == nil or settled(task) then
 		return false
 	end
 	return require("neoterm.terms.artifacts.commands").is_enabled({
@@ -208,28 +214,43 @@ local function auto_enabled(task)
 	})
 end
 
+---Auto steps `trigger_next` would run, in execution order. `checkouts` lists every checkout
+---matching `file`; `cwd` is the one the step runs in, nil when that is ambiguous.
+---@return { task: table, step: table, variant?: string, file: string, checkouts: string[], cwd?: string }[]
+function M.upcoming()
+	local resolve = require("neoterm.terms.artifacts.paths").checkout_resolver()
+	return vim.tbl_map(function(task)
+		local step = assert(auto_step(task))
+		local file = auto_file(task, step)
+		local checkouts = resolve(file)
+		return {
+			task = task,
+			step = step,
+			variant = auto_variant(task, step),
+			file = file,
+			checkouts = checkouts,
+			cwd = #checkouts <= 1 and (checkouts[1] or default_checkout(task)) or nil,
+		}
+	end, require("neoterm.terms.artifacts.tasks").auto_tasks(auto_enabled))
+end
+
 function M.trigger_next()
-	local task = require("neoterm.terms.artifacts.tasks").next_auto(auto_enabled)
-	if not task then
+	local item = M.upcoming()[1]
+	if not item then
 		vim.notify("No auto task")
 		return
 	end
-	local step = vim.deepcopy(assert(auto_step(task)))
-	local variant = auto_variant(task, step)
-	step.variants = variant and { variant } or nil
-	local file = auto_file(task, step)
-	local checkouts = require("neoterm.terms.artifacts.paths").checkouts(file)
-	assert(#checkouts <= 1, "Expected at most one checkout for " .. file .. ", found " .. table.concat(checkouts, ", "))
+	assert(
+		item.cwd,
+		"Expected at most one checkout for " .. item.file .. ", found " .. table.concat(item.checkouts, ", ")
+	)
+	local step = vim.deepcopy(item.step)
+	step.variants = item.variant and { item.variant } or nil
 	local commands = require("neoterm.terms.artifacts.commands")
-	local definitions = commands.for_file({
-		cwd = checkouts[1] or default_checkout(task),
-		file = file,
-		steps = { step },
-		executables = false,
-	})
-	assert(#definitions == 1, "Expected one definition for " .. step.name .. " on " .. file)
+	local definitions = commands.for_file({ cwd = item.cwd, file = item.file, steps = { step }, executables = false })
+	assert(#definitions == 1, "Expected one definition for " .. step.name .. " on " .. item.file)
 	commands.run(definitions[1])
-	return task
+	return item.task
 end
 
 local function notify_auto()

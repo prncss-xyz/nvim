@@ -34,6 +34,12 @@ local config = {
 				require("neoterm.task_panel").toggle()
 			end,
 		},
+		toggleterm_auto = {
+			ft = { "toggleterm-auto-panel" },
+			raise = function()
+				require("neoterm.auto_panel").toggle()
+			end,
+		},
 		neotest = {
 			ft = { "neotest-summary", "neotest-output-panel" },
 		},

@@ -45,6 +45,7 @@ local T = MiniTest.new_set({
 				package.loaded["neoterm.config"] = {
 					dirs = { projects = projects, artifacts = artifacts },
 					default_branches = { "main" },
+					tasks = { blocking = { status = "blocked", unblock = { "done" } } },
 					steps = {
 						{ name = "merge", source = "implementation.md", target = "merge.txt", auto = { "small-change.txt" }, command = { confirm = true, cmd = "merge" } },
 						{ name = "always", source = "task.md", auto = {}, target = "done.txt", command = { cmd = "always" } },
@@ -52,6 +53,12 @@ local T = MiniTest.new_set({
 					},
 				}
 				write("task.md")
+				package.loaded["neoterm.git"] = {
+					ensure_project = function(project, callback)
+						callback(vim.fs.joinpath(projects, project, "main"))
+					end,
+					ensure_worktree = function(_, callback) callback(true) end,
+				}
 				branch = require("neoterm.terms.artifacts.paths").source(vim.fs.joinpath(folder, "task.md")).branch
 				function name(step)
 					return step .. ":" .. branch .. ":feature"
@@ -125,17 +132,17 @@ T["only the lock holder fires, and a stale lock is taken over without refiring"]
 	]])
 end
 
-T["runs from the task checkout and skips when the checkout is ambiguous"] = function()
+T["runs nonfork steps in the default checkout and skips ambiguous checkouts"] = function()
 	child.lua([[
 		local auto = require("neoterm.terms.artifacts.auto")
 		local feature = vim.fs.joinpath(projects, "sample", branch)
 		auto.check({ task() })
-		assert(last_cwd == feature, last_cwd)
+		assert(last_cwd == vim.fs.joinpath(projects, "sample", "main"), last_cwd)
 		vim.fn.mkdir(feature, "p")
 		write("implementation.md")
 		write("small-change.txt")
 		auto.check({ task() })
-		assert(started[#started] == name("merge") and last_cwd == feature, vim.inspect({ started, last_cwd }))
+		assert(started[#started] == name("merge") and last_cwd == vim.fs.joinpath(projects, "sample", "main"), vim.inspect({ started, last_cwd }))
 		vim.fn.writefile({ "1" }, vim.fs.joinpath(folder, "merge.txt"))
 		auto.check({ task() })
 		vim.fn.delete(vim.fs.joinpath(folder, "merge.txt"))
@@ -155,7 +162,7 @@ end
 T["runs fork steps in the forked checkout like a manual trigger"] = function()
 	child.lua([[
 		package.loaded["neoterm.config"].steps = {
-			{ name = "plan", source = "task.md", target = "plan.md", auto = { "go.txt" }, command = { cmd = "plan" } },
+			{ name = "plan", fork = true, source = "task.md", target = "plan.md", auto = { "go.txt" }, command = { cmd = "plan" } },
 		}
 		write("go.txt")
 		require("neoterm.terms.artifacts.auto").check({ task() })
@@ -169,9 +176,9 @@ end
 T["trigger next runs the first task whose auto step is enabled for it"] = function()
 	child.lua([[
 		package.loaded["neoterm.config"].steps = {
-			{ name = "plan", source = "task.md", target = "plan.md", variants = { "fast", "slow" }, command = { cmd = "plan {variant}" } },
+			{ name = "plan", fork = true, source = "task.md", target = "plan.md", variants = { "fast", "slow" }, command = { cmd = "plan {variant}" } },
 			{ name = "merge", source = "implementation.md", target = "merge.txt", command = { cmd = "merge" } },
-			{ name = "review", source = "implementation.md", command = { cmd = "review {source}" } },
+			{ name = "review", fork = true, source = "implementation.md", command = { cmd = "review {source}" } },
 		}
 		local other = vim.fs.joinpath(artifacts, "sample", "other")
 		vim.fn.mkdir(other, "p")
@@ -194,8 +201,8 @@ T["trigger next runs the first task whose auto step is enabled for it"] = functi
 			}, extra or {})
 		end
 		local entries
-		package.loaded["neoterm.terms.artifacts.tasks"].next_auto = function(predicate)
-			return vim.iter(entries):find(predicate)
+		package.loaded["neoterm.terms.artifacts.tasks"].auto_tasks = function(predicate)
+			return vim.tbl_filter(predicate, entries)
 		end
 		local auto = require("neoterm.terms.artifacts.auto")
 		local main = vim.fs.joinpath(projects, "sample", "main")
@@ -236,6 +243,37 @@ T["trigger next runs the first task whose auto step is enabled for it"] = functi
 		entries = {}
 		auto.trigger_next()
 		assert(notifications[#notifications].message == "No auto task")
+	]])
+end
+
+T["upcoming lists enabled auto tasks with their source file or else the task file"] = function()
+	child.lua([[
+		package.loaded["neoterm.config"].steps = {
+			{ name = "plan", fork = true, source = "task.md", target = "plan.md", variants = { "fast", "slow" }, command = { cmd = "plan" } },
+			{ name = "review", fork = true, source = { "missing.md", "implementation.md" }, command = { cmd = "review" } },
+		}
+		write("implementation.md")
+		local function entry(auto, status)
+			return vim.tbl_extend("force", task(), { parts = { "sample", auto.step }, auto = auto, logical_status = status or "ready" })
+		end
+		local entries = {
+			entry({ step = "review" }, "done"),
+			entry({ step = "review" }),
+			entry({ step = "unknown" }),
+			entry({ step = "plan" }, "blocked"),
+			entry({ step = "plan" }),
+		}
+		package.loaded["neoterm.terms.artifacts.tasks"].auto_tasks = function(predicate)
+			return vim.tbl_filter(predicate, entries)
+		end
+		local upcoming = vim.tbl_map(function(item)
+			return { item.step.name, item.variant or false, item.file, item.cwd }
+		end, require("neoterm.terms.artifacts.auto").upcoming())
+		local expected = {
+			{ "review", false, vim.fs.joinpath(folder, "implementation.md"), vim.fs.joinpath(projects, "sample", "main") },
+			{ "plan", "fast", vim.fs.joinpath(folder, "task.md"), vim.fs.joinpath(projects, "sample", "main") },
+		}
+		assert(vim.deep_equal(upcoming, expected), vim.inspect(upcoming))
 	]])
 end
 

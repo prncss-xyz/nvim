@@ -166,7 +166,7 @@ local function create_and_notify(item, cb)
 	ctx =
 		vim.tbl_extend("force", ctx, { cwd = item.cwd, path = ctx.path or item.cwd, artifact_dir = item.artifact_dir })
 	local expand = require("neoterm.put.init").expand_values
-	item.cmd = normalize_cmd(expand(item.cmd, ctx))
+	item.cmd = normalize_cmd(item.cmd_expanded and item.cmd or expand(item.cmd, ctx))
 	local env = expand(item.env, ctx)
 	item.term = Term:new({
 		cmd = item.cmd,
