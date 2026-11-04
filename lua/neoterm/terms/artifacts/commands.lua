@@ -352,7 +352,7 @@ local function run_ready(definition)
 				link(definition)
 				local path = require("neoterm.helpers.project_file").get_project_file(definition.cwd)
 					or vim.fs.joinpath(definition.cwd, "README.md")
-				config.create(vim.fn.fnameescape(path))
+				config.create(path)
 			end
 		end)
 	end

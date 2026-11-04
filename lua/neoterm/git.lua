@@ -172,7 +172,7 @@ function M.clone_github()
 
 		obtain(input, vim.fs.joinpath(projects, vim.fs.basename(input)), function(checkout)
 			if checkout then
-				config.create(vim.fn.fnameescape(get_default_file(checkout)))
+				config.create(get_default_file(checkout))
 			end
 		end)
 	end)

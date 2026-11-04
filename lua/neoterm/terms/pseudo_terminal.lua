@@ -87,7 +87,7 @@ function M.create(touch)
 					dir,
 					{ require("neoterm.config").dirs.artifacts }
 				) or vim.fs.joinpath(dir, "README.md")
-				require("neoterm.config").create(vim.fn.fnameescape(target))
+				require("neoterm.config").create(target)
 				touch()
 			end)
 		end
@@ -103,7 +103,7 @@ function M.create(touch)
 			else
 				vim.fn.mkdir(target_dir, "p")
 				return artifact_cwd.select_artifact_file(dir, target_dir, function(file)
-					require("neoterm.config").create(vim.fn.fnameescape(file))
+					require("neoterm.config").create(file)
 					touch()
 				end)
 			end

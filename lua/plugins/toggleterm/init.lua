@@ -108,7 +108,7 @@ return {
 				git .. "w",
 				function()
 					require("neoterm.git").create_worktree_from_input(function(default_file)
-						require("my.create").create(vim.fn.fnameescape(default_file))
+						require("my.create").create(default_file)
 					end)
 				end,
 				desc = "Create Worktree",
@@ -140,7 +140,7 @@ return {
 					if target_win then
 						vim.api.nvim_set_current_win(target_win)
 					end
-					require("neoterm.config").create(vim.fn.fnameescape(cfile))
+					require("neoterm.config").create(cfile)
 				end,
 				desc = "open file in last visited file window",
 			},

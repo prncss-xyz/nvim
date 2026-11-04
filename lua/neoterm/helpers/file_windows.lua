@@ -31,7 +31,7 @@ function M.open(path, bufnr)
 		vim.api.nvim_win_set_buf(win, bufnr)
 	else
 		vim.api.nvim_win_call(win, function()
-			require("neoterm.config").create(vim.fn.fnameescape(path))
+			require("neoterm.config").create(path)
 		end)
 	end
 	vim.api.nvim_set_current_win(win)

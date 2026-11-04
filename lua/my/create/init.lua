@@ -10,10 +10,12 @@ local function get_snip(target)
 	end
 end
 
+---Edit `target`, expanding the matching snippet when the file does not exist yet.
+---@param target string unescaped path
 function M.create(target)
 	local snippet = get_snip(target)
-	local exists = vim.fn.filereadable(target) == 1
-	vim.cmd.edit(target)
+	local exists = vim.uv.fs_stat(target) ~= nil
+	vim.cmd.edit({ target, magic = { file = false } })
 	if not exists and snippet then
 		local luasnip = require("luasnip")
 		vim.cmd.startinsert()

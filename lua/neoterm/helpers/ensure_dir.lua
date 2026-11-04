@@ -42,7 +42,7 @@ function M.open_dir(dir, target_win, use_visible_window, exclude)
 
 	vim.api.nvim_win_call(target_win, function()
 		if use_visible_window and window.create then
-			window.create(vim.fn.fnameescape(path))
+			window.create(path)
 		else
 			vim.cmd.edit(vim.fn.fnameescape(path))
 		end

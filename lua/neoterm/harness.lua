@@ -148,7 +148,7 @@ function M.focus_last_created_artifact()
 		vim.notify("No artifact has been created in this session", vim.log.levels.WARN)
 		return
 	end
-	config.create(vim.fn.fnameescape(last_created_artifact))
+	config.create(last_created_artifact)
 end
 
 function M.artifact_to_worktree(branch, opts)
