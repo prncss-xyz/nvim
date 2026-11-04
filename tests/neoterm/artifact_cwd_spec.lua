@@ -9,7 +9,7 @@ local T = MiniTest.new_set({
 				root = vim.fn.tempname()
 				projects = vim.fs.joinpath(root, "projects")
 				artifacts = vim.fs.joinpath(root, "artifacts")
-				artifact_dir = vim.fs.joinpath(artifacts, "utils-mono", "stores", "fix-provider-store")
+				artifact_dir = vim.fs.joinpath(artifacts, "utils-mono", "stores", "fix provider store")
 				vim.fn.mkdir(artifact_dir, "p")
 				package.loaded["neoterm.config"] = {
 					dirs = { projects = projects, artifacts = artifacts },
@@ -45,34 +45,36 @@ local T = MiniTest.new_set({
 T["commit messages use the scope and the last step of the task"] = function()
 	child.lua([[
 		for _, case in ipairs({
-			{ "stores/fix-provider-store/task.md", "fix(stores): provider-store" },
-			{ "stores/fix-provider-store/plan.md", "fix(stores): provider-store" },
-			{ "stores/fix-provider-store/0.task.md", "fix(stores): provider-store" },
-			{ "stores/fix-provider-store/notes/review.plan.md", "fix(stores): provider-store" },
-			{ "stores/add-provider-store/task.md", "feat(stores): add-provider-store" },
-			{ "stores/01 fix-provider/task.md", "fix(stores): provider" },
-			{ "stores/fixation-provider/task.md", "feat(stores): fixation-provider" },
-			{ "outer/my-stores/docs-provider-store/task.md", "docs(outer): provider-store" },
-			{ "misc/fix-provider/task.md", "fix: provider" },
+			{ "stores/fix provider store/task.md", "fix(stores): provider store" },
+			{ "stores/fix provider store/plan.md", "fix(stores): provider store" },
+			{ "stores/fix provider store/0.task.md", "fix(stores): provider store" },
+			{ "stores/fix provider store/notes/review.plan.md", "fix(stores): provider store" },
+			{ "stores/add provider store/task.md", "feat(stores): add provider store" },
+			{ "stores/01 fix provider/task.md", "fix(stores): provider" },
+			{ "stores/fixation provider/task.md", "feat(stores): fixation provider" },
+			{ "stores/fix-provider/task.md", "feat(stores): fix-provider" },
+			{ "stores/test fast-check fuzz/task.md", "test(stores): fast-check fuzz" },
+			{ "outer/my stores/docs provider store/task.md", "docs(outer): provider store" },
+			{ "misc/fix provider/task.md", "fix: provider" },
 		}) do
 			local message = paths.commit_message(source(case[1]))
 			assert(message == case[2], message)
 		end
 		for _, prefix in ipairs({ "feat", "fix", "build", "chore", "ci", "docs", "style", "refactor", "perf", "test", "revert" }) do
-			assert(paths.commit_message(source("scope/" .. prefix .. "-change/task.md")) == prefix .. "(scope): change")
+			assert(paths.commit_message(source("scope/" .. prefix .. " change/task.md")) == prefix .. "(scope): change")
 		end
-		for _, path in ipairs({ "task.md", "stores/task.md", "stores/fix-provider.task.md", "fix-provider.task.md" }) do
+		for _, path in ipairs({ "task.md", "stores/task.md", "stores/fix provider.task.md", "fix provider.task.md" }) do
 			assert(not pcall(paths.commit_message, source(path)))
 		end
 		vim.fn.writefile({ "First line", "", "Second line", "" }, vim.fs.joinpath(artifact_dir, "implementation.md"))
 		local message = paths.commit_message(vim.fs.joinpath(artifact_dir, "implementation.md"))
-		assert(message == "fix(stores): provider-store\n\nFirst line\n\nSecond line", message)
+		assert(message == "fix(stores): provider store\n\nFirst line\n\nSecond line", message)
 	]])
 end
 
 T["nested artifacts and existing forks resolve in both directions"] = function()
 	child.lua([[
-		local repo = checkout(branch_of("stores/fix-provider-store/task.md"))
+		local repo = checkout(branch_of("stores/fix provider store/task.md"))
 		assert(cwd.resolve(artifact_dir .. "/task.md") == repo)
 		assert(cwd.resolve(artifact_dir) == repo)
 		assert(cwd.for_checkout(repo) == artifact_dir)
@@ -107,10 +109,10 @@ T["branches hash the path from the scope and slug the last step"] = function()
 			{ "fix.task.md", "main" },
 			{ "stores/task.md", "main" },
 			{ "stores/fix.task.md", "main" },
-			{ "stores/fix-provider-store/task.md", expected },
-			{ "stores/fix-provider-store/plan.md", expected },
-			{ "stores/fix-provider-store/fix.task.md", expected },
-			{ "stores/fix-provider-store/deep/er/0.task.md", expected },
+			{ "stores/fix provider store/task.md", expected },
+			{ "stores/fix provider store/plan.md", expected },
+			{ "stores/fix provider store/fix.task.md", expected },
+			{ "stores/fix provider store/deep/er/0.task.md", expected },
 			{ "outer/inner/02 Fix  the thing!/task.md", hash("outer/inner") .. "-Fix-the-thing" },
 		}) do
 			local file = source(case[1])
@@ -120,8 +122,8 @@ T["branches hash the path from the scope and slug the last step"] = function()
 			assert(identity.folder == vim.fs.dirname(file))
 			assert(paths.branch(identity) == case[2])
 		end
-		assert(branch_of("misc/fix-provider/task.md") ~= branch_of("other/fix-provider/task.md"))
-		assert(paths.source(source("fix-provider-store/deep/0.task.md")).default)
+		assert(branch_of("misc/fix provider/task.md") ~= branch_of("other/fix provider/task.md"))
+		assert(paths.source(source("fix provider store/deep/0.task.md")).default)
 		local dotted = vim.fs.joinpath(artifacts, "flies.nvim", "scope", "fix-x", "task.md")
 		vim.fn.mkdir(vim.fs.dirname(dotted), "p")
 		vim.fn.writefile({ "task" }, dotted)
@@ -151,7 +153,7 @@ end
 
 T["fork checkouts are found before a link is recorded"] = function()
 	child.lua([[
-		local file = source("stores/fix-provider-store/task.md")
+		local file = source("stores/fix provider store/task.md")
 		local repo = checkout(paths.source(file).branch)
 		assert(vim.deep_equal(paths.checkouts(file), { repo }))
 		assert(vim.deep_equal(paths.artifact_folders(repo), { artifact_dir }))
@@ -161,9 +163,9 @@ end
 
 T["tasks that do not fork contribute no branch"] = function()
 	child.lua([[
-		local file = source("stores/fix-provider-store/task.md")
+		local file = source("stores/fix provider store/task.md")
 		vim.fn.writefile({ "---", "fork: false", "---", "task" }, file)
-		local plan = source("stores/fix-provider-store/plan.md")
+		local plan = source("stores/fix provider store/plan.md")
 		local repo = checkout(paths.source(file).branch)
 		assert(vim.deep_equal(paths.branches(paths.source(file)), {}))
 		assert(vim.deep_equal(paths.branches(paths.source(plan)), {}))
@@ -174,7 +176,7 @@ end
 
 T["folder conversion finds the folders of a branch"] = function()
 	child.lua([[
-		local plan = source("stores/fix-provider-store/plan.md")
+		local plan = source("stores/fix provider store/plan.md")
 		local branch = paths.source(plan).branch
 		local repo = checkout(branch)
 		assert(vim.deep_equal(paths.checkouts(artifact_dir), { repo }))
@@ -185,7 +187,7 @@ end
 
 T["one artifact exposes all forks and navigation asks which checkout"] = function()
 	child.lua([[
-		local file = source("stores/fix-provider-store/task.md")
+		local file = source("stores/fix provider store/task.md")
 		local a, b = checkout("fork-a"), checkout("fork-b")
 		paths.link(a, artifact_dir, file)
 		paths.link(b, artifact_dir, file)
@@ -251,7 +253,7 @@ end
 
 T["artifact toggle offers all forks and opens the selected checkout"] = function()
 	child.lua([[
-		local file = source("stores/fix-provider-store/task.md")
+		local file = source("stores/fix provider store/task.md")
 		local a, b = checkout("fork-a"), checkout("fork-b")
 		paths.link(a, artifact_dir, file)
 		paths.link(b, artifact_dir, file)
@@ -321,8 +323,8 @@ end
 
 T["harness and steps derive the same checkout from a named nested plan"] = function()
 	child.lua([[
-		source("stores/fix-provider-store/task.md")
-		local file = source("stores/fix-provider-store/review.plan.md")
+		source("stores/fix provider store/task.md")
+		local file = source("stores/fix provider store/review.plan.md")
 		local repo = checkout(paths.source(file).branch)
 		vim.api.nvim_buf_set_name(0, file)
 		local focused
@@ -372,8 +374,8 @@ end
 
 T["the deepest available artifact folder is selected automatically"] = function()
 	child.lua([[
-		local file = source("stores/fix-provider-store/task.md")
-		local notes = source("stores/fix-provider-store/notes/review.plan.md")
+		local file = source("stores/fix provider store/task.md")
+		local notes = source("stores/fix provider store/notes/review.plan.md")
 		local repo = checkout(paths.source(file).branch)
 		vim.ui.select = function() error("Artifact folder selection must be automatic") end
 		local selected

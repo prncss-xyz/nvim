@@ -167,7 +167,7 @@ function M.commit_message(path)
 	assert(not identity.default, "Commit messages require a task on a non-default branch")
 	local steps = identity.steps
 	local name = steps[#steps]:gsub("^%d+ ", "")
-	local prefix, change = name:match("^(%a+)%-(.+)$")
+	local prefix, change = name:match("^(%a+) (.+)$")
 	if
 		not vim.tbl_contains(
 			{ "feat", "fix", "build", "chore", "ci", "docs", "style", "refactor", "perf", "test", "revert" },
