@@ -4,7 +4,7 @@ local note_dir = require("my.parameters").dirs.notes
 
 function M.toggle_project()
 	if vim.bo[0].buftype == "" then
-		M.open_project(vim.env.HOME, { vim.fn.getcwd() }, M.pick_project)
+		M.open_project(vim.env.HOME, { vim.fn.getcwd() }, require("neoterm.pickers.projects").pick_project)
 	end
 end
 
@@ -72,90 +72,6 @@ function M.pick_note_with(stem)
 		end,
 		args = { "-e", "md" },
 	})
-end
-
-local pick_config = {
-	format = require("plugins.snacks.format").directory_with_parent,
-	confirm = { { "tcd", "open_project" } },
-	recent = true,
-	matcher = {
-		frecency = true,
-		sort_empty = true,
-		cwd_bonus = false,
-	},
-	sort = { fields = { "score:desc", "idx" } },
-	win = {
-		preview = { minimal = true },
-		input = {
-			keys = {
-				-- every action will always first change the cwd of the current tabpage to the project
-				["<c-e>"] = { { "tcd", "picker_explorer" }, mode = { "n", "i" } },
-				["<c-f>"] = { { "tcd", "picker_files" }, mode = { "n", "i" } },
-				["<c-g>"] = { { "tcd", "picker_grep" }, mode = { "n", "i" } },
-				["<c-r>"] = { { "tcd", "picker_recent" }, mode = { "n", "i" } },
-				["<c-w>"] = { { "tcd" }, mode = { "n", "i" } },
-				["<c-t>"] = {
-					function(picker)
-						vim.cmd("tabnew")
-						Snacks.notify("New tab opened")
-						picker:close()
-						Snacks.picker.projects()
-					end,
-					mode = { "n", "i" },
-				},
-			},
-		},
-	},
-}
-
-function M.pick_worktree()
-	Snacks.picker.pick(vim.tbl_extend("force", pick_config, {
-		finder = function(opts, ctx)
-			-- toplevel of the worktree containing cwd; works from any subdirectory
-			local current = vim.fs.normalize(vim.trim(vim.fn.system("git rev-parse --show-toplevel")))
-			return require("snacks.picker.source.proc").proc(
-				ctx:opts({
-					cwd = vim.fn.getcwd(),
-					cmd = "git",
-					args = { "worktree", "list" },
-					transform = function(item)
-						-- "git worktree list" output: "<path> <sha> [<branch>]" (or "(detached HEAD)")
-						-- keep just the path (first run of non-whitespace)
-						local path = item.text:match("^(%S+)")
-						if path then
-							path = vim.fs.normalize(path)
-						end
-						if not path or path == current then
-							return false
-						end
-						item.text = path
-						item.file = path
-						item.dir = true
-					end,
-				}),
-				ctx
-			)
-		end,
-	}))
-end
-
-function M.pick_project()
-	Snacks.picker.pick(vim.tbl_extend("force", pick_config, {
-		finder = function(opts, ctx)
-			return require("snacks.picker.source.proc").proc(
-				ctx:opts({
-					cwd = require("my.parameters").dirs.projects,
-					cmd = "fd",
-					args = { "\\.git$", "-a", "--prune", "-u", "-d", "3", "-x", "echo", "{//}" },
-					transform = function(item)
-						item.file = item.text
-						item.dir = true
-					end,
-				}),
-				ctx
-			)
-		end,
-	}))
 end
 
 return M

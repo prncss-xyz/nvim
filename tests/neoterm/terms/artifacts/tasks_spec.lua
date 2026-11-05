@@ -12,6 +12,7 @@ local T = MiniTest.new_set({
 				package.loaded["neoterm.config"] = {
 					dirs = { projects = vim.fs.joinpath(vim.fs.dirname(artifacts), "projects"), artifacts = artifacts },
 					default_branches = { "main" },
+					tasks = { default_status = "ready", status = { { name = "ready" } } },
 				}
 				tasks = require("neoterm.terms.artifacts.tasks")
 				function write(name, lines)
@@ -46,6 +47,55 @@ T["tasks fork unless their task.md sets fork: false"] = function()
 		end
 		write("task.md", { "---", "fork: no", "---", "task" })
 		assert(not pcall(tasks.fork, plan))
+	]])
+end
+
+T["project index retains scanned branches and identifies linked checkouts"] = function()
+	child.lua([[
+		local root = package.loaded["neoterm.config"].dirs.projects
+		local main = root .. "/sample/main"
+		local linked = root .. "/sample/feature space"
+		local relative = root .. "/sample/relative"
+		vim.fn.mkdir(main .. "/.git/worktrees/feature", "p")
+		vim.fn.mkdir(main .. "/.git/worktrees/relative", "p")
+		vim.fn.mkdir(linked, "p")
+		vim.fn.mkdir(relative, "p")
+		vim.fn.mkdir(root .. "/plain/.git", "p")
+		vim.fn.mkdir(root .. "/sample/non-git", "p")
+		vim.fn.writefile({ "gitdir: " .. main .. "/.git/worktrees/feature" }, linked .. "/.git")
+		vim.fn.writefile({ "gitdir: ../main/.git/worktrees/relative" }, relative .. "/.git")
+		vim.fn.writefile({ "../.." }, main .. "/.git/worktrees/feature/commondir")
+		vim.fn.writefile({ "../.." }, main .. "/.git/worktrees/relative/commondir")
+		assert(tasks.projects() == nil)
+		assert(vim.wait(3000, function() return tasks.projects() ~= nil end, 20))
+		assert(tasks.projects().branches.sample["non-git"])
+		local expected = {
+			{ path = root .. "/plain", git_dir = root .. "/plain/.git" },
+			{ path = linked, git_dir = main .. "/.git" },
+			{ path = main, git_dir = main .. "/.git" },
+			{ path = relative, git_dir = main .. "/.git" },
+		}
+		assert(vim.deep_equal(tasks.projects().checkouts, expected), vim.inspect(tasks.projects()))
+	]])
+end
+
+T["project index follows checkout and git marker creation and deletion"] = function()
+	child.lua([[
+		local root = package.loaded["neoterm.config"].dirs.projects
+		local checkout = root .. "/sample/main"
+		vim.fn.mkdir(checkout, "p")
+		assert(vim.wait(3000, function() return tasks.projects() ~= nil end, 20))
+		assert(#tasks.projects().checkouts == 0)
+		vim.fn.mkdir(checkout .. "/.git", "p")
+		assert(vim.wait(3000, function() return #tasks.projects().checkouts == 1 end, 20))
+		vim.fn.delete(checkout .. "/.git", "rf")
+		assert(vim.wait(3000, function() return #tasks.projects().checkouts == 0 end, 20))
+		vim.fn.mkdir(root .. "/new/main/.git", "p")
+		assert(vim.wait(3000, function()
+			return tasks.projects().checkouts[1] and tasks.projects().checkouts[1].path == root .. "/new/main"
+		end, 20))
+		vim.fn.delete(root .. "/new", "rf")
+		assert(vim.wait(3000, function() return #tasks.projects().checkouts == 0 end, 20))
 	]])
 end
 

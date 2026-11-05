@@ -27,6 +27,9 @@ function M.attach_term(term, send, screen_manifest, osc)
 	end
 
 	local handle = nil
+	local url_handle = nil
+	local url_first_line = nil
+	local url_last_line = nil
 	local last_status = nil
 	local pending_idle = nil
 
@@ -61,6 +64,21 @@ function M.attach_term(term, send, screen_manifest, osc)
 		end
 	end
 
+	local function schedule_url_scan(bufnr, first_line, last_line, new_last_line)
+		url_first_line = math.min(url_first_line or first_line, first_line)
+		url_last_line = math.max(new_last_line, (url_last_line or last_line) + new_last_line - last_line)
+		if url_handle then
+			return
+		end
+		url_handle = vim.fn.timer_start(100, function()
+			local first, last = url_first_line, url_last_line
+			url_handle, url_first_line, url_last_line = nil, nil, nil
+			if vim.api.nvim_buf_is_valid(bufnr) then
+				scan_urls(bufnr, first, last)
+			end
+		end)
+	end
+
 	local function clear_timer()
 		if handle then
 			vim.fn.timer_stop(handle)
@@ -74,6 +92,10 @@ function M.attach_term(term, send, screen_manifest, osc)
 
 	local function clear()
 		clear_timer()
+		if url_handle then
+			vim.fn.timer_stop(url_handle)
+			url_handle, url_first_line, url_last_line = nil, nil, nil
+		end
 		clear_pending_idle()
 	end
 
@@ -168,8 +190,8 @@ function M.attach_term(term, send, screen_manifest, osc)
 			clear()
 			send({ type = "detach" })
 		end,
-		on_lines = function(_, bufnr, _, first_line, _, new_last_line)
-			scan_urls(bufnr, first_line, new_last_line)
+		on_lines = function(_, bufnr, _, first_line, last_line, new_last_line)
+			schedule_url_scan(bufnr, first_line, last_line, new_last_line)
 			schedule_status_update(bufnr)
 		end,
 	})

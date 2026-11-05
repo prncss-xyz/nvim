@@ -3,6 +3,7 @@ local M = {}
 local root
 local tasks = {}
 local files = {}
+local projects
 local watchers = {}
 local listeners = {}
 local refresh_timer
@@ -137,12 +138,12 @@ local function install_watchers(directories, project_directories)
 		table.insert(watched, { path = dir, recursive = recursive })
 	end
 	for _, dir in ipairs(project_directories) do
-		table.insert(watched, { path = dir, recursive = false })
+		table.insert(watched, type(dir) == "table" and dir or { path = dir, recursive = false })
 	end
 	for _, dir in ipairs(watched) do
 		local watcher = assert(vim.uv.new_fs_event())
-		local ok = watcher:start(dir.path, { recursive = dir.recursive }, function()
-			if refresh_timer then
+		local ok = watcher:start(dir.path, { recursive = dir.recursive or false }, function(_, name)
+			if refresh_timer and (not dir.file or not name or name == dir.file) then
 				refresh_timer:stop()
 				refresh_timer:start(100, 0, vim.schedule_wrap(request_rebuild))
 			end
@@ -155,36 +156,91 @@ local function install_watchers(directories, project_directories)
 	end
 end
 
+local function first_line(path)
+	local file = io.open(path, "r")
+	if not file then
+		return nil
+	end
+	local line = file:read("*l")
+	file:close()
+	return line
+end
+
+local function relative_to(directory, path)
+	return vim.fs.abspath(path:sub(1, 1) == "/" and path or vim.fs.joinpath(directory, path))
+end
+
+local function git_directory(path)
+	local directory = vim.fs.joinpath(path, ".git")
+	local stat = vim.uv.fs_stat(directory)
+	if not stat then
+		return nil
+	end
+	if stat.type == "file" then
+		local target = (first_line(directory) or ""):match("^gitdir: (.+)$")
+		if not target then
+			return nil
+		end
+		directory = relative_to(path, target)
+	end
+	local common = first_line(vim.fs.joinpath(directory, "commondir"))
+	if common then
+		directory = relative_to(directory, common)
+	end
+	return vim.uv.fs_realpath(directory) or vim.fs.normalize(directory)
+end
+
 local function finish_rebuild(id, directories, next_files, candidates)
 	if id ~= generation then
 		return
 	end
 	local branches = {}
+	local checkouts = {}
 	local project_directories = {}
 	local config = require("neoterm.config")
+	local project_root = config.dirs.projects
 	if config.tasks.forked then
-		local projects = assert(config.dirs.projects, "Projects directory is not configured")
-		local handle = vim.uv.fs_scandir(projects)
+		assert(project_root, "Projects directory is not configured")
+	end
+	local function checkout(path, watch)
+		if watch then
+			table.insert(project_directories, { path = path, file = ".git" })
+		end
+		local git_dir = git_directory(path)
+		if git_dir then
+			table.insert(checkouts, { path = path, git_dir = git_dir })
+		end
+	end
+	if project_root then
+		local handle = vim.uv.fs_scandir(project_root)
 		if handle then
-			table.insert(project_directories, projects)
+			table.insert(project_directories, project_root)
+			checkout(project_root)
 			while true do
 				local project, kind = vim.uv.fs_scandir_next(handle)
 				if not project then
 					break
 				end
 				if kind == "directory" then
-					local directory = vim.fs.joinpath(projects, project)
+					local directory = vim.fs.joinpath(project_root, project)
 					table.insert(project_directories, directory)
+					checkout(directory)
 					branches[project] = {}
 					for branch, branch_kind in vim.fs.dir(directory) do
 						if branch_kind == "directory" then
 							branches[project][branch] = true
+							if branch ~= ".git" then
+								checkout(vim.fs.joinpath(directory, branch), true)
+							end
 						end
 					end
 				end
 			end
 		end
 	end
+	table.sort(checkouts, function(left, right)
+		return left.path < right.path
+	end)
 	local next_tasks = {}
 	local pending = #candidates
 	local function complete()
@@ -287,6 +343,7 @@ local function finish_rebuild(id, directories, next_files, candidates)
 		end
 		tasks = next_tasks
 		files = next_files
+		projects = { branches = branches, checkouts = checkouts }
 		install_watchers(directories, project_directories)
 		rebuilding = false
 		notify_listeners()
@@ -460,6 +517,11 @@ end
 function M.get()
 	M.start()
 	return tasks
+end
+
+function M.projects()
+	M.start()
+	return projects
 end
 
 function M.files(dir)

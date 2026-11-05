@@ -75,14 +75,79 @@ T["attach terminal"]["joins a URL wrapped by terminal width"] = function()
 		end)
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "http://localhost:3000/abcdefghijklmnopqr" })
 		callbacks.on_lines(nil, bufnr, 0, 0, 1, 1)
+		vim.wait(150)
 		local before = vim.deepcopy(events)
 		vim.api.nvim_buf_set_lines(bufnr, 1, 1, false, { "stuvwxyz?key=value" })
 		callbacks.on_lines(nil, bufnr, 0, 1, 1, 2)
+		assert(vim.wait(1000, function() return #events == 1 end))
 		result = { before = before, after = events }
 	]])
 	assert.same({ before = {}, after = {
 		{ type = "url", value = "http://localhost:3000/abcdefghijklmnopqrstuvwxyz?key=value" },
 	} }, child.lua_get("result"))
+end
+
+T["URL scanning"] = MiniTest.new_set({
+	hooks = {
+		pre_case = function()
+			child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+				package.loaded["neoterm.terms.window"] = { is_in_view = function() return false end }
+				events = {}
+				bufnr = vim.api.nvim_create_buf(false, true)
+				vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "", "", "", "" })
+				reset = require("neoterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
+					table.insert(events, event)
+				end)
+			]])
+		end,
+	},
+})
+
+T["URL scanning"]["coalesces changes and tracks pending URLs when lines shift"] = function()
+	child.lua([[vim.api.nvim_buf_set_lines(bufnr, 3, 4, false, { "http://localhost:3000/pending" })
+		vim.api.nvim_buf_set_lines(bufnr, 0, 0, false, { "http://localhost:4000/inserted", "" })
+		before = vim.deepcopy(events)
+		assert(vim.wait(1000, function() return #events >= 2 end))
+	]])
+
+	assert.same({}, child.lua_get("before"))
+	assert.same({
+		{ type = "url", value = "http://localhost:4000/inserted" },
+		{ type = "url", value = "http://localhost:3000/pending" },
+	}, child.lua_get("events"))
+end
+
+T["URL scanning"]["scans during continuous output and catches the final update"] = function()
+	child.lua([[updates = 0
+		vim.fn.timer_start(20, function(timer)
+			updates = updates + 1
+			vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "http://localhost:3000/" .. updates })
+			if updates == 20 then vim.fn.timer_stop(timer) end
+		end, { ["repeat"] = -1 })
+		assert(vim.wait(2000, function() return #events > 0 end))
+		first_scan_updates = updates
+		assert(vim.wait(2000, function()
+			return events[#events].value == "http://localhost:3000/20"
+		end))
+	]])
+
+	assert(child.lua_get("first_scan_updates < 20"))
+	assert(child.lua_get("#events < updates"))
+	assert.same("http://localhost:3000/20", child.lua_get("events[#events].value"))
+end
+
+for _, action in ipairs({ "reset", "detach" }) do
+	T["URL scanning"]["cancels pending scans on " .. action] = function()
+		child.lua([[vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "http://localhost:3000/cancelled" })]])
+		if action == "reset" then
+			child.lua([[reset()]])
+		else
+			child.lua([[vim.api.nvim_buf_delete(bufnr, { force = true })]])
+		end
+		child.lua([[vim.wait(150)]])
+
+		assert.same(action == "detach" and { { type = "detach" } } or {}, child.lua_get("events"))
+	end
 end
 
 return T

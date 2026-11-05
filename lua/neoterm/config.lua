@@ -17,18 +17,7 @@ local agent_command = {
 	env = env,
 }
 
-local agent_variants = { "claude", "codex" }
-
 local agents = personal({
-	{
-		name = "claude",
-		command = agent_command,
-		alias = {
-			deep = { model = "opus", effort = "low" },
-			medium = { model = "sonnet", effort = "low" },
-			fast = { model = "haiku", effort = "low" },
-		},
-	},
 	{
 		name = "codex",
 		command = agent_command,
@@ -37,6 +26,15 @@ local agents = personal({
 			deep = { model = "gpt-6.1-sol", effort = "low" },
 			medium = { model = "gpt-6.1-terra", effort = "low" },
 			fast = { model = "gpt-6-luna", effort = "low" },
+		},
+	},
+	{
+		name = "claude",
+		command = agent_command,
+		alias = {
+			deep = { model = "opus", effort = "low" },
+			medium = { model = "sonnet", effort = "low" },
+			fast = { model = "haiku", effort = "low" },
 		},
 	},
 	{
@@ -70,6 +68,10 @@ local agents = personal({
 		},
 	},
 })
+
+local agent_variants = vim.tbl_map(function(agent)
+	return agent.name
+end, agents)
 
 return {
 	llm_query = personal(
@@ -160,7 +162,7 @@ return {
 			name = "fork",
 			source = "task.md",
 			target = "merge.txt",
-      fork = true,
+			fork = true,
 			command = { tag = "open" },
 		},
 		{
@@ -177,7 +179,7 @@ return {
 			name = "do-fork",
 			source = "task.md",
 			target = "merge.txt",
-      fork = true,
+			fork = true,
 			command = {
 				tag = "agent",
 				title = "{step}",
@@ -213,7 +215,7 @@ return {
 			name = "api-contract",
 			source = { "task.md", "plan.md" },
 			target = { "api-contract.md", "walkthrough.md", "merge.txt" },
-      fork = true,
+			fork = true,
 			variants = agent_variants,
 			command = {
 				tag = "agent",
@@ -227,7 +229,7 @@ return {
 			name = "implementation",
 			source = { "task.md", "plan.md" },
 			target = { "implementation.md", "merge.txt" },
-      fork = true,
+			fork = true,
 			status = "ready",
 			variants = agent_variants,
 			command = {
@@ -256,7 +258,7 @@ return {
 		{
 			name = "diff",
 			target = "merge.txt",
-      fork = true,
+			fork = true,
 			on_success = function(vars)
 				local path = require("neoterm.helpers.project_file").get_diff_file(vars.cwd, vars.source_branch)
 				if not path then
@@ -274,11 +276,11 @@ return {
 			requires_fork = true,
 			auto = { "small-change.txt" },
 			target = "merge.txt",
-      fork = true,
+			fork = true,
 			command = {
 				confirm = true,
 				cmd = { "merge-from-current", "{source_branch}", "{message}" },
-        exit_policy = "keep",
+				exit_policy = "keep",
 			},
 			on_success = function(vars, output)
 				local commit = assert(output.last_line(), "Merge command did not output a commit hash")
@@ -327,7 +329,7 @@ Output ONLY the branch name, nothing else.
 			status = "blocked",
 			unblock = { "done" },
 		},
-    forked = "active",
+		forked = "active",
 		status = {
 			{ name = "maybe" },
 			{ name = "later 2" },
