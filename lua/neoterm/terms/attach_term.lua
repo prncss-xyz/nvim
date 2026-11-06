@@ -3,22 +3,33 @@ local M = {}
 local detect_status = require("neoterm.terms.screen_status").detect
 local is_in_view = require("neoterm.terms.window").is_in_view
 
-local local_url_pattern =
-	[[\vhttps?://%([\w.-]*localhost|127\.0\.0\.1)%(:\d+)?%([/?#][[:alnum:]_.~:/?#@!$&*+,;=%-]*)?]]
+local url_scan_interval_ms = 250
+local url_wrap_margin = 4
+local remote_url_limit = 10
 
-local function get_local_urls(line)
+local url_pattern = [[\vhttps?://[[:alnum:]_.~:/?#@!$&*+,;=%-]+]]
+
+local function get_urls(line)
 	local urls = {}
 	local offset = 0
 	while offset < #line do
-		local match = vim.fn.matchstrpos(line, local_url_pattern, offset)
+		local match = vim.fn.matchstrpos(line, url_pattern, offset)
 		local url, start_col, end_col = match[1], match[2], match[3]
 		if url == "" then
 			break
 		end
-		table.insert(urls, url)
+		url = url:gsub("[.,;:!?]+$", "")
+		if not url:match("^https?://$") then
+			table.insert(urls, url)
+		end
 		offset = math.max(end_col, start_col + 1)
 	end
 	return urls
+end
+
+local function is_local_url(url)
+	local host = url:match("^https?://([^/:?#]+)")
+	return host == "localhost" or host == "127.0.0.1" or (host ~= nil and vim.endswith(host, ".localhost"))
 end
 
 function M.attach_term(term, send, screen_manifest, osc)
@@ -30,6 +41,8 @@ function M.attach_term(term, send, screen_manifest, osc)
 	local url_handle = nil
 	local url_first_line = nil
 	local url_last_line = nil
+	local sent_urls = {}
+	local remote_url_count = 0
 	local last_status = nil
 	local pending_idle = nil
 
@@ -37,27 +50,42 @@ function M.attach_term(term, send, screen_manifest, osc)
 		local line_count = vim.api.nvim_buf_line_count(bufnr)
 		local width = term.window and vim.api.nvim_win_is_valid(term.window)
 			and vim.api.nvim_win_get_width(term.window) or vim.o.columns
-		local lines = vim.api.nvim_buf_get_lines(bufnr, 0, line_count, false)
-		local start = math.min(line_count, first_line + 1)
-		while start > 1 and vim.fn.strdisplaywidth(lines[start - 1]) >= width do
+		local offset = math.max(0, math.min(line_count, first_line) - url_wrap_margin)
+		local changed_end = math.min(line_count, math.max(new_last_line, first_line + 1))
+		local lines = vim.api.nvim_buf_get_lines(bufnr, offset, math.min(line_count, changed_end + url_wrap_margin), false)
+		if not table.concat(lines):find("://", 1, true) then
+			return
+		end
+		local function is_full(line)
+			return #line >= width and vim.fn.strdisplaywidth(line) >= width
+		end
+		local start = math.min(#lines, first_line + 1 - offset)
+		while start > 1 and is_full(lines[start - 1]) do
 			start = start - 1
 		end
-		local finish = math.min(line_count, math.max(new_last_line, first_line + 1))
-		while finish < line_count and vim.fn.strdisplaywidth(lines[finish]) >= width do
+		local finish = changed_end - offset
+		while finish < #lines and is_full(lines[finish]) do
 			finish = finish + 1
 		end
 		local index = start
 		while index <= finish do
 			local joined = lines[index]
 			local last = index
-			while last < line_count and vim.fn.strdisplaywidth(lines[last]) >= width do
+			while last < #lines and is_full(lines[last]) do
 				last = last + 1
 				joined = joined .. lines[last]
 			end
 			-- A full final line may still receive the rest of its URL.
-			if vim.fn.strdisplaywidth(lines[last]) < width then
-				for _, url in ipairs(get_local_urls(joined)) do
-					send({ type = "url", value = url })
+			if not is_full(lines[last]) then
+				for _, url in ipairs(get_urls(joined)) do
+					local is_local = is_local_url(url)
+					if not sent_urls[url] and (is_local or remote_url_count < remote_url_limit) then
+						sent_urls[url] = true
+						if not is_local then
+							remote_url_count = remote_url_count + 1
+						end
+						send({ type = "url", value = url })
+					end
 				end
 			end
 			index = last + 1
@@ -70,7 +98,7 @@ function M.attach_term(term, send, screen_manifest, osc)
 		if url_handle then
 			return
 		end
-		url_handle = vim.fn.timer_start(100, function()
+		url_handle = vim.fn.timer_start(url_scan_interval_ms, function()
 			local first, last = url_first_line, url_last_line
 			url_handle, url_first_line, url_last_line = nil, nil, nil
 			if vim.api.nvim_buf_is_valid(bufnr) then
@@ -200,6 +228,8 @@ function M.attach_term(term, send, screen_manifest, osc)
 	return function()
 		clear()
 		last_status = nil
+		sent_urls = {}
+		remote_url_count = 0
 	end, function()
 		schedule_status_update(term.bufnr)
 	end

@@ -81,8 +81,9 @@ local function build_step(step, source, target, current_cwd, name, variant)
 	local cwd = current_cwd
 	local identity = paths.source(source, step.source)
 	local task_forks = require("neoterm.terms.artifacts.tasks").fork(source)
-	local fork = step.fork == true and task_forks and not identity.default
-	cwd = paths.checkout(identity.project, fork and paths.branch(identity) or paths.default_branch(identity.project))
+	local fork = (step.fork == "fork" or step.fork == "required") and task_forks and not identity.default
+	local branch = fork and paths.branch(identity) or paths.default_branch(identity.project)
+	cwd = paths.checkout(identity.project, branch)
 	local result, vars = resolve_command(step.command, source, target, name, step.name, variant, current_cwd)
 	vars.cwd = cwd
 	if step.command == nil then
@@ -113,19 +114,17 @@ local function build_step(step, source, target, current_cwd, name, variant)
 		result.artifact_dir = vim.fs.dirname(source)
 		result.artifact_source = source
 	end
-	if not task_forks and step.requires_fork then
-		result.refusal =
-			string.format("Step %s requires a forked task, but %s sets fork: false", step.name, identity.task)
+	if step.fork == "required" and paths.is_default(branch) then
+		result.refusal = string.format("Step %s cannot run on default branch %s", step.name, branch)
 	end
 	return result
 end
 
 local function validate_step(step)
 	assert(type(step.name) == "string", "Step name must be a string")
-	assert(step.fork == nil or type(step.fork) == "boolean", string.format("Step %s fork must be a boolean", step.name))
 	assert(
-		step.requires_fork == nil or type(step.requires_fork) == "boolean",
-		string.format("Step %s requires_fork must be a boolean", step.name)
+		step.fork == nil or step.fork == "default" or step.fork == "required" or step.fork == "fork",
+		string.format("Step %s fork must be default, required, or fork", step.name)
 	)
 	assert(step.on_success == nil or type(step.on_success) == "function", "Step on_success must be a function")
 	assert(step.auto == nil or vim.islist(step.auto), string.format("Step %s auto must be an array", step.name))
@@ -418,6 +417,7 @@ function M.select_for_current_file(resume)
 				cwd = item.cwd,
 				checkout_project = item.checkout_project,
 				checkout_branch = item.checkout_branch,
+				refusal = item.refusal,
 				artifact_dir = item.artifact_dir,
 				artifact_source = item.artifact_source,
 			}

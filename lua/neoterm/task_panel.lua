@@ -25,15 +25,23 @@ local function default_root(artifacts)
 	return artifact_cwd.for_project(dir)
 end
 
-local function close()
+local function clear()
 	vim.api.nvim_clear_autocmds({ group = events })
-	if state and state.unsubscribe then
-		state.unsubscribe()
-	end
-	if state and vim.api.nvim_win_is_valid(state.win) then
-		vim.api.nvim_win_close(state.win, false)
+	if state then
+		last_mode, last_root = state.mode, state.root
+		if state.unsubscribe then
+			state.unsubscribe()
+		end
 	end
 	state = nil
+end
+
+local function close()
+	local panel = state
+	clear()
+	if panel and vim.api.nvim_win_is_valid(panel.win) then
+		vim.api.nvim_win_close(panel.win, false)
+	end
 end
 
 local function has_prefix(parts, prefix)
@@ -252,7 +260,24 @@ local function set_root()
 		return
 	end
 	state.root = vim.fs.joinpath(state.artifacts, unpack(selected.parts))
-	last_root = state.root
+	render()
+end
+
+local function project_root()
+	local path = state.active_file
+	if not path or path == "" then
+		return
+	end
+	local paths = require("neoterm.terms.artifacts.paths")
+	local project = paths.artifact_project(path)
+	if not project then
+		local relative = vim.fs.relpath(require("neoterm.config").dirs.projects, path)
+		if relative == nil or relative == "." then
+			return
+		end
+		project = paths.project(path)
+	end
+	state.root = paths.project_artifacts(project)
 	render()
 end
 
@@ -261,7 +286,6 @@ local function up_root()
 		return
 	end
 	state.root = vim.fs.dirname(state.root)
-	last_root = state.root
 	render()
 end
 
@@ -269,7 +293,6 @@ local function change_mode(delta)
 	local index = vim.fn.index(state.modes, state.mode)
 	assert(index >= 0, "Unknown task panel mode: " .. state.mode)
 	state.mode = state.modes[(index + delta) % #state.modes + 1]
-	last_mode = state.mode
 	render()
 end
 
@@ -332,8 +355,7 @@ function M.toggle()
 	local config = require("neoterm.config")
 	local width = config.task_panel.width
 	local artifacts = config.dirs.artifacts
-	local root = last_root and vim.fs.relpath(artifacts, last_root) and vim.fn.isdirectory(last_root) == 1 and last_root
-		or default_root(artifacts)
+	local root = last_root and vim.fs.relpath(artifacts, last_root) and last_root or default_root(artifacts)
 	local mode_statuses = require("neoterm.terms.artifacts.statuses").modes()
 	local modes = vim.tbl_keys(mode_statuses)
 	table.sort(modes)
@@ -381,6 +403,7 @@ function M.toggle()
 			change_mode(-1)
 		end,
 		set_root = set_root,
+		project_root = project_root,
 		up_root = up_root,
 		open = open_selected,
 		delete = delete_selected,
@@ -392,11 +415,7 @@ function M.toggle()
 		buffer = buf,
 		callback = function()
 			if state == panel then
-				vim.api.nvim_clear_autocmds({ group = events })
-				if panel.unsubscribe then
-					panel.unsubscribe()
-				end
-				state = nil
+				clear()
 			end
 		end,
 	})
@@ -420,7 +439,7 @@ function M.toggle()
 				return
 			end
 			local path = vim.api.nvim_buf_get_name(args.buf)
-			if path ~= "" then
+			if vim.bo[args.buf].buftype == "" and path ~= "" then
 				panel.active_file = path
 				render()
 			end

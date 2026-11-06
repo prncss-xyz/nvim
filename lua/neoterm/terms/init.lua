@@ -92,7 +92,7 @@ local function apply_event(event, item)
 		end
 	elseif event.type == "url" then
 		for _, url in ipairs(item.term.url) do
-			if vim.startswith(url, event.value) then
+			if url == event.value then
 				return
 			end
 		end

@@ -48,8 +48,8 @@ T["expands variants in string and function templates"] = function()
 			cwd = cwd,
 			file = source,
 			steps = {
-				{ name = "var", fork = true, source = "task.md", variants = { "a", "b" }, command = { cmd = "echo {variant}", title = "{step}", skill = "{name}" } },
-				{ name = "fn", fork = true, source = "task.md", variants = { "a", "b" }, command = function(vars)
+				{ name = "var", fork = "fork", source = "task.md", variants = { "a", "b" }, command = { cmd = "echo {variant}", title = "{step}", skill = "{name}" } },
+				{ name = "fn", fork = "fork", source = "task.md", variants = { "a", "b" }, command = function(vars)
 					template_vars = vars
 					return { cmd = vars.variant .. " " .. vars.step }
 				end, on_success = function(vars, output) callback_vars, callback_output = vars, output end },
@@ -90,7 +90,7 @@ T["expands variants in string and function templates"] = function()
 		end, definitions)
 		local calls = 0
 		package.loaded["neoterm.config"].steps = {
-			{ name = "callback", fork = true, source = "task.md", on_success = function(vars)
+			{ name = "callback", fork = "fork", source = "task.md", on_success = function(vars)
 				calls = calls + 1
 				assert(vars.source == '"' .. source .. '"')
 			end },
@@ -144,9 +144,9 @@ T["steps opt into forking and task fork false uses the default checkout"] = func
 		local commands = require("neoterm.terms.artifacts.commands")
 		local branch = require("neoterm.terms.artifacts.paths").source(source).branch
 		local steps = {
-			{ name = "open", fork = true, source = "task.md", command = { tag = "open" } },
-			{ name = "plain", fork = true, source = "task.md", command = "echo plain" },
-			{ name = "merge", fork = true, source = "task.md", requires_fork = true, command = "echo merge" },
+			{ name = "open", fork = "fork", source = "task.md", command = { tag = "open" } },
+			{ name = "plain", fork = "fork", source = "task.md", command = "echo plain" },
+			{ name = "merge", fork = "required", source = "task.md", command = "echo merge" },
 		}
 		local function definitions()
 			return commands.for_file({ cwd = cwd, file = source, steps = steps })
@@ -164,7 +164,7 @@ T["steps opt into forking and task fork false uses the default checkout"] = func
 			assert(item.artifact_dir == nil and item.artifact_source == nil)
 		end
 		assert(items[1].refusal == nil and items[2].refusal == nil)
-		assert(items[3].refusal:find("requires a forked task", 1, true))
+		assert(items[3].refusal:find("default branch main", 1, true))
 		local notified
 		vim.notify = function(message, level) notified = { message, level } end
 		package.loaded["neoterm.terms"] = { start = function() error("Refused steps must not start") end }
@@ -175,10 +175,55 @@ T["steps opt into forking and task fork false uses the default checkout"] = func
 		vim.fn.writefile({ "task" }, source)
 		for _, invalid in ipairs({
 			{ name = "fork", source = "task.md", fork = "yes", command = "echo" },
-			{ name = "requires", source = "task.md", requires_fork = "yes", command = "echo" },
+			{ name = "boolean", source = "task.md", fork = true, command = "echo" },
+			{ name = "false", source = "task.md", fork = false, command = "echo" },
 		}) do
 			assert(not pcall(commands.for_file, { cwd = cwd, file = source, steps = { invalid } }))
 		end
+	]])
+end
+
+T["required forks refuse default branch tasks, including resumes"] = function()
+	child.lua([[
+		local root = vim.fn.tempname()
+		local projects = vim.fs.joinpath(root, "projects")
+		local artifacts = vim.fs.joinpath(root, "artifacts")
+		local cwd = vim.fs.joinpath(projects, "sample", "main")
+		local source = vim.fs.joinpath(artifacts, "sample", "task.md")
+		vim.fn.mkdir(cwd, "p")
+		vim.fn.mkdir(vim.fs.dirname(source), "p")
+		vim.fn.writefile({ "task" }, source)
+		package.loaded["neoterm.config"] = {
+			dirs = { projects = projects, artifacts = artifacts },
+			default_branches = { "main", "master" },
+			steps = { { name = "merge", source = "task.md", fork = "required", command = { tag = "agent", prompt = "merge" } } },
+		}
+		require("neoterm.terms.artifacts.tasks").executables = function() return {} end
+		local commands = require("neoterm.terms.artifacts.commands")
+		package.loaded["neoterm.terms.artifacts.cwd"] = { context_dir = function() return cwd end }
+		package.loaded["neoterm.git"] = { ensure_project = function() error("Refused steps must not prepare a project") end }
+		package.loaded["neoterm.terms"] = { start = function() error("Refused steps must not start") end }
+		vim.api.nvim_buf_set_name(0, source)
+		for _, branch in ipairs({ "main", "master" }) do
+			vim.fn.delete(cwd, "rf")
+			cwd = vim.fs.joinpath(projects, "sample", branch)
+			vim.fn.mkdir(cwd, "p")
+			for _, fork in ipairs({ true, false }) do
+				vim.fn.writefile({ "---", "fork: " .. tostring(fork), "---", "task" }, source)
+				for _, resume in ipairs({ false, true }) do
+					local notified
+					vim.notify = function(message, level) notified = { message, level } end
+					vim.ui.select = function(items, _, callback)
+						assert(#items == 1)
+						assert(items[1].refusal:find("default branch " .. branch, 1, true))
+						callback(items[1])
+					end
+					commands.select_for_current_file(resume)
+					assert(notified and notified[2] == vim.log.levels.ERROR)
+				end
+			end
+		end
+		vim.fn.delete(root, "rf")
 	]])
 end
 
@@ -214,11 +259,12 @@ T["steps prepare their checkout before starting, including resumes and default b
 		package.loaded["neoterm.terms"] = { start = function(item) started = item end }
 		package.loaded["neoterm.terms.artifacts.cwd"] = { context_dir = function() return cwd end }
 		for _, case in ipairs({
-			{ fork = true, branch = branch },
-			{ fork = false, branch = "master" },
+			{ fork = "fork", branch = branch },
+			{ fork = "required", branch = branch },
+			{ fork = "default", branch = "master" },
 			{ branch = "master" },
-			{ fork = true, task_fork = false, branch = "master" },
-			{ fork = true, default = true, branch = "master" },
+			{ fork = "fork", task_fork = false, branch = "master" },
+			{ fork = "fork", default = true, branch = "master" },
 		}) do
 			local file = case.default and artifacts .. "/sample/task.md" or source
 			vim.fn.writefile(case.task_fork == false and { "---", "fork: false", "---" } or { "task" }, file)
@@ -271,8 +317,8 @@ T["nested artifact directories form the branch name"] = function()
 			cwd = cwd,
 			file = source,
 			steps = {
-				{ name = "fork", fork = true, source = "task.md", command = { tag = "open" } },
-				{ name = "variant", fork = true, source = "task.md", variants = { "a" }, command = { cmd = { "git", "commit", "-m", "{message}" } } },
+				{ name = "fork", fork = "fork", source = "task.md", command = { tag = "open" } },
+				{ name = "variant", fork = "fork", source = "task.md", variants = { "a" }, command = { cmd = { "git", "commit", "-m", "{message}" } } },
 			},
 		})
 		result = vim.tbl_map(function(item) return vim.fs.relpath(projects, item.cwd) end, definitions)
@@ -344,7 +390,7 @@ T["source arrays prefer the last existing file and target arrays block on any fi
 		local commands = require("neoterm.terms.artifacts.commands")
 		local step = {
 			name = "implement",
-			fork = true,
+			fork = "fork",
 			source = { "task.md", "plan.md" },
 			target = { "walkthrough.md", "done.md" },
 			command = { cmd = "{source} {target}" },
@@ -402,7 +448,7 @@ T["steps without a source accept any artifact and respect targets"] = function()
 		local folder = vim.fs.joinpath(artifacts, "sample", "scope", "feature")
 		vim.fn.mkdir(cwd, "p")
 		vim.fn.mkdir(folder, "p")
-		local step = { name = "diff", fork = true, target = "merge.txt" }
+		local step = { name = "diff", fork = "fork", target = "merge.txt" }
 		package.loaded["neoterm.config"] = {
 			dirs = { projects = projects, artifacts = artifacts },
 			default_branches = { "main" },

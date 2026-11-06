@@ -136,6 +136,75 @@ T["URL scanning"]["scans during continuous output and catches the final update"]
 	assert.same("http://localhost:3000/20", child.lua_get("events[#events].value"))
 end
 
+T["URL scanning"]["sends each URL once until reset"] = function()
+	child.lua([[vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "http://localhost:3000/" })
+		assert(vim.wait(1000, function() return #events == 1 end))
+		vim.api.nvim_buf_set_lines(bufnr, 1, 2, false, { "http://localhost:3000/" })
+		vim.wait(400)
+		before_reset = #events
+		reset()
+		vim.api.nvim_buf_set_lines(bufnr, 2, 3, false, { "http://localhost:3000/" })
+		assert(vim.wait(1000, function() return #events == 2 end))
+	]])
+
+	assert.same(1, child.lua_get("before_reset"))
+	assert.same({
+		{ type = "url", value = "http://localhost:3000/" },
+		{ type = "url", value = "http://localhost:3000/" },
+	}, child.lua_get("events"))
+end
+
+T["URL scanning"]["ignores URLs outside the changed lines"] = function()
+	child.lua([[local lines = { "http://localhost:3000/old" }
+		for index = 2, 50 do
+			lines[index] = "line " .. index
+		end
+		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+		assert(vim.wait(1000, function() return #events == 1 end))
+		reset()
+		vim.api.nvim_buf_set_lines(bufnr, 40, 41, false, { "http://127.0.0.1:8080/new" })
+		assert(vim.wait(1000, function() return #events == 2 end))
+		vim.wait(400)
+	]])
+
+	assert.same({
+		{ type = "url", value = "http://localhost:3000/old" },
+		{ type = "url", value = "http://127.0.0.1:8080/new" },
+	}, child.lua_get("events"))
+end
+
+T["URL scanning"]["detects remote URLs without trailing punctuation"] = function()
+	child.lua([[vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, {
+			"see https://github.com/neovim/neovim/pull/1, then http://localhost:5173/.",
+		})
+		assert(vim.wait(1000, function() return #events == 2 end))
+	]])
+
+	assert.same({
+		{ type = "url", value = "https://github.com/neovim/neovim/pull/1" },
+		{ type = "url", value = "http://localhost:5173/" },
+	}, child.lua_get("events"))
+end
+
+T["URL scanning"]["caps remote URLs but keeps local ones"] = function()
+	child.lua([[local lines = {}
+		for index = 1, 12 do
+			lines[index] = "https://example.com/" .. index
+		end
+		lines[13] = "http://app.localhost:3000/"
+		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+		assert(vim.wait(1000, function() return #events == 11 end))
+		vim.wait(400)
+	]])
+
+	local values = vim.tbl_map(function(event)
+		return event.value
+	end, child.lua_get("events"))
+	assert.same(11, #values)
+	assert.same("https://example.com/10", values[10])
+	assert.same("http://app.localhost:3000/", values[11])
+end
+
 for _, action in ipairs({ "reset", "detach" }) do
 	T["URL scanning"]["cancels pending scans on " .. action] = function()
 		child.lua([[vim.api.nvim_buf_set_lines(bufnr, 0, 1, false, { "http://localhost:3000/cancelled" })]])
@@ -144,7 +213,7 @@ for _, action in ipairs({ "reset", "detach" }) do
 		else
 			child.lua([[vim.api.nvim_buf_delete(bufnr, { force = true })]])
 		end
-		child.lua([[vim.wait(150)]])
+		child.lua([[vim.wait(400)]])
 
 		assert.same(action == "detach" and { { type = "detach" } } or {}, child.lua_get("events"))
 	end

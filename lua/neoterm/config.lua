@@ -129,6 +129,7 @@ return {
 			n = "next_mode",
 			p = "previous_mode",
 			r = "set_root",
+			["."] = "project_root",
 			u = "up_root",
 			["<CR>"] = "open",
 			x = "delete",
@@ -162,7 +163,7 @@ return {
 			name = "fork",
 			source = "task.md",
 			target = "merge.txt",
-			fork = true,
+			fork = "fork",
 			command = { tag = "open" },
 		},
 		{
@@ -179,7 +180,7 @@ return {
 			name = "do-fork",
 			source = "task.md",
 			target = "merge.txt",
-			fork = true,
+			fork = "fork",
 			command = {
 				tag = "agent",
 				title = "{step}",
@@ -215,7 +216,7 @@ return {
 			name = "api-contract",
 			source = { "task.md", "plan.md" },
 			target = { "api-contract.md", "walkthrough.md", "merge.txt" },
-			fork = true,
+			fork = "fork",
 			variants = agent_variants,
 			command = {
 				tag = "agent",
@@ -229,7 +230,7 @@ return {
 			name = "implementation",
 			source = { "task.md", "plan.md" },
 			target = { "implementation.md", "merge.txt" },
-			fork = true,
+			fork = "fork",
 			status = "ready",
 			variants = agent_variants,
 			command = {
@@ -258,7 +259,7 @@ return {
 		{
 			name = "diff",
 			target = "merge.txt",
-			fork = true,
+			fork = "fork",
 			on_success = function(vars)
 				local path = require("neoterm.helpers.project_file").get_diff_file(vars.cwd, vars.source_branch)
 				if not path then
@@ -271,12 +272,20 @@ return {
 			end,
 		},
 		{
+			name = "rebase",
+			fork = "required",
+			command = {
+				confirm = true,
+				cmd = { "merge-current", "{source_branch}" },
+				exit_policy = "keep",
+			},
+		},
+		{
 			name = "merge",
 			source = "implementation.md",
-			requires_fork = true,
 			auto = { "small-change.txt" },
 			target = "merge.txt",
-			fork = true,
+			fork = "required",
 			command = {
 				confirm = true,
 				cmd = { "merge-from-current", "{source_branch}", "{message}" },
@@ -337,10 +346,10 @@ Output ONLY the branch name, nothing else.
 			{ name = "later 0" },
 			{ name = "explore", modes = { "focus" } },
 			{ name = "export", modes = { "standup" }, enabled = work(true, false) },
-			{ name = "blocked", modes = { "focus" } },
 			{ name = "inbox", modes = { "inbox" } },
 			{ name = "deferred", modes = { "inbox" } },
 			{ name = "ready", modes = work({ "focus", "standup" }, { "focus" }) },
+			{ name = "blocked", modes = { "focus" } },
 			{ name = "active", modes = work({ "focus", "standup" }, { "focus" }) },
 			{ name = "review" },
 			{ name = "merging" },

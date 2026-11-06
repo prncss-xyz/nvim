@@ -162,7 +162,7 @@ end
 T["runs fork steps in the forked checkout like a manual trigger"] = function()
 	child.lua([[
 		package.loaded["neoterm.config"].steps = {
-			{ name = "plan", fork = true, source = "task.md", target = "plan.md", auto = { "go.txt" }, command = { cmd = "plan" } },
+			{ name = "plan", fork = "fork", source = "task.md", target = "plan.md", auto = { "go.txt" }, command = { cmd = "plan" } },
 		}
 		write("go.txt")
 		require("neoterm.terms.artifacts.auto").check({ task() })
@@ -176,9 +176,9 @@ end
 T["trigger next runs the first task whose auto step is enabled for it"] = function()
 	child.lua([[
 		package.loaded["neoterm.config"].steps = {
-			{ name = "plan", fork = true, source = "task.md", target = "plan.md", variants = { "fast", "slow" }, command = { cmd = "plan {variant}" } },
+			{ name = "plan", fork = "fork", source = "task.md", target = "plan.md", variants = { "fast", "slow" }, command = { cmd = "plan {variant}" } },
 			{ name = "merge", source = "implementation.md", target = "merge.txt", command = { cmd = "merge" } },
-			{ name = "review", fork = true, source = "implementation.md", command = { cmd = "review {source}" } },
+			{ name = "review", fork = "fork", source = "implementation.md", command = { cmd = "review {source}" } },
 		}
 		local other = vim.fs.joinpath(artifacts, "sample", "other")
 		vim.fn.mkdir(other, "p")
@@ -249,8 +249,8 @@ end
 T["upcoming lists enabled auto tasks with their source file or else the task file"] = function()
 	child.lua([[
 		package.loaded["neoterm.config"].steps = {
-			{ name = "plan", fork = true, source = "task.md", target = "plan.md", variants = { "fast", "slow" }, command = { cmd = "plan" } },
-			{ name = "review", fork = true, source = { "missing.md", "implementation.md" }, command = { cmd = "review" } },
+			{ name = "plan", fork = "fork", source = "task.md", target = "plan.md", variants = { "fast", "slow" }, command = { cmd = "plan" } },
+			{ name = "review", fork = "fork", source = { "missing.md", "implementation.md" }, command = { cmd = "review" } },
 		}
 		write("implementation.md")
 		local function entry(auto, status)
