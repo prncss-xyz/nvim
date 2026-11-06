@@ -113,7 +113,7 @@ local function task_branch(steps)
 	if #steps < 2 then
 		return nil
 	end
-	local last = steps[#steps]:gsub("^%d+ ", "")
+	local last = steps[#steps]:gsub("^[%d ]*%d+ ", "")
 	return require("neoterm.helpers.hash")(table.concat(steps, "/", 1, #steps - 1))
 		.. "-"
 		.. require("neoterm.helpers.slug")(last)
@@ -166,7 +166,7 @@ function M.commit_message(path)
 	local identity = M.source(path)
 	assert(not identity.default, "Commit messages require a task on a non-default branch")
 	local steps = identity.steps
-	local name = steps[#steps]:gsub("^%d+ ", "")
+	local name = steps[#steps]:gsub("^[%d ]*%d+ ", "")
 	local prefix, change = name:match("^(%a+) (.+)$")
 	if
 		not vim.tbl_contains(
