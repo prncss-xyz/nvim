@@ -19,11 +19,12 @@ local T = MiniTest.new_set({
 					end,
 				}
 				upcoming = {}
+				watched = nil
 				package.loaded["neoterm.terms.artifacts.auto"] = {
 					upcoming = function()
 						return upcoming
 					end,
-					auto_status = function() end,
+					watched_parts = function() return watched end,
 					subscribe_auto = function()
 						return function() end
 					end,
@@ -50,14 +51,14 @@ T["lists upcoming auto steps in order and opens the step file"] = function()
 			{ task = { parts = { "sample", "b" } }, step = { name = "merge" }, file = "/b/implementation.md", checkouts = { "/p/x-b", "/p/y-b" } },
 		}
 		require("neoterm.auto_panel").toggle()
-		assert(vim.deep_equal(lines(), { "auto mode off", "sample/", "  a  plan:fast  → main", "  b  merge  → ambiguous: x-b, y-b", "count: 2" }), vim.inspect(lines()))
+		assert(vim.deep_equal(lines(), { "auto mode: off", "sample/", "  a  plan:fast  → main", "  b  merge  → ambiguous: x-b, y-b", "count: 2" }), vim.inspect(lines()))
 		assert(vim.api.nvim_win_get_cursor(0)[1] == 3)
 		vim.api.nvim_win_set_cursor(0, { 4, 0 })
 		vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)
 		assert(vim.deep_equal(opened, { "/b/implementation.md" }), vim.inspect(opened))
 		upcoming = {}
 		tasks_listener()
-		assert(vim.deep_equal(lines(), { "auto mode off", "No upcoming auto steps", "count: 0" }), vim.inspect(lines()))
+		assert(vim.deep_equal(lines(), { "auto mode: off", "No upcoming auto steps", "count: 0" }), vim.inspect(lines()))
 		vim.api.nvim_feedkeys("q", "x", false)
 		assert(vim.bo.filetype ~= "toggleterm-auto-panel" and tasks_listener == nil)
 	]])
@@ -76,13 +77,13 @@ T["groups nested directories without changing task order"] = function()
 		}) do
 			table.insert(upcoming, { task = { parts = parts }, step = { name = "plan" }, file = "/" .. table.concat(parts, "/") .. "/task.md", cwd = "/p/main" })
 		end
-		require("neoterm.terms.artifacts.auto").auto_status = function() return "waiting for task alpha/nested/a" end
+		watched = { "alpha", "nested", "a" }
 		require("neoterm.auto_panel").toggle()
 		assert(vim.deep_equal(lines(), {
-			"waiting for task alpha/nested/a",
+			"auto mode: on",
 			"alpha/",
 			"  nested/",
-			"    a  plan  → main",
+			"●   a  plan  → main",
 			"    b  plan  → main",
 			"  nested  plan  → main",
 			"  other/",
@@ -116,7 +117,7 @@ T["filters full paths and opens matching tasks with duplicate leaf names"] = fun
 			return vim.api.nvim_buf_get_lines(panel_buf, -2, -1, false)[1] == "count: 1"
 		end))
 		assert(vim.deep_equal(vim.api.nvim_buf_get_lines(panel_buf, 0, -1, false), {
-			"auto mode off", "beta/", "  a  plan  → main", "count: 1",
+			"auto mode: off", "beta/", "  a  plan  → main", "count: 1",
 		}))
 		assert(vim.fn.maparg("<C-n>", "i", false, true).callback)()
 		assert(vim.fn.maparg("<C-n>", "i", false, true).callback)()

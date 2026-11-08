@@ -15,7 +15,7 @@ local function close()
 	state = nil
 end
 
-local function create_rows(upcoming, filter)
+local function create_rows(upcoming, filter, watched)
 	local tasks = panel_utils.filter_rows(
 		vim.tbl_map(function(item)
 			local step = item.step.name .. (item.variant and ":" .. item.variant or "")
@@ -42,7 +42,11 @@ local function create_rows(upcoming, filter)
 				table.insert(rows, { text = string.rep("  ", depth - 1) .. part .. "/", directory = true })
 			end
 		end
-		task.text = string.rep("  ", #task.parts - 1) .. task.parts[#task.parts] .. task.details
+		local indent = string.rep("  ", #task.parts - 1)
+		if watched and table.concat(task.parts, "/") == table.concat(watched, "/") then
+			indent = "● " .. indent:sub(3)
+		end
+		task.text = indent .. task.parts[#task.parts] .. task.details
 		table.insert(rows, task)
 		previous = task.parts
 	end
@@ -54,8 +58,9 @@ local function render()
 		return
 	end
 	local auto = require("neoterm.terms.artifacts.auto")
-	local rows, count = create_rows(auto.upcoming(), state.filter)
-	table.insert(rows, 1, { text = auto.auto_status() or "auto mode off", header = true })
+	local watched = auto.watched_parts()
+	local rows, count = create_rows(auto.upcoming(), state.filter, watched)
+	table.insert(rows, 1, { text = "auto mode: " .. (watched and "on" or "off"), header = true })
 	if #rows == 1 then
 		table.insert(rows, { text = "No upcoming auto steps" })
 	end

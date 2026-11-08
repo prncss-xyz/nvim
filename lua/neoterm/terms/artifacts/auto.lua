@@ -304,6 +304,14 @@ function M.auto_status()
 	end
 end
 
+---Parts of the task auto mode is waiting for, or nil when auto mode is disabled.
+---@return string[]|nil
+function M.watched_parts()
+	if active and watched then
+		return watched.parts
+	end
+end
+
 ---@param listener fun()
 ---@return fun() unsubscribe
 function M.subscribe_auto(listener)
