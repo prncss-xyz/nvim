@@ -6,8 +6,9 @@ local notify = require("my.notify")
 local prompt_utils = require("neoterm.helpers.prompt")
 
 local env = {
-	NEOMUX_CTX = [[Save deliverables for the user, such as plans, reports, screenshots, and reusable scripts, in `{artifacts}`.
-Save temporary working files, such as logs, scratchpads, and throwaway scripts, in `/tmp`.
+	NEOMUX_CTX = [[
+Save deliverables for the user, such as plans, reports, screenshots, and reusable scripts, in `{artifacts}`.
+Save temporary working files, such as logs, scratchpads, and throwaway scripts, in `/tmp`. Retaining evidence does not make it a user-facing deliverable.
 ]],
 }
 
