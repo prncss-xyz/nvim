@@ -357,7 +357,7 @@ Output ONLY the branch name, nothing else.
 			{ name = "report:done", modes = { "standup" }, enabled = work(true, false) },
 			{ name = "done" },
 			{ name = "report:aborted", modes = { "standup" }, enabled = work(true, false) },
-			{ name = "aborted" },
+			{ name = "aborted", files = { "cancellation.md" } },
 			{ name = "failed", enabled = personal(true, false) },
 		},
 	},
