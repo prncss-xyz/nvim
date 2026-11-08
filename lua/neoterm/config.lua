@@ -20,6 +20,15 @@ local agent_command = {
 
 local agents = personal({
 	{
+		name = "claude",
+		command = agent_command,
+		alias = {
+			deep = { model = "opus", effort = "low" },
+			medium = { model = "sonnet", effort = "low" },
+			fast = { model = "haiku", effort = "low" },
+		},
+	},
+	{
 		name = "codex",
 		command = agent_command,
 		alias = {
@@ -27,15 +36,6 @@ local agents = personal({
 			deep = { model = "gpt-6.1-sol", effort = "low" },
 			medium = { model = "gpt-6.1-terra", effort = "low" },
 			fast = { model = "gpt-6-luna", effort = "low" },
-		},
-	},
-	{
-		name = "claude",
-		command = agent_command,
-		alias = {
-			deep = { model = "opus", effort = "low" },
-			medium = { model = "sonnet", effort = "low" },
-			fast = { model = "haiku", effort = "low" },
 		},
 	},
 	{

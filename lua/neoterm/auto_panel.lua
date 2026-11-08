@@ -15,17 +15,38 @@ local function close()
 	state = nil
 end
 
-local function create_rows(upcoming)
-	return vim.tbl_map(function(item)
-		local step = item.step.name .. (item.variant and ":" .. item.variant or "")
-		local checkout = item.cwd and vim.fs.basename(item.cwd)
-			or "ambiguous: " .. table.concat(vim.tbl_map(vim.fs.basename, item.checkouts), ", ")
-		return {
-			text = table.concat(item.task.parts, "/") .. "  " .. step .. "  → " .. checkout,
-			file = item.file,
-			ambiguous = item.cwd == nil,
-		}
-	end, upcoming)
+local function create_rows(upcoming, filter)
+	local tasks = panel_utils.filter_rows(
+		vim.tbl_map(function(item)
+			local step = item.step.name .. (item.variant and ":" .. item.variant or "")
+			local checkout = item.cwd and vim.fs.basename(item.cwd)
+				or "ambiguous: " .. table.concat(vim.tbl_map(vim.fs.basename, item.checkouts), ", ")
+			return {
+				text = table.concat(item.task.parts, "/") .. "  " .. step .. "  → " .. checkout,
+				parts = item.task.parts,
+				details = "  " .. step .. "  → " .. checkout,
+				file = item.file,
+				ambiguous = item.cwd == nil,
+			}
+		end, upcoming),
+		filter
+	)
+	local rows = {}
+	local previous = {}
+	for _, task in ipairs(tasks) do
+		local shared = true
+		for depth = 1, #task.parts - 1 do
+			local part = task.parts[depth]
+			shared = shared and previous[depth] == part
+			if not shared then
+				table.insert(rows, { text = string.rep("  ", depth - 1) .. part .. "/", directory = true })
+			end
+		end
+		task.text = string.rep("  ", #task.parts - 1) .. task.parts[#task.parts] .. task.details
+		table.insert(rows, task)
+		previous = task.parts
+	end
+	return rows, #tasks
 end
 
 local function render()
@@ -33,11 +54,12 @@ local function render()
 		return
 	end
 	local auto = require("neoterm.terms.artifacts.auto")
-	local rows = panel_utils.filter_rows(create_rows(auto.upcoming()), state.filter)
+	local rows, count = create_rows(auto.upcoming(), state.filter)
 	table.insert(rows, 1, { text = auto.auto_status() or "auto mode off", header = true })
 	if #rows == 1 then
 		table.insert(rows, { text = "No upcoming auto steps" })
 	end
+	table.insert(rows, { text = "count: " .. count })
 	state.rows = rows
 	vim.bo[state.buf].modifiable = true
 	vim.api.nvim_buf_set_lines(
@@ -54,7 +76,10 @@ local function render()
 	for index, row in ipairs(rows) do
 		vim.api.nvim_buf_set_extmark(state.buf, namespace, index - 1, 0, {
 			end_col = #row.text,
-			hl_group = row.ambiguous and "DiagnosticWarn" or row.file and "DiagnosticInfo" or "Comment",
+			hl_group = row.ambiguous and "DiagnosticWarn"
+				or row.file and "DiagnosticInfo"
+				or row.directory and "NeoTreeDirectoryName"
+				or "Comment",
 		})
 	end
 	panel_utils.highlight_filter(state, namespace)
@@ -75,7 +100,7 @@ local function filter_panel()
 			return state == panel
 		end,
 		same = function(row, selected)
-			return row.text == selected.text
+			return row.file == selected.file and row.text == selected.text
 		end,
 		accept = open_selected,
 	})
@@ -132,8 +157,11 @@ function M.toggle()
 		end,
 	})
 	render()
-	if #state.rows > 1 then
-		vim.api.nvim_win_set_cursor(win, { 2, 0 })
+	for line, row in ipairs(state.rows) do
+		if row.file then
+			vim.api.nvim_win_set_cursor(win, { line, #(row.text:match("^%s*") or "") })
+			break
+		end
 	end
 end
 
