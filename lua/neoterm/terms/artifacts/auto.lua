@@ -3,7 +3,7 @@ local M = {}
 local started = false
 local fired = {}
 local active = false
-local watched
+local watched = {}
 local watching = false
 local auto_listeners = {}
 
@@ -234,10 +234,14 @@ function M.upcoming()
 	end, require("neoterm.terms.artifacts.tasks").auto_tasks(auto_enabled))
 end
 
-function M.trigger_next()
-	local item = M.upcoming()[1]
+function M.trigger_next(predicate)
+	local item = vim.iter(M.upcoming()):find(function(candidate)
+		return predicate == nil or predicate(candidate.task)
+	end)
 	if not item then
-		vim.notify("No auto task")
+		if predicate == nil then
+			vim.notify("No auto task")
+		end
 		return
 	end
 	assert(
@@ -259,30 +263,47 @@ local function notify_auto()
 	end
 end
 
-local function advance()
+local function advance(force)
 	if not active then
 		return
 	end
-	if watched then
-		local status = require("neoterm.terms.artifacts.tasks").status(watched.path)
+	local limit = require("neoterm.config").max_parallel_flows
+	assert(type(limit) == "number" and limit >= 1 and limit % 1 == 0, "max_parallel_flows must be a positive integer")
+	local occupied = {}
+	local remaining = {}
+	for _, task in ipairs(watched) do
+		local status = require("neoterm.terms.artifacts.tasks").status(task.path)
 		if status == nil then
-			vim.notify("Watched task " .. table.concat(watched.parts, "/") .. " disappeared", vim.log.levels.WARN)
+			vim.notify("Watched task " .. table.concat(task.parts, "/") .. " disappeared", vim.log.levels.WARN)
 		elseif not vim.tbl_contains(require("neoterm.config").tasks.blocking.unblock, status) then
-			return
+			table.insert(remaining, task)
+			occupied[task.project] = true
 		end
 	end
-	local ok, result = pcall(M.trigger_next)
-	if ok then
-		watched = result
-	else
-		vim.notify("Auto mode stopped: " .. tostring(result), vim.log.levels.ERROR)
+	local changed = #remaining ~= #watched
+	watched = remaining
+	while #watched < limit do
+		local ok, result = pcall(M.trigger_next, function(task)
+			return not occupied[task.project]
+		end)
+		if not ok then
+			vim.notify("Auto mode stopped: " .. tostring(result), vim.log.levels.ERROR)
+			active = false
+			break
+		end
+		if result == nil then
+			break
+		end
+		changed = true
+		table.insert(watched, result)
+		occupied[result.project] = true
 	end
-	active = ok and watched ~= nil
-	notify_auto()
+	active = active and #watched > 0
+	if changed or not active or force then
+		notify_auto()
+	end
 end
 
----Toggle auto mode: trigger the next auto task, then trigger another each time the watched
----task reaches an unblocking status. The watched task is kept while disabled.
 function M.auto_trigger_next()
 	active = not active
 	if not watching then
@@ -290,25 +311,26 @@ function M.auto_trigger_next()
 		require("neoterm.terms.artifacts.tasks").subscribe(advance)
 	end
 	if active then
-		advance()
+		advance(true)
 	else
 		notify_auto()
 	end
 end
 
----Message describing the task auto mode is waiting for, or nil when auto mode is disabled.
----@return string|nil
 function M.auto_status()
-	if active and watched then
-		return "waiting for task " .. table.concat(watched.parts, "/")
+	if active then
+		local names = vim.tbl_map(function(task)
+			return table.concat(task.parts, "/")
+		end, watched)
+		return "waiting for task " .. table.concat(names, ", ")
 	end
 end
 
----Parts of the task auto mode is waiting for, or nil when auto mode is disabled.
----@return string[]|nil
 function M.watched_parts()
-	if active and watched then
-		return watched.parts
+	if active then
+		return vim.tbl_map(function(task)
+			return task.parts
+		end, watched)
 	end
 end
 

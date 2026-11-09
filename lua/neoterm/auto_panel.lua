@@ -43,7 +43,9 @@ local function create_rows(upcoming, filter, watched)
 			end
 		end
 		local indent = string.rep("  ", #task.parts - 1)
-		if watched and table.concat(task.parts, "/") == table.concat(watched, "/") then
+		if watched and vim.iter(watched):any(function(parts)
+			return vim.deep_equal(task.parts, parts)
+		end) then
 			indent = "● " .. indent:sub(3)
 		end
 		task.text = indent .. task.parts[#task.parts] .. task.details

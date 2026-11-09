@@ -77,7 +77,7 @@ T["groups nested directories without changing task order"] = function()
 		}) do
 			table.insert(upcoming, { task = { parts = parts }, step = { name = "plan" }, file = "/" .. table.concat(parts, "/") .. "/task.md", cwd = "/p/main" })
 		end
-		watched = { "alpha", "nested", "a" }
+		watched = { { "alpha", "nested", "a" }, { "beta", "nested", "a" } }
 		require("neoterm.auto_panel").toggle()
 		assert(vim.deep_equal(lines(), {
 			"auto mode: on",
@@ -90,7 +90,7 @@ T["groups nested directories without changing task order"] = function()
 			"    a  plan  → main",
 			"beta/",
 			"  nested/",
-			"    a  plan  → main",
+			"●   a  plan  → main",
 			"standalone  plan  → main",
 			"count: 6",
 		}), vim.inspect(lines()))

@@ -91,6 +91,7 @@ return {
 		artifacts = dirs.artifacts,
 	},
 	min_runtime = 10000,
+	max_parallel_flows = 4,
 	open_files_do_not_replace_types = do_not_replace_types,
 	browser = vim.ui.open,
 	-- browser = require("my.browser").visit,

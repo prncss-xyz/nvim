@@ -45,6 +45,7 @@ local T = MiniTest.new_set({
 				package.loaded["neoterm.config"] = {
 					dirs = { projects = projects, artifacts = artifacts },
 					default_branches = { "main" },
+					max_parallel_flows = 1,
 					tasks = { blocking = { status = "blocked", unblock = { "done" } } },
 					steps = {
 						{ name = "merge", source = "implementation.md", target = "merge.txt", auto = { "small-change.txt" }, command = { confirm = true, cmd = "merge" } },
@@ -291,9 +292,9 @@ T["auto mode triggers the next task once the watched task unblocks and keeps it 
 		end
 		local auto = require("neoterm.terms.artifacts.auto")
 		local queue = {
-			{ path = "/one/task.md", parts = { "sample", "one" } },
-			{ path = "/two/task.md", parts = { "sample", "two" } },
-			{ path = "/three/task.md", parts = { "sample", "three" } },
+			{ project = "sample", path = "/one/task.md", parts = { "sample", "one" } },
+			{ project = "sample", path = "/two/task.md", parts = { "sample", "two" } },
+			{ project = "sample", path = "/three/task.md", parts = { "sample", "three" } },
 		}
 		local triggered = {}
 		auto.trigger_next = function()
@@ -336,6 +337,86 @@ T["auto mode triggers the next task once the watched task unblocks and keeps it 
 	]])
 end
 
+T["auto mode fills parallel slots across projects and resumes each project independently"] = function()
+	child.lua([[
+		local config = package.loaded["neoterm.config"]
+		config.max_parallel_flows = 4
+		config.steps = { { name = "plan", source = "task.md", command = { cmd = "{source}" } } }
+		local tasks = package.loaded["neoterm.terms.artifacts.tasks"]
+		local listener
+		tasks.subscribe = function(callback) listener = callback end
+		local entries, statuses, runs = {}, {}, {}
+		local function entry(project, name)
+			local cwd = vim.fs.joinpath(artifacts, project, name)
+			local path = vim.fs.joinpath(cwd, "task.md")
+			vim.fn.mkdir(cwd, "p")
+			vim.fn.mkdir(vim.fs.joinpath(projects, project, "main"), "p")
+			vim.fn.writefile({ "task" }, path)
+			local task = {
+				project = project, cwd = cwd, path = path, parts = { project, name },
+				present = { ["task.md"] = true }, flat = false, auto = { step = "plan" },
+			}
+			table.insert(entries, task)
+			statuses[path] = "ready"
+			return task
+		end
+		local a1 = entry("alpha", "one")
+		local a2 = entry("alpha", "two")
+		local b1 = entry("beta", "one")
+		local c1 = entry("gamma", "one")
+		local d1 = entry("delta", "one")
+		local e1 = entry("epsilon", "one")
+		tasks.status = function(path) return statuses[path] end
+		tasks.auto_tasks = function(predicate)
+			for _, task in ipairs(entries) do task.logical_status = statuses[task.path] end
+			return vim.tbl_filter(function(task)
+				return statuses[task.path] ~= nil and predicate(task)
+			end, entries)
+		end
+		package.loaded["neoterm.terms"].start = function(definition)
+			table.insert(runs, definition.cmd)
+		end
+		local function expected(list)
+			return vim.tbl_map(function(task) return '"' .. task.path .. '"' end, list)
+		end
+		local auto = require("neoterm.terms.artifacts.auto")
+		local refreshes = 0
+		auto.subscribe_auto(function() refreshes = refreshes + 1 end)
+		auto.auto_trigger_next()
+		assert(vim.deep_equal(runs, expected({ a1, b1, c1, d1 })), vim.inspect(runs))
+		assert(#auto.watched_parts() == 4)
+		listener()
+		assert(#runs == 4)
+		auto.auto_trigger_next()
+		assert(auto.auto_status() == nil)
+		local before = refreshes
+		auto.auto_trigger_next()
+		assert(auto.auto_status() ~= nil and refreshes == before + 1 and #runs == 4)
+		statuses[b1.path] = "done"
+		listener()
+		assert(vim.deep_equal(runs, expected({ a1, b1, c1, d1, e1 })), vim.inspect(runs))
+		statuses[a1.path] = "review"
+		listener()
+		assert(#runs == 5)
+		statuses[a1.path] = "done"
+		listener()
+		assert(vim.deep_equal(runs, expected({ a1, b1, c1, d1, e1, a2 })), vim.inspect(runs))
+		auto.auto_trigger_next()
+		statuses[c1.path] = "done"
+		listener()
+		assert(auto.auto_status() == nil and #runs == 6)
+		auto.auto_trigger_next()
+		assert(#runs == 6 and #auto.watched_parts() == 3)
+		statuses[d1.path] = nil
+		listener()
+		assert(#runs == 6 and #auto.watched_parts() == 2)
+		statuses[a2.path] = "done"
+		statuses[e1.path] = "done"
+		listener()
+		assert(auto.auto_status() == nil and #runs == 6)
+	]])
+end
+
 T["auto mode reports a failed trigger and stops until re-enabled"] = function()
 	child.lua([[
 		package.loaded["neoterm.config"].tasks = { blocking = { status = "blocked", unblock = { "done" } } }
@@ -354,7 +435,7 @@ T["auto mode reports a failed trigger and stops until re-enabled"] = function()
 		auto.trigger_next = function()
 			calls = calls + 1
 			assert(not failing, "boom")
-			return { path = "/one/task.md", parts = { "sample", "one" } }
+			return { project = "sample", path = "/one/task.md", parts = { "sample", "one" } }
 		end
 		auto.auto_trigger_next()
 		failing = true
