@@ -239,7 +239,8 @@ function M.create_worktree(branch, on_success)
 end
 
 --- Remove the wohktree containing the current buffer, after confirmation.
---- Tracked changes and untracked files are protected by git worktree remove.
+--- A worktree with tracked changes or untracked files is only removed after a
+--- dedicated confirmation, which forces the removal.
 function M.remove_current_worktree(on_success, skip_confirmation)
 	local current_file = vim.fn.expand("%:p")
 	if current_file == "" then
@@ -253,18 +254,43 @@ function M.remove_current_worktree(on_success, skip_confirmation)
 			return
 		end
 		local worktree_path = vim.fs.normalize(vim.trim(output))
-		local function remove(confirmed)
+		local function remove(confirmed, force)
 			if not confirmed then
 				return
 			end
 			require("neoterm.terms").kill_in_dir(worktree_path)
+			local fallback_dir = vim.fs.dirname(worktree_path)
+			local function inside(dir)
+				dir = vim.fs.normalize(dir)
+				return dir == worktree_path or vim.startswith(dir, worktree_path .. "/")
+			end
+			for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+				for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab)) do
+					if inside(vim.fn.getcwd(win, vim.api.nvim_tabpage_get_number(tab))) then
+						vim.api.nvim_win_call(win, function()
+							vim.cmd.lcd(vim.fn.fnameescape(fallback_dir))
+						end)
+					end
+				end
+			end
+			if inside(vim.fn.getcwd(-1, -1)) then
+				vim.cmd.cd(vim.fn.fnameescape(fallback_dir))
+			end
 			for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
 				local path = vim.api.nvim_buf_get_name(bufnr)
 				if path ~= "" and vim.startswith(vim.fs.normalize(path), worktree_path .. "/") then
 					config.bdelete(bufnr)
 				end
 			end
-			run({ "git", "-C", worktree_path, "worktree", "remove", worktree_path }, function(removed, result)
+			if vim.api.nvim_buf_get_name(0) == "" and not vim.bo.modifiable then
+				vim.cmd.enew()
+			end
+			local command = { "git", "-C", worktree_path, "worktree", "remove" }
+			if force then
+				table.insert(command, "--force")
+			end
+			table.insert(command, worktree_path)
+			run(command, function(removed, result)
 				if not removed then
 					vim.notify("Failed to remove worktree: " .. result, vim.log.levels.ERROR)
 					return
@@ -274,11 +300,19 @@ function M.remove_current_worktree(on_success, skip_confirmation)
 				end
 			end)
 		end
-		if skip_confirmation then
-			remove(true)
-		else
-			require("neoterm.helpers.confirm")("Remove worktree " .. worktree_path .. "?", remove)
-		end
+		run({ "git", "-C", worktree_path, "status", "--porcelain" }, function(status_ok, status)
+			assert(status_ok, status)
+			local dirty = vim.trim(status) ~= ""
+			if skip_confirmation and not dirty then
+				remove(true)
+				return
+			end
+			local prompt = dirty and ("Worktree " .. worktree_path .. " has uncommitted or untracked files. Force remove?")
+				or ("Remove worktree " .. worktree_path .. "?")
+			require("neoterm.helpers.confirm")(prompt, function(confirmed)
+				remove(confirmed, dirty)
+			end)
+		end)
 	end)
 end
 
