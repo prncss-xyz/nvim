@@ -24,7 +24,9 @@ require("lazy").setup({
 		lazy = true,
 	},
 	dev = {
-		path = "~/projects/",
+		path = function(plugin)
+			return "~/projects/" .. plugin.name .. "/main"
+		end,
 		patterns = { "prncss-xyz" },
 		fallback = true,
 	},
