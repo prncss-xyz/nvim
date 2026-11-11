@@ -123,8 +123,21 @@ local function apply_event(event, item)
 	end
 end
 
+local function track_task(event, item)
+	if not item.task_path then
+		return
+	end
+	local active = require("neoterm.terms.artifacts.active")
+	if event.type == "create" then
+		active.add(item.task_path, item.task_project, item)
+	elseif event.type == "detach" or (event.type == "status" and (event.value == "success" or event.value == "failure")) then
+		active.remove(item.task_path, item)
+	end
+end
+
 local function notify(event, item)
 	apply_event(event, item)
+	track_task(event, item)
 	for _, listener in pairs(listeners) do
 		pcall(listener, event, item)
 	end
@@ -176,6 +189,7 @@ local function create_and_notify(item, cb)
 		exit_policy = item.exit_policy,
 		screen_manifest = item.screen_manifest,
 		osc_status = item.osc_status,
+		detect_urls = config.detect_urls,
 		auto_scroll = item.auto_scroll,
 		on_success = item.on_success,
 	}, function(event)

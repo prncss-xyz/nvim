@@ -93,6 +93,7 @@ return {
 	min_runtime = 10000,
 	max_parallel_flows = 4,
 	open_files_do_not_replace_types = do_not_replace_types,
+	detect_urls = false,
 	browser = vim.ui.open,
 	-- browser = require("my.browser").visit,
 	create = require("my.create").create,
@@ -283,6 +284,21 @@ return {
 			},
 		},
 		{
+			name = "remove-worktree",
+			source = "cancellation.md",
+			fork = "required",
+			existing = true,
+			on_success = function(vars)
+				require("neoterm.helpers.confirm")("Force remove worktree " .. vars.cwd .. "?", function(confirmed)
+					if confirmed then
+						require("neoterm.git").remove_worktree(vars.cwd, function()
+							vim.notify("Removed worktree: " .. vars.cwd, vim.log.levels.INFO, { title = "Step remove-worktree" })
+						end, true)
+					end
+				end)
+			end,
+		},
+		{
 			name = "merge",
 			source = "implementation.md",
 			auto = { "small-change.txt" },
@@ -294,6 +310,7 @@ return {
 				exit_policy = "keep",
 			},
 			on_success = function(vars, output)
+				vim.notify("Merge succeeded: " .. vars.source_branch, vim.log.levels.INFO, { title = "Step merge" })
 				local commit = assert(output.last_line(), "Merge command did not output a commit hash")
 				assert(commit:match("^%x+$"), "Merge command output is not a commit hash")
 				local source = vars.source:sub(2, -2):gsub("^~", function()

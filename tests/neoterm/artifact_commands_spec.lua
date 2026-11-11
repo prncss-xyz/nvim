@@ -183,13 +183,13 @@ T["steps opt into forking and task fork false uses the default checkout"] = func
 	]])
 end
 
-T["required forks refuse default branch tasks, including resumes"] = function()
+T["required steps refuse the default branch when the task does not fork, including resumes"] = function()
 	child.lua([[
 		local root = vim.fn.tempname()
 		local projects = vim.fs.joinpath(root, "projects")
 		local artifacts = vim.fs.joinpath(root, "artifacts")
 		local cwd = vim.fs.joinpath(projects, "sample", "main")
-		local source = vim.fs.joinpath(artifacts, "sample", "task.md")
+		local source = vim.fs.joinpath(artifacts, "sample", "scope", "feature", "task.md")
 		vim.fn.mkdir(cwd, "p")
 		vim.fn.mkdir(vim.fs.dirname(source), "p")
 		vim.fn.writefile({ "task" }, source)
@@ -208,19 +208,17 @@ T["required forks refuse default branch tasks, including resumes"] = function()
 			vim.fn.delete(cwd, "rf")
 			cwd = vim.fs.joinpath(projects, "sample", branch)
 			vim.fn.mkdir(cwd, "p")
-			for _, fork in ipairs({ true, false }) do
-				vim.fn.writefile({ "---", "fork: " .. tostring(fork), "---", "task" }, source)
-				for _, resume in ipairs({ false, true }) do
-					local notified
-					vim.notify = function(message, level) notified = { message, level } end
-					vim.ui.select = function(items, _, callback)
-						assert(#items == 1)
-						assert(items[1].refusal:find("default branch " .. branch, 1, true))
-						callback(items[1])
-					end
-					commands.select_for_current_file(resume)
-					assert(notified and notified[2] == vim.log.levels.ERROR)
+			vim.fn.writefile({ "---", "fork: false", "---", "task" }, source)
+			for _, resume in ipairs({ false, true }) do
+				local notified
+				vim.notify = function(message, level) notified = { message, level } end
+				vim.ui.select = function(items, _, callback)
+					assert(#items == 1)
+					assert(items[1].refusal:find("default branch " .. branch, 1, true))
+					callback(items[1])
 				end
+				commands.select_for_current_file(resume)
+				assert(notified and notified[2] == vim.log.levels.ERROR)
 			end
 		end
 		vim.fn.delete(root, "rf")
@@ -264,9 +262,8 @@ T["steps prepare their checkout before starting, including resumes and default b
 			{ fork = "default", branch = "master" },
 			{ branch = "master" },
 			{ fork = "fork", task_fork = false, branch = "master" },
-			{ fork = "fork", default = true, branch = "master" },
 		}) do
-			local file = case.default and artifacts .. "/sample/task.md" or source
+			local file = source
 			vim.fn.writefile(case.task_fork == false and { "---", "fork: false", "---" } or { "task" }, file)
 			config.steps = { { name = "do", source = "task.md", fork = case.fork, command = { tag = "agent", prompt = "do" } } }
 			for _, resume in ipairs({ false, true }) do
@@ -298,13 +295,13 @@ T["steps prepare their checkout before starting, including resumes and default b
 	]])
 end
 
-T["nested artifact directories form the branch name"] = function()
+T["project-level tasks hide steps that fork"] = function()
 	child.lua([[
 		local root = vim.fn.tempname()
 		local projects = vim.fs.joinpath(root, "projects")
 		local artifacts = vim.fs.joinpath(root, "artifacts")
-		local cwd = vim.fs.joinpath(projects, "utils-mono", "main")
-		local source = vim.fs.joinpath(artifacts, "utils-mono", "stores", "fix-provider-store", "task.md")
+		local cwd = vim.fs.joinpath(projects, "sample", "main")
+		local source = vim.fs.joinpath(artifacts, "sample", "task.md")
 		vim.fn.mkdir(cwd, "p")
 		vim.fn.mkdir(vim.fs.dirname(source), "p")
 		vim.fn.writefile({ "task" }, source)
@@ -313,21 +310,16 @@ T["nested artifact directories form the branch name"] = function()
 			default_branches = { "main" },
 		}
 		require("neoterm.terms.artifacts.tasks").executables = function() return {} end
-		local definitions = require("neoterm.terms.artifacts.commands").for_file({
-			cwd = cwd,
-			file = source,
-			steps = {
-				{ name = "fork", fork = "fork", source = "task.md", command = { tag = "open" } },
-				{ name = "variant", fork = "fork", source = "task.md", variants = { "a" }, command = { cmd = { "git", "commit", "-m", "{message}" } } },
-			},
-		})
-		result = vim.tbl_map(function(item) return vim.fs.relpath(projects, item.cwd) end, definitions)
-		assert(vim.deep_equal(definitions[2].cmd, { "git", "commit", "-m", "fix(stores): provider-store" }))
+		local steps = {
+			{ name = "fork", fork = "fork", source = "task.md", command = "echo" },
+			{ name = "required", fork = "required", source = "task.md", command = "echo" },
+			{ name = "default", fork = "default", source = "task.md", command = "echo" },
+			{ name = "plain", source = "task.md", command = "echo" },
+		}
+		local definitions = require("neoterm.terms.artifacts.commands").for_file({ cwd = cwd, file = source, steps = steps })
+		result = vim.tbl_map(function(item) return item.name end, definitions)
 	]])
-	local branch = "utils-mono/"
-		.. child.lua_get([[require("neoterm.helpers.hash")("stores")]])
-		.. "-fix-provider-store"
-	assert.same({ branch, branch }, child.lua_get("result"))
+	assert.same({ "default:main:sample", "plain:main:sample" }, child.lua_get("result"))
 end
 
 T["fork opens a project file only after the worktree is ready"] = function()
@@ -533,6 +525,42 @@ T["steps with a status are disabled while the task status precedes it"] = functi
 	]])
 end
 
+T["existing steps are offered only when the task worktree exists"] = function()
+	child.lua([[
+		local root = vim.fn.tempname()
+		local projects = vim.fs.joinpath(root, "projects")
+		local artifacts = vim.fs.joinpath(root, "artifacts")
+		local cwd = vim.fs.joinpath(projects, "sample", "main")
+		local folder = vim.fs.joinpath(artifacts, "sample", "scope", "feature")
+		vim.fn.mkdir(cwd, "p")
+		vim.fn.mkdir(folder, "p")
+		local cancellation = vim.fs.joinpath(folder, "cancellation.md")
+		vim.fn.writefile({ "task" }, vim.fs.joinpath(folder, "task.md"))
+		vim.fn.writefile({ "cancelled" }, cancellation)
+		package.loaded["neoterm.config"] = {
+			dirs = { projects = projects, artifacts = artifacts },
+			default_branches = { "main" },
+		}
+		require("neoterm.terms.artifacts.tasks").executables = function() return {} end
+		require("neoterm.terms.artifacts.tasks").fork = function() return true end
+		local commands = require("neoterm.terms.artifacts.commands")
+		local step = { name = "remove", source = "cancellation.md", fork = "required", existing = true, on_success = function() end }
+		local function count()
+			return #commands.for_file({ cwd = cwd, file = cancellation, steps = { step } })
+		end
+		assert(count() == 0)
+		local identity = require("neoterm.terms.artifacts.paths").source(cancellation, "cancellation.md")
+		vim.fn.mkdir(vim.fs.joinpath(projects, "sample", identity.branch), "p")
+		assert(count() == 1)
+		local ok = pcall(commands.for_file, {
+			cwd = cwd,
+			file = cancellation,
+			steps = { { name = "invalid", source = "cancellation.md", existing = true } },
+		})
+		assert(not ok, "existing without fork = required should fail validation")
+	]])
+end
+
 T["resolved step commands are not expanded again as prompt templates"] = function()
 	child.lua([[
 		local cwd = vim.fn.tempname()
@@ -553,6 +581,39 @@ T["resolved step commands are not expanded again as prompt templates"] = functio
 		})
 	]])
 	MiniTest.expect.equality(child.lua_get("created"), "'merge-from-current' 'main' 'body ${position} {unknown}'")
+end
+
+T["steps are offered for an artifact project without a checkout"] = function()
+	child.lua([[
+		local root = vim.fn.tempname()
+		local projects = vim.fs.joinpath(root, "projects")
+		local artifacts = vim.fs.joinpath(root, "artifacts")
+		local other = vim.fs.joinpath(projects, "other", "main")
+		local source = vim.fs.joinpath(artifacts, "fresh", "misc", "feature", "task.md")
+		vim.fn.mkdir(other, "p")
+		vim.fn.mkdir(vim.fs.dirname(source), "p")
+		vim.fn.writefile({ "task" }, source)
+		package.loaded["neoterm.config"] = {
+			dirs = { projects = projects, artifacts = artifacts },
+			default_branches = { "main" },
+			steps = { { name = "do", source = "task.md", command = { cmd = "echo" } } },
+		}
+		require("neoterm.terms.artifacts.tasks").executables = function() return {} end
+		vim.cmd.cd(other)
+		vim.api.nvim_buf_set_name(0, source)
+		local commands = require("neoterm.terms.artifacts.commands")
+		local started
+		package.loaded["neoterm.git"] = { ensure_project = function(project, callback) callback(vim.fs.joinpath(projects, project, "main")) end, ensure_worktree = function(_, callback) callback(true) end }
+		package.loaded["neoterm.terms"] = { start = function(definition) started = definition.cwd end }
+		vim.ui.select = function(items, _, callback)
+			assert(#items == 1)
+			callback(items[1])
+		end
+		commands.select_for_current_file()
+		cwd_started = started
+		expected = vim.fs.joinpath(projects, "fresh", "main")
+	]])
+	MiniTest.expect.equality(child.lua_get("cwd_started"), child.lua_get("expected"))
 end
 
 return T

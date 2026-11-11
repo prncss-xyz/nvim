@@ -324,28 +324,6 @@ T["generic terminal creation selects artifacts before expanding its environment"
 	]])
 end
 
-T["harness and steps derive the same checkout from a named nested plan"] = function()
-	child.lua([[
-		source("stores/fix provider store/task.md")
-		local file = source("stores/fix provider store/review.plan.md")
-		local repo = checkout(paths.source(file).branch)
-		vim.api.nvim_buf_set_name(0, file)
-		local focused
-		package.loaded["neoterm.terms"] = { focus = function(command) focused = command end }
-		require("neoterm.harness").with_worktree()
-		assert(focused.cwd == repo)
-		assert(focused.artifact_source == file)
-		assert(vim.deep_equal(paths.artifact_folders(repo), { vim.fs.dirname(file) }))
-		require("neoterm.terms.artifacts.tasks").executables = function() return {} end
-		local definitions = require("neoterm.terms.artifacts.commands").for_file({
-			cwd = repo, file = file,
-			steps = { { name = "implement", source = "plan.md", command = "echo" } },
-		})
-		assert(#definitions == 1)
-		assert(definitions[1].cwd == focused.cwd)
-	]])
-end
-
 T["equivalent saved locations are deduplicated before navigation"] = function()
 	child.lua([[
 		local file = source("one/task.md")

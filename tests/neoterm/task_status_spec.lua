@@ -226,4 +226,20 @@ T["next auto task prefers the first directory at every level, then the deepest t
 	)
 end
 
+T["next auto task puts unnumbered parts before numbered ones, ordered by number"] = function()
+	child.lua([[
+		write("10-b/task.md", { "---", "auto: plan", "---" })
+		write("2-a/task.md", { "---", "auto: plan", "---" })
+		write("z/task.md", { "---", "auto: plan", "---" })
+		write("a/2-y/task.md", { "---", "auto: plan", "---" })
+		write("a/x/task.md", { "---", "auto: plan", "---" })
+		tasks = require("neoterm.terms.artifacts.tasks")
+		vim.wait(3000, function() return #tasks.auto_tasks() == 5 end, 20)
+	]])
+	MiniTest.expect.equality(
+		child.lua_get("vim.tbl_map(function(task) return table.concat(task.parts, '/') end, tasks.auto_tasks())"),
+		{ "a/x", "a/2-y", "z", "2-a", "10-b" }
+	)
+end
+
 return T

@@ -110,22 +110,33 @@ local function create_rows(tasks, statuses, status_names, root_parts)
 			})
 			local function append(node, depth, parts)
 				local names = vim.tbl_keys(node.children)
-				table.sort(names)
+				table.sort(names, function(left, right)
+					return require("neoterm.terms.artifacts.tasks").precedes({ left }, { right })
+				end)
 				for _, name in ipairs(names) do
 					local child = node.children[name]
 					local child_parts = vim.deepcopy(parts)
 					table.insert(child_parts, name)
-					local icon = child.task and child.task.flat and "󰈙" or "󰉋"
-					table.insert(result, {
-						text = string.rep("  ", depth) .. icon .. " " .. name,
-						status = group.name,
-						broken = group.broken,
-						parts = child_parts,
-						has_children = not vim.tbl_isempty(child.children),
-						cwd = child.task and child.task.cwd or nil,
-						task = child.task,
-					})
-					append(child, depth + 1, child_parts)
+					local has_children = not vim.tbl_isempty(child.children)
+					local function append_row(task)
+						local icon = task and task.flat and "󰈙" or "󰉋"
+						table.insert(result, {
+							text = string.rep("  ", depth) .. icon .. " " .. name,
+							status = group.name,
+							broken = group.broken,
+							parts = child_parts,
+							has_children = has_children,
+							cwd = task and task.cwd or nil,
+							task = task,
+						})
+					end
+					if has_children then
+						append_row(nil)
+						append(child, depth + 1, child_parts)
+					end
+					if child.task then
+						append_row(child.task)
+					end
 				end
 			end
 			append(root, 0, vim.deepcopy(root_parts))
@@ -166,6 +177,10 @@ local function render()
 		table.insert(state.rows, { text = "No artifact tasks" })
 	end
 	state.rows = panel_utils.filter_rows(state.rows, state.filter)
+	local count = #vim.tbl_filter(function(row)
+		return row.task ~= nil
+	end, state.rows)
+	table.insert(state.rows, { text = "count: " .. count, footer = true })
 	local lines = vim.tbl_map(function(row)
 		return row.text
 	end, state.rows)
@@ -176,7 +191,7 @@ local function render()
 	for index, row in ipairs(state.rows) do
 		vim.api.nvim_buf_set_extmark(state.buf, namespace, index - 1, 0, {
 			end_col = #row.text,
-			hl_group = row.root and "Comment"
+			hl_group = (row.root or row.footer) and "Comment"
 				or (row.status_heading and "DiagnosticWarn")
 				or (row.task and "DiagnosticInfo")
 				or "NeoTreeDirectoryName",
@@ -195,7 +210,7 @@ end
 function M.list_tasks()
 	local tasks = vim.list_extend({}, require("neoterm.terms.artifacts.tasks").get())
 	table.sort(tasks, function(left, right)
-		return table.concat(left.parts, "/") < table.concat(right.parts, "/")
+		return require("neoterm.terms.artifacts.tasks").precedes(left.parts, right.parts)
 	end)
 	return tasks
 end

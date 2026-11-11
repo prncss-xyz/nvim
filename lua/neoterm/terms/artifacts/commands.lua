@@ -75,13 +75,20 @@ local function resolve_command(command, source, target, step, name, variant, cwd
 	return resolve(command), vars
 end
 
+local function task_file(identity)
+	if vim.fs.basename(identity.file) == identity.source then
+		return vim.fs.joinpath(identity.folder, "task.md")
+	end
+	return vim.fs.joinpath(identity.folder, identity.identifier .. ".task.md")
+end
+
 local function build_step(step, source, target, current_cwd, name, variant)
 	source = vim.fs.abspath(source)
 	target = target and vim.fs.abspath(target) or nil
 	local cwd = current_cwd
 	local identity = paths.source(source, step.source)
 	local task_forks = require("neoterm.terms.artifacts.tasks").fork(source)
-	local fork = (step.fork == "fork" or step.fork == "required") and task_forks and not identity.default
+	local fork = (step.fork == "fork" or step.fork == "required") and task_forks
 	local branch = fork and paths.branch(identity) or paths.default_branch(identity.project)
 	cwd = paths.checkout(identity.project, branch)
 	local result, vars = resolve_command(step.command, source, target, name, step.name, variant, current_cwd)
@@ -103,6 +110,8 @@ local function build_step(step, source, target, current_cwd, name, variant)
 	end
 	result.cwd = result.cwd or cwd
 	result.checkout_project = identity.project
+	result.task_path = task_file(identity)
+	result.task_project = identity.project
 	result.checkout_branch = fork and identity.branch or nil
 	if step.on_success then
 		result.on_success = function(output)
@@ -110,7 +119,7 @@ local function build_step(step, source, target, current_cwd, name, variant)
 			step.on_success(vars, output)
 		end
 	end
-	if fork and not identity.default then
+	if fork then
 		result.artifact_dir = vim.fs.dirname(source)
 		result.artifact_source = source
 	end
@@ -127,6 +136,10 @@ local function validate_step(step)
 		string.format("Step %s fork must be default, required, or fork", step.name)
 	)
 	assert(step.on_success == nil or type(step.on_success) == "function", "Step on_success must be a function")
+	assert(
+		step.existing == nil or (type(step.existing) == "boolean" and step.fork == "required"),
+		string.format("Step %s existing must be a boolean and requires fork = required", step.name)
+	)
 	assert(step.auto == nil or vim.islist(step.auto), string.format("Step %s auto must be an array", step.name))
 	for _, name in ipairs(step.auto or {}) do
 		assert(type(name) == "string", string.format("Step %s auto values must be strings", step.name))
@@ -204,13 +217,6 @@ local function step_matches_source(step, source)
 	return filename == step.source or (step.target == nil and vim.endswith(filename, "." .. step.source))
 end
 
-local function task_file(identity)
-	if vim.fs.basename(identity.file) == identity.source then
-		return vim.fs.joinpath(identity.folder, "task.md")
-	end
-	return vim.fs.joinpath(identity.folder, identity.identifier .. ".task.md")
-end
-
 local function status_reached(step, identity)
 	if step.status == nil then
 		return true
@@ -223,6 +229,12 @@ end
 local function is_available(step, source, checkout_branch, related)
 	local identity = paths.source(source, step.source)
 	if not status_reached(step, identity) then
+		return false
+	end
+	if identity.default and (step.fork == "fork" or step.fork == "required") then
+		return false
+	end
+	if step.existing and not paths.is_directory(paths.checkout(identity.project, identity.branch)) then
 		return false
 	end
 	return paths.is_default(checkout_branch) or vim.tbl_contains(paths.branches(identity), checkout_branch) or related
@@ -387,7 +399,11 @@ end
 
 function M.select_for_current_file(resume)
 	local file = vim.api.nvim_buf_get_name(0)
-	local cwd = require("neoterm.terms.artifacts.cwd").context_dir() or vim.fn.getcwd()
+	local cwd = require("neoterm.terms.artifacts.cwd").context_dir()
+	if cwd == nil then
+		local project = paths.artifact_project(file)
+		cwd = project and paths.checkout(project, paths.default_branch(project)) or vim.fn.getcwd()
+	end
 	local steps = config.steps
 	if resume then
 		steps = vim.tbl_filter(function(step)

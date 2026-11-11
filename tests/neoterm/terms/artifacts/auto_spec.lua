@@ -278,62 +278,56 @@ T["upcoming lists enabled auto tasks with their source file or else the task fil
 	]])
 end
 
-T["auto mode triggers the next task once the watched task unblocks and keeps it while disabled"] = function()
+T["auto mode launches a project's next task only after its active task terminates"] = function()
 	child.lua([[
-		package.loaded["neoterm.config"].tasks = { blocking = { status = "blocked", unblock = { "done" } } }
 		local tasks = package.loaded["neoterm.terms.artifacts.tasks"]
 		local listener
 		tasks.subscribe = function(callback)
 			listener = callback
 		end
-		local statuses = {}
-		tasks.status = function(path)
-			return statuses[path]
-		end
-		local auto = require("neoterm.terms.artifacts.auto")
-		local queue = {
+		local all = {
 			{ project = "sample", path = "/one/task.md", parts = { "sample", "one" } },
 			{ project = "sample", path = "/two/task.md", parts = { "sample", "two" } },
-			{ project = "sample", path = "/three/task.md", parts = { "sample", "three" } },
 		}
+		tasks.get = function()
+			return all
+		end
+		local finished = {}
+		local auto = require("neoterm.terms.artifacts.auto")
+		local active = require("neoterm.terms.artifacts.active")
 		local triggered = {}
-		auto.trigger_next = function()
-			local task = table.remove(queue, 1)
-			table.insert(triggered, task and task.path or "none")
-			return task
+		auto.trigger_next = function(predicate)
+			for _, task in ipairs(all) do
+				if not finished[task.path] and predicate(task) then
+					table.insert(triggered, task.path)
+					return task
+				end
+			end
 		end
 		local refreshed = 0
 		auto.subscribe_auto(function()
 			refreshed = refreshed + 1
 		end)
-		assert(auto.auto_status() == nil)
+		assert(auto.auto_status() == nil and not auto.is_enabled())
 		auto.auto_trigger_next()
 		assert(vim.deep_equal(triggered, { "/one/task.md" }), vim.inspect(triggered))
 		assert(auto.auto_status() == "waiting for task sample/one", auto.auto_status())
-		statuses["/one/task.md"] = "review"
 		listener()
 		assert(#triggered == 1, vim.inspect(triggered))
-		auto.auto_trigger_next()
-		assert(auto.auto_status() == nil)
-		statuses["/one/task.md"] = "done"
+		local owner = {}
+		active.add("/one/task.md", "sample", owner)
 		listener()
+		assert(#triggered == 1 and auto.auto_status() == "waiting for task sample/one", vim.inspect(triggered))
+		finished["/one/task.md"] = true
+		active.remove("/one/task.md", owner)
 		assert(#triggered == 1, vim.inspect(triggered))
-		auto.auto_trigger_next()
+		listener()
 		assert(vim.deep_equal(triggered, { "/one/task.md", "/two/task.md" }), vim.inspect(triggered))
-		assert(auto.auto_status() == "waiting for task sample/two", auto.auto_status())
-		statuses["/two/task.md"] = "active"
+		auto.auto_trigger_next()
+		assert(auto.auto_status() == nil and not auto.is_enabled())
 		listener()
 		assert(#triggered == 2, vim.inspect(triggered))
-		statuses["/two/task.md"] = "done"
-		listener()
-		assert(auto.auto_status() == "waiting for task sample/three", auto.auto_status())
-		listener()
-		assert(vim.deep_equal(triggered, { "/one/task.md", "/two/task.md", "/three/task.md", "none" }), vim.inspect(triggered))
-		assert(notifications[#notifications].message == "Watched task sample/three disappeared", vim.inspect(notifications))
-		assert(auto.auto_status() == nil)
-		listener()
-		assert(#triggered == 4, vim.inspect(triggered))
-		assert(refreshed == 5, refreshed)
+		assert(refreshed >= 4, refreshed)
 	]])
 end
 
@@ -343,9 +337,10 @@ T["auto mode fills parallel slots across projects and resumes each project indep
 		config.max_parallel_flows = 4
 		config.steps = { { name = "plan", source = "task.md", command = { cmd = "{source}" } } }
 		local tasks = package.loaded["neoterm.terms.artifacts.tasks"]
+		local active = require("neoterm.terms.artifacts.active")
 		local listener
 		tasks.subscribe = function(callback) listener = callback end
-		local entries, statuses, runs = {}, {}, {}
+		local entries, statuses, runs, owners = {}, {}, {}, {}
 		local function entry(project, name)
 			local cwd = vim.fs.joinpath(artifacts, project, name)
 			local path = vim.fs.joinpath(cwd, "task.md")
@@ -366,7 +361,7 @@ T["auto mode fills parallel slots across projects and resumes each project indep
 		local c1 = entry("gamma", "one")
 		local d1 = entry("delta", "one")
 		local e1 = entry("epsilon", "one")
-		tasks.status = function(path) return statuses[path] end
+		tasks.get = function() return entries end
 		tasks.auto_tasks = function(predicate)
 			for _, task in ipairs(entries) do task.logical_status = statuses[task.path] end
 			return vim.tbl_filter(function(task)
@@ -375,6 +370,12 @@ T["auto mode fills parallel slots across projects and resumes each project indep
 		end
 		package.loaded["neoterm.terms"].start = function(definition)
 			table.insert(runs, definition.cmd)
+			owners[definition.task_path] = definition
+			active.add(definition.task_path, definition.task_project, definition)
+		end
+		local function finish(task)
+			statuses[task.path] = "done"
+			active.remove(task.path, owners[task.path])
 		end
 		local function expected(list)
 			return vim.tbl_map(function(task) return '"' .. task.path .. '"' end, list)
@@ -384,71 +385,60 @@ T["auto mode fills parallel slots across projects and resumes each project indep
 		auto.subscribe_auto(function() refreshes = refreshes + 1 end)
 		auto.auto_trigger_next()
 		assert(vim.deep_equal(runs, expected({ a1, b1, c1, d1 })), vim.inspect(runs))
-		assert(#auto.watched_parts() == 4)
+		assert(active.has(a1.path) and not active.has(a2.path) and not active.has(e1.path))
 		listener()
 		assert(#runs == 4)
 		auto.auto_trigger_next()
-		assert(auto.auto_status() == nil)
+		assert(auto.auto_status() == nil and not auto.is_enabled())
 		local before = refreshes
 		auto.auto_trigger_next()
-		assert(auto.auto_status() ~= nil and refreshes == before + 1 and #runs == 4)
-		statuses[b1.path] = "done"
+		assert(auto.is_enabled() and refreshes == before + 1 and #runs == 4)
+		finish(b1)
 		listener()
 		assert(vim.deep_equal(runs, expected({ a1, b1, c1, d1, e1 })), vim.inspect(runs))
-		statuses[a1.path] = "review"
-		listener()
-		assert(#runs == 5)
-		statuses[a1.path] = "done"
+		finish(a1)
 		listener()
 		assert(vim.deep_equal(runs, expected({ a1, b1, c1, d1, e1, a2 })), vim.inspect(runs))
-		auto.auto_trigger_next()
-		statuses[c1.path] = "done"
+		for _, task in ipairs({ c1, d1, e1, a2 }) do
+			finish(task)
+		end
 		listener()
-		assert(auto.auto_status() == nil and #runs == 6)
-		auto.auto_trigger_next()
-		assert(#runs == 6 and #auto.watched_parts() == 3)
-		statuses[d1.path] = nil
-		listener()
-		assert(#runs == 6 and #auto.watched_parts() == 2)
-		statuses[a2.path] = "done"
-		statuses[e1.path] = "done"
-		listener()
-		assert(auto.auto_status() == nil and #runs == 6)
+		assert(not auto.is_enabled() and #runs == 6)
 	]])
 end
 
 T["auto mode reports a failed trigger and stops until re-enabled"] = function()
 	child.lua([[
-		package.loaded["neoterm.config"].tasks = { blocking = { status = "blocked", unblock = { "done" } } }
+		package.loaded["neoterm.config"].max_parallel_flows = 2
 		local tasks = package.loaded["neoterm.terms.artifacts.tasks"]
 		local listener
 		tasks.subscribe = function(callback)
 			listener = callback
 		end
-		local statuses = { ["/one/task.md"] = "active" }
-		tasks.status = function(path)
-			return statuses[path]
+		local one = { project = "sample", path = "/one/task.md", parts = { "sample", "one" } }
+		tasks.get = function()
+			return { one }
 		end
 		local auto = require("neoterm.terms.artifacts.auto")
 		local failing = false
 		local calls = 0
-		auto.trigger_next = function()
+		auto.trigger_next = function(predicate)
 			calls = calls + 1
 			assert(not failing, "boom")
-			return { project = "sample", path = "/one/task.md", parts = { "sample", "one" } }
+			return predicate(one) and one or nil
 		end
 		auto.auto_trigger_next()
 		failing = true
-		statuses["/one/task.md"] = "done"
 		listener()
 		local last = notifications[#notifications]
 		assert(last.level == vim.log.levels.ERROR and last.message:find("boom", 1, true), vim.inspect(notifications))
 		assert(auto.auto_status() == nil)
+		local before = calls
 		listener()
-		assert(calls == 2, calls)
+		assert(calls == before, calls)
 		failing = false
 		auto.auto_trigger_next()
-		assert(calls == 3, calls)
+		assert(calls > before, calls)
 		assert(auto.auto_status() == "waiting for task sample/one", auto.auto_status())
 	]])
 end

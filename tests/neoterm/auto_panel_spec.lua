@@ -19,12 +19,15 @@ local T = MiniTest.new_set({
 					end,
 				}
 				upcoming = {}
-				watched = nil
+				working = {}
+				package.loaded["neoterm.terms.artifacts.active"] = {
+					has = function(path) return working[path] == true end,
+				}
 				package.loaded["neoterm.terms.artifacts.auto"] = {
 					upcoming = function()
 						return upcoming
 					end,
-					watched_parts = function() return watched end,
+					is_enabled = function() return enabled == true end,
 					subscribe_auto = function()
 						return function() end
 					end,
@@ -75,9 +78,10 @@ T["groups nested directories without changing task order"] = function()
 			{ "beta", "nested", "a" },
 			{ "standalone" },
 		}) do
-			table.insert(upcoming, { task = { parts = parts }, step = { name = "plan" }, file = "/" .. table.concat(parts, "/") .. "/task.md", cwd = "/p/main" })
+			table.insert(upcoming, { task = { parts = parts, path = "/" .. table.concat(parts, "/") .. "/task.md" }, step = { name = "plan" }, file = "/" .. table.concat(parts, "/") .. "/task.md", cwd = "/p/main" })
 		end
-		watched = { { "alpha", "nested", "a" }, { "beta", "nested", "a" } }
+		enabled = true
+		working = { ["/alpha/nested/a/task.md"] = true, ["/beta/nested/a/task.md"] = true }
 		require("neoterm.auto_panel").toggle()
 		assert(vim.deep_equal(lines(), {
 			"auto mode: on",
@@ -105,7 +109,7 @@ T["filters full paths and opens matching tasks with duplicate leaf names"] = fun
 	child.lua([[
 		upcoming = {}
 		for _, parts in ipairs({ { "alpha", "a" }, { "beta", "a" }, { "beta", "b" } }) do
-			table.insert(upcoming, { task = { parts = parts }, step = { name = "plan" }, file = "/" .. table.concat(parts, "/") .. "/task.md", cwd = "/p/main" })
+			table.insert(upcoming, { task = { parts = parts, path = "/" .. table.concat(parts, "/") .. "/task.md" }, step = { name = "plan" }, file = "/" .. table.concat(parts, "/") .. "/task.md", cwd = "/p/main" })
 		end
 		require("neoterm.auto_panel").toggle()
 		local panel_buf = vim.api.nvim_get_current_buf()

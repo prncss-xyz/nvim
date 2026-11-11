@@ -72,7 +72,7 @@ T["attach terminal"]["joins a URL wrapped by terminal width"] = function()
 		local bufnr = vim.api.nvim_create_buf(false, true)
 		require("neoterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
 			table.insert(events, event)
-		end)
+		end, nil, nil, true)
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "http://localhost:3000/abcdefghijklmnopqr" })
 		callbacks.on_lines(nil, bufnr, 0, 0, 1, 1)
 		vim.wait(150)
@@ -97,7 +97,7 @@ T["URL scanning"] = MiniTest.new_set({
 				vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "", "", "", "" })
 				reset = require("neoterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
 					table.insert(events, event)
-				end)
+				end, nil, nil, true)
 			]])
 		end,
 	},

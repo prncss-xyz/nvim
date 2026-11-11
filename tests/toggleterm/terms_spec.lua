@@ -154,4 +154,41 @@ T["url events"]["keeps URLs that are prefixes of known ones and drops exact dupl
 	assert.same({ "https://github.com/a/b", "https://github.com/" }, child.lua_get("result"))
 end
 
+T["task tracking"] = MiniTest.new_set()
+
+T["task tracking"]["marks a task active from terminal creation until it exits or detaches"] = function()
+	child.lua([[
+		local send
+		local item = { key = "plan", display_name = "plan", dir = "/tmp", task_path = "/a/task.md", task_project = "alpha" }
+		package.loaded["neoterm.terms.create_term"] = {
+			new = function(_, _, handler)
+				send = handler
+				return { focus = function() end, is_in_view = function() return false end }
+			end,
+		}
+		package.loaded["neoterm.config"] = { on_status = function() end, middlewares = {} }
+		package.loaded["neoterm.terms.get_query_fn"] = {
+			get_query_fn = function() return function() return true end end,
+		}
+		package.loaded["neoterm.terms.get_commands"] = {
+			get_commands = function(_, _, callback) callback({ item }) end,
+		}
+		package.loaded["neoterm.terms.artifacts.cwd"] = { context_dir = function() return nil end }
+		package.loaded["neoterm.put.path"] = { display = function(path) return path end }
+		package.loaded["neoterm.git"] = { ensure_worktree = function(_, callback) callback(true) end }
+		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+		local active = require("neoterm.terms.artifacts.active")
+		require("neoterm.terms").focus({})
+		assert(active.has("/a/task.md") and active.projects().alpha == 1)
+		send({ type = "status", value = "working" })
+		assert(active.has("/a/task.md"))
+		send({ type = "status", value = "success" })
+		assert(not active.has("/a/task.md"))
+		send({ type = "create" })
+		assert(active.has("/a/task.md"))
+		send({ type = "detach" })
+		assert(not active.has("/a/task.md"))
+	]])
+end
+
 return T

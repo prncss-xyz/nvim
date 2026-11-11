@@ -28,6 +28,7 @@ local T = MiniTest.new_set({
 					end,
 				}
 				package.loaded["neoterm.terms.artifacts.tasks"] = {
+					precedes = require("neoterm.terms.artifacts.tasks").precedes,
 					get = function()
 						return {}
 					end,
@@ -63,6 +64,43 @@ local T = MiniTest.new_set({
 		post_once = child.stop,
 	},
 })
+
+T["orders tasks like the auto panel and counts tasks without directory rows"] = function()
+	child.lua([[
+		vim.cmd.cd(checkout("sample", "main"))
+		local tasks = {}
+		for _, path in ipairs({ "10-last", "2-first", "z", "a", "a/10-ten", "a/2-two", "a/x" }) do
+			table.insert(tasks, {
+				parts = vim.split("sample/" .. path, "/"),
+				cwd = vim.fs.joinpath(artifacts, "sample", path),
+				status = "ready",
+				logical_status = "ready",
+			})
+		end
+		require("neoterm.terms.artifacts.tasks").get = function() return tasks end
+		require("neoterm.terms.artifacts.statuses").modes = function()
+			return { focus = { "ready" } }
+		end
+		require("neoterm.terms.artifacts.statuses").order = function()
+			return { ready = 1 }
+		end
+		require("neoterm.task_panel").toggle()
+		local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+		assert(vim.deep_equal(lines, {
+			"sample [focus]",
+			"ready:",
+			"󰉋 a",
+			"  󰉋 x",
+			"  󰉋 2-two",
+			"  󰉋 10-ten",
+			"󰉋 a",
+			"󰉋 z",
+			"󰉋 2-first",
+			"󰉋 10-last",
+			"count: 7",
+		}), vim.inspect(lines))
+	]])
+end
 
 T["opens on the project of the current working directory"] = function()
 	child.lua([[

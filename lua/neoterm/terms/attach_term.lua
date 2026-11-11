@@ -32,7 +32,7 @@ local function is_local_url(url)
 	return host == "localhost" or host == "127.0.0.1" or (host ~= nil and vim.endswith(host, ".localhost"))
 end
 
-function M.attach_term(term, send, screen_manifest, osc)
+function M.attach_term(term, send, screen_manifest, osc, detect_urls)
 	if not term.bufnr or not vim.api.nvim_buf_is_valid(term.bufnr) then
 		return
 	end
@@ -41,7 +41,7 @@ function M.attach_term(term, send, screen_manifest, osc)
 	local url_handle = nil
 	local url_first_line = nil
 	local url_last_line = nil
-	local sent_urls = {}
+	local sent_urls = detect_urls and {} or nil
 	local remote_url_count = 0
 	local last_status = nil
 	local pending_idle = nil
@@ -213,22 +213,29 @@ function M.attach_term(term, send, screen_manifest, osc)
 		schedule_update(bufnr, screen_manifest.debounce_ms or 100)
 	end
 
+	local on_lines = screen_manifest and function(_, bufnr)
+		schedule_status_update(bufnr)
+	end or nil
+	if detect_urls then
+		on_lines = function(_, bufnr, _, first_line, last_line, new_last_line)
+			schedule_url_scan(bufnr, first_line, last_line, new_last_line)
+			schedule_status_update(bufnr)
+		end
+	end
+
 	vim.api.nvim_buf_attach(term.bufnr, false, {
 		on_detach = function()
 			clear()
 			send({ type = "detach" })
 		end,
-		on_lines = function(_, bufnr, _, first_line, last_line, new_last_line)
-			schedule_url_scan(bufnr, first_line, last_line, new_last_line)
-			schedule_status_update(bufnr)
-		end,
+		on_lines = on_lines,
 	})
 
 	schedule_status_update(term.bufnr)
 	return function()
 		clear()
 		last_status = nil
-		sent_urls = {}
+		sent_urls = detect_urls and {} or nil
 		remote_url_count = 0
 	end, function()
 		schedule_status_update(term.bufnr)

@@ -144,6 +144,7 @@ function Term:new(opts, send, prepare, min_runtime, notify)
 		cwd = opts.cwd or vim.fn.getcwd(),
 		screen_manifest = opts.screen_manifest,
 		osc_status = opts.osc_status,
+		detect_urls = opts.detect_urls,
 		min_runtime = min_runtime or 0,
 		restart_scheduled = false,
 		restart_requested = false,
@@ -236,6 +237,9 @@ function Term:handle_osc(generation, sequence)
 		return
 	end
 	if command == "8" then
+		if not self.detect_urls then
+			return
+		end
 		local url = osc_url(payload)
 		if url then
 			self.send({ type = "url", value = url })
@@ -301,7 +305,7 @@ function Term:attach_status(terminal)
 		if generation == self.attachment_generation then
 			self.send(event)
 		end
-	end, self.screen_manifest, self.osc)
+	end, self.screen_manifest, self.osc, self.detect_urls)
 	if replacing then
 		self.send({ type = "create" })
 	end

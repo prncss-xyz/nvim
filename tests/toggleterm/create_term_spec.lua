@@ -11,6 +11,56 @@ local T = MiniTest.new_set({
 
 T["create_term"] = MiniTest.new_set()
 
+for _, mode in ipairs({ "default", false, true }) do
+	T["create_term"]["URL detection: " .. tostring(mode)] = function()
+		child.lua("detect_urls = " .. (mode == "default" and "nil" or tostring(mode)))
+		child.lua([[
+			local events = {}
+			local work_started = false
+			local terminal = { bufnr = vim.api.nvim_create_buf(false, true) }
+			package.loaded["toggleterm.terminal"] = { Terminal = { new = function() return terminal end } }
+			package.loaded["neoterm.terms.window"] = {
+				is_visible = function() return false end,
+				is_in_view = function() return false end,
+			}
+			package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
+			package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
+			local timer_start = vim.fn.timer_start
+			vim.fn.timer_start = function(...)
+				work_started = true
+				return timer_start(...)
+			end
+			local get_lines = vim.api.nvim_buf_get_lines
+			vim.api.nvim_buf_get_lines = function(...)
+				work_started = true
+				return get_lines(...)
+			end
+			local instance = require("neoterm.terms.create_term"):new({ detect_urls = detect_urls }, function(event)
+				table.insert(events, event)
+			end)
+			vim.wait(10)
+			vim.api.nvim_exec_autocmds("TermRequest", {
+				buffer = terminal.bufnr,
+				data = { sequence = "\27]8;;https://example.com/link\7" },
+			})
+			vim.api.nvim_buf_set_lines(terminal.bufnr, 0, -1, false, { "http://localhost:3000/output" })
+			vim.wait(400)
+			result = {
+				urls = vim.tbl_filter(function(event) return event.type == "url" end, events),
+				work_started = work_started,
+			}
+		]])
+
+		assert.same({
+			urls = mode == true and {
+				{ type = "url", value = "https://example.com/link" },
+				{ type = "url", value = "http://localhost:3000/output" },
+			} or {},
+			work_started = mode == true,
+		}, child.lua_get("result"))
+	end
+end
+
 T["create_term"]["reports process exit status"] = function()
 	child.lua([[local terminal_options
 		local events = {}

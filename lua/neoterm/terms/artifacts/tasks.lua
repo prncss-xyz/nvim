@@ -564,17 +564,30 @@ function M.status(path)
 	end
 end
 
-local function precedes(left, right)
+local function part_precedes(left, right)
+	local left_number = tonumber(left:match("^%d+"))
+	local right_number = tonumber(right:match("^%d+"))
+	if left_number and right_number and left_number ~= right_number then
+		return left_number < right_number
+	end
+	if (left_number == nil) ~= (right_number == nil) then
+		return left_number == nil
+	end
+	return left < right
+end
+
+function M.precedes(left, right)
 	for index = 1, math.min(#left, #right) do
 		if left[index] ~= right[index] then
-			return left[index] < right[index]
+			return part_precedes(left[index], right[index])
 		end
 	end
 	return #left > #right
 end
 
 ---Tasks with an `auto` field accepted by `predicate`, preferring the alphabetically first
----directory at every level, then the most deeply nested task.
+---directory at every level, then the most deeply nested task. Parts without a leading ordering
+---number come before numbered ones; numbered parts sort by number.
 ---@param predicate? fun(task: table): boolean
 ---@return table[]
 function M.auto_tasks(predicate)
@@ -582,7 +595,7 @@ function M.auto_tasks(predicate)
 		return task.auto ~= nil and (predicate == nil or predicate(task))
 	end, M.get())
 	table.sort(result, function(left, right)
-		return precedes(left.parts, right.parts)
+		return M.precedes(left.parts, right.parts)
 	end)
 	return result
 end

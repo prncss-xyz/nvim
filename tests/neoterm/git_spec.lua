@@ -97,4 +97,16 @@ T["ensure_worktree creates the project before adding the worktree"] = function()
 	]])
 end
 
+T["remove_worktree forcibly removes the given worktree"] = function()
+	child.lua([[
+		package.loaded["neoterm.terms"] = { kill_in_dir = function() end }
+		local worktree = vim.fs.joinpath(projects, "sample", "feature")
+		local removed
+		git.remove_worktree(worktree, function(path) removed = path end, true)
+		assert(vim.wait(1000, function() return removed ~= nil end))
+		assert(removed == worktree)
+		assert(vim.tbl_contains(calls, "git -C " .. worktree .. " worktree remove --force " .. worktree))
+	]])
+end
+
 return T
