@@ -264,6 +264,9 @@ T["steps prepare their checkout before starting, including resumes and default b
 			{ fork = "fork", task_fork = false, branch = "master" },
 		}) do
 			local file = source
+			if case.fork == "required" then
+				vim.fn.mkdir(projects .. "/sample/" .. case.branch, "p")
+			end
 			vim.fn.writefile(case.task_fork == false and { "---", "fork: false", "---" } or { "task" }, file)
 			config.steps = { { name = "do", source = "task.md", fork = case.fork, command = { tag = "agent", prompt = "do" } } }
 			for _, resume in ipairs({ false, true }) do
@@ -525,7 +528,7 @@ T["steps with a status are disabled while the task status precedes it"] = functi
 	]])
 end
 
-T["existing steps are offered only when the task worktree exists"] = function()
+T["required fork steps are offered only when the task worktree exists"] = function()
 	child.lua([[
 		local root = vim.fn.tempname()
 		local projects = vim.fs.joinpath(root, "projects")
@@ -544,7 +547,7 @@ T["existing steps are offered only when the task worktree exists"] = function()
 		require("neoterm.terms.artifacts.tasks").executables = function() return {} end
 		require("neoterm.terms.artifacts.tasks").fork = function() return true end
 		local commands = require("neoterm.terms.artifacts.commands")
-		local step = { name = "remove", source = "cancellation.md", fork = "required", existing = true, on_success = function() end }
+		local step = { name = "remove", source = "cancellation.md", fork = "required", on_success = function() end }
 		local function count()
 			return #commands.for_file({ cwd = cwd, file = cancellation, steps = { step } })
 		end
@@ -552,12 +555,6 @@ T["existing steps are offered only when the task worktree exists"] = function()
 		local identity = require("neoterm.terms.artifacts.paths").source(cancellation, "cancellation.md")
 		vim.fn.mkdir(vim.fs.joinpath(projects, "sample", identity.branch), "p")
 		assert(count() == 1)
-		local ok = pcall(commands.for_file, {
-			cwd = cwd,
-			file = cancellation,
-			steps = { { name = "invalid", source = "cancellation.md", existing = true } },
-		})
-		assert(not ok, "existing without fork = required should fail validation")
 	]])
 end
 

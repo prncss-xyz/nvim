@@ -136,10 +136,6 @@ local function validate_step(step)
 		string.format("Step %s fork must be default, required, or fork", step.name)
 	)
 	assert(step.on_success == nil or type(step.on_success) == "function", "Step on_success must be a function")
-	assert(
-		step.existing == nil or (type(step.existing) == "boolean" and step.fork == "required"),
-		string.format("Step %s existing must be a boolean and requires fork = required", step.name)
-	)
 	assert(step.auto == nil or vim.islist(step.auto), string.format("Step %s auto must be an array", step.name))
 	for _, name in ipairs(step.auto or {}) do
 		assert(type(name) == "string", string.format("Step %s auto values must be strings", step.name))
@@ -234,7 +230,11 @@ local function is_available(step, source, checkout_branch, related)
 	if identity.default and (step.fork == "fork" or step.fork == "required") then
 		return false
 	end
-	if step.existing and not paths.is_directory(paths.checkout(identity.project, identity.branch)) then
+	if
+		step.fork == "required"
+		and require("neoterm.terms.artifacts.tasks").fork(source)
+		and not paths.is_directory(paths.checkout(identity.project, identity.branch))
+	then
 		return false
 	end
 	return paths.is_default(checkout_branch) or vim.tbl_contains(paths.branches(identity), checkout_branch) or related
