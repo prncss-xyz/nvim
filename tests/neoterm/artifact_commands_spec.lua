@@ -106,7 +106,7 @@ T["expands variants in string and function templates"] = function()
 			table.insert(ensured, path)
 			callback(true)
 		end }
-		package.loaded["neoterm.terms"] = { start = function() error("Unexpected terminal") end }
+		package.loaded["neoterm.terms"] = { fork = function() return {} end, finish_fork = function() end, start = function() error("Unexpected terminal") end }
 		for index = 1, 2 do
 			vim.ui.select = function(items, _, callback)
 				assert(calls == index - 1)
@@ -254,7 +254,7 @@ T["steps prepare their checkout before starting, including resumes and default b
 				checkout_ready = callback
 			end,
 		}
-		package.loaded["neoterm.terms"] = { start = function(item) started = item end }
+		package.loaded["neoterm.terms"] = { fork = function() return {} end, finish_fork = function() end, start = function(item) started = item end }
 		package.loaded["neoterm.terms.artifacts.cwd"] = { context_dir = function() return cwd end }
 		for _, case in ipairs({
 			{ fork = "fork", branch = branch },
@@ -601,7 +601,7 @@ T["steps are offered for an artifact project without a checkout"] = function()
 		local commands = require("neoterm.terms.artifacts.commands")
 		local started
 		package.loaded["neoterm.git"] = { ensure_project = function(project, callback) callback(vim.fs.joinpath(projects, project, "main")) end, ensure_worktree = function(_, callback) callback(true) end }
-		package.loaded["neoterm.terms"] = { start = function(definition) started = definition.cwd end }
+		package.loaded["neoterm.terms"] = { fork = function() return {} end, finish_fork = function() end, start = function(definition) started = definition.cwd end }
 		vim.ui.select = function(items, _, callback)
 			assert(#items == 1)
 			callback(items[1])
@@ -611,6 +611,143 @@ T["steps are offered for an artifact project without a checkout"] = function()
 		expected = vim.fs.joinpath(projects, "fresh", "main")
 	]])
 	MiniTest.expect.equality(child.lua_get("cwd_started"), child.lua_get("expected"))
+end
+
+T["forking steps are visible, inert, active, and launch only once"] = function()
+	child.lua([[
+		local cwd = "/projects/sample/feature"
+		local task = "/artifacts/sample/feature/task.md"
+		local project_ready, checkout_ready, middleware_ready, panel_history
+		local projects, spawned, focused = 0, 0, 0
+		package.loaded["neoterm.config"] = {
+			dirs = { projects = "/projects", artifacts = "/artifacts" },
+			middlewares = { "test_fork" },
+			on_status = function() end,
+		}
+		package.loaded["neoterm.git"] = {
+			ensure_project = function(_, callback)
+				projects = projects + 1
+				project_ready = callback
+			end,
+			ensure_worktree = function(_, callback)
+				if checkout_ready then callback(true) else checkout_ready = callback end
+			end,
+		}
+		package.loaded["neoterm.middlewares.test_fork"] = function(item, callback)
+			middleware_ready = function(err) callback(vim.tbl_extend("force", {}, item), err) end
+		end
+		package.loaded["neoterm.terms.get_commands"] = {
+			get_commands = function(_, _, callback) callback({}) end,
+		}
+		package.loaded["neoterm.terms.artifacts.cwd"] = { context_dir = function() end, link = function() end, contains = function() return false end }
+		package.loaded["neoterm.terms.create_term"] = {
+			new = function()
+				spawned = spawned + 1
+				return { focus = function() focused = focused + 1 end }
+			end,
+		}
+		package.loaded["neoterm.terms.term_panel"] = {
+			open = function(history) panel_history = history end,
+		}
+		local terms = require("neoterm.terms")
+		local commands = require("neoterm.terms.artifacts.commands")
+		local active = require("neoterm.terms.artifacts.active")
+		terms.raise_panel()
+		local function items()
+			return panel_history.filter(function(item) return not item.artifact end)
+		end
+		local definition = {
+			name = "do:feature", cmd = "echo done", cwd = cwd, artifact_dir = "/artifacts/sample/feature",
+			checkout_project = "sample", checkout_branch = "feature",
+			task_path = task, task_project = "sample",
+		}
+		commands.run(vim.deepcopy(definition))
+		assert(#items() == 1 and items()[1].status == "forking")
+		assert(active.has(task) and active.projects().sample == 1)
+		local number = items()[1].instance_count
+		local query = { instance_count = number }
+		terms.focus(query)
+		terms.toggle(query)
+		terms.restart(query)
+		terms.kill_in_dir(cwd)
+		terms.read(number, {}, function() error("Unexpected read") end)
+		items()[1].term:put("hello")
+		commands.run(vim.deepcopy(definition))
+		terms.start({ key = definition.name, cwd = cwd })
+		assert(projects == 1 and spawned == 0 and focused == 0)
+		project_ready("/projects/sample/main")
+		assert(#items() == 1 and items()[1].status == "forking")
+		checkout_ready(true)
+		assert(spawned == 0 and items()[1].status == "forking")
+		commands.run(vim.deepcopy(definition))
+		assert(projects == 1)
+		middleware_ready()
+		assert(spawned == 1 and focused == 1)
+		assert(#items() == 1 and items()[1].status == "idle" and items()[1].instance_count == number)
+		assert(active.has(task) and active.projects().sample == 1)
+		local retry = vim.deepcopy(definition)
+		retry.name = "retry:feature"
+		commands.run(vim.deepcopy(retry))
+		project_ready("/projects/sample/main")
+		local failure
+		vim.notify = function(message) failure = message end
+		middleware_ready("Could not prepare agent")
+		assert(failure == "Could not prepare agent" and #items() == 1)
+		assert(active.projects().sample == 1)
+		retry.confirm = true
+		package.loaded["neoterm.helpers.confirm"] = function(_, callback) callback(false) end
+		commands.run(vim.deepcopy(retry))
+		project_ready("/projects/sample/main")
+		assert(#items() == 1 and spawned == 1)
+		assert(active.projects().sample == 1)
+		local opened
+		package.loaded["neoterm.config"].create = function(path) opened = path end
+		package.loaded["neoterm.helpers.project_file"] = { get_project_file = function() return cwd .. "/README.md" end }
+		retry.confirm, retry.cmd, retry.tag = nil, nil, "open"
+		commands.run(vim.deepcopy(retry))
+		assert(#items() == 2 and items()[1].status == "forking")
+		commands.run(vim.deepcopy(retry))
+		project_ready("/projects/sample/main")
+		assert(opened == cwd .. "/README.md" and #items() == 1 and spawned == 1)
+	]])
+end
+
+T["failed forks disappear and can be retried"] = function()
+	child.lua([[
+		local ready, panel_history
+		package.loaded["neoterm.config"] = { dirs = {} }
+		package.loaded["neoterm.git"] = {
+			ensure_project = function(_, callback) ready = callback end,
+			ensure_worktree = function(_, callback) ready = callback end,
+		}
+		package.loaded["neoterm.terms.create_term"] = {}
+		package.loaded["neoterm.terms.term_panel"] = {
+			open = function(history) panel_history = history end,
+		}
+		local terms = require("neoterm.terms")
+		local commands = require("neoterm.terms.artifacts.commands")
+		local active = require("neoterm.terms.artifacts.active")
+		terms.raise_panel()
+		local function items()
+			return panel_history.filter(function(item) return not item.artifact end)
+		end
+		local definition = {
+			name = "do:feature", cmd = "echo done", cwd = "/projects/sample/feature",
+			checkout_project = "sample", checkout_branch = "feature",
+			task_path = "/artifacts/sample/feature/task.md", task_project = "sample",
+		}
+		commands.run(vim.deepcopy(definition))
+		local number = items()[1].instance_count
+		ready(nil)
+		assert(#items() == 0 and not active.has(definition.task_path))
+		commands.run(vim.deepcopy(definition))
+		assert(#items() == 1 and items()[1].instance_count == number)
+		ready("/projects/sample/main")
+		ready(false)
+		assert(#items() == 0 and not active.has(definition.task_path))
+		commands.run(vim.deepcopy(definition))
+		assert(#items() == 1 and active.has(definition.task_path))
+	]])
 end
 
 return T

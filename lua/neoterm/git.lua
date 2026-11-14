@@ -64,38 +64,44 @@ local function obtain(repo, repo_dir, callback)
 				return callback(clone_dir)
 			end
 			run({ "git", "-C", clone_dir, "symbolic-ref", "HEAD", "refs/heads/" .. branch }, function()
-				run({ "git", "-C", clone_dir, "commit", "--allow-empty", "-m", "chore: initial commit" }, function(ok, result)
-					if not ok then
-						vim.notify("Failed to create initial commit: " .. result, vim.log.levels.ERROR)
-						return callback(nil)
-					end
-					run({ "git", "-C", clone_dir, "push", "-u", "origin", branch }, function(pushed, push_result)
-						if not pushed then
-							vim.notify("Failed to push initial commit: " .. push_result, vim.log.levels.ERROR)
+				run(
+					{ "git", "-C", clone_dir, "commit", "--allow-empty", "-m", "chore: initial commit" },
+					function(ok, result)
+						if not ok then
+							vim.notify("Failed to create initial commit: " .. result, vim.log.levels.ERROR)
 							return callback(nil)
 						end
-						callback(clone_dir)
-					end)
-				end)
+						run({ "git", "-C", clone_dir, "push", "-u", "origin", branch }, function(pushed, push_result)
+							if not pushed then
+								vim.notify("Failed to push initial commit: " .. push_result, vim.log.levels.ERROR)
+								return callback(nil)
+							end
+							callback(clone_dir)
+						end)
+					end
+				)
 			end)
 		end)
 	end
 
-	run({ "gh", "repo", "view", repo, "--json", "defaultBranchRef", "-q", ".defaultBranchRef.name" }, function(exists, output)
-		if exists and vim.trim(output) ~= "" then
-			return clone(vim.trim(output), false)
-		end
-		if exists then
-			return clone(config.default_branches[1], true)
-		end
-		run({ "gh", "repo", "create", repo, "--public" }, function(created, result)
-			if not created then
-				vim.notify("Failed to create repo " .. repo .. ": " .. result, vim.log.levels.ERROR)
-				return callback(nil)
+	run(
+		{ "gh", "repo", "view", repo, "--json", "defaultBranchRef", "-q", ".defaultBranchRef.name" },
+		function(exists, output)
+			if exists and vim.trim(output) ~= "" then
+				return clone(vim.trim(output), false)
 			end
-			clone(config.default_branches[1], true)
-		end)
-	end)
+			if exists then
+				return clone(config.default_branches[1], true)
+			end
+			run({ "gh", "repo", "create", repo, "--public" }, function(created, result)
+				if not created then
+					vim.notify("Failed to create repo " .. repo .. ": " .. result, vim.log.levels.ERROR)
+					return callback(nil)
+				end
+				clone(config.default_branches[1], true)
+			end)
+		end
+	)
 end
 
 --- Find the default checkout of a project, cloning or creating its repo when missing.
@@ -309,7 +315,8 @@ function M.remove_current_worktree(on_success, skip_confirmation)
 				M.remove_worktree(worktree_path, on_success)
 				return
 			end
-			local prompt = dirty and ("Worktree " .. worktree_path .. " has uncommitted or untracked files. Force remove?")
+			local prompt = dirty
+					and ("Worktree " .. worktree_path .. " has uncommitted or untracked files. Force remove?")
 				or ("Remove worktree " .. worktree_path .. "?")
 			require("neoterm.helpers.confirm")(prompt, function(confirmed)
 				if confirmed then
@@ -384,54 +391,87 @@ function M.merge_to_default()
 				check_clean(default_path, function()
 					run({ "git", "-C", worktree_path, "rebase", target }, function(rebased, result)
 						if not rebased then
-							vim.notify("Rebase failed; resolve conflicts before merging: " .. result, vim.log.levels.ERROR)
+							vim.notify(
+								"Rebase failed; resolve conflicts before merging: " .. result,
+								vim.log.levels.ERROR
+							)
 							return
 						end
-						run({ "git", "-C", worktree_path, "rev-list", "--count", target .. "..HEAD" }, function(counted, count_output)
-							if not counted then
-								vim.notify("Failed to count branch commits: " .. count_output, vim.log.levels.ERROR)
-								return
-							end
-							local count = tonumber(vim.trim(count_output))
-							assert(count)
-							local function fast_forward()
-								run({ "git", "-C", default_path, "merge", "--ff-only", branch }, function(merged, merge_result)
-									if not merged then
-										vim.notify("Failed to fast-forward default branch: " .. merge_result, vim.log.levels.ERROR)
-										return
-									end
-									M.remove_current_worktree(function()
-										require("neoterm.helpers.ensure_dir").ensure_dir(default_path)
-									end, true)
-								end)
-							end
-							if count <= 1 then
-								fast_forward()
-								return
-							end
-							run({ "git", "-C", worktree_path, "rev-parse", "HEAD" }, function(saved, original_head)
-								if not saved then
-									vim.notify("Failed to save branch tip: " .. original_head, vim.log.levels.ERROR)
+						run(
+							{ "git", "-C", worktree_path, "rev-list", "--count", target .. "..HEAD" },
+							function(counted, count_output)
+								if not counted then
+									vim.notify("Failed to count branch commits: " .. count_output, vim.log.levels.ERROR)
 									return
 								end
-								local original = vim.trim(original_head)
-								run({ "git", "-C", worktree_path, "reset", "--soft", target }, function(reset, reset_result)
-									if not reset then
-										vim.notify("Failed to prepare squash: " .. reset_result, vim.log.levels.ERROR)
+								local count = tonumber(vim.trim(count_output))
+								assert(count)
+								local function fast_forward()
+									run(
+										{ "git", "-C", default_path, "merge", "--ff-only", branch },
+										function(merged, merge_result)
+											if not merged then
+												vim.notify(
+													"Failed to fast-forward default branch: " .. merge_result,
+													vim.log.levels.ERROR
+												)
+												return
+											end
+											M.remove_current_worktree(function()
+												require("neoterm.helpers.ensure_dir").ensure_dir(default_path)
+											end, true)
+										end
+									)
+								end
+								if count <= 1 then
+									fast_forward()
+									return
+								end
+								run({ "git", "-C", worktree_path, "rev-parse", "HEAD" }, function(saved, original_head)
+									if not saved then
+										vim.notify("Failed to save branch tip: " .. original_head, vim.log.levels.ERROR)
 										return
 									end
-									run({ "git", "-C", worktree_path, "commit", "-m", message }, function(committed, commit_result)
-										if not committed then
-											run({ "git", "-C", worktree_path, "reset", "--hard", original }, function(restored, restore_result)
-												vim.notify("Failed to commit squash: " .. commit_result .. (restored and "" or "; restoration failed: " .. restore_result), vim.log.levels.ERROR)
-											end)
-											return
+									local original = vim.trim(original_head)
+									run(
+										{ "git", "-C", worktree_path, "reset", "--soft", target },
+										function(reset, reset_result)
+											if not reset then
+												vim.notify(
+													"Failed to prepare squash: " .. reset_result,
+													vim.log.levels.ERROR
+												)
+												return
+											end
+											run(
+												{ "git", "-C", worktree_path, "commit", "-m", message },
+												function(committed, commit_result)
+													if not committed then
+														run(
+															{ "git", "-C", worktree_path, "reset", "--hard", original },
+															function(restored, restore_result)
+																vim.notify(
+																	"Failed to commit squash: "
+																		.. commit_result
+																		.. (
+																			restored and ""
+																			or "; restoration failed: "
+																				.. restore_result
+																		),
+																	vim.log.levels.ERROR
+																)
+															end
+														)
+														return
+													end
+													fast_forward()
+												end
+											)
 										end
-										fast_forward()
-									end)
+									)
 								end)
-							end)
-						end)
+							end
+						)
 					end)
 				end)
 			end)

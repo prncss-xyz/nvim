@@ -32,6 +32,8 @@ local T = MiniTest.new_set({
 				end
 				started = {}
 				package.loaded["neoterm.terms"] = {
+					fork = function() return {} end,
+					finish_fork = function() end,
 					start = function(definition)
 						assert(definition.confirm ~= true, "Auto-triggered steps must not confirm")
 						table.insert(started, definition.name)

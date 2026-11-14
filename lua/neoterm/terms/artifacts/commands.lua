@@ -342,7 +342,7 @@ local function link(definition)
 	end
 end
 
-local function run_ready(definition)
+local function run_ready(definition, forking)
 	if definition.refusal then
 		return vim.notify(definition.refusal, vim.log.levels.ERROR)
 	end
@@ -352,6 +352,9 @@ local function run_ready(definition)
 				if ok then
 					link(definition)
 					definition.on_success()
+				end
+				if forking then
+					require("neoterm.terms").finish_fork(forking)
 				end
 			end)
 		end
@@ -365,13 +368,16 @@ local function run_ready(definition)
 					or vim.fs.joinpath(definition.cwd, "README.md")
 				config.create(path)
 			end
+			if forking then
+				require("neoterm.terms").finish_fork(forking)
+			end
 		end)
 	end
 	definition.key = definition.name
 	definition.display_name = definition.name
 	definition.exit_policy = definition.exit_policy or "close"
 	definition.cmd_expanded = true
-	require("neoterm.terms").start(definition)
+	require("neoterm.terms").start(definition, forking)
 end
 
 function M.run(definition)
@@ -382,8 +388,14 @@ function M.run(definition)
 	then
 		return run_ready(definition)
 	end
+	local terms = require("neoterm.terms")
+	local forking = terms.fork(definition)
+	if not forking then
+		return
+	end
 	require("neoterm.git").ensure_project(definition.checkout_project, function(checkout)
 		if not checkout then
+			terms.finish_fork(forking)
 			return
 		end
 		definition.cwd = definition.checkout_branch
@@ -391,7 +403,10 @@ function M.run(definition)
 			or checkout
 		require("neoterm.git").ensure_worktree(definition.cwd, function(ok)
 			if ok then
-				run_ready(definition)
+				forking.cwd = definition.cwd
+				run_ready(definition, forking)
+			else
+				terms.finish_fork(forking)
 			end
 		end)
 	end)
@@ -436,6 +451,8 @@ function M.select_for_current_file(resume)
 				refusal = item.refusal,
 				artifact_dir = item.artifact_dir,
 				artifact_source = item.artifact_source,
+				task_path = item.task_path,
+				task_project = item.task_project,
 			}
 		end
 	end

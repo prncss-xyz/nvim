@@ -130,7 +130,9 @@ local function track_task(event, item)
 	local active = require("neoterm.terms.artifacts.active")
 	if event.type == "create" then
 		active.add(item.task_path, item.task_project, item)
-	elseif event.type == "detach" or (event.type == "status" and (event.value == "success" or event.value == "failure")) then
+	elseif
+		event.type == "detach" or (event.type == "status" and (event.value == "success" or event.value == "failure"))
+	then
 		active.remove(item.task_path, item)
 	end
 end
@@ -140,6 +142,47 @@ local function notify(event, item)
 	track_task(event, item)
 	for _, listener in pairs(listeners) do
 		pcall(listener, event, item)
+	end
+end
+
+function M.fork(definition)
+	local existing = history.find(function(item)
+		return item.status == "forking"
+			and item.key == definition.name
+			and item.task_path == definition.task_path
+			and item.checkout_project == definition.checkout_project
+			and item.checkout_branch == definition.checkout_branch
+	end)
+	if existing then
+		return
+	end
+	local noop = function() end
+	local item = vim.tbl_extend("force", definition, {
+		key = definition.name,
+		display_name = definition.name,
+		status = "forking",
+		term = {
+			status_changed_at = os.time(),
+			focus = noop,
+			toggle = noop,
+			restart = noop,
+			kill = noop,
+			put = noop,
+			read = noop,
+			is_in_view = function()
+				return false
+			end,
+		},
+	})
+	reserve_instance(item)
+	notify({ type = "create" }, item)
+	return item
+end
+
+function M.finish_fork(item)
+	if item then
+		notify({ type = "detach" }, item)
+		release_instance(item)
 	end
 end
 
@@ -174,7 +217,7 @@ local function normalize_cmd(cmd)
 	return cmd
 end
 
-local function create_and_notify(item, cb)
+local function create_and_notify(item, cb, forking)
 	local ctx = require("neoterm.terms.window").get_ctx() or {}
 	ctx =
 		vim.tbl_extend("force", ctx, { cwd = item.cwd, path = ctx.path or item.cwd, artifact_dir = item.artifact_dir })
@@ -199,21 +242,27 @@ local function create_and_notify(item, cb)
 		notify(event, item)
 	end, cb == prepare, config.min_runtime, config.notify)
 	notify({ type = "create" }, item)
+	M.finish_fork(forking)
 	cb(item)
 end
 
-local function make_item(item, cb, requested_instance)
+local function make_item(item, cb, requested_instance, forking)
 	if item.confirm == true then
 		return require("neoterm.helpers.confirm")("Run " .. (item.name or item.key) .. "?", function(confirmed)
 			if not confirmed then
+				M.finish_fork(forking)
 				return
 			end
-			make_item(vim.tbl_extend("force", item, { confirm = false }), cb, requested_instance)
+			make_item(vim.tbl_extend("force", item, { confirm = false }), cb, requested_instance, forking)
 		end)
 	end
 	item.status = item.status or "idle"
 	item.changed = nil
-	reserve_instance(item, requested_instance)
+	if forking then
+		item.instance_count = forking.instance_count
+	else
+		reserve_instance(item, requested_instance)
+	end
 	assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
 	item.cwd = type(item.cwd) == "string" and item.cwd or vim.fn.getcwd()
 	local function spawn()
@@ -221,11 +270,12 @@ local function make_item(item, cb, requested_instance)
 			local name = config.middlewares[index]
 			if not name then
 				instance_owners[item.instance_count] = item
-				create_and_notify(item, cb)
+				create_and_notify(item, cb, forking)
 				return
 			end
 			local function continue(next_item, err)
 				if err then
+					M.finish_fork(forking)
 					release_instance(item)
 					vim.notify(err, vim.log.levels.ERROR)
 					return
@@ -261,6 +311,7 @@ local function make_item(item, cb, requested_instance)
 			end
 			create()
 		else
+			M.finish_fork(forking)
 			release_instance(item)
 		end
 	end)
@@ -557,6 +608,9 @@ local function prepare_put(arg)
 end
 
 local function put(instance, invocation, arg)
+	if instance.status == "forking" then
+		return
+	end
 	local ctx = instance.term.get_ctx and instance.term.get_ctx(invocation)
 		or require("neoterm.terms.window").get_ctx(invocation)
 	if ctx then
@@ -621,9 +675,12 @@ function M.browse()
 	end)
 end
 
-function M.start(query)
+function M.start(query, forking)
 	query = normalize_query(query)
 	local existing = history.find(get_filter(query))
+	if existing and existing.status == "forking" and existing ~= forking then
+		return
+	end
 	if existing and existing.start then
 		return existing.start()
 	end
@@ -637,13 +694,15 @@ function M.start(query)
 				or vim.tbl_extend("force", without_query_options(query), { cwd = query.cwd[1] })
 			make_item(item, function(instance)
 				instance.term:focus()
-			end, query.instance_count)
+			end, query.instance_count, forking)
 		end, true)
 	end
 	if query.cwd[1] then
 		require("neoterm.git").ensure_worktree(query.cwd[1], function(ok)
 			if ok then
 				start_command()
+			else
+				M.finish_fork(forking)
 			end
 		end)
 	else
