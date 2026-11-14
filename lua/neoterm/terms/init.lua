@@ -147,7 +147,7 @@ end
 
 function M.fork(definition)
 	local existing = history.find(function(item)
-		return item.status == "forking"
+		return item.status == "preparing"
 			and item.key == definition.name
 			and item.task_path == definition.task_path
 			and item.checkout_project == definition.checkout_project
@@ -160,7 +160,7 @@ function M.fork(definition)
 	local item = vim.tbl_extend("force", definition, {
 		key = definition.name,
 		display_name = definition.name,
-		status = "forking",
+		status = "preparing",
 		term = {
 			status_changed_at = os.time(),
 			focus = noop,
@@ -608,7 +608,7 @@ local function prepare_put(arg)
 end
 
 local function put(instance, invocation, arg)
-	if instance.status == "forking" then
+	if instance.status == "preparing" then
 		return
 	end
 	local ctx = instance.term.get_ctx and instance.term.get_ctx(invocation)
@@ -678,7 +678,7 @@ end
 function M.start(query, forking)
 	query = normalize_query(query)
 	local existing = history.find(get_filter(query))
-	if existing and existing.status == "forking" and existing ~= forking then
+	if existing and existing.status == "preparing" and existing ~= forking then
 		return
 	end
 	if existing and existing.start then

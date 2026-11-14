@@ -3,7 +3,7 @@ local M = {}
 local default_icon = "  "
 
 local status_icons = {
-	forking = "◌ ",
+	preparing = "◌ ",
 	idle = "○ ",
 	working = "● ",
 	blocked = "! ",

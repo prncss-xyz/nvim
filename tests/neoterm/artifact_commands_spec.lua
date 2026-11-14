@@ -613,7 +613,7 @@ T["steps are offered for an artifact project without a checkout"] = function()
 	MiniTest.expect.equality(child.lua_get("cwd_started"), child.lua_get("expected"))
 end
 
-T["forking steps are visible, inert, active, and launch only once"] = function()
+T["preparing steps are visible, inert, active, and launch only once"] = function()
 	child.lua([[
 		local cwd = "/projects/sample/feature"
 		local task = "/artifacts/sample/feature/task.md"
@@ -662,7 +662,7 @@ T["forking steps are visible, inert, active, and launch only once"] = function()
 			task_path = task, task_project = "sample",
 		}
 		commands.run(vim.deepcopy(definition))
-		assert(#items() == 1 and items()[1].status == "forking")
+		assert(#items() == 1 and items()[1].status == "preparing")
 		assert(active.has(task) and active.projects().sample == 1)
 		local number = items()[1].instance_count
 		local query = { instance_count = number }
@@ -676,9 +676,9 @@ T["forking steps are visible, inert, active, and launch only once"] = function()
 		terms.start({ key = definition.name, cwd = cwd })
 		assert(projects == 1 and spawned == 0 and focused == 0)
 		project_ready("/projects/sample/main")
-		assert(#items() == 1 and items()[1].status == "forking")
+		assert(#items() == 1 and items()[1].status == "preparing")
 		checkout_ready(true)
-		assert(spawned == 0 and items()[1].status == "forking")
+		assert(spawned == 0 and items()[1].status == "preparing")
 		commands.run(vim.deepcopy(definition))
 		assert(projects == 1)
 		middleware_ready()
@@ -705,7 +705,7 @@ T["forking steps are visible, inert, active, and launch only once"] = function()
 		package.loaded["neoterm.helpers.project_file"] = { get_project_file = function() return cwd .. "/README.md" end }
 		retry.confirm, retry.cmd, retry.tag = nil, nil, "open"
 		commands.run(vim.deepcopy(retry))
-		assert(#items() == 2 and items()[1].status == "forking")
+		assert(#items() == 2 and items()[1].status == "preparing")
 		commands.run(vim.deepcopy(retry))
 		project_ready("/projects/sample/main")
 		assert(opened == cwd .. "/README.md" and #items() == 1 and spawned == 1)

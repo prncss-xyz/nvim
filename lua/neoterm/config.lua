@@ -1,5 +1,4 @@
 local personal = require("my.conds").personal
-local work = require("my.conds").work
 local dirs = require("my.parameters").dirs
 local do_not_replace_types = require("my.parameters").open_files_do_not_replace_types
 local notify = require("my.notify")
@@ -291,7 +290,11 @@ return {
 				require("neoterm.helpers.confirm")("Force remove worktree " .. vars.cwd .. "?", function(confirmed)
 					if confirmed then
 						require("neoterm.git").remove_worktree(vars.cwd, function()
-							vim.notify("Removed worktree: " .. vars.cwd, vim.log.levels.INFO, { title = "Step remove-worktree" })
+							vim.notify(
+								"Removed worktree: " .. vars.cwd,
+								vim.log.levels.INFO,
+								{ title = "Step remove-worktree" }
+							)
 						end, true)
 					end
 				end)
@@ -363,19 +366,14 @@ Output ONLY the branch name, nothing else.
 			{ name = "later 1" },
 			{ name = "later 0" },
 			{ name = "explore", modes = { "focus" } },
-			{ name = "export", modes = { "standup" }, enabled = work(true, false) },
 			{ name = "inbox", modes = { "inbox" } },
 			{ name = "deferred", modes = { "inbox" } },
-			{ name = "ready", modes = work({ "focus", "standup" }, { "focus" }) },
+			{ name = "ready", files = { "plan.md" }, modes = { "focus" } },
 			{ name = "blocked", modes = { "focus" } },
-			{ name = "active", modes = work({ "focus", "standup" }, { "focus" }) },
-			{ name = "review" },
-			{ name = "merging" },
-			{ name = "report:done", modes = { "standup" }, enabled = work(true, false) },
-			{ name = "done" },
-			{ name = "report:aborted", modes = { "standup" }, enabled = work(true, false) },
+			{ name = "active", modes = { "focus" } },
+			{ name = "review", files = { "implementation.md" }, modes = { "focus" } },
+			{ name = "done", files = { "merge.txt" } },
 			{ name = "aborted", files = { "cancellation.md" } },
-			{ name = "failed", enabled = personal(true, false) },
 		},
 	},
 	templates = {
