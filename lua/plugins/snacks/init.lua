@@ -11,7 +11,6 @@ local web = domain.web
 local move = domain.move
 local git = domain.git
 local projects = require("plugins.snacks.projects")
-local project_pickers = require("neoplane.pickers.projects")
 local auto_confirm = require("plugins.snacks.auto_confirm")
 local create_file = require("plugins.snacks.create_file")
 local dirs = require("my.parameters").dirs
@@ -126,21 +125,21 @@ return {
 				function()
 					-- TODO: I would like this to list all working dirictories of opened projects
 					-- and pick would open a buffer (the most recently accessed) of one of them
-					project_pickers.pick_project()
+					require("neoplane.pickers.projects").pick_project()
 				end,
 				desc = "Pick Opened Project",
 			},
 			{
 				pick .. reverse(theme.project),
 				function()
-					project_pickers.pick_worktree()
+					require("neoplane.pickers.projects").pick_worktree()
 				end,
 				desc = "Pick Worktree",
 			},
 			{
 				pick .. theme.project,
 				function()
-					project_pickers.pick_project()
+					require("neoplane.pickers.projects").pick_project()
 				end,
 				desc = "Pick Project",
 			},
