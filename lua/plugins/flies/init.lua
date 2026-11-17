@@ -364,7 +364,7 @@ return {
 				function()
 					require("my.repl").op:call({ domain = "outer" }, {
 						i = function()
-							require("neoterm.terms").focus({ key = "repl" })
+							require("neoplane.terms").focus({ key = "repl" })
 						end,
 					})
 				end,

@@ -1,0 +1,172 @@
+local M = {}
+local window = require("neoplane.terms.window")
+
+local function noop() end
+
+local function project_dir()
+	local artifact_cwd = require("neoplane.terms.artifacts.cwd")
+	local current = vim.api.nvim_buf_get_name(0)
+	local dir = artifact_cwd.resolve(current)
+		or vim.fs.root(current, require("neoplane.config").rooter_patterns)
+		or vim.fn.getcwd()
+	dir = vim.uv.fs_realpath(dir) or vim.fs.normalize(dir)
+	if vim.fs.relpath(require("neoplane.config").dirs.projects, dir) == nil then
+		return nil
+	end
+	return dir
+end
+
+local function latest_artifact(dir)
+	if dir == nil then
+		return nil
+	end
+	local artifact_cwd = require("neoplane.terms.artifacts.cwd")
+	return artifact_cwd.latest_for_checkout(dir)
+end
+
+local function source_context(dir, invocation)
+	if dir == nil then
+		return nil
+	end
+	local artifact_cwd = require("neoplane.terms.artifacts.cwd")
+	local ctx = window.get_ctx(invocation)
+	if ctx == nil then
+		return
+	end
+	local path = vim.api.nvim_buf_get_name(ctx.bufnr)
+	if path == "" or artifact_cwd.contains(path) or vim.fs.relpath(dir, path) == nil then
+		return
+	end
+	local artifact = latest_artifact(dir)
+	return vim.tbl_extend("force", ctx, {
+		path = vim.fs.relpath(dir, path) or path,
+		artifact_dir = artifact and vim.fs.dirname(artifact.path) or nil,
+	})
+end
+
+---@param touch fun()
+function M.create(touch)
+	local artifact = {
+		key = "artifact",
+		display_name = "artifact",
+		tag = "agent",
+		restart = noop,
+		start = noop,
+		toggle_panel = noop,
+	}
+	local term = {}
+
+	local function focus_buffer(bufnr)
+		if bufnr == vim.api.nvim_get_current_buf() then
+			return
+		end
+		local target_window = vim.fn.win_findbuf(bufnr)[1]
+		if target_window then
+			vim.api.nvim_set_current_win(target_window)
+		else
+			vim.cmd.buffer(bufnr)
+		end
+	end
+
+	local function focus_artifact()
+		local target = latest_artifact(project_dir())
+		if target == nil then
+			return
+		end
+		focus_buffer(target.bufnr)
+		touch()
+	end
+
+	local function toggle_artifact()
+		local current = vim.fs.normalize(vim.api.nvim_buf_get_name(0))
+		local artifact_cwd = require("neoplane.terms.artifacts.cwd")
+		local from_artifact = artifact_cwd.contains(current)
+		if from_artifact then
+			return artifact_cwd.select_checkout(current, function(dir)
+				local target = require("neoplane.helpers.project_file").get_project_file(
+					dir,
+					{ require("neoplane.config").dirs.artifacts }
+				) or vim.fs.joinpath(dir, "README.md")
+				require("neoplane.config").create(target)
+				touch()
+			end)
+		end
+		local dir = project_dir()
+		if dir == nil then
+			vim.notify("Project is outside projects directory", vim.log.levels.WARN)
+			return
+		end
+		artifact_cwd.select_artifacts(dir, function(target_dir)
+			local target = artifact_cwd.latest_for_checkout(dir, target_dir)
+			if target then
+				focus_buffer(target.bufnr)
+			else
+				vim.fn.mkdir(target_dir, "p")
+				return artifact_cwd.select_artifact_file(dir, target_dir, function(file)
+					require("neoplane.config").create(file)
+					touch()
+				end)
+			end
+			touch()
+		end)
+	end
+
+	local function send_to_artifact(str)
+		local dir = project_dir()
+		local target = latest_artifact(dir)
+		if target == nil then
+			return
+		end
+		if type(str) == "function" then
+			local ctx = source_context(dir)
+			if ctx == nil then
+				return
+			end
+			str = str(ctx, artifact)
+		end
+		if type(str) ~= "string" then
+			return
+		end
+		vim.fn.bufload(target.bufnr)
+		local target_windows = vim.fn.win_findbuf(target.bufnr)
+		local current_window = vim.api.nvim_get_current_win()
+		local target_window = vim.api.nvim_win_get_buf(current_window) == target.bufnr and current_window
+			or target_windows[1]
+		local row, col
+		if target_window then
+			row, col = unpack(vim.api.nvim_win_get_cursor(target_window))
+		else
+			row, col = unpack(vim.api.nvim_buf_get_mark(target.bufnr, '"'))
+		end
+		row = math.max(row, 1)
+		local line = vim.api.nvim_buf_get_lines(target.bufnr, row - 1, row, false)[1] or ""
+		col = math.min(col, #line)
+		vim.api.nvim_buf_set_text(target.bufnr, row - 1, col, row - 1, col, vim.split(str, "\n", { plain = true }))
+		focus_buffer(target.bufnr)
+		touch()
+	end
+
+	term.focus = function()
+		focus_artifact()
+	end
+	term.toggle = function()
+		toggle_artifact()
+	end
+	term.get_ctx = function(_, invocation)
+		return source_context(project_dir(), invocation)
+	end
+	term.put = function(_, str)
+		send_to_artifact(str)
+	end
+	artifact.term = term
+
+	setmetatable(term, {
+		__index = function()
+			return function() end
+		end,
+	})
+
+	return artifact
+end
+
+return M

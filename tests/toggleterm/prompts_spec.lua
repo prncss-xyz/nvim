@@ -15,11 +15,11 @@ T["direct prompts run with input"] = function()
 		local captured
 
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		package.loaded["neoterm.config"] = { prompts = {} }
+		package.loaded["neoplane.config"] = { prompts = {} }
 		vim.schedule = function(callback) scheduled = callback end
 		vim.ui.input = function(_, callback) input_callback = callback end
 
-		require("neoterm.prompts").run(function(input, prompt)
+		require("neoplane.prompts").run(function(input, prompt)
 			input(prompt, function(contents) captured = { contents, prompt } end)
 		end, "task")
 		assert(scheduled)

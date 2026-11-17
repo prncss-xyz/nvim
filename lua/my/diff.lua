@@ -27,7 +27,7 @@ end
 
 function M.variant()
 	M.cp(variant, function()
-		require("neoterm.terms").restart({ key = "diff" })
+		require("neoplane.terms").restart({ key = "diff" })
 	end)
 end
 

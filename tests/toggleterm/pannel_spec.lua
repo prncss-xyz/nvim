@@ -4,7 +4,7 @@ local T = MiniTest.new_set({
 	hooks = {
 		pre_case = function()
 			child.restart({ "-u", "NONE" })
-			child.lua([[package.loaded["neoterm.terms.window"] = {}]])
+			child.lua([[package.loaded["neoplane.terms.window"] = {}]])
 			child.lua([[vim.system = function(_, _, callback) callback({ code = 1, stdout = "" }) end]])
 			child.lua(
 				[[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path]]
@@ -54,13 +54,13 @@ T["terminal panel"]["toggles a filtered side panel and focuses the selected term
 			listener = cb
 			return function() listener = nil end
 		end
-		package.loaded["neoterm.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
+		package.loaded["neoplane.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
 		package.loaded["my.browser"] = { visit = function(url) table.insert(visited, url) end }
-		package.loaded["neoterm.terms.format_item"] = {
+		package.loaded["neoplane.terms.format_item"] = {
 			format_item = function() return function(item) return item.status .. " " .. item.display_name end end,
 		}
 
-		local panel = require("neoterm.terms.term_panel")
+		local panel = require("neoplane.terms.term_panel")
 		panel.toggle({ key = "agent" }, history, subscribe)
 		local win = vim.api.nvim_get_current_win()
 		local buf = vim.api.nvim_win_get_buf(win)
@@ -128,11 +128,11 @@ T["terminal panel"]["refreshes from events and preserves selection by hash"] = f
 			listener = cb
 			return function() listener = nil end
 		end
-		package.loaded["neoterm.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
-		package.loaded["neoterm.terms.format_item"] = {
+		package.loaded["neoplane.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
+		package.loaded["neoplane.terms.format_item"] = {
 			format_item = function() return function(item) return item.hash .. ":" .. item.status end end,
 		}
-		local panel = require("neoterm.terms.term_panel")
+		local panel = require("neoplane.terms.term_panel")
 		panel.toggle({}, history, subscribe)
 		local win = vim.api.nvim_get_current_win()
 		vim.api.nvim_win_set_cursor(win, { 3, 0 })
@@ -162,11 +162,11 @@ T["terminal panel"]["shows full cwd paths while keeping nested cwd grouped"] = f
 		}
 		local history = { filter = function() return items end }
 		local function subscribe() return function() end end
-		package.loaded["neoterm.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
-		package.loaded["neoterm.terms.format_item"] = {
+		package.loaded["neoplane.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
+		package.loaded["neoplane.terms.format_item"] = {
 			format_item = function() return function(item) return item.label end end,
 		}
-		local panel = require("neoterm.terms.term_panel")
+		local panel = require("neoplane.terms.term_panel")
 		panel.toggle({}, history, subscribe)
 		result = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, -1, false)
 	]])
@@ -188,11 +188,11 @@ T["terminal panel"]["shortens home directories without shortening sibling paths"
 			{ cwd = "/tmp/panel-home-other", term = {} },
 		}
 		local history = { filter = function() return items end }
-		package.loaded["neoterm.config"] = { term_panel = { width = 24, keybindings = {} } }
-		package.loaded["neoterm.terms.format_item"] = {
+		package.loaded["neoplane.config"] = { term_panel = { width = 24, keybindings = {} } }
+		package.loaded["neoplane.terms.format_item"] = {
 			format_item = function() return function() return "terminal" end end,
 		}
-		require("neoterm.terms.term_panel").toggle({}, history, function() return function() end end)
+		require("neoplane.terms.term_panel").toggle({}, history, function() return function() end end)
 		result = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, -1, false)
 	]])
 
@@ -212,18 +212,18 @@ T["terminal panel"]["shows the task auto mode is waiting for and refreshes when 
 		local history = { filter = function() return items end }
 		local waiting
 		local auto_listener
-		package.loaded["neoterm.terms.artifacts.auto"] = {
+		package.loaded["neoplane.terms.artifacts.auto"] = {
 			auto_status = function() return waiting end,
 			subscribe_auto = function(callback)
 				auto_listener = callback
 				return function() auto_listener = nil end
 			end,
 		}
-		package.loaded["neoterm.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
-		package.loaded["neoterm.terms.format_item"] = {
+		package.loaded["neoplane.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
+		package.loaded["neoplane.terms.format_item"] = {
 			format_item = function() return function() return "terminal" end end,
 		}
-		local panel = require("neoterm.terms.term_panel")
+		local panel = require("neoplane.terms.term_panel")
 		panel.toggle({}, history, function() return function() end end)
 		local buf = vim.api.nvim_get_current_buf()
 		local before = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
@@ -253,11 +253,11 @@ T["terminal panel"]["highlights directories and terminal states"] = function()
 		}
 		local history = { filter = function() return items end }
 		local function subscribe() return function() end end
-		package.loaded["neoterm.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
-		package.loaded["neoterm.terms.format_item"] = {
+		package.loaded["neoplane.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
+		package.loaded["neoplane.terms.format_item"] = {
 			format_item = function() return function(item) return item.hash end end,
 		}
-		local panel = require("neoterm.terms.term_panel")
+		local panel = require("neoplane.terms.term_panel")
 		panel.toggle({}, history, subscribe)
 		local marks = vim.api.nvim_buf_get_extmarks(vim.api.nvim_get_current_buf(), -1, 0, -1, { details = true })
 		result = vim.tbl_map(function(mark)
@@ -280,11 +280,11 @@ T["terminal panel"]["renders an empty state and enter is a no-op"] = function()
 			filter = function() return {} end,
 		}
 		local function subscribe() return function() end end
-		package.loaded["neoterm.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
-		package.loaded["neoterm.terms.format_item"] = {
+		package.loaded["neoplane.config"] = { term_panel = { width = 24, keybindings = { ["<CR>"] = "focus" } } }
+		package.loaded["neoplane.terms.format_item"] = {
 			format_item = function() return function() error("must not format") end end,
 		}
-		local panel = require("neoterm.terms.term_panel")
+		local panel = require("neoplane.terms.term_panel")
 		panel.toggle({}, history, subscribe)
 		local buf = vim.api.nvim_get_current_buf()
 		vim.api.nvim_feedkeys(vim.keycode("<CR>"), "x", false)

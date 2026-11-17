@@ -1,0 +1,81 @@
+local M = {}
+
+function M.is_task_file(path)
+	local name = vim.fs.basename(path)
+	return name == "task.md" or name:match("^.+%.task%.md$") ~= nil
+end
+
+local function assert_task_file(path)
+	assert(M.is_task_file(path), "Not a task file: " .. path)
+end
+
+function M.add_dependency()
+	local source = vim.api.nvim_buf_get_name(0)
+	assert_task_file(source)
+	local tasks = require("neoplane.task_panel").list_tasks()
+	local artifacts = require("neoplane.config").dirs.artifacts
+	local project_root = vim.fs.root(artifacts, ".git") or artifacts
+	local function dependency_name(task)
+		return table.concat(task.parts, "/")
+	end
+	vim.ui.select(tasks, {
+		prompt = "Select dependency",
+		format_item = dependency_name,
+	}, function(task)
+		if task == nil then
+			return
+		end
+
+		local source_dir = vim.fs.dirname(source)
+		local relative = vim.fs.relpath(source_dir, task.path)
+		local project_relative = vim.fs.relpath(project_root, task.path)
+		local home_relative = vim.fs.relpath(vim.uv.os_homedir(), task.path)
+		local dependency
+		if relative and relative ~= ".." and not vim.startswith(relative, "../") then
+			dependency = "./" .. relative
+		elseif project_relative then
+			dependency = project_relative
+		elseif home_relative then
+			dependency = "~/" .. home_relative
+		else
+			dependency = task.path
+		end
+		local yaml = require("neoplane.yaml")
+		local frontmatter = yaml.read(0)
+		local dependencies = frontmatter.dependencies
+		if type(dependencies) == "string" then
+			dependencies = { dependencies }
+		elseif type(dependencies) ~= "table" or not vim.islist(dependencies) then
+			dependencies = {}
+		end
+		table.insert(dependencies, dependency)
+		frontmatter.dependencies = dependencies
+		yaml.write(0, frontmatter)
+	end)
+end
+
+function M.statuses()
+	return require("neoplane.terms.artifacts.statuses").names()
+end
+
+function M.update_status()
+	assert_task_file(vim.api.nvim_buf_get_name(0))
+	local yaml = require("neoplane.yaml")
+	local remove = "REMOVE"
+	local statuses = M.statuses()
+	table.insert(statuses, remove)
+	vim.ui.select(statuses, { prompt = "Select status" }, function(choice)
+		if choice == nil then
+			return
+		end
+		local frontmatter = yaml.read(0)
+		if choice == remove then
+			frontmatter.status = nil
+		else
+			frontmatter.status = choice
+		end
+		yaml.write(0, frontmatter)
+	end)
+end
+
+return M

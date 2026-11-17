@@ -5,7 +5,7 @@ local T = MiniTest.new_set({
 			child.restart({ "-u", "NONE" })
 			child.lua([=[
 				package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. package.path
-				package.loaded["neoterm.config"] = {
+				package.loaded["neoplane.config"] = {
 					filter = { keybindings = { ["<C-n>"] = "next", ["<C-p>"] = "previous", ["<CR>"] = "accept" } },
 				}
 			]=])
@@ -16,7 +16,7 @@ local T = MiniTest.new_set({
 
 T["matches all literal words case insensitively"] = function()
 	child.lua([=[
-		local panel_utils = require("neoterm.helpers.panel")
+		local panel_utils = require("neoplane.helpers.panel")
 		local rows = { { text = "alpha [beta]" }, { text = "Alpha [beta]" }, { text = "alpha other" } }
 		assert(panel_utils.filter_rows(rows, nil) == rows)
 		assert(panel_utils.filter_rows(rows, "") == rows)
@@ -29,7 +29,7 @@ end
 
 local function setup()
 	child.lua([=[
-		panel_utils = require("neoterm.helpers.panel")
+		panel_utils = require("neoplane.helpers.panel")
 		local rows = { { text = "same", id = 1 }, { text = "same", id = 2 }, { text = "other", id = 3 } }
 		panel = { win = vim.api.nvim_get_current_win(), buf = vim.api.nvim_get_current_buf(), rows = rows }
 		local ns = vim.api.nvim_create_namespace("filter-test")
@@ -79,7 +79,7 @@ end
 
 T["uses configured filter bindings in normal and insert mode"] = function()
 	child.lua([=[
-		require("neoterm.config").filter.keybindings = {
+		require("neoplane.config").filter.keybindings = {
 			["<Down>"] = "next", ["<Up>"] = "previous", ["<C-y>"] = "accept",
 		}
 	]=])
@@ -122,7 +122,7 @@ end
 
 T["binds panel actions and provides help from configured bindings"] = function()
 	child.lua([=[
-		local utils = require("neoterm.helpers.panel")
+		local utils = require("neoplane.helpers.panel")
 		local panel = { buf = vim.api.nvim_get_current_buf() }
 		local bindings = { x = "close", ["?"] = "help" }
 		local called
@@ -148,7 +148,7 @@ end
 
 T["rejects unknown panel operations"] = function()
 	child.lua([=[
-		local ok, err = pcall(require("neoterm.helpers.panel").bind,
+		local ok, err = pcall(require("neoplane.helpers.panel").bind,
 			{ buf = vim.api.nvim_get_current_buf() }, { x = "missing" }, {})
 		assert(not ok and err:find("Unknown panel operation: missing", 1, true))
 	]=])

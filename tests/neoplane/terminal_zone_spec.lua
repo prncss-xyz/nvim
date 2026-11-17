@@ -1,0 +1,56 @@
+local MiniTest = require("mini.test")
+local T = MiniTest.new_set()
+
+T["terminal directory change only visits a directory with an open file buffer"] = function()
+	local modules = {
+		"toggleterm.terminal",
+		"neoplane.terms.attach_term",
+		"neoplane.terms.window",
+		"neoplane.helpers.ensure_dir",
+		"neoplane.rooter",
+		"neoplane.terms.artifacts.cwd",
+		"neoplane.terms.create_term",
+	}
+	local original = {}
+	for _, name in ipairs(modules) do
+		original[name] = package.loaded[name]
+	end
+	local dir = vim.fn.tempname()
+	vim.fn.mkdir(dir, "p")
+	local ensured = 0
+	package.loaded["toggleterm.terminal"] = { Terminal = { new = function() return {} end } }
+	package.loaded["neoplane.terms.attach_term"] = { attach_term = function() end }
+	package.loaded["neoplane.terms.window"] = { is_visible = function() return false end }
+	package.loaded["neoplane.helpers.ensure_dir"] = { ensure_dir = function() ensured = ensured + 1 end }
+	package.loaded["neoplane.rooter"] = { project_dir = function(path) return path end }
+	package.loaded["neoplane.terms.artifacts.cwd"] = { resolve_all = function() return {} end }
+	package.loaded["neoplane.terms.create_term"] = nil
+	local ok, err = pcall(function()
+		local successes = 0
+		local term = require("neoplane.terms.create_term"):new({
+			on_success = function() successes = successes + 1 end,
+		}, function() end)
+		term:on_exit({}, 0, 1)
+		assert.same(0, successes)
+		term:on_exit({}, 0, 0)
+		assert.same(1, successes)
+		local osc = "\27]7;file://localhost" .. dir .. "\7"
+		term:handle_osc(0, osc)
+		vim.wait(100, function() return term.cwd == dir end)
+		vim.wait(50)
+		assert.same(0, ensured)
+		local buf = vim.api.nvim_create_buf(true, false)
+		vim.api.nvim_buf_set_name(buf, dir .. "/file.txt")
+		term:handle_osc(0, osc)
+		vim.wait(100, function() return ensured > 0 end)
+		assert.same(1, ensured)
+		vim.api.nvim_buf_delete(buf, { force = true })
+	end)
+	for _, name in ipairs(modules) do
+		package.loaded[name] = original[name]
+	end
+	vim.fn.delete(dir, "rf")
+	if not ok then error(err) end
+end
+
+return T

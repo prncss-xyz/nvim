@@ -25,41 +25,41 @@ T["screen status events"]["marks unseen changes as seen when focus is regained i
 			dir = "/tmp",
 		}
 
-		package.loaded["neoterm.terms.create_term"] = {
+		package.loaded["neoplane.terms.create_term"] = {
 			new = function(_, _, handler)
 				send = handler
 				return {
 					focus = function() end,
 					is_in_view = function()
-						return require("neoterm.terms.window").is_in_view(term_window)
+						return require("neoplane.terms.window").is_in_view(term_window)
 					end,
 				}
 			end,
 		}
-		package.loaded["neoterm.config"] = {
+		package.loaded["neoplane.config"] = {
 			on_status = function(instance)
 				table.insert(notifications, instance.status)
 			end,
 			middlewares = {},
 		}
-		package.loaded["neoterm.terms.get_query_fn"] = {
+		package.loaded["neoplane.terms.get_query_fn"] = {
 			get_query_fn = function() return function() return true end end,
 		}
-		package.loaded["neoterm.terms.get_commands"] = {
+		package.loaded["neoplane.terms.get_commands"] = {
 			get_commands = function(_, _, callback) callback({ item }) end,
 		}
-		package.loaded["neoterm.terms.artifacts.cwd"] = {
+		package.loaded["neoplane.terms.artifacts.cwd"] = {
 			context_dir = function() return nil end,
 		}
-		package.loaded["neoterm.put.path"] = {
+		package.loaded["neoplane.put.path"] = {
 			display = function(path) return path end,
 		}
-		package.loaded["neoterm.git"] = {
+		package.loaded["neoplane.git"] = {
 			ensure_worktree = function(_, callback) callback(true) end,
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local terms = require("neoterm.terms")
+		local terms = require("neoplane.terms")
 		terms.focus({})
 
 		-- a status change that arrives while neovim lacks focus is unseen,
@@ -114,7 +114,7 @@ end
 T["directory queries"] = MiniTest.new_set()
 
 T["directory queries"]["matches HOME exactly"] = function()
-	local get_query_fn = require("neoterm.terms.get_query_fn").get_query_fn
+	local get_query_fn = require("neoplane.terms.get_query_fn").get_query_fn
 	local filter = get_query_fn({ dir = vim.env.HOME })
 
 	assert(filter({ dir = vim.env.HOME }))
@@ -126,25 +126,25 @@ T["url events"] = MiniTest.new_set()
 T["url events"]["keeps URLs that are prefixes of known ones and drops exact duplicates"] = function()
 	child.lua([[local send
 		local term = { url = {}, focus = function() end, is_in_view = function() return false end }
-		package.loaded["neoterm.terms.create_term"] = {
+		package.loaded["neoplane.terms.create_term"] = {
 			new = function(_, _, handler)
 				send = handler
 				return term
 			end,
 		}
-		package.loaded["neoterm.config"] = { on_status = function() end, middlewares = {} }
-		package.loaded["neoterm.terms.get_query_fn"] = {
+		package.loaded["neoplane.config"] = { on_status = function() end, middlewares = {} }
+		package.loaded["neoplane.terms.get_query_fn"] = {
 			get_query_fn = function() return function() return true end end,
 		}
-		package.loaded["neoterm.terms.get_commands"] = {
+		package.loaded["neoplane.terms.get_commands"] = {
 			get_commands = function(_, _, callback) callback({ { key = "dev", display_name = "dev", dir = "/tmp" } }) end,
 		}
-		package.loaded["neoterm.terms.artifacts.cwd"] = { context_dir = function() return nil end }
-		package.loaded["neoterm.put.path"] = { display = function(path) return path end }
-		package.loaded["neoterm.git"] = { ensure_worktree = function(_, callback) callback(true) end }
+		package.loaded["neoplane.terms.artifacts.cwd"] = { context_dir = function() return nil end }
+		package.loaded["neoplane.put.path"] = { display = function(path) return path end }
+		package.loaded["neoplane.git"] = { ensure_worktree = function(_, callback) callback(true) end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		require("neoterm.terms").focus({})
+		require("neoplane.terms").focus({})
 		send({ type = "url", value = "https://github.com/a/b" })
 		send({ type = "url", value = "https://github.com/" })
 		send({ type = "url", value = "https://github.com/a/b" })
@@ -160,25 +160,25 @@ T["task tracking"]["marks a task active from terminal creation until it exits or
 	child.lua([[
 		local send
 		local item = { key = "plan", display_name = "plan", dir = "/tmp", task_path = "/a/task.md", task_project = "alpha" }
-		package.loaded["neoterm.terms.create_term"] = {
+		package.loaded["neoplane.terms.create_term"] = {
 			new = function(_, _, handler)
 				send = handler
 				return { focus = function() end, is_in_view = function() return false end }
 			end,
 		}
-		package.loaded["neoterm.config"] = { on_status = function() end, middlewares = {} }
-		package.loaded["neoterm.terms.get_query_fn"] = {
+		package.loaded["neoplane.config"] = { on_status = function() end, middlewares = {} }
+		package.loaded["neoplane.terms.get_query_fn"] = {
 			get_query_fn = function() return function() return true end end,
 		}
-		package.loaded["neoterm.terms.get_commands"] = {
+		package.loaded["neoplane.terms.get_commands"] = {
 			get_commands = function(_, _, callback) callback({ item }) end,
 		}
-		package.loaded["neoterm.terms.artifacts.cwd"] = { context_dir = function() return nil end }
-		package.loaded["neoterm.put.path"] = { display = function(path) return path end }
-		package.loaded["neoterm.git"] = { ensure_worktree = function(_, callback) callback(true) end }
+		package.loaded["neoplane.terms.artifacts.cwd"] = { context_dir = function() return nil end }
+		package.loaded["neoplane.put.path"] = { display = function(path) return path end }
+		package.loaded["neoplane.git"] = { ensure_worktree = function(_, callback) callback(true) end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		local active = require("neoterm.terms.artifacts.active")
-		require("neoterm.terms").focus({})
+		local active = require("neoplane.terms.artifacts.active")
+		require("neoplane.terms").focus({})
 		assert(active.has("/a/task.md") and active.projects().alpha == 1)
 		send({ type = "status", value = "working" })
 		assert(active.has("/a/task.md"))

@@ -15,7 +15,7 @@ T["proxy schema routes OpenCode and preserves other key behavior"] = function()
 		'GROQ_API_KEY=pass("groq/key")',
 	}
 	vim.fn.writefile(original, source)
-	require("neoterm.proxy_schema").ensure(source, target)
+	require("neoplane.proxy_schema").ensure(source, target)
 	assert.same(original, vim.fn.readfile(source))
 	assert.same({
 		"# @plugin(@varlock/pass-plugin@1.0.2)",
@@ -26,7 +26,7 @@ T["proxy schema routes OpenCode and preserves other key behavior"] = function()
 		"# @required @sensitive @proxy=passthrough",
 		'GROQ_API_KEY=pass("groq/key")',
 	}, vim.fn.readfile(target))
-	assert.same(target, require("neoterm.proxy_schema").ensure(source, target))
+	assert.same(target, require("neoplane.proxy_schema").ensure(source, target))
 	vim.fn.delete(root, "rf")
 end
 
@@ -36,7 +36,7 @@ T["proxy schema accepts schemas without OpenCode"] = function()
 	local target = root .. "/state/proxy.env.schema"
 	vim.fn.mkdir(root, "p")
 	vim.fn.writefile({ "# @sensitive", 'OTHER_KEY="value"' }, source)
-	require("neoterm.proxy_schema").ensure(source, target)
+	require("neoplane.proxy_schema").ensure(source, target)
 	assert.same({ "# @sensitive @proxy=passthrough", 'OTHER_KEY="value"' }, vim.fn.readfile(target))
 	vim.fn.delete(root, "rf")
 end

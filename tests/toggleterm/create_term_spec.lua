@@ -19,11 +19,11 @@ for _, mode in ipairs({ "default", false, true }) do
 			local work_started = false
 			local terminal = { bufnr = vim.api.nvim_create_buf(false, true) }
 			package.loaded["toggleterm.terminal"] = { Terminal = { new = function() return terminal end } }
-			package.loaded["neoterm.terms.window"] = {
+			package.loaded["neoplane.terms.window"] = {
 				is_visible = function() return false end,
 				is_in_view = function() return false end,
 			}
-			package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
+			package.loaded["neoplane.helpers.ensure_dir"] = { ensure_dir = function() end }
 			package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 			local timer_start = vim.fn.timer_start
 			vim.fn.timer_start = function(...)
@@ -35,7 +35,7 @@ for _, mode in ipairs({ "default", false, true }) do
 				work_started = true
 				return get_lines(...)
 			end
-			local instance = require("neoterm.terms.create_term"):new({ detect_urls = detect_urls }, function(event)
+			local instance = require("neoplane.terms.create_term"):new({ detect_urls = detect_urls }, function(event)
 				table.insert(events, event)
 			end)
 			vim.wait(10)
@@ -74,15 +74,15 @@ T["create_term"]["reports process exit status"] = function()
 				end,
 			},
 		}
-		package.loaded["neoterm.terms.attach_term"] = { attach_term = function() end }
-		package.loaded["neoterm.terms.window"] = {
+		package.loaded["neoplane.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["neoplane.terms.window"] = {
 			is_visible = function() return false end,
 			is_in_view = function() return visible end,
 		}
-		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoplane.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local Term = require("neoterm.terms.create_term")
+		local Term = require("neoplane.terms.create_term")
 		Term:new({}, function(event)
 			table.insert(events, event)
 		end)
@@ -108,15 +108,15 @@ T["create_term"]["reports whether its terminal is in view"] = function()
 				end,
 			},
 		}
-		package.loaded["neoterm.terms.attach_term"] = { attach_term = function() end }
-		package.loaded["neoterm.terms.window"] = {
+		package.loaded["neoplane.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["neoplane.terms.window"] = {
 			is_visible = function() return false end,
 			is_in_view = function(winnr) return visible and winnr == terminal.window end,
 		}
-		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoplane.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local Term = require("neoterm.terms.create_term")
+		local Term = require("neoplane.terms.create_term")
 		local instance = Term:new({}, function() end)
 		local in_view = instance:is_in_view()
 		visible = false
@@ -138,15 +138,15 @@ T["create_term"]["passes OSC notifications to the configured notifier"] = functi
 				end,
 			},
 		}
-		package.loaded["neoterm.terms.attach_term"] = { attach_term = function() end }
-		package.loaded["neoterm.terms.window"] = {
+		package.loaded["neoplane.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["neoplane.terms.window"] = {
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoplane.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local Term = require("neoterm.terms.create_term")
+		local Term = require("neoplane.terms.create_term")
 		Term:new({}, function() end, false, nil, function(title, message)
 			notification = { title, message }
 		end)
@@ -174,12 +174,12 @@ T["create_term"]["does not steal focus when attaching a created terminal"] = fun
 		package.loaded["toggleterm.terminal"] = {
 			Terminal = { new = function() return terminal end },
 		}
-		package.loaded["neoterm.terms.attach_term"] = { attach_term = function() end }
-		package.loaded["neoterm.terms.window"] = {
+		package.loaded["neoplane.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["neoplane.terms.window"] = {
 			is_visible = function() return true end,
 			is_in_view = function() return true end,
 		}
-		package.loaded["neoterm.helpers.ensure_dir"] = {
+		package.loaded["neoplane.helpers.ensure_dir"] = {
 			ensure_dir = function()
 				vim.api.nvim_set_current_win(file_win)
 				ensured = true
@@ -188,7 +188,7 @@ T["create_term"]["does not steal focus when attaching a created terminal"] = fun
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		vim.api.nvim_set_current_win(terminal_win)
-		require("neoterm.terms.create_term"):new({}, function() end)
+		require("neoplane.terms.create_term"):new({}, function() end)
 		vim.wait(100, function() return ensured end)
 		result = ensured and vim.api.nvim_get_current_win() == terminal_win
 	]])
@@ -209,12 +209,12 @@ T["create_term"]["does not let OSC directory updates steal focus"] = function()
 		package.loaded["toggleterm.terminal"] = {
 			Terminal = { new = function() return terminal end },
 		}
-		package.loaded["neoterm.terms.attach_term"] = { attach_term = function() end }
-		package.loaded["neoterm.terms.window"] = {
+		package.loaded["neoplane.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["neoplane.terms.window"] = {
 			is_visible = function() return true end,
 			is_in_view = function() return true end,
 		}
-		package.loaded["neoterm.helpers.ensure_dir"] = {
+		package.loaded["neoplane.helpers.ensure_dir"] = {
 			ensure_dir = function()
 				vim.api.nvim_set_current_win(file_win)
 				ensured = true
@@ -222,7 +222,7 @@ T["create_term"]["does not let OSC directory updates steal focus"] = function()
 		}
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		require("neoterm.terms.create_term"):new({}, function() end)
+		require("neoplane.terms.create_term"):new({}, function() end)
 		vim.wait(10)
 		vim.api.nvim_set_current_win(terminal_win)
 		vim.api.nvim_exec_autocmds("TermRequest", {
@@ -243,7 +243,7 @@ T["create_term"]["retains OSC title and progress for status detection"] = functi
 		package.loaded["toggleterm.terminal"] = {
 			Terminal = { new = function() return terminal end },
 		}
-		package.loaded["neoterm.terms.attach_term"] = {
+		package.loaded["neoplane.terms.attach_term"] = {
 			attach_term = function(_, _, _, evidence)
 				osc = evidence
 				return function() end, function()
@@ -251,14 +251,14 @@ T["create_term"]["retains OSC title and progress for status detection"] = functi
 				end
 			end,
 		}
-		package.loaded["neoterm.terms.window"] = {
+		package.loaded["neoplane.terms.window"] = {
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoplane.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		require("neoterm.terms.create_term"):new({}, function() end)
+		require("neoplane.terms.create_term"):new({}, function() end)
 		vim.wait(10)
 		vim.api.nvim_exec_autocmds("TermRequest", {
 			buffer = terminal.bufnr,
@@ -296,18 +296,18 @@ T["create_term"]["sends strings as bracketed paste"] = function()
 				end,
 			},
 		}
-		package.loaded["neoterm.terms.attach_term"] = { attach_term = function() end }
-		package.loaded["neoterm.terms.window"] = {
+		package.loaded["neoplane.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["neoplane.terms.window"] = {
 			is_visible = function() return true end,
 			is_in_view = function() return true end,
 		}
-		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoplane.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 		vim.api.nvim_chan_send = function(job_id, str)
 			sent = { job_id, str }
 		end
 
-		local Term = require("neoterm.terms.create_term")
+		local Term = require("neoplane.terms.create_term")
 		Term:new({}, function() end):put("@lua/example.lua ")
 		vim.wait(100, function() return sent ~= nil end)
 		result = sent
@@ -332,15 +332,15 @@ T["create_term"]["ignores process exits while Neovim is shutting down"] = functi
 				end,
 			},
 		}
-		package.loaded["neoterm.terms.attach_term"] = { attach_term = function() end }
-		package.loaded["neoterm.terms.window"] = {
+		package.loaded["neoplane.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["neoplane.terms.window"] = {
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoplane.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local Term = require("neoterm.terms.create_term")
+		local Term = require("neoplane.terms.create_term")
 		Term:new({ on_exit = "restart" }, function(event)
 			table.insert(events, event)
 		end, true, 0)
@@ -370,19 +370,19 @@ T["create_term"]["reattaches status detection when toggleterm replaces the buffe
 				end,
 			},
 		}
-		package.loaded["neoterm.terms.attach_term"] = {
+		package.loaded["neoplane.terms.attach_term"] = {
 			attach_term = function(term, send)
 				table.insert(attachments, { bufnr = term.bufnr, send = send })
 			end,
 		}
-		package.loaded["neoterm.terms.window"] = {
+		package.loaded["neoplane.terms.window"] = {
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoplane.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local Term = require("neoterm.terms.create_term")
+		local Term = require("neoplane.terms.create_term")
 		Term:new({}, function(event)
 			table.insert(events, event)
 		end, true)
@@ -424,23 +424,23 @@ T["create_term"]["resets status and screen detection when manually restarted"] =
 				end,
 			},
 		}
-		package.loaded["neoterm.terms.attach_term"] = {
+		package.loaded["neoplane.terms.attach_term"] = {
 			attach_term = function()
 				return function()
 					reset_count = reset_count + 1
 				end
 			end,
 		}
-		package.loaded["neoterm.terms.window"] = {
+		package.loaded["neoplane.terms.window"] = {
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoplane.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 		vim.fn.jobwait = function() return { -1 } end
 		vim.fn.jobstop = function() end
 
-		local Term = require("neoterm.terms.create_term")
+		local Term = require("neoplane.terms.create_term")
 		local instance = Term:new({ screen_manifest = {} }, function(event)
 			table.insert(events, event)
 		end)
@@ -473,15 +473,15 @@ T["create_term"]["does not restart successful or short-lived processes"] = funct
 				end,
 			},
 		}
-		package.loaded["neoterm.terms.attach_term"] = { attach_term = function() end }
-		package.loaded["neoterm.terms.window"] = {
+		package.loaded["neoplane.terms.attach_term"] = { attach_term = function() end }
+		package.loaded["neoplane.terms.window"] = {
 			is_visible = function() return false end,
 			is_in_view = function() return false end,
 		}
-		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoplane.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
-		local Term = require("neoterm.terms.create_term")
+		local Term = require("neoplane.terms.create_term")
 		Term:new({ on_exit = "restart" }, function() end, true, 100000)
 		terminal_options.on_exit(terminal, nil, 0)
 		terminal_options.on_exit(terminal, nil, 1)
@@ -498,16 +498,16 @@ T["create_term"]["handles OSC 7501 queries and root status reports"] = function(
 		local visible = false
 		local terminal = { bufnr = vim.api.nvim_create_buf(false, true), job_id = 7 }
 		package.loaded["toggleterm.terminal"] = { Terminal = { new = function() return terminal end } }
-		package.loaded["neoterm.terms.window"] = {
+		package.loaded["neoplane.terms.window"] = {
 			is_visible = function() return false end,
 			is_in_view = function() return visible end,
 		}
-		package.loaded["neoterm.helpers.ensure_dir"] = { ensure_dir = function() end }
+		package.loaded["neoplane.helpers.ensure_dir"] = { ensure_dir = function() end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 		vim.api.nvim_chan_send = function(channel, bytes)
 			table.insert(replies, { channel, bytes })
 		end
-		local Term = require("neoterm.terms.create_term")
+		local Term = require("neoplane.terms.create_term")
 		local instance = Term:new({ osc_status = true }, function(event)
 			table.insert(events, event)
 		end)

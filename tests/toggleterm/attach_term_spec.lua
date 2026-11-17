@@ -20,12 +20,12 @@ T["attach terminal"]["emits status transitions with their visibility"] = functio
 			callbacks = opts
 			return true
 		end
-		package.loaded["neoterm.terms.window"] = { is_in_view = function() return visible end }
+		package.loaded["neoplane.terms.window"] = { is_in_view = function() return visible end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 
 		local bufnr = vim.api.nvim_create_buf(false, true)
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "❯ " })
-		require("neoterm.terms.attach_term").attach_term({ bufnr = bufnr, window = 1 }, function(event)
+		require("neoplane.terms.attach_term").attach_term({ bufnr = bufnr, window = 1 }, function(event)
 			table.insert(events, event)
 		end, {
 			debounce_ms = 0,
@@ -66,11 +66,11 @@ T["attach terminal"]["joins a URL wrapped by terminal width"] = function()
 			callbacks = opts
 			return true
 		end
-		package.loaded["neoterm.terms.window"] = { is_in_view = function() return false end }
+		package.loaded["neoplane.terms.window"] = { is_in_view = function() return false end }
 		package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
 		vim.o.columns = 40
 		local bufnr = vim.api.nvim_create_buf(false, true)
-		require("neoterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
+		require("neoplane.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
 			table.insert(events, event)
 		end, nil, nil, true)
 		vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "http://localhost:3000/abcdefghijklmnopqr" })
@@ -91,11 +91,11 @@ T["URL scanning"] = MiniTest.new_set({
 	hooks = {
 		pre_case = function()
 			child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-				package.loaded["neoterm.terms.window"] = { is_in_view = function() return false end }
+				package.loaded["neoplane.terms.window"] = { is_in_view = function() return false end }
 				events = {}
 				bufnr = vim.api.nvim_create_buf(false, true)
 				vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "", "", "", "" })
-				reset = require("neoterm.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
+				reset = require("neoplane.terms.attach_term").attach_term({ bufnr = bufnr }, function(event)
 					table.insert(events, event)
 				end, nil, nil, true)
 			]])

@@ -1,0 +1,721 @@
+local M = {}
+
+local create_history = require("neoplane.terms.history").create_history
+local Term = require("neoplane.terms.create_term")
+local config = require("neoplane.config")
+local get_query_fn = require("neoplane.terms.get_query_fn").get_query_fn
+local utils = require("neoplane.terms.sort_utils")
+local commands = require("neoplane.terms.get_commands")
+local get_commands = commands.get_commands
+local format_item = require("neoplane.terms.format_item").format_item
+local create_pseudo_terminal = require("neoplane.terms.pseudo_terminal").create
+
+local history = create_history("instance_count")
+local instance_owners = {}
+local listeners = {}
+local next_listener_id = 0
+local working_count = 0
+
+local function update_working_count(delta)
+	local was_working = working_count > 0
+	working_count = working_count + delta
+	assert(working_count >= 0, "Working terminal count cannot be negative")
+	local is_working = working_count > 0
+	if is_working ~= was_working and config.on_working_change then
+		config.on_working_change(is_working)
+	end
+end
+
+local function available_instance(requested_instance)
+	if requested_instance then
+		assert(not instance_owners[requested_instance], "Terminal instance number is already in use")
+	end
+	local instance_count = requested_instance or 1
+	while instance_owners[instance_count] do
+		instance_count = instance_count + 1
+	end
+	return instance_count
+end
+
+local function reserve_instance(item, requested_instance)
+	local instance_count = available_instance(requested_instance)
+	instance_owners[instance_count] = item
+	item.instance_count = instance_count
+end
+
+local function release_instance(item)
+	if instance_owners[item.instance_count] == item then
+		instance_owners[item.instance_count] = nil
+	end
+end
+
+local function subscribe(listener)
+	next_listener_id = next_listener_id + 1
+	local id = next_listener_id
+	listeners[id] = listener
+	return function()
+		listeners[id] = nil
+	end
+end
+
+local artifact
+artifact = create_pseudo_terminal(function()
+	artifact.changed = nil
+	history.insert(artifact)
+end)
+artifact.artifact = true
+artifact.instance_count = 1
+artifact.status = "idle"
+instance_owners[1] = artifact
+history.insert(artifact)
+
+local function apply_event(event, item)
+	if event.type == "create" then
+		history.insert(item)
+	elseif event.type == "focus" then
+		item.changed = nil
+		history.insert(item)
+	elseif event.type == "status" and event.value ~= item.status then
+		local was_working = item.status == "working"
+		local is_working = event.value == "working"
+		if was_working ~= is_working then
+			update_working_count(is_working and 1 or -1)
+			item.working_counted = is_working
+		end
+		item.status = event.value
+		item.term.status_changed_at = os.time()
+		if event.visible == true or item.term:is_in_view() then
+			item.changed = nil
+		else
+			item.changed = true
+			config.on_status(item)
+		end
+	elseif event.type == "url" then
+		for _, url in ipairs(item.term.url) do
+			if url == event.value then
+				return
+			end
+		end
+		table.insert(item.term.url, event.value)
+	elseif event.type == "title" then
+		item.title = event.value ~= "" and event.value or nil
+	elseif event.type == "cwd" then
+		history.insert(item)
+	elseif event.type == "detach" then
+		if item.working_counted then
+			update_working_count(-1)
+			item.working_counted = false
+		end
+		local current = history.find(function(candidate)
+			return candidate.instance_count == item.instance_count
+		end)
+		if current == item then
+			history.purge(item.instance_count)
+		end
+		vim.schedule(function()
+			local replacement = history.find(function(candidate)
+				return candidate.instance_count == item.instance_count
+			end)
+			if replacement ~= item then
+				release_instance(item)
+			end
+		end)
+	end
+end
+
+local function track_task(event, item)
+	if not item.task_path then
+		return
+	end
+	local active = require("neoplane.terms.artifacts.active")
+	if event.type == "create" then
+		active.add(item.task_path, item.task_project, item)
+	elseif
+		event.type == "detach" or (event.type == "status" and (event.value == "success" or event.value == "failure"))
+	then
+		active.remove(item.task_path, item)
+	end
+end
+
+local function notify(event, item)
+	apply_event(event, item)
+	track_task(event, item)
+	for _, listener in pairs(listeners) do
+		pcall(listener, event, item)
+	end
+end
+
+function M.fork(definition)
+	local existing = history.find(function(item)
+		return item.status == "preparing"
+			and item.key == definition.name
+			and item.task_path == definition.task_path
+			and item.checkout_project == definition.checkout_project
+			and item.checkout_branch == definition.checkout_branch
+	end)
+	if existing then
+		return
+	end
+	local noop = function() end
+	local item = vim.tbl_extend("force", definition, {
+		key = definition.name,
+		display_name = definition.name,
+		status = "preparing",
+		term = {
+			status_changed_at = os.time(),
+			focus = noop,
+			toggle = noop,
+			restart = noop,
+			kill = noop,
+			put = noop,
+			read = noop,
+			is_in_view = function()
+				return false
+			end,
+		},
+	})
+	reserve_instance(item)
+	notify({ type = "create" }, item)
+	return item
+end
+
+function M.finish_fork(item)
+	if item then
+		notify({ type = "detach" }, item)
+		release_instance(item)
+	end
+end
+
+vim.api.nvim_create_autocmd("FocusGained", {
+	callback = function()
+		for _, item in
+			ipairs(history.filter(function(candidate)
+				return candidate.changed
+					and candidate.term
+					and candidate.term.is_in_view
+					and candidate.term:is_in_view()
+			end))
+		do
+			notify({ type = "focus" }, item)
+		end
+	end,
+})
+
+local function prepare()
+	-- act as noop, but also used as a flag
+end
+
+local function normalize_cmd(cmd)
+	if vim.islist(cmd) then
+		return table.concat(
+			vim.tbl_map(function(value)
+				return vim.fn.shellescape(value)
+			end, cmd),
+			" "
+		)
+	end
+	return cmd
+end
+
+local function create_and_notify(item, cb, forking)
+	local ctx = require("neoplane.terms.window").get_ctx() or {}
+	ctx =
+		vim.tbl_extend("force", ctx, { cwd = item.cwd, path = ctx.path or item.cwd, artifact_dir = item.artifact_dir })
+	local expand = require("neoplane.put.init").expand_values
+	item.cmd = normalize_cmd(item.cmd_expanded and item.cmd or expand(item.cmd, ctx))
+	local env = expand(item.env, ctx)
+	item.term = Term:new({
+		cmd = item.cmd,
+		env = env,
+		cwd = item.cwd,
+		instance_count = item.instance_count,
+		exit_policy = item.exit_policy,
+		screen_manifest = item.screen_manifest,
+		osc_status = item.osc_status,
+		detect_urls = config.detect_urls,
+		auto_scroll = item.auto_scroll,
+		on_success = item.on_success,
+	}, function(event)
+		if event.type == "cwd" then
+			item.cwd = event.value
+		end
+		notify(event, item)
+	end, cb == prepare, config.min_runtime, config.notify)
+	notify({ type = "create" }, item)
+	M.finish_fork(forking)
+	cb(item)
+end
+
+local function make_item(item, cb, requested_instance, forking)
+	if item.confirm == true then
+		return require("neoplane.helpers.confirm")("Run " .. (item.name or item.key) .. "?", function(confirmed)
+			if not confirmed then
+				M.finish_fork(forking)
+				return
+			end
+			make_item(vim.tbl_extend("force", item, { confirm = false }), cb, requested_instance, forking)
+		end)
+	end
+	item.status = item.status or "idle"
+	item.changed = nil
+	if forking then
+		item.instance_count = forking.instance_count
+	else
+		reserve_instance(item, requested_instance)
+	end
+	assert(type(item.key) == "string" and item.key ~= "", "Cannot spawn an ad-hoc terminal without a key")
+	item.cwd = type(item.cwd) == "string" and item.cwd or vim.fn.getcwd()
+	local function spawn()
+		local function apply(index)
+			local name = config.middlewares[index]
+			if not name then
+				instance_owners[item.instance_count] = item
+				create_and_notify(item, cb, forking)
+				return
+			end
+			local function continue(next_item, err)
+				if err then
+					M.finish_fork(forking)
+					release_instance(item)
+					vim.notify(err, vim.log.levels.ERROR)
+					return
+				end
+				item = next_item
+				apply(index + 1)
+			end
+			local next_item = require("neoplane.middlewares." .. name)(item, continue)
+			if next_item then
+				continue(next_item)
+			end
+		end
+		apply(1)
+	end
+	local function create()
+		if type(item.cmd) == "function" then
+			return item.cmd(function(cmd)
+				item.cmd = cmd
+				spawn()
+			end)
+		end
+		spawn()
+	end
+	require("neoplane.git").ensure_worktree(item.cwd, function(ok)
+		if ok then
+			if item.artifact_dir then
+				require("neoplane.terms.artifacts.cwd").link(item.cwd, item.artifact_dir, item.artifact_source)
+			elseif config.dirs and vim.fs.relpath(config.dirs.projects, item.cwd) ~= nil then
+				return require("neoplane.terms.artifacts.cwd").select_artifacts(item.cwd, function(folder)
+					item.artifact_dir = folder
+					create()
+				end)
+			end
+			create()
+		else
+			M.finish_fork(forking)
+			release_instance(item)
+		end
+	end)
+end
+
+local lt_item =
+	utils.compose_gt(utils.lt_field("cwd", ""), utils.lt_field("key", ""), utils.lt_field("instance_count", 0))
+
+local function any_command(commands)
+	local _, item = next(commands)
+	return item
+end
+
+local function normalize_query(query)
+	query = vim.tbl_extend("keep", query or {}, {})
+	query.instance_count = vim.v.count > 0 and vim.v.count or query.instance_count
+	if query.cwd == nil then
+		query.cwd = { vim.fn.getcwd(), vim.env.HOME }
+		local context_dir = require("neoplane.terms.artifacts.cwd").context_dir()
+		if context_dir then
+			table.insert(query.cwd, 1, context_dir)
+		end
+	elseif type(query.cwd) == "string" then
+		query.cwd = { query.cwd }
+	end
+	return query
+end
+
+local function get_filter(query)
+	local include_artifact = query.artifact == true or query.key == "artifact" or query.instance_count == 1
+	local regular_query = vim.tbl_extend("force", {}, query)
+	regular_query.artifact = nil
+	local regular_filter = get_query_fn(regular_query)
+	if not include_artifact then
+		return function(item)
+			return not item.artifact and regular_filter(item)
+		end
+	end
+	local artifact_query = vim.tbl_extend("force", {}, regular_query)
+	artifact_query.cwd = nil
+	local artifact_filter = get_query_fn(artifact_query)
+	return function(item)
+		if item.artifact then
+			return artifact_filter(item)
+		end
+		return regular_filter(item)
+	end
+end
+
+local function without_query_options(query)
+	local item = vim.tbl_extend("force", {}, query)
+	item.artifact = nil
+	return item
+end
+
+local function get_query_commands(query, filter, callback, prefer_direct)
+	local cwd = type(query.cwd) == "table" and query.cwd[1] or nil
+	if prefer_direct and query.tag == "agent" and not query.key then
+		local agent = config.agents[1] and config.agents[1].name
+		assert(agent, "No agents configured")
+		local item = {
+			agent = agent,
+			key = agent,
+			name = agent,
+			display_name = agent,
+			tag = "agent",
+			cwd = cwd or vim.fn.getcwd(),
+		}
+		if filter(item) then
+			return callback({ [agent] = item })
+		end
+	end
+	get_commands(filter, cwd, callback, prefer_direct)
+end
+
+local function with_query(query, cb)
+	query = normalize_query(query)
+	if query.instance_count then
+		local instance = history.find(get_filter({ instance_count = query.instance_count }))
+		if instance then
+			return cb(instance)
+		end
+	end
+	local filter = get_filter(query)
+	if query.prompt then
+		local items = history.filter(filter)
+		table.sort(items, lt_item)
+		if #items > 0 then
+			return vim.ui.select(items, {
+				prompt = query.prompt,
+				format_item = format_item(query.cwd == require("neoplane.terms.get_query_fn").any),
+			}, function(item)
+				if item then
+					cb(item)
+				end
+			end)
+		end
+		return get_query_commands(query, filter, function(commands)
+			items = utils.all_of(commands)
+			table.sort(items, lt_item)
+			vim.ui.select(items, {
+				prompt = query.prompt,
+				format_item = format_item(query.cwd == vim.env.HOME),
+			}, function(item)
+				if item then
+					make_item(item, function(instance)
+						cb(instance, true)
+					end, query.instance_count)
+				end
+			end)
+		end)
+	end
+	local item = history.find(filter)
+	if item then
+		return cb(item)
+	end
+	get_query_commands(query, filter, function(commands)
+		item = any_command(commands)
+		local function created(instance)
+			cb(instance, true)
+		end
+		if item then
+			make_item(item, created, query.instance_count)
+		else
+			make_item(
+				vim.tbl_extend("force", without_query_options(query), { cwd = query.cwd[1] }),
+				created,
+				query.instance_count
+			)
+		end
+	end, true)
+end
+
+local local_format_item = format_item(false)
+
+function M.run_or_raise(raise, query)
+	if type(raise) ~= "boolean" then
+		query = raise
+		raise = true
+	end
+	query = normalize_query(query)
+	if raise and query.instance_count then
+		local instance = history.find(get_filter({ instance_count = query.instance_count }))
+		if instance then
+			return instance.term:focus()
+		end
+	end
+	local filter = get_filter(query)
+	local selected = history.find(filter)
+	if raise and selected and selected.artifact then
+		return selected.term:focus()
+	end
+	get_query_commands(query, filter, function(items)
+		local running = history.filter(filter)
+		local choices = raise and running or {}
+		local requested_instance = query.instance_count
+		if not raise and requested_instance and instance_owners[requested_instance] then
+			requested_instance = nil
+		end
+		local instance_count = available_instance(requested_instance)
+		for _, item in pairs(items) do
+			item.instance_count = instance_count
+			local already_running = false
+			for _, instance in ipairs(running) do
+				if instance.key == item.key and instance.cwd == item.cwd then
+					already_running = true
+					break
+				end
+			end
+			if not raise or not already_running then
+				table.insert(choices, item)
+			end
+		end
+		table.sort(choices, lt_item)
+		vim.ui.select(choices, {
+			prompt = "Select Command: ",
+			format_item = local_format_item,
+		}, function(item)
+			if not item then
+				return
+			end
+			if item.term then
+				return item.term:focus()
+			end
+			make_item(item, function(instance)
+				instance.term:focus()
+			end, requested_instance)
+		end)
+	end)
+end
+
+function M.focus(query)
+	with_query(query, function(instance)
+		instance.term:focus()
+	end)
+end
+
+function M.toggle(query)
+	with_query(query, function(instance)
+		instance.term:toggle()
+	end)
+end
+
+function M.toggle_or_default()
+	local query = normalize_query()
+	local instance = history.find(get_filter(query))
+	if instance then
+		return instance.term:toggle()
+	end
+	return M.start({ key = config.default_command, instance_count = query.instance_count })
+end
+
+function M.has_changed()
+	return history.find(function(item)
+		return item.changed ~= nil
+	end) ~= nil
+end
+
+function M.has_working()
+	return working_count > 0
+end
+
+function M.toggle_unseen_or_latest(query)
+	query = normalize_query(query)
+	if query.instance_count then
+		return M.toggle(query)
+	end
+	local filter = get_filter(query)
+	local oldest_changed
+	for _, instance in
+		ipairs(history.filter(function(candidate)
+			return filter(candidate) and candidate.changed
+		end))
+	do
+		if not oldest_changed or instance.term.status_changed_at < oldest_changed.term.status_changed_at then
+			oldest_changed = instance
+		end
+	end
+	if oldest_changed then
+		return oldest_changed.term:focus()
+	end
+	M.toggle(query)
+end
+
+local panel_history = {
+	filter = function(filter)
+		return history.filter(function(item)
+			return item.cwd ~= nil and filter(item)
+		end)
+	end,
+}
+
+function M.kill_in_dir(dir)
+	dir = vim.fs.normalize(dir)
+	for _, item in
+		ipairs(history.filter(function(candidate)
+			local cwd = candidate.cwd and vim.fs.normalize(candidate.cwd)
+			return not candidate.artifact and cwd and (cwd == dir or vim.startswith(cwd, dir .. "/"))
+		end))
+	do
+		item.term:kill()
+	end
+end
+
+function M.toggle_panel(query)
+	query = normalize_query(query)
+	local selected = history.find(get_filter(query))
+	if selected and selected.toggle_panel then
+		return selected.toggle_panel()
+	end
+	require("neoplane.terms.term_panel").toggle(query, panel_history, subscribe, function(dir)
+		M.focus({ cwd = dir, prompt = "Select Command: " })
+	end)
+end
+
+function M.raise_panel()
+	require("neoplane.terms.term_panel").open(panel_history, subscribe, function(dir)
+		M.focus({ cwd = dir, prompt = "Select Command: " })
+	end)
+end
+
+function M.prepare(query)
+	with_query(query, prepare)
+end
+
+local function prepare_put(arg)
+	local invocation
+	if type(arg) == "string" then
+		local put = require("neoplane.put.init")
+		invocation = put.capture(arg)
+		arg = put.template(arg)
+	end
+	return invocation, arg
+end
+
+local function put(instance, invocation, arg)
+	if instance.status == "preparing" then
+		return
+	end
+	local ctx = instance.term.get_ctx and instance.term.get_ctx(invocation)
+		or require("neoplane.terms.window").get_ctx(invocation)
+	if ctx then
+		arg = arg(ctx, instance)
+	else
+		return
+	end
+	instance.term:put(arg, true)
+end
+
+function M.put(query, arg, opts)
+	local invocation
+	invocation, arg = prepare_put(arg)
+	if opts and opts.new then
+		query = normalize_query(query)
+		return get_query_commands(query, get_filter(query), function(commands)
+			local item = any_command(commands)
+				or vim.tbl_extend("force", without_query_options(query), { cwd = query.cwd[1] })
+			make_item(item, function(instance)
+				put(instance, invocation, arg)
+			end, query.instance_count)
+		end, true)
+	end
+	with_query(query, function(instance)
+		put(instance, invocation, arg)
+	end)
+end
+
+function M.read(instance_count, opts, cb)
+	local item = history.find(function(candidate)
+		return candidate.instance_count == instance_count
+	end)
+	if not item then
+		return
+	end
+	return item.term:read(opts, cb)
+end
+
+function M.browse()
+	local choices = {}
+	for _, item in
+		ipairs(history.filter(function(candidate)
+			return candidate.term and candidate.term.url and #candidate.term.url > 0
+		end))
+	do
+		for _, url in ipairs(item.term.url) do
+			table.insert(choices, { item = item, url = url })
+		end
+	end
+	table.sort(choices, function(a, b)
+		return lt_item(a.item, b.item)
+	end)
+	vim.ui.select(choices, {
+		prompt = "Select Terminal URL",
+		format_item = function(choice)
+			return string.format("%s  —  %s", format_item(true)(choice.item), choice.url)
+		end,
+	}, function(choice)
+		if choice then
+			config.browser(choice.url)
+		end
+	end)
+end
+
+function M.start(query, forking)
+	query = normalize_query(query)
+	local existing = history.find(get_filter(query))
+	if existing and existing.status == "preparing" and existing ~= forking then
+		return
+	end
+	if existing and existing.start then
+		return existing.start()
+	end
+	if query.instance_count and history.find(get_filter({ instance_count = query.instance_count })) then
+		vim.notify(string.format("Terminal instance %d already exists", query.instance_count), vim.log.levels.ERROR)
+		return
+	end
+	local function start_command()
+		get_query_commands(query, get_filter(query), function(commands)
+			local item = any_command(commands)
+				or vim.tbl_extend("force", without_query_options(query), { cwd = query.cwd[1] })
+			make_item(item, function(instance)
+				instance.term:focus()
+			end, query.instance_count, forking)
+		end, true)
+	end
+	if query.cwd[1] then
+		require("neoplane.git").ensure_worktree(query.cwd[1], function(ok)
+			if ok then
+				start_command()
+			else
+				M.finish_fork(forking)
+			end
+		end)
+	else
+		start_command()
+	end
+end
+
+function M.restart(query)
+	with_query(query, function(instance, created)
+		if not created then
+			instance.term:restart()
+		end
+	end)
+end
+
+return M

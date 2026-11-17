@@ -1,7 +1,7 @@
 local original_system = vim.system
 local original_jobstart = vim.fn.jobstart
 local original_jobwait = vim.fn.jobwait
-local original_proxy_schema = package.loaded["neoterm.proxy_schema"]
+local original_proxy_schema = package.loaded["neoplane.proxy_schema"]
 local cert_dir = vim.fn.tempname()
 local cert_file = vim.fs.joinpath(cert_dir, "ca-cert.pem")
 local sources = { "/tmp/agent.env.schema", "/tmp/other.env.schema" }
@@ -17,7 +17,7 @@ local T = MiniTest.new_set({
 		pre_once = function()
 			vim.fn.mkdir(cert_dir, "p")
 			vim.fn.writefile({ "test certificate" }, cert_file)
-			package.loaded["neoterm.proxy_schema"] = {
+			package.loaded["neoplane.proxy_schema"] = {
 				ensure = function(source, target)
 					ensured[source] = target
 					return target
@@ -64,7 +64,7 @@ local T = MiniTest.new_set({
 		end,
 		post_once = function()
 			vim.fn.delete(cert_dir, "rf")
-			package.loaded["neoterm.proxy_schema"] = original_proxy_schema
+			package.loaded["neoplane.proxy_schema"] = original_proxy_schema
 			vim.system = original_system
 			vim.fn.jobstart = original_jobstart
 			vim.fn.jobwait = original_jobwait
@@ -80,8 +80,8 @@ local function wrapped(source)
 		artifacts_dir = "/tmp/artifacts",
 		cmd = { "printf", "%s", "hello world" },
 	}
-	item = require("neoterm.middlewares.sandbox")(item)
-	return require("neoterm.middlewares.varlock")(item)
+	item = require("neoplane.middlewares.sandbox")(item)
+	return require("neoplane.middlewares.varlock")(item)
 end
 
 T["varlock wraps sandbox and binds certificate"] = function()
@@ -111,7 +111,7 @@ T["one proxy per schema path, reused on demand"] = function()
 end
 
 T["invalid varlock path is rejected"] = function()
-	local ok = pcall(require("neoterm.middlewares.varlock"), { varlock = true, cmd = { "true" } })
+	local ok = pcall(require("neoplane.middlewares.varlock"), { varlock = true, cmd = { "true" } })
 	assert(not ok)
 end
 
@@ -142,7 +142,7 @@ T["bwrap sandbox binds linked worktree metadata"] = function()
 	})
 	git({ "-C", main, "worktree", "add", "-q", "-b", "sandbox-test", worktree })
 
-	local item = require("neoterm.middlewares.sandbox")({
+	local item = require("neoplane.middlewares.sandbox")({
 		sandbox = "bwrap",
 		agent = "codex",
 		cwd = worktree,

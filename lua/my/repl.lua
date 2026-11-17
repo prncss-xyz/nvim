@@ -19,7 +19,7 @@ end
 M.op = require("flies.operations._with_contents"):new({
 	cb = function(lang, contents)
 		local key = get_REPL_from_lang(lang)
-		require("neoterm.terms").put({ key = key }, contents)
+		require("neoplane.terms").put({ key = key }, contents)
 	end,
 })
 

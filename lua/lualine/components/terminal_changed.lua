@@ -1,5 +1,5 @@
 return function()
-	local terms = package.loaded["neoterm.terms"]
+	local terms = package.loaded["neoplane.terms"]
 	if not terms then
 		return ""
 	end

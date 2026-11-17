@@ -1,4 +1,4 @@
-local History = require("neoterm.terms.history")
+local History = require("neoplane.terms.history")
 
 describe("history", function()
 	it("finds the most recently inserted matching item", function()

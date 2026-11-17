@@ -1,0 +1,39 @@
+return function(opts)
+	if opts.tag ~= "agent" then
+		return opts
+	end
+	local settings = require("neoplane.config").agents
+	local name = opts.agent or settings[1].name
+	local agent
+	for _, entry in ipairs(settings) do
+		if entry.name == name then
+			agent = entry
+			break
+		end
+	end
+	assert(agent, "Unknown agent: " .. name)
+	local config = require("neoplane.agents." .. name)
+	local alias = opts.alias and assert(agent.alias and agent.alias[opts.alias], "Unknown agent alias: " .. opts.alias)
+	local resolved = vim.tbl_extend("force", { agent = name }, agent.command or {}, alias or {}, opts)
+	if resolved.resume then
+		assert(
+			resolved.title == nil or type(resolved.title) == "string" and resolved.title ~= "",
+			"Invalid agent title"
+		)
+		resolved.provider = nil
+		resolved.model = nil
+		resolved.effort = nil
+	end
+	if resolved.skill then
+		assert(type(resolved.skill) == "string" and resolved.skill ~= "", "Invalid skill name")
+		local skill = string.format(config.skill or "use the skill %s", resolved.skill)
+		resolved.prompt = resolved.prompt and skill .. " " .. resolved.prompt or skill
+	end
+	return vim.tbl_extend("force", {
+		cmd = config.builder(resolved),
+		auto_scroll = false,
+		writable_dirs = config.writable_dirs,
+		screen_manifest = config.screen_manifest,
+		osc_status = config.osc_status,
+	}, resolved)
+end

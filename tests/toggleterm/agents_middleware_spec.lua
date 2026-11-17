@@ -14,12 +14,12 @@ local T = MiniTest.new_set({
 
 T["agent command and alias settings resolve with caller overrides"] = function()
 	child.lua([[
-		package.loaded["neoterm.config"] = {
+		package.loaded["neoplane.config"] = {
 			agents = {
 				{ name = "pi", command = { sandbox = "bwrap", varlock = "schema" }, alias = { deep = { model = "deep-model" } } },
 			},
 		}
-		local middleware = require("neoterm.middlewares.agents")
+		local middleware = require("neoplane.middlewares.agents")
 		local default = middleware({ tag = "agent", alias = "deep" })
 		local override = middleware({ tag = "agent", alias = "deep", model = "custom", sandbox = false })
 		result = {
@@ -35,10 +35,10 @@ end
 
 T["skill prefixes the prompt using the harness skill format"] = function()
 	child.lua([[
-		package.loaded["neoterm.config"] = {
+		package.loaded["neoplane.config"] = {
 			agents = { { name = "codex" }, { name = "pi" }, { name = "claude" } },
 		}
-		local middleware = require("neoterm.middlewares.agents")
+		local middleware = require("neoplane.middlewares.agents")
 		result = {
 			middleware({ tag = "agent", agent = "codex", skill = "deploy" }).cmd,
 			middleware({ tag = "agent", agent = "codex", skill = "deploy", prompt = "now" }).cmd,
@@ -56,8 +56,8 @@ end
 
 T["claude enables OSC status without screen heuristics"] = function()
 	child.lua([[
-		package.loaded["neoterm.config"] = { agents = { { name = "claude" } } }
-		local opts = require("neoterm.middlewares.agents")({ tag = "agent" })
+		package.loaded["neoplane.config"] = { agents = { { name = "claude" } } }
+		local opts = require("neoplane.middlewares.agents")({ tag = "agent" })
 		result = { opts.osc_status, opts.screen_manifest == nil, opts.cmd }
 	]])
 	assert.same({ true, true, { "claude" } }, child.lua_get("result"))

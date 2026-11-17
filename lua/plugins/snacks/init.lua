@@ -11,7 +11,7 @@ local web = domain.web
 local move = domain.move
 local git = domain.git
 local projects = require("plugins.snacks.projects")
-local project_pickers = require("neoterm.pickers.projects")
+local project_pickers = require("neoplane.pickers.projects")
 local auto_confirm = require("plugins.snacks.auto_confirm")
 local create_file = require("plugins.snacks.create_file")
 local dirs = require("my.parameters").dirs
@@ -260,7 +260,7 @@ return {
 			{
 				pick .. reverse("a"),
 				function()
-					local artifact_cwd = require("neoterm.terms.artifacts.cwd")
+					local artifact_cwd = require("neoplane.terms.artifacts.cwd")
 					local project_dir = artifact_cwd.context_dir() or vim.fn.getcwd()
 					artifact_cwd.select_artifacts(project_dir, function(target_dir)
 						vim.fn.mkdir(target_dir, "p")
@@ -437,7 +437,7 @@ return {
 			{
 				"bz",
 				function()
-					local win_history = require("neoterm.helpers.win_history")
+					local win_history = require("neoplane.helpers.win_history")
 					if win_history.get_last_file_win() == vim.api.nvim_get_current_win() then
 						projects.open_project(vim.env.HOME, {
 							vim.fn.getcwd(),
@@ -452,11 +452,11 @@ return {
 			{
 				"bn",
 				function()
-					local artifacts = require("neoterm.terms.artifacts.cwd")
+					local artifacts = require("neoplane.terms.artifacts.cwd")
 					local file = vim.api.nvim_buf_get_name(0)
 					if #artifacts.resolve_all(file) > 0 then
 						artifacts.select_checkout(file, function(project_dir)
-							require("neoterm.helpers.ensure_dir").open_dir(project_dir, 0, false)
+							require("neoplane.helpers.ensure_dir").open_dir(project_dir, 0, false)
 						end)
 					else
 						projects.open_project(require("my.parameters").dirs.notes)

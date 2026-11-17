@@ -68,7 +68,7 @@ return {
 					"git_status",
 					"document_symbols",
 				},
-				open_files_do_not_replace_types = require("neoterm.config").open_files_do_not_replace_types,
+				open_files_do_not_replace_types = require("neoplane.config").open_files_do_not_replace_types,
 				default_component_configs = {
 					indent = {
 						indent_marker = " ",

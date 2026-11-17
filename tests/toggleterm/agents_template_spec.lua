@@ -11,13 +11,13 @@ local T = MiniTest.new_set({
 
 T["agents template adds installed agents in order"] = function()
 	child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		package.loaded["neoterm.helpers.term_templates"] = {
+		package.loaded["neoplane.helpers.term_templates"] = {
 			executable = function(name, callback)
 				vim.schedule(function() callback(name == "first" or name == "third") end)
 			end,
 		}
 		local definitions
-		require("neoterm.templates.agents")({
+		require("neoplane.templates.agents")({
 			agents = { { name = "first" }, { name = "missing" }, { name = "third" } },
 			default_agent = "first",
 		}, function(result) definitions = result end)
@@ -31,11 +31,11 @@ end
 
 T["templates add asynchronous agent definitions"] = function()
 	child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		package.loaded["neoterm.helpers.term_templates"] = {
+		package.loaded["neoplane.helpers.term_templates"] = {
 			executable = function(_, callback) vim.schedule(function() callback(true) end) end,
 		}
 		local commands
-		require("neoterm.term_templates").add_commands({}, { "agents" }, {
+		require("neoplane.term_templates").add_commands({}, { "agents" }, {
 			agents = { { name = "p" } },
 		}, function(result) commands = result end)
 		vim.wait(1000, function() return commands ~= nil end)
@@ -45,7 +45,7 @@ end
 
 T["agent templates can use the default agent"] = function()
 	child.lua([[package.path = vim.fn.getcwd() .. "/lua/?.lua;" .. vim.fn.getcwd() .. "/lua/?/init.lua;" .. package.path
-		package.preload["neoterm.templates.default_agent_test"] = function()
+		package.preload["neoplane.templates.default_agent_test"] = function()
 			return function()
 				return {
 					{ name = "default agent", tag = "agent" },
@@ -53,7 +53,7 @@ T["agent templates can use the default agent"] = function()
 			end
 		end
 		local commands
-		require("neoterm.term_templates").add_commands({}, { "default_agent_test" }, {}, function(result)
+		require("neoplane.term_templates").add_commands({}, { "default_agent_test" }, {}, function(result)
 			commands = result
 		end)
 		assert(commands["default agent"].tag == "agent", "expected task without explicit agent")
