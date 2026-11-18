@@ -90,6 +90,6 @@ M.directions = {
 	search = "é",
 }
 
-M.selection_chars = "asdfjkl;ghqweruiopzxcvm,étybn"
+M.selection_chars = "asdfjkl;ghqweruiopzxcvm,.étybn"
 
 return M

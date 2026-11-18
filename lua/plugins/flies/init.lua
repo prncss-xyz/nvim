@@ -6,16 +6,6 @@ local theme = require("my.parameters").theme
 return {
 	{
 		"prncss-xyz/flies.nvim",
-		dependencies = {
-			"nvim-lua/plenary.nvim",
-			{
-				"prncss-xyz/hop.nvim",
-				module = "hop",
-				opts = {
-					jump_on_sole_occurrence = true,
-				},
-			},
-		},
 		config = function()
 			require("flies").setup({
 				hlslens = require("my.conds").not_vscode,
@@ -25,7 +15,9 @@ return {
 					},
 				},
 				hints = {
-					max = false,
+					max = 100,
+					keys = require("my.parameters").selection_chars,
+					jump_on_sole_occurrence = true,
 				},
 				hint_keys = require("my.parameters").selection_chars,
 				mappings = {
