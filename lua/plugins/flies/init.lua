@@ -22,7 +22,10 @@ return {
 				hint_keys = require("my.parameters").selection_chars,
 				mappings = {
 					a = "toggle",
-					b = require("flies.flies.brackets"),
+					b = require("flies.flies._ts"):new({
+						names = "delimiter",
+						no_tree = require("flies.flies.brackets"),
+					}),
 					c = require("flies.flies.char_to_any"),
 					d = require("flies.flies.line"),
 					e = require("flies.flies.buffer"),
