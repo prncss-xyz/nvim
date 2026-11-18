@@ -401,7 +401,6 @@ return {
 				desc = "Put Prompt Result",
 				mode = { "n", "x" },
 			},
-
 			{
 				"m" .. reverse("n"),
 				function()
