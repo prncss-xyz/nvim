@@ -302,9 +302,8 @@ return {
 		},
 		{
 			name = "merge",
-			source = "implementation.md",
-			auto = { "small-change.txt" },
-			target = "merge.txt",
+			source = "mergeable.txt",
+			target = "merged.txt",
 			fork = "required",
 			command = {
 				confirm = true,
@@ -332,8 +331,8 @@ return {
 	},
 	tasks = {
 		create_task_name = [==[
-Generate a concise task description which can be used as a branch name. This
-can contain spaces as it will be sluged as needed.
+Generate a concise task description which can be used as a commit message for the task. This
+can contain spaces.
 
 Rules:
 - Keep it short: 1-3 words, max 4 if necessary

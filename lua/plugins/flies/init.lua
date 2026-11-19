@@ -53,7 +53,7 @@ return {
 					}),
 					-- r: reference
 					s = "hint",
-					t = require("flies.flies._ts"):new({ names = "tag" }),
+					-- t ...........................................
 					-- u ...........................................
 					v = require("flies.flies.variable_segment"),
 					w = require("flies.flies.word"),
@@ -65,10 +65,7 @@ return {
 						},
 					}),
 					z = require("flies.flies.diagnostic"),
-					["<"] = require("flies.flies.brackets"):new({
-						left_patterns = { "<" },
-						right_patterns = { ">" },
-					}),
+					-- < ...........................................
 					["$"] = "last",
 					[" "] = require("flies.flies.bigword"),
 					["*"] = require("flies.flies._ts"):new({
